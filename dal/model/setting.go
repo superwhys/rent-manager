@@ -25,14 +25,16 @@ const (
 type SystemSettings struct {
 	ID uint `gorm:"primaryKey" json:"id"`
 
+	PropertyID uint `gorm:"not null;index;comment:物业ID" json:"property_id"`
+
 	// 费用设置
-	DefaultRent         float32             `gorm:"not null;type:numeric(10,2);default:0" json:"defaultRent" binding:"min=0"`
-	DepositMultiple     float32             `gorm:"not null;type:numeric(3,1);default:1" json:"depositMultiple" binding:"min=0"`
-	NetworkFee          float32             `gorm:"not null;type:numeric(8,2);default:0" json:"networkFee" binding:"min=0"`
-	ElevatorFee         float32             `gorm:"not null;type:numeric(8,2);default:0" json:"elevatorFee" binding:"min=0"`
-	BillGenerateDate    int                 `gorm:"not null;type:integer;default:1" json:"billGenerateDate" binding:"min=1,max=30"`
-	OverdueReminderDays int                 `gorm:"not null;type:integer;default:3" json:"overdueReminderDays" binding:"min=1,max=30"`
-	AutoBackup          AutoBackupFrequency `gorm:"not null;type:varchar(20);default:'daily'" json:"autoBackup" binding:"oneof=daily weekly monthly"`
+	DefaultRent         float32             `gorm:"not null;type:numeric(10,2);default:0;comment:默认租金" json:"defaultRent" binding:"min=0"`
+	DepositMultiple     float32             `gorm:"not null;type:numeric(3,1);default:1;comment:押金倍数" json:"depositMultiple" binding:"min=0"`
+	NetworkFee          float32             `gorm:"not null;type:numeric(8,2);default:0;comment:网络费" json:"networkFee" binding:"min=0"`
+	ElevatorFee         float32             `gorm:"not null;type:numeric(8,2);default:0;comment:电梯费" json:"elevatorFee" binding:"min=0"`
+	BillGenerateDate    int                 `gorm:"not null;type:integer;default:1;comment:账单生成日期" json:"billGenerateDate" binding:"min=1,max=30"`
+	OverdueReminderDays int                 `gorm:"not null;type:integer;default:3;comment:逾期提醒天数" json:"overdueReminderDays" binding:"min=1,max=30"`
+	AutoBackup          AutoBackupFrequency `gorm:"not null;type:varchar(20);default:'daily';comment:自动备份频率" json:"autoBackup" binding:"oneof=daily weekly monthly"`
 
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
