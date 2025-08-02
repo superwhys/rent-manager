@@ -8,11 +8,24 @@
 
 package permission
 
-import "github.com/miebyte/goutils/ginutils"
+import (
+	"net/http"
 
-type App interface {
-}
+	"github.com/miebyte/goutils/ginutils"
+	"github.com/superwhys/rent-manager-server/api/middleware"
+	"github.com/superwhys/rent-manager-server/api/permission/routers"
+)
 
-func Router(app App) ginutils.EngineOption {
-	return ginutils.WithGroupRouters("/permission")
+func Router(app routers.App, middlewareManager middleware.Manager) ginutils.EngineOption {
+	permissionRouter := ginutils.NewRouter()
+	permissionRouter.NewHandlerGroup().
+		WithMiddlewares(middlewareManager.Auth()).
+		WithHandlers(
+			ginutils.HandlerPath(http.MethodGet, "/list", ginutils.MountHandlerWithArg[routers.ListPermissionHandler](app)),
+		)
+
+	return ginutils.WithGroupRouters(
+		"/permission",
+		ginutils.WithRootRouters(permissionRouter),
+	)
 }
