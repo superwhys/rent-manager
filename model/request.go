@@ -36,3 +36,26 @@ type UpdateUserInfoRequest struct {
 type DeleteUserRequest struct {
 	Username string `json:"username"`
 }
+
+type CreateTenantRequest struct {
+	Username   string `json:"username"`
+	Phone      string `json:"phone"`
+	IDCard     string `json:"id_card"`
+	RoomID     uint   `json:"room_id"`
+	PropertyID uint   `json:"property_id"`
+	MoveInDate string `json:"move_in_date"`
+}
+
+type UpdateTenantRequest struct {
+	ID         uint   `json:"id"`
+	Username   string `json:"username"`
+	Phone      string `json:"phone"`
+	IDCard     string `json:"id_card"`
+	RoomID     uint   `json:"room_id"`
+	PropertyID uint   `json:"property_id"`
+	MoveInDate string `json:"move_in_date"`
+}
+
+type DeleteTenantRequest struct {
+	ID uint `json:"id"`
+}
