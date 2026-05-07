@@ -10,6 +10,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
@@ -28,10 +29,21 @@ func (RoomOption) Mixin() []ent.Mixin {
 
 func (RoomOption) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").NotEmpty().MaxLen(12).Comment("房间选项名字"),
+		field.String("name").
+			NotEmpty().
+			MaxLen(12).
+			Comment("房间选项名字"),
+		field.Int("account_id").
+			Comment("所属账号ID"),
 	}
 }
 
 func (RoomOption) Edges() []ent.Edge {
-	return []ent.Edge{}
+	return []ent.Edge{
+		edge.From("account", Account.Type).
+			Field("account_id").
+			Ref("room_options").
+			Unique().
+			Required(),
+	}
 }

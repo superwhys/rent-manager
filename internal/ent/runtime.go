@@ -285,7 +285,7 @@ func init() {
 		}
 	}()
 	// roleDescIsActive is the schema descriptor for is_active field.
-	roleDescIsActive := roleFields[1].Descriptor()
+	roleDescIsActive := roleFields[2].Descriptor()
 	// role.DefaultIsActive holds the default value on creation for the is_active field.
 	role.DefaultIsActive = roleDescIsActive.Default.(bool)
 	roomMixin := schema.Room{}.Mixin()

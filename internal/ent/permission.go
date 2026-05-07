@@ -23,13 +23,13 @@ type Permission struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// Code holds the value of the "code" field.
+	// 权限代码
 	Code string `json:"code,omitempty"`
-	// APIPath holds the value of the "api_path" field.
+	// 权限路径
 	APIPath string `json:"api_path,omitempty"`
-	// Description holds the value of the "description" field.
+	// 权限描述
 	Description string `json:"description,omitempty"`
-	// IsActive holds the value of the "is_active" field.
+	// 权限是否激活
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PermissionQuery when eager-loading is set.

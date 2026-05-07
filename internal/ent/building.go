@@ -24,13 +24,13 @@ type Building struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// Name holds the value of the "name" field.
+	// 楼栋名字
 	Name string `json:"name,omitempty"`
-	// Address holds the value of the "address" field.
+	// 楼栋地址
 	Address string `json:"address,omitempty"`
-	// City holds the value of the "city" field.
+	// 楼栋城市
 	City string `json:"city,omitempty"`
-	// Province holds the value of the "province" field.
+	// 楼栋省份
 	Province string `json:"province,omitempty"`
 	// 所属账号ID
 	AccountID int `json:"account_id,omitempty"`

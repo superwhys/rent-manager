@@ -30,6 +30,8 @@ const (
 	FieldIsActive = "is_active"
 	// EdgeBuildings holds the string denoting the buildings edge name in mutations.
 	EdgeBuildings = "buildings"
+	// EdgeRoomOptions holds the string denoting the room_options edge name in mutations.
+	EdgeRoomOptions = "room_options"
 	// Table holds the table name of the account in the database.
 	Table = "accounts"
 	// BuildingsTable is the table that holds the buildings relation/edge.
@@ -39,6 +41,13 @@ const (
 	BuildingsInverseTable = "buildings"
 	// BuildingsColumn is the table column denoting the buildings relation/edge.
 	BuildingsColumn = "account_id"
+	// RoomOptionsTable is the table that holds the room_options relation/edge.
+	RoomOptionsTable = "room_options"
+	// RoomOptionsInverseTable is the table name for the RoomOption entity.
+	// It exists in this package in order to avoid circular dependency with the "roomoption" package.
+	RoomOptionsInverseTable = "room_options"
+	// RoomOptionsColumn is the table column denoting the room_options relation/edge.
+	RoomOptionsColumn = "account_id"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -136,10 +145,31 @@ func ByBuildings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newBuildingsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByRoomOptionsCount orders the results by room_options count.
+func ByRoomOptionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRoomOptionsStep(), opts...)
+	}
+}
+
+// ByRoomOptions orders the results by room_options terms.
+func ByRoomOptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRoomOptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBuildingsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(BuildingsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, BuildingsTable, BuildingsColumn),
+	)
+}
+func newRoomOptionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RoomOptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RoomOptionsTable, RoomOptionsColumn),
 	)
 }

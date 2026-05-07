@@ -369,6 +369,22 @@ func (c *AccountClient) QueryBuildings(_m *Account) *BuildingQuery {
 	return query
 }
 
+// QueryRoomOptions queries the room_options edge of a Account.
+func (c *AccountClient) QueryRoomOptions(_m *Account) *RoomOptionQuery {
+	query := (&RoomOptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(roomoption.Table, roomoption.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.RoomOptionsTable, account.RoomOptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *AccountClient) Hooks() []Hook {
 	return c.hooks.Account
@@ -1112,6 +1128,22 @@ func (c *RoomOptionClient) GetX(ctx context.Context, id int) *RoomOption {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryAccount queries the account edge of a RoomOption.
+func (c *RoomOptionClient) QueryAccount(_m *RoomOption) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(roomoption.Table, roomoption.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, roomoption.AccountTable, roomoption.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

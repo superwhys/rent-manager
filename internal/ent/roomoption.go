@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
 )
 
@@ -24,8 +25,33 @@ type RoomOption struct {
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// 房间选项名字
-	Name         string `json:"name,omitempty"`
+	Name string `json:"name,omitempty"`
+	// 所属账号ID
+	AccountID int `json:"account_id,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the RoomOptionQuery when eager-loading is set.
+	Edges        RoomOptionEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// RoomOptionEdges holds the relations/edges for other nodes in the graph.
+type RoomOptionEdges struct {
+	// Account holds the value of the account edge.
+	Account *Account `json:"account,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// AccountOrErr returns the Account value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RoomOptionEdges) AccountOrErr() (*Account, error) {
+	if e.Account != nil {
+		return e.Account, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: account.Label}
+	}
+	return nil, &NotLoadedError{edge: "account"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -33,7 +59,7 @@ func (*RoomOption) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case roomoption.FieldID:
+		case roomoption.FieldID, roomoption.FieldAccountID:
 			values[i] = new(sql.NullInt64)
 		case roomoption.FieldName:
 			values[i] = new(sql.NullString)
@@ -85,6 +111,12 @@ func (_m *RoomOption) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Name = value.String
 			}
+		case roomoption.FieldAccountID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field account_id", values[i])
+			} else if value.Valid {
+				_m.AccountID = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -96,6 +128,11 @@ func (_m *RoomOption) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *RoomOption) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryAccount queries the "account" edge of the RoomOption entity.
+func (_m *RoomOption) QueryAccount() *AccountQuery {
+	return NewRoomOptionClient(_m.config).QueryAccount(_m)
 }
 
 // Update returns a builder for updating this RoomOption.
@@ -134,6 +171,9 @@ func (_m *RoomOption) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
+	builder.WriteString(", ")
+	builder.WriteString("account_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
 	builder.WriteByte(')')
 	return builder.String()
 }

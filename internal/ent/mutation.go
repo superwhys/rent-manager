@@ -40,23 +40,26 @@ const (
 // AccountMutation represents an operation that mutates the Account nodes in the graph.
 type AccountMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int
-	created_at       *time.Time
-	updated_at       *time.Time
-	deleted_at       *time.Time
-	name             *string
-	email            *string
-	password         *string
-	is_active        *bool
-	clearedFields    map[string]struct{}
-	buildings        map[int]struct{}
-	removedbuildings map[int]struct{}
-	clearedbuildings bool
-	done             bool
-	oldValue         func(context.Context) (*Account, error)
-	predicates       []predicate.Account
+	op                  Op
+	typ                 string
+	id                  *int
+	created_at          *time.Time
+	updated_at          *time.Time
+	deleted_at          *time.Time
+	name                *string
+	email               *string
+	password            *string
+	is_active           *bool
+	clearedFields       map[string]struct{}
+	buildings           map[int]struct{}
+	removedbuildings    map[int]struct{}
+	clearedbuildings    bool
+	room_options        map[int]struct{}
+	removedroom_options map[int]struct{}
+	clearedroom_options bool
+	done                bool
+	oldValue            func(context.Context) (*Account, error)
+	predicates          []predicate.Account
 }
 
 var _ ent.Mutation = (*AccountMutation)(nil)
@@ -476,6 +479,60 @@ func (m *AccountMutation) ResetBuildings() {
 	m.removedbuildings = nil
 }
 
+// AddRoomOptionIDs adds the "room_options" edge to the RoomOption entity by ids.
+func (m *AccountMutation) AddRoomOptionIDs(ids ...int) {
+	if m.room_options == nil {
+		m.room_options = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.room_options[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRoomOptions clears the "room_options" edge to the RoomOption entity.
+func (m *AccountMutation) ClearRoomOptions() {
+	m.clearedroom_options = true
+}
+
+// RoomOptionsCleared reports if the "room_options" edge to the RoomOption entity was cleared.
+func (m *AccountMutation) RoomOptionsCleared() bool {
+	return m.clearedroom_options
+}
+
+// RemoveRoomOptionIDs removes the "room_options" edge to the RoomOption entity by IDs.
+func (m *AccountMutation) RemoveRoomOptionIDs(ids ...int) {
+	if m.removedroom_options == nil {
+		m.removedroom_options = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.room_options, ids[i])
+		m.removedroom_options[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRoomOptions returns the removed IDs of the "room_options" edge to the RoomOption entity.
+func (m *AccountMutation) RemovedRoomOptionsIDs() (ids []int) {
+	for id := range m.removedroom_options {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RoomOptionsIDs returns the "room_options" edge IDs in the mutation.
+func (m *AccountMutation) RoomOptionsIDs() (ids []int) {
+	for id := range m.room_options {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRoomOptions resets all changes to the "room_options" edge.
+func (m *AccountMutation) ResetRoomOptions() {
+	m.room_options = nil
+	m.clearedroom_options = false
+	m.removedroom_options = nil
+}
+
 // Where appends a list predicates to the AccountMutation builder.
 func (m *AccountMutation) Where(ps ...predicate.Account) {
 	m.predicates = append(m.predicates, ps...)
@@ -720,9 +777,12 @@ func (m *AccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.buildings != nil {
 		edges = append(edges, account.EdgeBuildings)
+	}
+	if m.room_options != nil {
+		edges = append(edges, account.EdgeRoomOptions)
 	}
 	return edges
 }
@@ -737,15 +797,24 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case account.EdgeRoomOptions:
+		ids := make([]ent.Value, 0, len(m.room_options))
+		for id := range m.room_options {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedbuildings != nil {
 		edges = append(edges, account.EdgeBuildings)
+	}
+	if m.removedroom_options != nil {
+		edges = append(edges, account.EdgeRoomOptions)
 	}
 	return edges
 }
@@ -760,15 +829,24 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case account.EdgeRoomOptions:
+		ids := make([]ent.Value, 0, len(m.removedroom_options))
+		for id := range m.removedroom_options {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedbuildings {
 		edges = append(edges, account.EdgeBuildings)
+	}
+	if m.clearedroom_options {
+		edges = append(edges, account.EdgeRoomOptions)
 	}
 	return edges
 }
@@ -779,6 +857,8 @@ func (m *AccountMutation) EdgeCleared(name string) bool {
 	switch name {
 	case account.EdgeBuildings:
 		return m.clearedbuildings
+	case account.EdgeRoomOptions:
+		return m.clearedroom_options
 	}
 	return false
 }
@@ -797,6 +877,9 @@ func (m *AccountMutation) ResetEdge(name string) error {
 	switch name {
 	case account.EdgeBuildings:
 		m.ResetBuildings()
+		return nil
+	case account.EdgeRoomOptions:
+		m.ResetRoomOptions()
 		return nil
 	}
 	return fmt.Errorf("unknown Account edge %s", name)
@@ -2445,6 +2528,8 @@ type RoleMutation struct {
 	updated_at         *time.Time
 	deleted_at         *time.Time
 	name               *string
+	account_id         *int
+	addaccount_id      *int
 	is_active          *bool
 	clearedFields      map[string]struct{}
 	permissions        map[int]struct{}
@@ -2710,6 +2795,62 @@ func (m *RoleMutation) ResetName() {
 	m.name = nil
 }
 
+// SetAccountID sets the "account_id" field.
+func (m *RoleMutation) SetAccountID(i int) {
+	m.account_id = &i
+	m.addaccount_id = nil
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *RoleMutation) AccountID() (r int, exists bool) {
+	v := m.account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the Role entity.
+// If the Role object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RoleMutation) OldAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// AddAccountID adds i to the "account_id" field.
+func (m *RoleMutation) AddAccountID(i int) {
+	if m.addaccount_id != nil {
+		*m.addaccount_id += i
+	} else {
+		m.addaccount_id = &i
+	}
+}
+
+// AddedAccountID returns the value that was added to the "account_id" field in this mutation.
+func (m *RoleMutation) AddedAccountID() (r int, exists bool) {
+	v := m.addaccount_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *RoleMutation) ResetAccountID() {
+	m.account_id = nil
+	m.addaccount_id = nil
+}
+
 // SetIsActive sets the "is_active" field.
 func (m *RoleMutation) SetIsActive(b bool) {
 	m.is_active = &b
@@ -2834,7 +2975,7 @@ func (m *RoleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RoleMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.created_at != nil {
 		fields = append(fields, role.FieldCreatedAt)
 	}
@@ -2846,6 +2987,9 @@ func (m *RoleMutation) Fields() []string {
 	}
 	if m.name != nil {
 		fields = append(fields, role.FieldName)
+	}
+	if m.account_id != nil {
+		fields = append(fields, role.FieldAccountID)
 	}
 	if m.is_active != nil {
 		fields = append(fields, role.FieldIsActive)
@@ -2866,6 +3010,8 @@ func (m *RoleMutation) Field(name string) (ent.Value, bool) {
 		return m.DeletedAt()
 	case role.FieldName:
 		return m.Name()
+	case role.FieldAccountID:
+		return m.AccountID()
 	case role.FieldIsActive:
 		return m.IsActive()
 	}
@@ -2885,6 +3031,8 @@ func (m *RoleMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldDeletedAt(ctx)
 	case role.FieldName:
 		return m.OldName(ctx)
+	case role.FieldAccountID:
+		return m.OldAccountID(ctx)
 	case role.FieldIsActive:
 		return m.OldIsActive(ctx)
 	}
@@ -2924,6 +3072,13 @@ func (m *RoleMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
+	case role.FieldAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
 	case role.FieldIsActive:
 		v, ok := value.(bool)
 		if !ok {
@@ -2938,13 +3093,21 @@ func (m *RoleMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *RoleMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addaccount_id != nil {
+		fields = append(fields, role.FieldAccountID)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *RoleMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case role.FieldAccountID:
+		return m.AddedAccountID()
+	}
 	return nil, false
 }
 
@@ -2953,6 +3116,13 @@ func (m *RoleMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *RoleMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case role.FieldAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAccountID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Role numeric field %s", name)
 }
@@ -3000,6 +3170,9 @@ func (m *RoleMutation) ResetField(name string) error {
 		return nil
 	case role.FieldName:
 		m.ResetName()
+		return nil
+	case role.FieldAccountID:
+		m.ResetAccountID()
 		return nil
 	case role.FieldIsActive:
 		m.ResetIsActive()
@@ -4031,17 +4204,19 @@ func (m *RoomMutation) ResetEdge(name string) error {
 // RoomOptionMutation represents an operation that mutates the RoomOption nodes in the graph.
 type RoomOptionMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	created_at    *time.Time
-	updated_at    *time.Time
-	deleted_at    *time.Time
-	name          *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*RoomOption, error)
-	predicates    []predicate.RoomOption
+	op             Op
+	typ            string
+	id             *int
+	created_at     *time.Time
+	updated_at     *time.Time
+	deleted_at     *time.Time
+	name           *string
+	clearedFields  map[string]struct{}
+	account        *int
+	clearedaccount bool
+	done           bool
+	oldValue       func(context.Context) (*RoomOption, error)
+	predicates     []predicate.RoomOption
 }
 
 var _ ent.Mutation = (*RoomOptionMutation)(nil)
@@ -4299,6 +4474,69 @@ func (m *RoomOptionMutation) ResetName() {
 	m.name = nil
 }
 
+// SetAccountID sets the "account_id" field.
+func (m *RoomOptionMutation) SetAccountID(i int) {
+	m.account = &i
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *RoomOptionMutation) AccountID() (r int, exists bool) {
+	v := m.account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the RoomOption entity.
+// If the RoomOption object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RoomOptionMutation) OldAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *RoomOptionMutation) ResetAccountID() {
+	m.account = nil
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (m *RoomOptionMutation) ClearAccount() {
+	m.clearedaccount = true
+	m.clearedFields[roomoption.FieldAccountID] = struct{}{}
+}
+
+// AccountCleared reports if the "account" edge to the Account entity was cleared.
+func (m *RoomOptionMutation) AccountCleared() bool {
+	return m.clearedaccount
+}
+
+// AccountIDs returns the "account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AccountID instead. It exists only for internal usage by the builders.
+func (m *RoomOptionMutation) AccountIDs() (ids []int) {
+	if id := m.account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAccount resets all changes to the "account" edge.
+func (m *RoomOptionMutation) ResetAccount() {
+	m.account = nil
+	m.clearedaccount = false
+}
+
 // Where appends a list predicates to the RoomOptionMutation builder.
 func (m *RoomOptionMutation) Where(ps ...predicate.RoomOption) {
 	m.predicates = append(m.predicates, ps...)
@@ -4333,7 +4571,7 @@ func (m *RoomOptionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RoomOptionMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, roomoption.FieldCreatedAt)
 	}
@@ -4345,6 +4583,9 @@ func (m *RoomOptionMutation) Fields() []string {
 	}
 	if m.name != nil {
 		fields = append(fields, roomoption.FieldName)
+	}
+	if m.account != nil {
+		fields = append(fields, roomoption.FieldAccountID)
 	}
 	return fields
 }
@@ -4362,6 +4603,8 @@ func (m *RoomOptionMutation) Field(name string) (ent.Value, bool) {
 		return m.DeletedAt()
 	case roomoption.FieldName:
 		return m.Name()
+	case roomoption.FieldAccountID:
+		return m.AccountID()
 	}
 	return nil, false
 }
@@ -4379,6 +4622,8 @@ func (m *RoomOptionMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldDeletedAt(ctx)
 	case roomoption.FieldName:
 		return m.OldName(ctx)
+	case roomoption.FieldAccountID:
+		return m.OldAccountID(ctx)
 	}
 	return nil, fmt.Errorf("unknown RoomOption field %s", name)
 }
@@ -4416,6 +4661,13 @@ func (m *RoomOptionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
+	case roomoption.FieldAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown RoomOption field %s", name)
 }
@@ -4423,13 +4675,16 @@ func (m *RoomOptionMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *RoomOptionMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *RoomOptionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
 	return nil, false
 }
 
@@ -4486,25 +4741,37 @@ func (m *RoomOptionMutation) ResetField(name string) error {
 	case roomoption.FieldName:
 		m.ResetName()
 		return nil
+	case roomoption.FieldAccountID:
+		m.ResetAccountID()
+		return nil
 	}
 	return fmt.Errorf("unknown RoomOption field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RoomOptionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.account != nil {
+		edges = append(edges, roomoption.EdgeAccount)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *RoomOptionMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case roomoption.EdgeAccount:
+		if id := m.account; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RoomOptionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -4516,24 +4783,41 @@ func (m *RoomOptionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RoomOptionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedaccount {
+		edges = append(edges, roomoption.EdgeAccount)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *RoomOptionMutation) EdgeCleared(name string) bool {
+	switch name {
+	case roomoption.EdgeAccount:
+		return m.clearedaccount
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *RoomOptionMutation) ClearEdge(name string) error {
+	switch name {
+	case roomoption.EdgeAccount:
+		m.ClearAccount()
+		return nil
+	}
 	return fmt.Errorf("unknown RoomOption unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *RoomOptionMutation) ResetEdge(name string) error {
+	switch name {
+	case roomoption.EdgeAccount:
+		m.ResetAccount()
+		return nil
+	}
 	return fmt.Errorf("unknown RoomOption edge %s", name)
 }

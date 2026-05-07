@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
 )
 
@@ -66,6 +67,17 @@ func (_c *RoomOptionCreate) SetNillableDeletedAt(v *time.Time) *RoomOptionCreate
 func (_c *RoomOptionCreate) SetName(v string) *RoomOptionCreate {
 	_c.mutation.SetName(v)
 	return _c
+}
+
+// SetAccountID sets the "account_id" field.
+func (_c *RoomOptionCreate) SetAccountID(v int) *RoomOptionCreate {
+	_c.mutation.SetAccountID(v)
+	return _c
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (_c *RoomOptionCreate) SetAccount(v *Account) *RoomOptionCreate {
+	return _c.SetAccountID(v.ID)
 }
 
 // Mutation returns the RoomOptionMutation object of the builder.
@@ -129,6 +141,12 @@ func (_c *RoomOptionCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomOption.name": %w`, err)}
 		}
 	}
+	if _, ok := _c.mutation.AccountID(); !ok {
+		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "RoomOption.account_id"`)}
+	}
+	if len(_c.mutation.AccountIDs()) == 0 {
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "RoomOption.account"`)}
+	}
 	return nil
 }
 
@@ -170,6 +188,23 @@ func (_c *RoomOptionCreate) createSpec() (*RoomOption, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(roomoption.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   roomoption.AccountTable,
+			Columns: []string{roomoption.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.AccountID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

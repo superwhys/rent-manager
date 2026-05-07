@@ -69,6 +69,27 @@ func (_u *RoleUpdate) SetNillableName(v *string) *RoleUpdate {
 	return _u
 }
 
+// SetAccountID sets the "account_id" field.
+func (_u *RoleUpdate) SetAccountID(v int) *RoleUpdate {
+	_u.mutation.ResetAccountID()
+	_u.mutation.SetAccountID(v)
+	return _u
+}
+
+// SetNillableAccountID sets the "account_id" field if the given value is not nil.
+func (_u *RoleUpdate) SetNillableAccountID(v *int) *RoleUpdate {
+	if v != nil {
+		_u.SetAccountID(*v)
+	}
+	return _u
+}
+
+// AddAccountID adds value to the "account_id" field.
+func (_u *RoleUpdate) AddAccountID(v int) *RoleUpdate {
+	_u.mutation.AddAccountID(v)
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *RoleUpdate) SetIsActive(v bool) *RoleUpdate {
 	_u.mutation.SetIsActive(v)
@@ -194,6 +215,12 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(role.FieldName, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.AccountID(); ok {
+		_spec.SetField(role.FieldAccountID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedAccountID(); ok {
+		_spec.AddField(role.FieldAccountID, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(role.FieldIsActive, field.TypeBool, value)
 	}
@@ -299,6 +326,27 @@ func (_u *RoleUpdateOne) SetNillableName(v *string) *RoleUpdateOne {
 	if v != nil {
 		_u.SetName(*v)
 	}
+	return _u
+}
+
+// SetAccountID sets the "account_id" field.
+func (_u *RoleUpdateOne) SetAccountID(v int) *RoleUpdateOne {
+	_u.mutation.ResetAccountID()
+	_u.mutation.SetAccountID(v)
+	return _u
+}
+
+// SetNillableAccountID sets the "account_id" field if the given value is not nil.
+func (_u *RoleUpdateOne) SetNillableAccountID(v *int) *RoleUpdateOne {
+	if v != nil {
+		_u.SetAccountID(*v)
+	}
+	return _u
+}
+
+// AddAccountID adds value to the "account_id" field.
+func (_u *RoleUpdateOne) AddAccountID(v int) *RoleUpdateOne {
+	_u.mutation.AddAccountID(v)
 	return _u
 }
 
@@ -456,6 +504,12 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(role.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AccountID(); ok {
+		_spec.SetField(role.FieldAccountID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedAccountID(); ok {
+		_spec.AddField(role.FieldAccountID, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(role.FieldIsActive, field.TypeBool, value)

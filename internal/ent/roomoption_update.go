@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
 )
@@ -68,9 +69,34 @@ func (_u *RoomOptionUpdate) SetNillableName(v *string) *RoomOptionUpdate {
 	return _u
 }
 
+// SetAccountID sets the "account_id" field.
+func (_u *RoomOptionUpdate) SetAccountID(v int) *RoomOptionUpdate {
+	_u.mutation.SetAccountID(v)
+	return _u
+}
+
+// SetNillableAccountID sets the "account_id" field if the given value is not nil.
+func (_u *RoomOptionUpdate) SetNillableAccountID(v *int) *RoomOptionUpdate {
+	if v != nil {
+		_u.SetAccountID(*v)
+	}
+	return _u
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (_u *RoomOptionUpdate) SetAccount(v *Account) *RoomOptionUpdate {
+	return _u.SetAccountID(v.ID)
+}
+
 // Mutation returns the RoomOptionMutation object of the builder.
 func (_u *RoomOptionUpdate) Mutation() *RoomOptionMutation {
 	return _u.mutation
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (_u *RoomOptionUpdate) ClearAccount() *RoomOptionUpdate {
+	_u.mutation.ClearAccount()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -116,6 +142,9 @@ func (_u *RoomOptionUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomOption.name": %w`, err)}
 		}
 	}
+	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "RoomOption.account"`)
+	}
 	return nil
 }
 
@@ -142,6 +171,35 @@ func (_u *RoomOptionUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(roomoption.FieldName, field.TypeString, value)
+	}
+	if _u.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   roomoption.AccountTable,
+			Columns: []string{roomoption.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   roomoption.AccountTable,
+			Columns: []string{roomoption.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -203,9 +261,34 @@ func (_u *RoomOptionUpdateOne) SetNillableName(v *string) *RoomOptionUpdateOne {
 	return _u
 }
 
+// SetAccountID sets the "account_id" field.
+func (_u *RoomOptionUpdateOne) SetAccountID(v int) *RoomOptionUpdateOne {
+	_u.mutation.SetAccountID(v)
+	return _u
+}
+
+// SetNillableAccountID sets the "account_id" field if the given value is not nil.
+func (_u *RoomOptionUpdateOne) SetNillableAccountID(v *int) *RoomOptionUpdateOne {
+	if v != nil {
+		_u.SetAccountID(*v)
+	}
+	return _u
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (_u *RoomOptionUpdateOne) SetAccount(v *Account) *RoomOptionUpdateOne {
+	return _u.SetAccountID(v.ID)
+}
+
 // Mutation returns the RoomOptionMutation object of the builder.
 func (_u *RoomOptionUpdateOne) Mutation() *RoomOptionMutation {
 	return _u.mutation
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (_u *RoomOptionUpdateOne) ClearAccount() *RoomOptionUpdateOne {
+	_u.mutation.ClearAccount()
+	return _u
 }
 
 // Where appends a list predicates to the RoomOptionUpdate builder.
@@ -264,6 +347,9 @@ func (_u *RoomOptionUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomOption.name": %w`, err)}
 		}
 	}
+	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "RoomOption.account"`)
+	}
 	return nil
 }
 
@@ -307,6 +393,35 @@ func (_u *RoomOptionUpdateOne) sqlSave(ctx context.Context) (_node *RoomOption, 
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(roomoption.FieldName, field.TypeString, value)
+	}
+	if _u.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   roomoption.AccountTable,
+			Columns: []string{roomoption.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   roomoption.AccountTable,
+			Columns: []string{roomoption.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &RoomOption{config: _u.config}
 	_spec.Assign = _node.assignValues

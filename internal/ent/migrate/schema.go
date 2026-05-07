@@ -75,6 +75,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "account_id", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
@@ -117,12 +118,21 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 12},
+		{Name: "account_id", Type: field.TypeInt},
 	}
 	// RoomOptionsTable holds the schema information for the "room_options" table.
 	RoomOptionsTable = &schema.Table{
 		Name:       "room_options",
 		Columns:    RoomOptionsColumns,
 		PrimaryKey: []*schema.Column{RoomOptionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "room_options_accounts_room_options",
+				Columns:    []*schema.Column{RoomOptionsColumns[5]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// RolePermissionsColumns holds the columns for the "role_permissions" table.
 	RolePermissionsColumns = []*schema.Column{
@@ -164,6 +174,7 @@ var (
 func init() {
 	BuildingsTable.ForeignKeys[0].RefTable = AccountsTable
 	RoomsTable.ForeignKeys[0].RefTable = BuildingsTable
+	RoomOptionsTable.ForeignKeys[0].RefTable = AccountsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 }

@@ -24,10 +24,21 @@ func (Account) Mixin() []ent.Mixin {
 // Fields of the Account.
 func (Account) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").NotEmpty().MaxLen(255),
-		field.String("email").NotEmpty().Match(regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)),
-		field.String("password").NotEmpty().MaxLen(255),
-		field.Bool("is_active").Default(true),
+		field.String("name").
+			NotEmpty().
+			MaxLen(255).
+			Comment("账号名字"),
+		field.String("email").
+			NotEmpty().
+			Match(regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)).
+			Comment("账号邮箱"),
+		field.String("password").
+			NotEmpty().
+			MaxLen(255).
+			Comment("账号密码"),
+		field.Bool("is_active").
+			Default(true).
+			Comment("账号是否激活"),
 	}
 }
 
@@ -35,5 +46,6 @@ func (Account) Fields() []ent.Field {
 func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("buildings", Building.Type),
+		edge.To("room_options", RoomOption.Type),
 	}
 }

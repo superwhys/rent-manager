@@ -22,8 +22,15 @@ func (Role) Mixin() []ent.Mixin {
 // Fields of the Role.
 func (Role) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").NotEmpty().MaxLen(255),
-		field.Bool("is_active").Default(true),
+		field.String("name").
+			NotEmpty().
+			MaxLen(255).
+			Comment("角色名字"),
+		field.Int("account_id").
+			Comment("所属账号ID"),
+		field.Bool("is_active").
+			Default(true).
+			Comment("角色是否激活"),
 	}
 }
 

@@ -22,10 +22,21 @@ func (Permission) Mixin() []ent.Mixin {
 // Fields of the Permission.
 func (Permission) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("code").NotEmpty().MaxLen(255),
-		field.String("api_path").NotEmpty().MaxLen(255),
-		field.String("description").NotEmpty().MaxLen(255),
-		field.Bool("is_active").Default(true),
+		field.String("code").
+			NotEmpty().
+			MaxLen(255).
+			Comment("权限代码"),
+		field.String("api_path").
+			NotEmpty().
+			MaxLen(255).
+			Comment("权限路径"),
+		field.String("description").
+			NotEmpty().
+			MaxLen(255).
+			Comment("权限描述"),
+		field.Bool("is_active").
+			Default(true).
+			Comment("权限是否激活"),
 	}
 }
 

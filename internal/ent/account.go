@@ -23,13 +23,13 @@ type Account struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// Name holds the value of the "name" field.
+	// 账号名字
 	Name string `json:"name,omitempty"`
-	// Email holds the value of the "email" field.
+	// 账号邮箱
 	Email string `json:"email,omitempty"`
-	// Password holds the value of the "password" field.
+	// 账号密码
 	Password string `json:"password,omitempty"`
-	// IsActive holds the value of the "is_active" field.
+	// 账号是否激活
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccountQuery when eager-loading is set.
@@ -41,9 +41,11 @@ type Account struct {
 type AccountEdges struct {
 	// Buildings holds the value of the buildings edge.
 	Buildings []*Building `json:"buildings,omitempty"`
+	// RoomOptions holds the value of the room_options edge.
+	RoomOptions []*RoomOption `json:"room_options,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // BuildingsOrErr returns the Buildings value or an error if the edge
@@ -53,6 +55,15 @@ func (e AccountEdges) BuildingsOrErr() ([]*Building, error) {
 		return e.Buildings, nil
 	}
 	return nil, &NotLoadedError{edge: "buildings"}
+}
+
+// RoomOptionsOrErr returns the RoomOptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccountEdges) RoomOptionsOrErr() ([]*RoomOption, error) {
+	if e.loadedTypes[1] {
+		return e.RoomOptions, nil
+	}
+	return nil, &NotLoadedError{edge: "room_options"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -148,6 +159,11 @@ func (_m *Account) Value(name string) (ent.Value, error) {
 // QueryBuildings queries the "buildings" edge of the Account entity.
 func (_m *Account) QueryBuildings() *BuildingQuery {
 	return NewAccountClient(_m.config).QueryBuildings(_m)
+}
+
+// QueryRoomOptions queries the "room_options" edge of the Account entity.
+func (_m *Account) QueryRoomOptions() *RoomOptionQuery {
+	return NewAccountClient(_m.config).QueryRoomOptions(_m)
 }
 
 // Update returns a builder for updating this Account.

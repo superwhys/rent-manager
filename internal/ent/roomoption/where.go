@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 )
 
@@ -72,6 +73,11 @@ func DeletedAt(v time.Time) predicate.RoomOption {
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.RoomOption {
 	return predicate.RoomOption(sql.FieldEQ(FieldName, v))
+}
+
+// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
+func AccountID(v int) predicate.RoomOption {
+	return predicate.RoomOption(sql.FieldEQ(FieldAccountID, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -267,6 +273,49 @@ func NameEqualFold(v string) predicate.RoomOption {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.RoomOption {
 	return predicate.RoomOption(sql.FieldContainsFold(FieldName, v))
+}
+
+// AccountIDEQ applies the EQ predicate on the "account_id" field.
+func AccountIDEQ(v int) predicate.RoomOption {
+	return predicate.RoomOption(sql.FieldEQ(FieldAccountID, v))
+}
+
+// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
+func AccountIDNEQ(v int) predicate.RoomOption {
+	return predicate.RoomOption(sql.FieldNEQ(FieldAccountID, v))
+}
+
+// AccountIDIn applies the In predicate on the "account_id" field.
+func AccountIDIn(vs ...int) predicate.RoomOption {
+	return predicate.RoomOption(sql.FieldIn(FieldAccountID, vs...))
+}
+
+// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
+func AccountIDNotIn(vs ...int) predicate.RoomOption {
+	return predicate.RoomOption(sql.FieldNotIn(FieldAccountID, vs...))
+}
+
+// HasAccount applies the HasEdge predicate on the "account" edge.
+func HasAccount() predicate.RoomOption {
+	return predicate.RoomOption(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
+func HasAccountWith(preds ...predicate.Account) predicate.RoomOption {
+	return predicate.RoomOption(func(s *sql.Selector) {
+		step := newAccountStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -22,11 +22,24 @@ func (Building) Mixin() []ent.Mixin {
 // Fields of the Building.
 func (Building) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").NotEmpty().MaxLen(255),
-		field.String("address").NotEmpty().MaxLen(255),
-		field.String("city").NotEmpty().MaxLen(255),
-		field.String("province").NotEmpty().MaxLen(255),
-		field.Int("account_id").Comment("所属账号ID"),
+		field.String("name").
+			NotEmpty().
+			MaxLen(255).
+			Comment("楼栋名字"),
+		field.String("address").
+			NotEmpty().
+			MaxLen(255).
+			Comment("楼栋地址"),
+		field.String("city").
+			NotEmpty().
+			MaxLen(255).
+			Comment("楼栋城市"),
+		field.String("province").
+			NotEmpty().
+			MaxLen(255).
+			Comment("楼栋省份"),
+		field.Int("account_id").
+			Comment("所属账号ID"),
 	}
 }
 
