@@ -14,7 +14,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // AccountUpdate is the builder for updating Account entities.
@@ -127,19 +127,19 @@ func (_u *AccountUpdate) AddBuildings(v ...*Building) *AccountUpdate {
 	return _u.AddBuildingIDs(ids...)
 }
 
-// AddRoomOptionIDs adds the "room_options" edge to the RoomOption entity by IDs.
-func (_u *AccountUpdate) AddRoomOptionIDs(ids ...int) *AccountUpdate {
-	_u.mutation.AddRoomOptionIDs(ids...)
+// AddRoomTypeIDs adds the "room_types" edge to the RoomType entity by IDs.
+func (_u *AccountUpdate) AddRoomTypeIDs(ids ...int) *AccountUpdate {
+	_u.mutation.AddRoomTypeIDs(ids...)
 	return _u
 }
 
-// AddRoomOptions adds the "room_options" edges to the RoomOption entity.
-func (_u *AccountUpdate) AddRoomOptions(v ...*RoomOption) *AccountUpdate {
+// AddRoomTypes adds the "room_types" edges to the RoomType entity.
+func (_u *AccountUpdate) AddRoomTypes(v ...*RoomType) *AccountUpdate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.AddRoomOptionIDs(ids...)
+	return _u.AddRoomTypeIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -168,25 +168,25 @@ func (_u *AccountUpdate) RemoveBuildings(v ...*Building) *AccountUpdate {
 	return _u.RemoveBuildingIDs(ids...)
 }
 
-// ClearRoomOptions clears all "room_options" edges to the RoomOption entity.
-func (_u *AccountUpdate) ClearRoomOptions() *AccountUpdate {
-	_u.mutation.ClearRoomOptions()
+// ClearRoomTypes clears all "room_types" edges to the RoomType entity.
+func (_u *AccountUpdate) ClearRoomTypes() *AccountUpdate {
+	_u.mutation.ClearRoomTypes()
 	return _u
 }
 
-// RemoveRoomOptionIDs removes the "room_options" edge to RoomOption entities by IDs.
-func (_u *AccountUpdate) RemoveRoomOptionIDs(ids ...int) *AccountUpdate {
-	_u.mutation.RemoveRoomOptionIDs(ids...)
+// RemoveRoomTypeIDs removes the "room_types" edge to RoomType entities by IDs.
+func (_u *AccountUpdate) RemoveRoomTypeIDs(ids ...int) *AccountUpdate {
+	_u.mutation.RemoveRoomTypeIDs(ids...)
 	return _u
 }
 
-// RemoveRoomOptions removes "room_options" edges to RoomOption entities.
-func (_u *AccountUpdate) RemoveRoomOptions(v ...*RoomOption) *AccountUpdate {
+// RemoveRoomTypes removes "room_types" edges to RoomType entities.
+func (_u *AccountUpdate) RemoveRoomTypes(v ...*RoomType) *AccountUpdate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.RemoveRoomOptionIDs(ids...)
+	return _u.RemoveRoomTypeIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -323,28 +323,28 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if _u.mutation.RoomOptionsCleared() {
+	if _u.mutation.RoomTypesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   account.RoomOptionsTable,
-			Columns: []string{account.RoomOptionsColumn},
+			Table:   account.RoomTypesTable,
+			Columns: []string{account.RoomTypesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RemovedRoomOptionsIDs(); len(nodes) > 0 && !_u.mutation.RoomOptionsCleared() {
+	if nodes := _u.mutation.RemovedRoomTypesIDs(); len(nodes) > 0 && !_u.mutation.RoomTypesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   account.RoomOptionsTable,
-			Columns: []string{account.RoomOptionsColumn},
+			Table:   account.RoomTypesTable,
+			Columns: []string{account.RoomTypesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -352,15 +352,15 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RoomOptionsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RoomTypesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   account.RoomOptionsTable,
-			Columns: []string{account.RoomOptionsColumn},
+			Table:   account.RoomTypesTable,
+			Columns: []string{account.RoomTypesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -485,19 +485,19 @@ func (_u *AccountUpdateOne) AddBuildings(v ...*Building) *AccountUpdateOne {
 	return _u.AddBuildingIDs(ids...)
 }
 
-// AddRoomOptionIDs adds the "room_options" edge to the RoomOption entity by IDs.
-func (_u *AccountUpdateOne) AddRoomOptionIDs(ids ...int) *AccountUpdateOne {
-	_u.mutation.AddRoomOptionIDs(ids...)
+// AddRoomTypeIDs adds the "room_types" edge to the RoomType entity by IDs.
+func (_u *AccountUpdateOne) AddRoomTypeIDs(ids ...int) *AccountUpdateOne {
+	_u.mutation.AddRoomTypeIDs(ids...)
 	return _u
 }
 
-// AddRoomOptions adds the "room_options" edges to the RoomOption entity.
-func (_u *AccountUpdateOne) AddRoomOptions(v ...*RoomOption) *AccountUpdateOne {
+// AddRoomTypes adds the "room_types" edges to the RoomType entity.
+func (_u *AccountUpdateOne) AddRoomTypes(v ...*RoomType) *AccountUpdateOne {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.AddRoomOptionIDs(ids...)
+	return _u.AddRoomTypeIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -526,25 +526,25 @@ func (_u *AccountUpdateOne) RemoveBuildings(v ...*Building) *AccountUpdateOne {
 	return _u.RemoveBuildingIDs(ids...)
 }
 
-// ClearRoomOptions clears all "room_options" edges to the RoomOption entity.
-func (_u *AccountUpdateOne) ClearRoomOptions() *AccountUpdateOne {
-	_u.mutation.ClearRoomOptions()
+// ClearRoomTypes clears all "room_types" edges to the RoomType entity.
+func (_u *AccountUpdateOne) ClearRoomTypes() *AccountUpdateOne {
+	_u.mutation.ClearRoomTypes()
 	return _u
 }
 
-// RemoveRoomOptionIDs removes the "room_options" edge to RoomOption entities by IDs.
-func (_u *AccountUpdateOne) RemoveRoomOptionIDs(ids ...int) *AccountUpdateOne {
-	_u.mutation.RemoveRoomOptionIDs(ids...)
+// RemoveRoomTypeIDs removes the "room_types" edge to RoomType entities by IDs.
+func (_u *AccountUpdateOne) RemoveRoomTypeIDs(ids ...int) *AccountUpdateOne {
+	_u.mutation.RemoveRoomTypeIDs(ids...)
 	return _u
 }
 
-// RemoveRoomOptions removes "room_options" edges to RoomOption entities.
-func (_u *AccountUpdateOne) RemoveRoomOptions(v ...*RoomOption) *AccountUpdateOne {
+// RemoveRoomTypes removes "room_types" edges to RoomType entities.
+func (_u *AccountUpdateOne) RemoveRoomTypes(v ...*RoomType) *AccountUpdateOne {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.RemoveRoomOptionIDs(ids...)
+	return _u.RemoveRoomTypeIDs(ids...)
 }
 
 // Where appends a list predicates to the AccountUpdate builder.
@@ -711,28 +711,28 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if _u.mutation.RoomOptionsCleared() {
+	if _u.mutation.RoomTypesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   account.RoomOptionsTable,
-			Columns: []string{account.RoomOptionsColumn},
+			Table:   account.RoomTypesTable,
+			Columns: []string{account.RoomTypesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RemovedRoomOptionsIDs(); len(nodes) > 0 && !_u.mutation.RoomOptionsCleared() {
+	if nodes := _u.mutation.RemovedRoomTypesIDs(); len(nodes) > 0 && !_u.mutation.RoomTypesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   account.RoomOptionsTable,
-			Columns: []string{account.RoomOptionsColumn},
+			Table:   account.RoomTypesTable,
+			Columns: []string{account.RoomTypesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -740,15 +740,15 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RoomOptionsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RoomTypesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   account.RoomOptionsTable,
-			Columns: []string{account.RoomOptionsColumn},
+			Table:   account.RoomTypesTable,
+			Columns: []string{account.RoomTypesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

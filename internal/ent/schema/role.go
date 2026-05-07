@@ -7,7 +7,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
 
-// Role holds the schema definition for the Role entity.
+// 角色实体
 type Role struct {
 	ent.Schema
 }

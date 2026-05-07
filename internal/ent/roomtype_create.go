@@ -11,24 +11,25 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
-// RoomOptionCreate is the builder for creating a RoomOption entity.
-type RoomOptionCreate struct {
+// RoomTypeCreate is the builder for creating a RoomType entity.
+type RoomTypeCreate struct {
 	config
-	mutation *RoomOptionMutation
+	mutation *RoomTypeMutation
 	hooks    []Hook
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (_c *RoomOptionCreate) SetCreatedAt(v time.Time) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetCreatedAt(v time.Time) *RoomTypeCreate {
 	_c.mutation.SetCreatedAt(v)
 	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_c *RoomOptionCreate) SetNillableCreatedAt(v *time.Time) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetNillableCreatedAt(v *time.Time) *RoomTypeCreate {
 	if v != nil {
 		_c.SetCreatedAt(*v)
 	}
@@ -36,13 +37,13 @@ func (_c *RoomOptionCreate) SetNillableCreatedAt(v *time.Time) *RoomOptionCreate
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (_c *RoomOptionCreate) SetUpdatedAt(v time.Time) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetUpdatedAt(v time.Time) *RoomTypeCreate {
 	_c.mutation.SetUpdatedAt(v)
 	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (_c *RoomOptionCreate) SetNillableUpdatedAt(v *time.Time) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetNillableUpdatedAt(v *time.Time) *RoomTypeCreate {
 	if v != nil {
 		_c.SetUpdatedAt(*v)
 	}
@@ -50,13 +51,13 @@ func (_c *RoomOptionCreate) SetNillableUpdatedAt(v *time.Time) *RoomOptionCreate
 }
 
 // SetDeletedAt sets the "deleted_at" field.
-func (_c *RoomOptionCreate) SetDeletedAt(v time.Time) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetDeletedAt(v time.Time) *RoomTypeCreate {
 	_c.mutation.SetDeletedAt(v)
 	return _c
 }
 
 // SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (_c *RoomOptionCreate) SetNillableDeletedAt(v *time.Time) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetNillableDeletedAt(v *time.Time) *RoomTypeCreate {
 	if v != nil {
 		_c.SetDeletedAt(*v)
 	}
@@ -64,35 +65,50 @@ func (_c *RoomOptionCreate) SetNillableDeletedAt(v *time.Time) *RoomOptionCreate
 }
 
 // SetName sets the "name" field.
-func (_c *RoomOptionCreate) SetName(v string) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetName(v string) *RoomTypeCreate {
 	_c.mutation.SetName(v)
 	return _c
 }
 
 // SetAccountID sets the "account_id" field.
-func (_c *RoomOptionCreate) SetAccountID(v int) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetAccountID(v int) *RoomTypeCreate {
 	_c.mutation.SetAccountID(v)
 	return _c
 }
 
 // SetAccount sets the "account" edge to the Account entity.
-func (_c *RoomOptionCreate) SetAccount(v *Account) *RoomOptionCreate {
+func (_c *RoomTypeCreate) SetAccount(v *Account) *RoomTypeCreate {
 	return _c.SetAccountID(v.ID)
 }
 
-// Mutation returns the RoomOptionMutation object of the builder.
-func (_c *RoomOptionCreate) Mutation() *RoomOptionMutation {
+// AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
+func (_c *RoomTypeCreate) AddRoomIDs(ids ...int) *RoomTypeCreate {
+	_c.mutation.AddRoomIDs(ids...)
+	return _c
+}
+
+// AddRooms adds the "rooms" edges to the Room entity.
+func (_c *RoomTypeCreate) AddRooms(v ...*Room) *RoomTypeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRoomIDs(ids...)
+}
+
+// Mutation returns the RoomTypeMutation object of the builder.
+func (_c *RoomTypeCreate) Mutation() *RoomTypeMutation {
 	return _c.mutation
 }
 
-// Save creates the RoomOption in the database.
-func (_c *RoomOptionCreate) Save(ctx context.Context) (*RoomOption, error) {
+// Save creates the RoomType in the database.
+func (_c *RoomTypeCreate) Save(ctx context.Context) (*RoomType, error) {
 	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (_c *RoomOptionCreate) SaveX(ctx context.Context) *RoomOption {
+func (_c *RoomTypeCreate) SaveX(ctx context.Context) *RoomType {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -101,56 +117,56 @@ func (_c *RoomOptionCreate) SaveX(ctx context.Context) *RoomOption {
 }
 
 // Exec executes the query.
-func (_c *RoomOptionCreate) Exec(ctx context.Context) error {
+func (_c *RoomTypeCreate) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *RoomOptionCreate) ExecX(ctx context.Context) {
+func (_c *RoomTypeCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *RoomOptionCreate) defaults() {
+func (_c *RoomTypeCreate) defaults() {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := roomoption.DefaultCreatedAt()
+		v := roomtype.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		v := roomoption.DefaultUpdatedAt()
+		v := roomtype.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_c *RoomOptionCreate) check() error {
+func (_c *RoomTypeCreate) check() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "RoomOption.created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "RoomType.created_at"`)}
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "RoomOption.updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "RoomType.updated_at"`)}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "RoomOption.name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "RoomType.name"`)}
 	}
 	if v, ok := _c.mutation.Name(); ok {
-		if err := roomoption.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomOption.name": %w`, err)}
+		if err := roomtype.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomType.name": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.AccountID(); !ok {
-		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "RoomOption.account_id"`)}
+		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "RoomType.account_id"`)}
 	}
 	if len(_c.mutation.AccountIDs()) == 0 {
-		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "RoomOption.account"`)}
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "RoomType.account"`)}
 	}
 	return nil
 }
 
-func (_c *RoomOptionCreate) sqlSave(ctx context.Context) (*RoomOption, error) {
+func (_c *RoomTypeCreate) sqlSave(ctx context.Context) (*RoomType, error) {
 	if err := _c.check(); err != nil {
 		return nil, err
 	}
@@ -168,33 +184,33 @@ func (_c *RoomOptionCreate) sqlSave(ctx context.Context) (*RoomOption, error) {
 	return _node, nil
 }
 
-func (_c *RoomOptionCreate) createSpec() (*RoomOption, *sqlgraph.CreateSpec) {
+func (_c *RoomTypeCreate) createSpec() (*RoomType, *sqlgraph.CreateSpec) {
 	var (
-		_node = &RoomOption{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(roomoption.Table, sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt))
+		_node = &RoomType{config: _c.config}
+		_spec = sqlgraph.NewCreateSpec(roomtype.Table, sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt))
 	)
 	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(roomoption.FieldCreatedAt, field.TypeTime, value)
+		_spec.SetField(roomtype.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if value, ok := _c.mutation.UpdatedAt(); ok {
-		_spec.SetField(roomoption.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(roomtype.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := _c.mutation.DeletedAt(); ok {
-		_spec.SetField(roomoption.FieldDeletedAt, field.TypeTime, value)
+		_spec.SetField(roomtype.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
 	if value, ok := _c.mutation.Name(); ok {
-		_spec.SetField(roomoption.FieldName, field.TypeString, value)
+		_spec.SetField(roomtype.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   roomoption.AccountTable,
-			Columns: []string{roomoption.AccountColumn},
+			Table:   roomtype.AccountTable,
+			Columns: []string{roomtype.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
@@ -206,30 +222,46 @@ func (_c *RoomOptionCreate) createSpec() (*RoomOption, *sqlgraph.CreateSpec) {
 		_node.AccountID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := _c.mutation.RoomsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   roomtype.RoomsTable,
+			Columns: []string{roomtype.RoomsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
-// RoomOptionCreateBulk is the builder for creating many RoomOption entities in bulk.
-type RoomOptionCreateBulk struct {
+// RoomTypeCreateBulk is the builder for creating many RoomType entities in bulk.
+type RoomTypeCreateBulk struct {
 	config
 	err      error
-	builders []*RoomOptionCreate
+	builders []*RoomTypeCreate
 }
 
-// Save creates the RoomOption entities in the database.
-func (_c *RoomOptionCreateBulk) Save(ctx context.Context) ([]*RoomOption, error) {
+// Save creates the RoomType entities in the database.
+func (_c *RoomTypeCreateBulk) Save(ctx context.Context) ([]*RoomType, error) {
 	if _c.err != nil {
 		return nil, _c.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
-	nodes := make([]*RoomOption, len(_c.builders))
+	nodes := make([]*RoomType, len(_c.builders))
 	mutators := make([]Mutator, len(_c.builders))
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*RoomOptionMutation)
+				mutation, ok := m.(*RoomTypeMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -276,7 +308,7 @@ func (_c *RoomOptionCreateBulk) Save(ctx context.Context) ([]*RoomOption, error)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_c *RoomOptionCreateBulk) SaveX(ctx context.Context) []*RoomOption {
+func (_c *RoomTypeCreateBulk) SaveX(ctx context.Context) []*RoomType {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -285,13 +317,13 @@ func (_c *RoomOptionCreateBulk) SaveX(ctx context.Context) []*RoomOption {
 }
 
 // Exec executes the query.
-func (_c *RoomOptionCreateBulk) Exec(ctx context.Context) error {
+func (_c *RoomTypeCreateBulk) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *RoomOptionCreateBulk) ExecX(ctx context.Context) {
+func (_c *RoomTypeCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}

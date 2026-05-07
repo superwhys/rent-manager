@@ -30,10 +30,14 @@ const (
 	FieldSize = "size"
 	// FieldBuildingID holds the string denoting the building_id field in the database.
 	FieldBuildingID = "building_id"
+	// FieldRoomTypeID holds the string denoting the room_type_id field in the database.
+	FieldRoomTypeID = "room_type_id"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
 	// EdgeBuilding holds the string denoting the building edge name in mutations.
 	EdgeBuilding = "building"
+	// EdgeRoomType holds the string denoting the room_type edge name in mutations.
+	EdgeRoomType = "room_type"
 	// Table holds the table name of the room in the database.
 	Table = "rooms"
 	// BuildingTable is the table that holds the building relation/edge.
@@ -43,6 +47,13 @@ const (
 	BuildingInverseTable = "buildings"
 	// BuildingColumn is the table column denoting the building relation/edge.
 	BuildingColumn = "building_id"
+	// RoomTypeTable is the table that holds the room_type relation/edge.
+	RoomTypeTable = "rooms"
+	// RoomTypeInverseTable is the table name for the RoomType entity.
+	// It exists in this package in order to avoid circular dependency with the "roomtype" package.
+	RoomTypeInverseTable = "room_types"
+	// RoomTypeColumn is the table column denoting the room_type relation/edge.
+	RoomTypeColumn = "room_type_id"
 )
 
 // Columns holds all SQL columns for room fields.
@@ -56,6 +67,7 @@ var Columns = []string{
 	FieldPrice,
 	FieldSize,
 	FieldBuildingID,
+	FieldRoomTypeID,
 	FieldIsActive,
 }
 
@@ -130,6 +142,11 @@ func ByBuildingID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBuildingID, opts...).ToFunc()
 }
 
+// ByRoomTypeID orders the results by the room_type_id field.
+func ByRoomTypeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRoomTypeID, opts...).ToFunc()
+}
+
 // ByIsActive orders the results by the is_active field.
 func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
@@ -141,10 +158,24 @@ func ByBuildingField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newBuildingStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByRoomTypeField orders the results by room_type field.
+func ByRoomTypeField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRoomTypeStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newBuildingStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(BuildingInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, BuildingTable, BuildingColumn),
+	)
+}
+func newRoomTypeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RoomTypeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, RoomTypeTable, RoomTypeColumn),
 	)
 }

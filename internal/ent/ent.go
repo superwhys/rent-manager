@@ -17,7 +17,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -83,7 +83,7 @@ func checkColumn(t, c string) error {
 			permission.Table: permission.ValidColumn,
 			role.Table:       role.ValidColumn,
 			room.Table:       room.ValidColumn,
-			roomoption.Table: roomoption.ValidColumn,
+			roomtype.Table:   roomtype.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

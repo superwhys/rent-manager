@@ -10,15 +10,6 @@ CREATE TABLE `accounts` (
   `is_active` bool NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`)
 ) CHARSET utf8mb4 COLLATE utf8mb4_bin;
--- Create "room_options" table
-CREATE TABLE `room_options` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `created_at` timestamp NOT NULL,
-  `updated_at` timestamp NOT NULL,
-  `deleted_at` timestamp NULL,
-  `name` varchar(12) NOT NULL,
-  PRIMARY KEY (`id`)
-) CHARSET utf8mb4 COLLATE utf8mb4_bin;
 -- Create "buildings" table
 CREATE TABLE `buildings` (
   `id` bigint NOT NULL AUTO_INCREMENT,
@@ -53,6 +44,7 @@ CREATE TABLE `roles` (
   `updated_at` timestamp NOT NULL,
   `deleted_at` timestamp NULL,
   `name` varchar(255) NOT NULL,
+  `account_id` bigint NOT NULL,
   `is_active` bool NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`)
 ) CHARSET utf8mb4 COLLATE utf8mb4_bin;
@@ -64,6 +56,18 @@ CREATE TABLE `role_permissions` (
   INDEX `role_permissions_permission_id` (`permission_id`),
   CONSTRAINT `role_permissions_permission_id` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
   CONSTRAINT `role_permissions_role_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+) CHARSET utf8mb4 COLLATE utf8mb4_bin;
+-- Create "room_types" table
+CREATE TABLE `room_types` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` timestamp NOT NULL,
+  `updated_at` timestamp NOT NULL,
+  `deleted_at` timestamp NULL,
+  `name` varchar(12) NOT NULL,
+  `account_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `room_types_accounts_room_types` (`account_id`),
+  CONSTRAINT `room_types_accounts_room_types` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
 ) CHARSET utf8mb4 COLLATE utf8mb4_bin;
 -- Create "rooms" table
 CREATE TABLE `rooms` (
@@ -77,7 +81,10 @@ CREATE TABLE `rooms` (
   `size` bigint NOT NULL,
   `is_active` bool NOT NULL DEFAULT 1,
   `building_id` bigint NOT NULL,
+  `room_type_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `rooms_buildings_rooms` (`building_id`),
-  CONSTRAINT `rooms_buildings_rooms` FOREIGN KEY (`building_id`) REFERENCES `buildings` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+  INDEX `rooms_room_types_rooms` (`room_type_id`),
+  CONSTRAINT `rooms_buildings_rooms` FOREIGN KEY (`building_id`) REFERENCES `buildings` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT `rooms_room_types_rooms` FOREIGN KEY (`room_type_id`) REFERENCES `room_types` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
 ) CHARSET utf8mb4 COLLATE utf8mb4_bin;

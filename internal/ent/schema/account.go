@@ -9,7 +9,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
 
-// Account holds the schema definition for the Account entity.
+// 账号实体
 type Account struct {
 	ent.Schema
 }
@@ -46,6 +46,6 @@ func (Account) Fields() []ent.Field {
 func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("buildings", Building.Type),
-		edge.To("room_options", RoomOption.Type),
+		edge.To("room_types", RoomType.Type),
 	}
 }

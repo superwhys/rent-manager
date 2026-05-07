@@ -17,7 +17,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 const (
@@ -34,32 +34,32 @@ const (
 	TypePermission = "Permission"
 	TypeRole       = "Role"
 	TypeRoom       = "Room"
-	TypeRoomOption = "RoomOption"
+	TypeRoomType   = "RoomType"
 )
 
 // AccountMutation represents an operation that mutates the Account nodes in the graph.
 type AccountMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *int
-	created_at          *time.Time
-	updated_at          *time.Time
-	deleted_at          *time.Time
-	name                *string
-	email               *string
-	password            *string
-	is_active           *bool
-	clearedFields       map[string]struct{}
-	buildings           map[int]struct{}
-	removedbuildings    map[int]struct{}
-	clearedbuildings    bool
-	room_options        map[int]struct{}
-	removedroom_options map[int]struct{}
-	clearedroom_options bool
-	done                bool
-	oldValue            func(context.Context) (*Account, error)
-	predicates          []predicate.Account
+	op                Op
+	typ               string
+	id                *int
+	created_at        *time.Time
+	updated_at        *time.Time
+	deleted_at        *time.Time
+	name              *string
+	email             *string
+	password          *string
+	is_active         *bool
+	clearedFields     map[string]struct{}
+	buildings         map[int]struct{}
+	removedbuildings  map[int]struct{}
+	clearedbuildings  bool
+	room_types        map[int]struct{}
+	removedroom_types map[int]struct{}
+	clearedroom_types bool
+	done              bool
+	oldValue          func(context.Context) (*Account, error)
+	predicates        []predicate.Account
 }
 
 var _ ent.Mutation = (*AccountMutation)(nil)
@@ -479,58 +479,58 @@ func (m *AccountMutation) ResetBuildings() {
 	m.removedbuildings = nil
 }
 
-// AddRoomOptionIDs adds the "room_options" edge to the RoomOption entity by ids.
-func (m *AccountMutation) AddRoomOptionIDs(ids ...int) {
-	if m.room_options == nil {
-		m.room_options = make(map[int]struct{})
+// AddRoomTypeIDs adds the "room_types" edge to the RoomType entity by ids.
+func (m *AccountMutation) AddRoomTypeIDs(ids ...int) {
+	if m.room_types == nil {
+		m.room_types = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.room_options[ids[i]] = struct{}{}
+		m.room_types[ids[i]] = struct{}{}
 	}
 }
 
-// ClearRoomOptions clears the "room_options" edge to the RoomOption entity.
-func (m *AccountMutation) ClearRoomOptions() {
-	m.clearedroom_options = true
+// ClearRoomTypes clears the "room_types" edge to the RoomType entity.
+func (m *AccountMutation) ClearRoomTypes() {
+	m.clearedroom_types = true
 }
 
-// RoomOptionsCleared reports if the "room_options" edge to the RoomOption entity was cleared.
-func (m *AccountMutation) RoomOptionsCleared() bool {
-	return m.clearedroom_options
+// RoomTypesCleared reports if the "room_types" edge to the RoomType entity was cleared.
+func (m *AccountMutation) RoomTypesCleared() bool {
+	return m.clearedroom_types
 }
 
-// RemoveRoomOptionIDs removes the "room_options" edge to the RoomOption entity by IDs.
-func (m *AccountMutation) RemoveRoomOptionIDs(ids ...int) {
-	if m.removedroom_options == nil {
-		m.removedroom_options = make(map[int]struct{})
+// RemoveRoomTypeIDs removes the "room_types" edge to the RoomType entity by IDs.
+func (m *AccountMutation) RemoveRoomTypeIDs(ids ...int) {
+	if m.removedroom_types == nil {
+		m.removedroom_types = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.room_options, ids[i])
-		m.removedroom_options[ids[i]] = struct{}{}
+		delete(m.room_types, ids[i])
+		m.removedroom_types[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedRoomOptions returns the removed IDs of the "room_options" edge to the RoomOption entity.
-func (m *AccountMutation) RemovedRoomOptionsIDs() (ids []int) {
-	for id := range m.removedroom_options {
+// RemovedRoomTypes returns the removed IDs of the "room_types" edge to the RoomType entity.
+func (m *AccountMutation) RemovedRoomTypesIDs() (ids []int) {
+	for id := range m.removedroom_types {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// RoomOptionsIDs returns the "room_options" edge IDs in the mutation.
-func (m *AccountMutation) RoomOptionsIDs() (ids []int) {
-	for id := range m.room_options {
+// RoomTypesIDs returns the "room_types" edge IDs in the mutation.
+func (m *AccountMutation) RoomTypesIDs() (ids []int) {
+	for id := range m.room_types {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetRoomOptions resets all changes to the "room_options" edge.
-func (m *AccountMutation) ResetRoomOptions() {
-	m.room_options = nil
-	m.clearedroom_options = false
-	m.removedroom_options = nil
+// ResetRoomTypes resets all changes to the "room_types" edge.
+func (m *AccountMutation) ResetRoomTypes() {
+	m.room_types = nil
+	m.clearedroom_types = false
+	m.removedroom_types = nil
 }
 
 // Where appends a list predicates to the AccountMutation builder.
@@ -781,8 +781,8 @@ func (m *AccountMutation) AddedEdges() []string {
 	if m.buildings != nil {
 		edges = append(edges, account.EdgeBuildings)
 	}
-	if m.room_options != nil {
-		edges = append(edges, account.EdgeRoomOptions)
+	if m.room_types != nil {
+		edges = append(edges, account.EdgeRoomTypes)
 	}
 	return edges
 }
@@ -797,9 +797,9 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case account.EdgeRoomOptions:
-		ids := make([]ent.Value, 0, len(m.room_options))
-		for id := range m.room_options {
+	case account.EdgeRoomTypes:
+		ids := make([]ent.Value, 0, len(m.room_types))
+		for id := range m.room_types {
 			ids = append(ids, id)
 		}
 		return ids
@@ -813,8 +813,8 @@ func (m *AccountMutation) RemovedEdges() []string {
 	if m.removedbuildings != nil {
 		edges = append(edges, account.EdgeBuildings)
 	}
-	if m.removedroom_options != nil {
-		edges = append(edges, account.EdgeRoomOptions)
+	if m.removedroom_types != nil {
+		edges = append(edges, account.EdgeRoomTypes)
 	}
 	return edges
 }
@@ -829,9 +829,9 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case account.EdgeRoomOptions:
-		ids := make([]ent.Value, 0, len(m.removedroom_options))
-		for id := range m.removedroom_options {
+	case account.EdgeRoomTypes:
+		ids := make([]ent.Value, 0, len(m.removedroom_types))
+		for id := range m.removedroom_types {
 			ids = append(ids, id)
 		}
 		return ids
@@ -845,8 +845,8 @@ func (m *AccountMutation) ClearedEdges() []string {
 	if m.clearedbuildings {
 		edges = append(edges, account.EdgeBuildings)
 	}
-	if m.clearedroom_options {
-		edges = append(edges, account.EdgeRoomOptions)
+	if m.clearedroom_types {
+		edges = append(edges, account.EdgeRoomTypes)
 	}
 	return edges
 }
@@ -857,8 +857,8 @@ func (m *AccountMutation) EdgeCleared(name string) bool {
 	switch name {
 	case account.EdgeBuildings:
 		return m.clearedbuildings
-	case account.EdgeRoomOptions:
-		return m.clearedroom_options
+	case account.EdgeRoomTypes:
+		return m.clearedroom_types
 	}
 	return false
 }
@@ -878,8 +878,8 @@ func (m *AccountMutation) ResetEdge(name string) error {
 	case account.EdgeBuildings:
 		m.ResetBuildings()
 		return nil
-	case account.EdgeRoomOptions:
-		m.ResetRoomOptions()
+	case account.EdgeRoomTypes:
+		m.ResetRoomTypes()
 		return nil
 	}
 	return fmt.Errorf("unknown Account edge %s", name)
@@ -3268,26 +3268,28 @@ func (m *RoleMutation) ResetEdge(name string) error {
 // RoomMutation represents an operation that mutates the Room nodes in the graph.
 type RoomMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	created_at      *time.Time
-	updated_at      *time.Time
-	deleted_at      *time.Time
-	room_no         *string
-	floor           *int
-	addfloor        *int
-	price           *int
-	addprice        *int
-	size            *int
-	addsize         *int
-	is_active       *bool
-	clearedFields   map[string]struct{}
-	building        *int
-	clearedbuilding bool
-	done            bool
-	oldValue        func(context.Context) (*Room, error)
-	predicates      []predicate.Room
+	op               Op
+	typ              string
+	id               *int
+	created_at       *time.Time
+	updated_at       *time.Time
+	deleted_at       *time.Time
+	room_no          *string
+	floor            *int
+	addfloor         *int
+	price            *int
+	addprice         *int
+	size             *int
+	addsize          *int
+	is_active        *bool
+	clearedFields    map[string]struct{}
+	building         *int
+	clearedbuilding  bool
+	room_type        *int
+	clearedroom_type bool
+	done             bool
+	oldValue         func(context.Context) (*Room, error)
+	predicates       []predicate.Room
 }
 
 var _ ent.Mutation = (*RoomMutation)(nil)
@@ -3749,6 +3751,42 @@ func (m *RoomMutation) ResetBuildingID() {
 	m.building = nil
 }
 
+// SetRoomTypeID sets the "room_type_id" field.
+func (m *RoomMutation) SetRoomTypeID(i int) {
+	m.room_type = &i
+}
+
+// RoomTypeID returns the value of the "room_type_id" field in the mutation.
+func (m *RoomMutation) RoomTypeID() (r int, exists bool) {
+	v := m.room_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRoomTypeID returns the old "room_type_id" field's value of the Room entity.
+// If the Room object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RoomMutation) OldRoomTypeID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRoomTypeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRoomTypeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRoomTypeID: %w", err)
+	}
+	return oldValue.RoomTypeID, nil
+}
+
+// ResetRoomTypeID resets all changes to the "room_type_id" field.
+func (m *RoomMutation) ResetRoomTypeID() {
+	m.room_type = nil
+}
+
 // SetIsActive sets the "is_active" field.
 func (m *RoomMutation) SetIsActive(b bool) {
 	m.is_active = &b
@@ -3812,6 +3850,33 @@ func (m *RoomMutation) ResetBuilding() {
 	m.clearedbuilding = false
 }
 
+// ClearRoomType clears the "room_type" edge to the RoomType entity.
+func (m *RoomMutation) ClearRoomType() {
+	m.clearedroom_type = true
+	m.clearedFields[room.FieldRoomTypeID] = struct{}{}
+}
+
+// RoomTypeCleared reports if the "room_type" edge to the RoomType entity was cleared.
+func (m *RoomMutation) RoomTypeCleared() bool {
+	return m.clearedroom_type
+}
+
+// RoomTypeIDs returns the "room_type" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RoomTypeID instead. It exists only for internal usage by the builders.
+func (m *RoomMutation) RoomTypeIDs() (ids []int) {
+	if id := m.room_type; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRoomType resets all changes to the "room_type" edge.
+func (m *RoomMutation) ResetRoomType() {
+	m.room_type = nil
+	m.clearedroom_type = false
+}
+
 // Where appends a list predicates to the RoomMutation builder.
 func (m *RoomMutation) Where(ps ...predicate.Room) {
 	m.predicates = append(m.predicates, ps...)
@@ -3846,7 +3911,7 @@ func (m *RoomMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RoomMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.created_at != nil {
 		fields = append(fields, room.FieldCreatedAt)
 	}
@@ -3870,6 +3935,9 @@ func (m *RoomMutation) Fields() []string {
 	}
 	if m.building != nil {
 		fields = append(fields, room.FieldBuildingID)
+	}
+	if m.room_type != nil {
+		fields = append(fields, room.FieldRoomTypeID)
 	}
 	if m.is_active != nil {
 		fields = append(fields, room.FieldIsActive)
@@ -3898,6 +3966,8 @@ func (m *RoomMutation) Field(name string) (ent.Value, bool) {
 		return m.Size()
 	case room.FieldBuildingID:
 		return m.BuildingID()
+	case room.FieldRoomTypeID:
+		return m.RoomTypeID()
 	case room.FieldIsActive:
 		return m.IsActive()
 	}
@@ -3925,6 +3995,8 @@ func (m *RoomMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldSize(ctx)
 	case room.FieldBuildingID:
 		return m.OldBuildingID(ctx)
+	case room.FieldRoomTypeID:
+		return m.OldRoomTypeID(ctx)
 	case room.FieldIsActive:
 		return m.OldIsActive(ctx)
 	}
@@ -3991,6 +4063,13 @@ func (m *RoomMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetBuildingID(v)
+		return nil
+	case room.FieldRoomTypeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRoomTypeID(v)
 		return nil
 	case room.FieldIsActive:
 		v, ok := value.(bool)
@@ -4120,6 +4199,9 @@ func (m *RoomMutation) ResetField(name string) error {
 	case room.FieldBuildingID:
 		m.ResetBuildingID()
 		return nil
+	case room.FieldRoomTypeID:
+		m.ResetRoomTypeID()
+		return nil
 	case room.FieldIsActive:
 		m.ResetIsActive()
 		return nil
@@ -4129,9 +4211,12 @@ func (m *RoomMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RoomMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.building != nil {
 		edges = append(edges, room.EdgeBuilding)
+	}
+	if m.room_type != nil {
+		edges = append(edges, room.EdgeRoomType)
 	}
 	return edges
 }
@@ -4144,13 +4229,17 @@ func (m *RoomMutation) AddedIDs(name string) []ent.Value {
 		if id := m.building; id != nil {
 			return []ent.Value{*id}
 		}
+	case room.EdgeRoomType:
+		if id := m.room_type; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RoomMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -4162,9 +4251,12 @@ func (m *RoomMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RoomMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedbuilding {
 		edges = append(edges, room.EdgeBuilding)
+	}
+	if m.clearedroom_type {
+		edges = append(edges, room.EdgeRoomType)
 	}
 	return edges
 }
@@ -4175,6 +4267,8 @@ func (m *RoomMutation) EdgeCleared(name string) bool {
 	switch name {
 	case room.EdgeBuilding:
 		return m.clearedbuilding
+	case room.EdgeRoomType:
+		return m.clearedroom_type
 	}
 	return false
 }
@@ -4185,6 +4279,9 @@ func (m *RoomMutation) ClearEdge(name string) error {
 	switch name {
 	case room.EdgeBuilding:
 		m.ClearBuilding()
+		return nil
+	case room.EdgeRoomType:
+		m.ClearRoomType()
 		return nil
 	}
 	return fmt.Errorf("unknown Room unique edge %s", name)
@@ -4197,12 +4294,15 @@ func (m *RoomMutation) ResetEdge(name string) error {
 	case room.EdgeBuilding:
 		m.ResetBuilding()
 		return nil
+	case room.EdgeRoomType:
+		m.ResetRoomType()
+		return nil
 	}
 	return fmt.Errorf("unknown Room edge %s", name)
 }
 
-// RoomOptionMutation represents an operation that mutates the RoomOption nodes in the graph.
-type RoomOptionMutation struct {
+// RoomTypeMutation represents an operation that mutates the RoomType nodes in the graph.
+type RoomTypeMutation struct {
 	config
 	op             Op
 	typ            string
@@ -4214,22 +4314,25 @@ type RoomOptionMutation struct {
 	clearedFields  map[string]struct{}
 	account        *int
 	clearedaccount bool
+	rooms          map[int]struct{}
+	removedrooms   map[int]struct{}
+	clearedrooms   bool
 	done           bool
-	oldValue       func(context.Context) (*RoomOption, error)
-	predicates     []predicate.RoomOption
+	oldValue       func(context.Context) (*RoomType, error)
+	predicates     []predicate.RoomType
 }
 
-var _ ent.Mutation = (*RoomOptionMutation)(nil)
+var _ ent.Mutation = (*RoomTypeMutation)(nil)
 
-// roomoptionOption allows management of the mutation configuration using functional options.
-type roomoptionOption func(*RoomOptionMutation)
+// roomtypeOption allows management of the mutation configuration using functional options.
+type roomtypeOption func(*RoomTypeMutation)
 
-// newRoomOptionMutation creates new mutation for the RoomOption entity.
-func newRoomOptionMutation(c config, op Op, opts ...roomoptionOption) *RoomOptionMutation {
-	m := &RoomOptionMutation{
+// newRoomTypeMutation creates new mutation for the RoomType entity.
+func newRoomTypeMutation(c config, op Op, opts ...roomtypeOption) *RoomTypeMutation {
+	m := &RoomTypeMutation{
 		config:        c,
 		op:            op,
-		typ:           TypeRoomOption,
+		typ:           TypeRoomType,
 		clearedFields: make(map[string]struct{}),
 	}
 	for _, opt := range opts {
@@ -4238,20 +4341,20 @@ func newRoomOptionMutation(c config, op Op, opts ...roomoptionOption) *RoomOptio
 	return m
 }
 
-// withRoomOptionID sets the ID field of the mutation.
-func withRoomOptionID(id int) roomoptionOption {
-	return func(m *RoomOptionMutation) {
+// withRoomTypeID sets the ID field of the mutation.
+func withRoomTypeID(id int) roomtypeOption {
+	return func(m *RoomTypeMutation) {
 		var (
 			err   error
 			once  sync.Once
-			value *RoomOption
+			value *RoomType
 		)
-		m.oldValue = func(ctx context.Context) (*RoomOption, error) {
+		m.oldValue = func(ctx context.Context) (*RoomType, error) {
 			once.Do(func() {
 				if m.done {
 					err = errors.New("querying old values post mutation is not allowed")
 				} else {
-					value, err = m.Client().RoomOption.Get(ctx, id)
+					value, err = m.Client().RoomType.Get(ctx, id)
 				}
 			})
 			return value, err
@@ -4260,10 +4363,10 @@ func withRoomOptionID(id int) roomoptionOption {
 	}
 }
 
-// withRoomOption sets the old RoomOption of the mutation.
-func withRoomOption(node *RoomOption) roomoptionOption {
-	return func(m *RoomOptionMutation) {
-		m.oldValue = func(context.Context) (*RoomOption, error) {
+// withRoomType sets the old RoomType of the mutation.
+func withRoomType(node *RoomType) roomtypeOption {
+	return func(m *RoomTypeMutation) {
+		m.oldValue = func(context.Context) (*RoomType, error) {
 			return node, nil
 		}
 		m.id = &node.ID
@@ -4272,7 +4375,7 @@ func withRoomOption(node *RoomOption) roomoptionOption {
 
 // Client returns a new `ent.Client` from the mutation. If the mutation was
 // executed in a transaction (ent.Tx), a transactional client is returned.
-func (m RoomOptionMutation) Client() *Client {
+func (m RoomTypeMutation) Client() *Client {
 	client := &Client{config: m.config}
 	client.init()
 	return client
@@ -4280,7 +4383,7 @@ func (m RoomOptionMutation) Client() *Client {
 
 // Tx returns an `ent.Tx` for mutations that were executed in transactions;
 // it returns an error otherwise.
-func (m RoomOptionMutation) Tx() (*Tx, error) {
+func (m RoomTypeMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
 		return nil, errors.New("ent: mutation is not running in a transaction")
 	}
@@ -4291,7 +4394,7 @@ func (m RoomOptionMutation) Tx() (*Tx, error) {
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *RoomOptionMutation) ID() (id int, exists bool) {
+func (m *RoomTypeMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -4302,7 +4405,7 @@ func (m *RoomOptionMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *RoomOptionMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *RoomTypeMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
@@ -4311,19 +4414,19 @@ func (m *RoomOptionMutation) IDs(ctx context.Context) ([]int, error) {
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().RoomOption.Query().Where(m.predicates...).IDs(ctx)
+		return m.Client().RoomType.Query().Where(m.predicates...).IDs(ctx)
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (m *RoomOptionMutation) SetCreatedAt(t time.Time) {
+func (m *RoomTypeMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
 }
 
 // CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *RoomOptionMutation) CreatedAt() (r time.Time, exists bool) {
+func (m *RoomTypeMutation) CreatedAt() (r time.Time, exists bool) {
 	v := m.created_at
 	if v == nil {
 		return
@@ -4331,10 +4434,10 @@ func (m *RoomOptionMutation) CreatedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldCreatedAt returns the old "created_at" field's value of the RoomOption entity.
-// If the RoomOption object wasn't provided to the builder, the object is fetched from the database.
+// OldCreatedAt returns the old "created_at" field's value of the RoomType entity.
+// If the RoomType object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RoomOptionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *RoomTypeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
 	}
@@ -4349,17 +4452,17 @@ func (m *RoomOptionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err
 }
 
 // ResetCreatedAt resets all changes to the "created_at" field.
-func (m *RoomOptionMutation) ResetCreatedAt() {
+func (m *RoomTypeMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (m *RoomOptionMutation) SetUpdatedAt(t time.Time) {
+func (m *RoomTypeMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
 }
 
 // UpdatedAt returns the value of the "updated_at" field in the mutation.
-func (m *RoomOptionMutation) UpdatedAt() (r time.Time, exists bool) {
+func (m *RoomTypeMutation) UpdatedAt() (r time.Time, exists bool) {
 	v := m.updated_at
 	if v == nil {
 		return
@@ -4367,10 +4470,10 @@ func (m *RoomOptionMutation) UpdatedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldUpdatedAt returns the old "updated_at" field's value of the RoomOption entity.
-// If the RoomOption object wasn't provided to the builder, the object is fetched from the database.
+// OldUpdatedAt returns the old "updated_at" field's value of the RoomType entity.
+// If the RoomType object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RoomOptionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *RoomTypeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
 	}
@@ -4385,17 +4488,17 @@ func (m *RoomOptionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err
 }
 
 // ResetUpdatedAt resets all changes to the "updated_at" field.
-func (m *RoomOptionMutation) ResetUpdatedAt() {
+func (m *RoomTypeMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
 // SetDeletedAt sets the "deleted_at" field.
-func (m *RoomOptionMutation) SetDeletedAt(t time.Time) {
+func (m *RoomTypeMutation) SetDeletedAt(t time.Time) {
 	m.deleted_at = &t
 }
 
 // DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *RoomOptionMutation) DeletedAt() (r time.Time, exists bool) {
+func (m *RoomTypeMutation) DeletedAt() (r time.Time, exists bool) {
 	v := m.deleted_at
 	if v == nil {
 		return
@@ -4403,10 +4506,10 @@ func (m *RoomOptionMutation) DeletedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldDeletedAt returns the old "deleted_at" field's value of the RoomOption entity.
-// If the RoomOption object wasn't provided to the builder, the object is fetched from the database.
+// OldDeletedAt returns the old "deleted_at" field's value of the RoomType entity.
+// If the RoomType object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RoomOptionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+func (m *RoomTypeMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
 	}
@@ -4421,30 +4524,30 @@ func (m *RoomOptionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, er
 }
 
 // ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *RoomOptionMutation) ClearDeletedAt() {
+func (m *RoomTypeMutation) ClearDeletedAt() {
 	m.deleted_at = nil
-	m.clearedFields[roomoption.FieldDeletedAt] = struct{}{}
+	m.clearedFields[roomtype.FieldDeletedAt] = struct{}{}
 }
 
 // DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *RoomOptionMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[roomoption.FieldDeletedAt]
+func (m *RoomTypeMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[roomtype.FieldDeletedAt]
 	return ok
 }
 
 // ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *RoomOptionMutation) ResetDeletedAt() {
+func (m *RoomTypeMutation) ResetDeletedAt() {
 	m.deleted_at = nil
-	delete(m.clearedFields, roomoption.FieldDeletedAt)
+	delete(m.clearedFields, roomtype.FieldDeletedAt)
 }
 
 // SetName sets the "name" field.
-func (m *RoomOptionMutation) SetName(s string) {
+func (m *RoomTypeMutation) SetName(s string) {
 	m.name = &s
 }
 
 // Name returns the value of the "name" field in the mutation.
-func (m *RoomOptionMutation) Name() (r string, exists bool) {
+func (m *RoomTypeMutation) Name() (r string, exists bool) {
 	v := m.name
 	if v == nil {
 		return
@@ -4452,10 +4555,10 @@ func (m *RoomOptionMutation) Name() (r string, exists bool) {
 	return *v, true
 }
 
-// OldName returns the old "name" field's value of the RoomOption entity.
-// If the RoomOption object wasn't provided to the builder, the object is fetched from the database.
+// OldName returns the old "name" field's value of the RoomType entity.
+// If the RoomType object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RoomOptionMutation) OldName(ctx context.Context) (v string, err error) {
+func (m *RoomTypeMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldName is only allowed on UpdateOne operations")
 	}
@@ -4470,17 +4573,17 @@ func (m *RoomOptionMutation) OldName(ctx context.Context) (v string, err error) 
 }
 
 // ResetName resets all changes to the "name" field.
-func (m *RoomOptionMutation) ResetName() {
+func (m *RoomTypeMutation) ResetName() {
 	m.name = nil
 }
 
 // SetAccountID sets the "account_id" field.
-func (m *RoomOptionMutation) SetAccountID(i int) {
+func (m *RoomTypeMutation) SetAccountID(i int) {
 	m.account = &i
 }
 
 // AccountID returns the value of the "account_id" field in the mutation.
-func (m *RoomOptionMutation) AccountID() (r int, exists bool) {
+func (m *RoomTypeMutation) AccountID() (r int, exists bool) {
 	v := m.account
 	if v == nil {
 		return
@@ -4488,10 +4591,10 @@ func (m *RoomOptionMutation) AccountID() (r int, exists bool) {
 	return *v, true
 }
 
-// OldAccountID returns the old "account_id" field's value of the RoomOption entity.
-// If the RoomOption object wasn't provided to the builder, the object is fetched from the database.
+// OldAccountID returns the old "account_id" field's value of the RoomType entity.
+// If the RoomType object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RoomOptionMutation) OldAccountID(ctx context.Context) (v int, err error) {
+func (m *RoomTypeMutation) OldAccountID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
 	}
@@ -4506,25 +4609,25 @@ func (m *RoomOptionMutation) OldAccountID(ctx context.Context) (v int, err error
 }
 
 // ResetAccountID resets all changes to the "account_id" field.
-func (m *RoomOptionMutation) ResetAccountID() {
+func (m *RoomTypeMutation) ResetAccountID() {
 	m.account = nil
 }
 
 // ClearAccount clears the "account" edge to the Account entity.
-func (m *RoomOptionMutation) ClearAccount() {
+func (m *RoomTypeMutation) ClearAccount() {
 	m.clearedaccount = true
-	m.clearedFields[roomoption.FieldAccountID] = struct{}{}
+	m.clearedFields[roomtype.FieldAccountID] = struct{}{}
 }
 
 // AccountCleared reports if the "account" edge to the Account entity was cleared.
-func (m *RoomOptionMutation) AccountCleared() bool {
+func (m *RoomTypeMutation) AccountCleared() bool {
 	return m.clearedaccount
 }
 
 // AccountIDs returns the "account" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AccountID instead. It exists only for internal usage by the builders.
-func (m *RoomOptionMutation) AccountIDs() (ids []int) {
+func (m *RoomTypeMutation) AccountIDs() (ids []int) {
 	if id := m.account; id != nil {
 		ids = append(ids, *id)
 	}
@@ -4532,20 +4635,74 @@ func (m *RoomOptionMutation) AccountIDs() (ids []int) {
 }
 
 // ResetAccount resets all changes to the "account" edge.
-func (m *RoomOptionMutation) ResetAccount() {
+func (m *RoomTypeMutation) ResetAccount() {
 	m.account = nil
 	m.clearedaccount = false
 }
 
-// Where appends a list predicates to the RoomOptionMutation builder.
-func (m *RoomOptionMutation) Where(ps ...predicate.RoomOption) {
+// AddRoomIDs adds the "rooms" edge to the Room entity by ids.
+func (m *RoomTypeMutation) AddRoomIDs(ids ...int) {
+	if m.rooms == nil {
+		m.rooms = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.rooms[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRooms clears the "rooms" edge to the Room entity.
+func (m *RoomTypeMutation) ClearRooms() {
+	m.clearedrooms = true
+}
+
+// RoomsCleared reports if the "rooms" edge to the Room entity was cleared.
+func (m *RoomTypeMutation) RoomsCleared() bool {
+	return m.clearedrooms
+}
+
+// RemoveRoomIDs removes the "rooms" edge to the Room entity by IDs.
+func (m *RoomTypeMutation) RemoveRoomIDs(ids ...int) {
+	if m.removedrooms == nil {
+		m.removedrooms = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.rooms, ids[i])
+		m.removedrooms[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRooms returns the removed IDs of the "rooms" edge to the Room entity.
+func (m *RoomTypeMutation) RemovedRoomsIDs() (ids []int) {
+	for id := range m.removedrooms {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RoomsIDs returns the "rooms" edge IDs in the mutation.
+func (m *RoomTypeMutation) RoomsIDs() (ids []int) {
+	for id := range m.rooms {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRooms resets all changes to the "rooms" edge.
+func (m *RoomTypeMutation) ResetRooms() {
+	m.rooms = nil
+	m.clearedrooms = false
+	m.removedrooms = nil
+}
+
+// Where appends a list predicates to the RoomTypeMutation builder.
+func (m *RoomTypeMutation) Where(ps ...predicate.RoomType) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the RoomOptionMutation builder. Using this method,
+// WhereP appends storage-level predicates to the RoomTypeMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *RoomOptionMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.RoomOption, len(ps))
+func (m *RoomTypeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.RoomType, len(ps))
 	for i := range ps {
 		p[i] = ps[i]
 	}
@@ -4553,39 +4710,39 @@ func (m *RoomOptionMutation) WhereP(ps ...func(*sql.Selector)) {
 }
 
 // Op returns the operation name.
-func (m *RoomOptionMutation) Op() Op {
+func (m *RoomTypeMutation) Op() Op {
 	return m.op
 }
 
 // SetOp allows setting the mutation operation.
-func (m *RoomOptionMutation) SetOp(op Op) {
+func (m *RoomTypeMutation) SetOp(op Op) {
 	m.op = op
 }
 
-// Type returns the node type of this mutation (RoomOption).
-func (m *RoomOptionMutation) Type() string {
+// Type returns the node type of this mutation (RoomType).
+func (m *RoomTypeMutation) Type() string {
 	return m.typ
 }
 
 // Fields returns all fields that were changed during this mutation. Note that in
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
-func (m *RoomOptionMutation) Fields() []string {
+func (m *RoomTypeMutation) Fields() []string {
 	fields := make([]string, 0, 5)
 	if m.created_at != nil {
-		fields = append(fields, roomoption.FieldCreatedAt)
+		fields = append(fields, roomtype.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
-		fields = append(fields, roomoption.FieldUpdatedAt)
+		fields = append(fields, roomtype.FieldUpdatedAt)
 	}
 	if m.deleted_at != nil {
-		fields = append(fields, roomoption.FieldDeletedAt)
+		fields = append(fields, roomtype.FieldDeletedAt)
 	}
 	if m.name != nil {
-		fields = append(fields, roomoption.FieldName)
+		fields = append(fields, roomtype.FieldName)
 	}
 	if m.account != nil {
-		fields = append(fields, roomoption.FieldAccountID)
+		fields = append(fields, roomtype.FieldAccountID)
 	}
 	return fields
 }
@@ -4593,17 +4750,17 @@ func (m *RoomOptionMutation) Fields() []string {
 // Field returns the value of a field with the given name. The second boolean
 // return value indicates that this field was not set, or was not defined in the
 // schema.
-func (m *RoomOptionMutation) Field(name string) (ent.Value, bool) {
+func (m *RoomTypeMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case roomoption.FieldCreatedAt:
+	case roomtype.FieldCreatedAt:
 		return m.CreatedAt()
-	case roomoption.FieldUpdatedAt:
+	case roomtype.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case roomoption.FieldDeletedAt:
+	case roomtype.FieldDeletedAt:
 		return m.DeletedAt()
-	case roomoption.FieldName:
+	case roomtype.FieldName:
 		return m.Name()
-	case roomoption.FieldAccountID:
+	case roomtype.FieldAccountID:
 		return m.AccountID()
 	}
 	return nil, false
@@ -4612,56 +4769,56 @@ func (m *RoomOptionMutation) Field(name string) (ent.Value, bool) {
 // OldField returns the old value of the field from the database. An error is
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
-func (m *RoomOptionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+func (m *RoomTypeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case roomoption.FieldCreatedAt:
+	case roomtype.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case roomoption.FieldUpdatedAt:
+	case roomtype.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case roomoption.FieldDeletedAt:
+	case roomtype.FieldDeletedAt:
 		return m.OldDeletedAt(ctx)
-	case roomoption.FieldName:
+	case roomtype.FieldName:
 		return m.OldName(ctx)
-	case roomoption.FieldAccountID:
+	case roomtype.FieldAccountID:
 		return m.OldAccountID(ctx)
 	}
-	return nil, fmt.Errorf("unknown RoomOption field %s", name)
+	return nil, fmt.Errorf("unknown RoomType field %s", name)
 }
 
 // SetField sets the value of a field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *RoomOptionMutation) SetField(name string, value ent.Value) error {
+func (m *RoomTypeMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case roomoption.FieldCreatedAt:
+	case roomtype.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
 		return nil
-	case roomoption.FieldUpdatedAt:
+	case roomtype.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
 		return nil
-	case roomoption.FieldDeletedAt:
+	case roomtype.FieldDeletedAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDeletedAt(v)
 		return nil
-	case roomoption.FieldName:
+	case roomtype.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
 		return nil
-	case roomoption.FieldAccountID:
+	case roomtype.FieldAccountID:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
@@ -4669,12 +4826,12 @@ func (m *RoomOptionMutation) SetField(name string, value ent.Value) error {
 		m.SetAccountID(v)
 		return nil
 	}
-	return fmt.Errorf("unknown RoomOption field %s", name)
+	return fmt.Errorf("unknown RoomType field %s", name)
 }
 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
-func (m *RoomOptionMutation) AddedFields() []string {
+func (m *RoomTypeMutation) AddedFields() []string {
 	var fields []string
 	return fields
 }
@@ -4682,7 +4839,7 @@ func (m *RoomOptionMutation) AddedFields() []string {
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
-func (m *RoomOptionMutation) AddedField(name string) (ent.Value, bool) {
+func (m *RoomTypeMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	}
 	return nil, false
@@ -4691,133 +4848,161 @@ func (m *RoomOptionMutation) AddedField(name string) (ent.Value, bool) {
 // AddField adds the value to the field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *RoomOptionMutation) AddField(name string, value ent.Value) error {
+func (m *RoomTypeMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	}
-	return fmt.Errorf("unknown RoomOption numeric field %s", name)
+	return fmt.Errorf("unknown RoomType numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
-func (m *RoomOptionMutation) ClearedFields() []string {
+func (m *RoomTypeMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(roomoption.FieldDeletedAt) {
-		fields = append(fields, roomoption.FieldDeletedAt)
+	if m.FieldCleared(roomtype.FieldDeletedAt) {
+		fields = append(fields, roomtype.FieldDeletedAt)
 	}
 	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
-func (m *RoomOptionMutation) FieldCleared(name string) bool {
+func (m *RoomTypeMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
-func (m *RoomOptionMutation) ClearField(name string) error {
+func (m *RoomTypeMutation) ClearField(name string) error {
 	switch name {
-	case roomoption.FieldDeletedAt:
+	case roomtype.FieldDeletedAt:
 		m.ClearDeletedAt()
 		return nil
 	}
-	return fmt.Errorf("unknown RoomOption nullable field %s", name)
+	return fmt.Errorf("unknown RoomType nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
-func (m *RoomOptionMutation) ResetField(name string) error {
+func (m *RoomTypeMutation) ResetField(name string) error {
 	switch name {
-	case roomoption.FieldCreatedAt:
+	case roomtype.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
-	case roomoption.FieldUpdatedAt:
+	case roomtype.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
-	case roomoption.FieldDeletedAt:
+	case roomtype.FieldDeletedAt:
 		m.ResetDeletedAt()
 		return nil
-	case roomoption.FieldName:
+	case roomtype.FieldName:
 		m.ResetName()
 		return nil
-	case roomoption.FieldAccountID:
+	case roomtype.FieldAccountID:
 		m.ResetAccountID()
 		return nil
 	}
-	return fmt.Errorf("unknown RoomOption field %s", name)
+	return fmt.Errorf("unknown RoomType field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
-func (m *RoomOptionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+func (m *RoomTypeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
 	if m.account != nil {
-		edges = append(edges, roomoption.EdgeAccount)
+		edges = append(edges, roomtype.EdgeAccount)
+	}
+	if m.rooms != nil {
+		edges = append(edges, roomtype.EdgeRooms)
 	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
-func (m *RoomOptionMutation) AddedIDs(name string) []ent.Value {
+func (m *RoomTypeMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case roomoption.EdgeAccount:
+	case roomtype.EdgeAccount:
 		if id := m.account; id != nil {
 			return []ent.Value{*id}
 		}
+	case roomtype.EdgeRooms:
+		ids := make([]ent.Value, 0, len(m.rooms))
+		for id := range m.rooms {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
-func (m *RoomOptionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+func (m *RoomTypeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedrooms != nil {
+		edges = append(edges, roomtype.EdgeRooms)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
-func (m *RoomOptionMutation) RemovedIDs(name string) []ent.Value {
+func (m *RoomTypeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case roomtype.EdgeRooms:
+		ids := make([]ent.Value, 0, len(m.removedrooms))
+		for id := range m.removedrooms {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *RoomOptionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+func (m *RoomTypeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
 	if m.clearedaccount {
-		edges = append(edges, roomoption.EdgeAccount)
+		edges = append(edges, roomtype.EdgeAccount)
+	}
+	if m.clearedrooms {
+		edges = append(edges, roomtype.EdgeRooms)
 	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
-func (m *RoomOptionMutation) EdgeCleared(name string) bool {
+func (m *RoomTypeMutation) EdgeCleared(name string) bool {
 	switch name {
-	case roomoption.EdgeAccount:
+	case roomtype.EdgeAccount:
 		return m.clearedaccount
+	case roomtype.EdgeRooms:
+		return m.clearedrooms
 	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
-func (m *RoomOptionMutation) ClearEdge(name string) error {
+func (m *RoomTypeMutation) ClearEdge(name string) error {
 	switch name {
-	case roomoption.EdgeAccount:
+	case roomtype.EdgeAccount:
 		m.ClearAccount()
 		return nil
 	}
-	return fmt.Errorf("unknown RoomOption unique edge %s", name)
+	return fmt.Errorf("unknown RoomType unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
-func (m *RoomOptionMutation) ResetEdge(name string) error {
+func (m *RoomTypeMutation) ResetEdge(name string) error {
 	switch name {
-	case roomoption.EdgeAccount:
+	case roomtype.EdgeAccount:
 		m.ResetAccount()
 		return nil
+	case roomtype.EdgeRooms:
+		m.ResetRooms()
+		return nil
 	}
-	return fmt.Errorf("unknown RoomOption edge %s", name)
+	return fmt.Errorf("unknown RoomType edge %s", name)
 }

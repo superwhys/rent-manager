@@ -96,6 +96,7 @@ var (
 		{Name: "size", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "building_id", Type: field.TypeInt},
+		{Name: "room_type_id", Type: field.TypeInt},
 	}
 	// RoomsTable holds the schema information for the "rooms" table.
 	RoomsTable = &schema.Table{
@@ -109,10 +110,16 @@ var (
 				RefColumns: []*schema.Column{BuildingsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
+			{
+				Symbol:     "rooms_room_types_rooms",
+				Columns:    []*schema.Column{RoomsColumns[10]},
+				RefColumns: []*schema.Column{RoomTypesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
 		},
 	}
-	// RoomOptionsColumns holds the columns for the "room_options" table.
-	RoomOptionsColumns = []*schema.Column{
+	// RoomTypesColumns holds the columns for the "room_types" table.
+	RoomTypesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -120,15 +127,15 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 12},
 		{Name: "account_id", Type: field.TypeInt},
 	}
-	// RoomOptionsTable holds the schema information for the "room_options" table.
-	RoomOptionsTable = &schema.Table{
-		Name:       "room_options",
-		Columns:    RoomOptionsColumns,
-		PrimaryKey: []*schema.Column{RoomOptionsColumns[0]},
+	// RoomTypesTable holds the schema information for the "room_types" table.
+	RoomTypesTable = &schema.Table{
+		Name:       "room_types",
+		Columns:    RoomTypesColumns,
+		PrimaryKey: []*schema.Column{RoomTypesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "room_options_accounts_room_options",
-				Columns:    []*schema.Column{RoomOptionsColumns[5]},
+				Symbol:     "room_types_accounts_room_types",
+				Columns:    []*schema.Column{RoomTypesColumns[5]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -166,7 +173,7 @@ var (
 		PermissionsTable,
 		RolesTable,
 		RoomsTable,
-		RoomOptionsTable,
+		RoomTypesTable,
 		RolePermissionsTable,
 	}
 )
@@ -174,7 +181,8 @@ var (
 func init() {
 	BuildingsTable.ForeignKeys[0].RefTable = AccountsTable
 	RoomsTable.ForeignKeys[0].RefTable = BuildingsTable
-	RoomOptionsTable.ForeignKeys[0].RefTable = AccountsTable
+	RoomsTable.ForeignKeys[1].RefTable = RoomTypesTable
+	RoomTypesTable.ForeignKeys[0].RefTable = AccountsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 }

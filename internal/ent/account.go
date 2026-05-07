@@ -41,8 +41,8 @@ type Account struct {
 type AccountEdges struct {
 	// Buildings holds the value of the buildings edge.
 	Buildings []*Building `json:"buildings,omitempty"`
-	// RoomOptions holds the value of the room_options edge.
-	RoomOptions []*RoomOption `json:"room_options,omitempty"`
+	// RoomTypes holds the value of the room_types edge.
+	RoomTypes []*RoomType `json:"room_types,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
@@ -57,13 +57,13 @@ func (e AccountEdges) BuildingsOrErr() ([]*Building, error) {
 	return nil, &NotLoadedError{edge: "buildings"}
 }
 
-// RoomOptionsOrErr returns the RoomOptions value or an error if the edge
+// RoomTypesOrErr returns the RoomTypes value or an error if the edge
 // was not loaded in eager-loading.
-func (e AccountEdges) RoomOptionsOrErr() ([]*RoomOption, error) {
+func (e AccountEdges) RoomTypesOrErr() ([]*RoomType, error) {
 	if e.loadedTypes[1] {
-		return e.RoomOptions, nil
+		return e.RoomTypes, nil
 	}
-	return nil, &NotLoadedError{edge: "room_options"}
+	return nil, &NotLoadedError{edge: "room_types"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -161,9 +161,9 @@ func (_m *Account) QueryBuildings() *BuildingQuery {
 	return NewAccountClient(_m.config).QueryBuildings(_m)
 }
 
-// QueryRoomOptions queries the "room_options" edge of the Account entity.
-func (_m *Account) QueryRoomOptions() *RoomOptionQuery {
-	return NewAccountClient(_m.config).QueryRoomOptions(_m)
+// QueryRoomTypes queries the "room_types" edge of the Account entity.
+func (_m *Account) QueryRoomTypes() *RoomTypeQuery {
+	return NewAccountClient(_m.config).QueryRoomTypes(_m)
 }
 
 // Update returns a builder for updating this Account.

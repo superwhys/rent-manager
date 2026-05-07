@@ -22,8 +22,8 @@ type Tx struct {
 	Role *RoleClient
 	// Room is the client for interacting with the Room builders.
 	Room *RoomClient
-	// RoomOption is the client for interacting with the RoomOption builders.
-	RoomOption *RoomOptionClient
+	// RoomType is the client for interacting with the RoomType builders.
+	RoomType *RoomTypeClient
 
 	// lazily loaded.
 	client     *Client
@@ -160,7 +160,7 @@ func (tx *Tx) init() {
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.Room = NewRoomClient(tx.config)
-	tx.RoomOption = NewRoomOptionClient(tx.config)
+	tx.RoomType = NewRoomTypeClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

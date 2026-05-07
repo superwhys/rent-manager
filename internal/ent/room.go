@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // Room is the model entity for the Room schema.
@@ -34,6 +35,8 @@ type Room struct {
 	Size int `json:"size,omitempty"`
 	// 所属楼栋ID
 	BuildingID int `json:"building_id,omitempty"`
+	// 所属房间类型ID
+	RoomTypeID int `json:"room_type_id,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -46,9 +49,11 @@ type Room struct {
 type RoomEdges struct {
 	// Building holds the value of the building edge.
 	Building *Building `json:"building,omitempty"`
+	// RoomType holds the value of the room_type edge.
+	RoomType *RoomType `json:"room_type,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // BuildingOrErr returns the Building value or an error if the edge
@@ -62,6 +67,17 @@ func (e RoomEdges) BuildingOrErr() (*Building, error) {
 	return nil, &NotLoadedError{edge: "building"}
 }
 
+// RoomTypeOrErr returns the RoomType value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RoomEdges) RoomTypeOrErr() (*RoomType, error) {
+	if e.RoomType != nil {
+		return e.RoomType, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: roomtype.Label}
+	}
+	return nil, &NotLoadedError{edge: "room_type"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Room) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -69,7 +85,7 @@ func (*Room) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case room.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case room.FieldID, room.FieldFloor, room.FieldPrice, room.FieldSize, room.FieldBuildingID:
+		case room.FieldID, room.FieldFloor, room.FieldPrice, room.FieldSize, room.FieldBuildingID, room.FieldRoomTypeID:
 			values[i] = new(sql.NullInt64)
 		case room.FieldRoomNo:
 			values[i] = new(sql.NullString)
@@ -145,6 +161,12 @@ func (_m *Room) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.BuildingID = int(value.Int64)
 			}
+		case room.FieldRoomTypeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field room_type_id", values[i])
+			} else if value.Valid {
+				_m.RoomTypeID = int(value.Int64)
+			}
 		case room.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
@@ -167,6 +189,11 @@ func (_m *Room) Value(name string) (ent.Value, error) {
 // QueryBuilding queries the "building" edge of the Room entity.
 func (_m *Room) QueryBuilding() *BuildingQuery {
 	return NewRoomClient(_m.config).QueryBuilding(_m)
+}
+
+// QueryRoomType queries the "room_type" edge of the Room entity.
+func (_m *Room) QueryRoomType() *RoomTypeQuery {
+	return NewRoomClient(_m.config).QueryRoomType(_m)
 }
 
 // Update returns a builder for updating this Room.
@@ -217,6 +244,9 @@ func (_m *Room) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("building_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.BuildingID))
+	builder.WriteString(", ")
+	builder.WriteString("room_type_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.RoomTypeID))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))

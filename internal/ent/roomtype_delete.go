@@ -9,29 +9,29 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
-// RoomOptionDelete is the builder for deleting a RoomOption entity.
-type RoomOptionDelete struct {
+// RoomTypeDelete is the builder for deleting a RoomType entity.
+type RoomTypeDelete struct {
 	config
 	hooks    []Hook
-	mutation *RoomOptionMutation
+	mutation *RoomTypeMutation
 }
 
-// Where appends a list predicates to the RoomOptionDelete builder.
-func (_d *RoomOptionDelete) Where(ps ...predicate.RoomOption) *RoomOptionDelete {
+// Where appends a list predicates to the RoomTypeDelete builder.
+func (_d *RoomTypeDelete) Where(ps ...predicate.RoomType) *RoomTypeDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *RoomOptionDelete) Exec(ctx context.Context) (int, error) {
+func (_d *RoomTypeDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *RoomOptionDelete) ExecX(ctx context.Context) int {
+func (_d *RoomTypeDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (_d *RoomOptionDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *RoomOptionDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(roomoption.Table, sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt))
+func (_d *RoomTypeDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(roomtype.Table, sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (_d *RoomOptionDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// RoomOptionDeleteOne is the builder for deleting a single RoomOption entity.
-type RoomOptionDeleteOne struct {
-	_d *RoomOptionDelete
+// RoomTypeDeleteOne is the builder for deleting a single RoomType entity.
+type RoomTypeDeleteOne struct {
+	_d *RoomTypeDelete
 }
 
-// Where appends a list predicates to the RoomOptionDelete builder.
-func (_d *RoomOptionDeleteOne) Where(ps ...predicate.RoomOption) *RoomOptionDeleteOne {
+// Where appends a list predicates to the RoomTypeDelete builder.
+func (_d *RoomTypeDeleteOne) Where(ps ...predicate.RoomType) *RoomTypeDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *RoomOptionDeleteOne) Exec(ctx context.Context) error {
+func (_d *RoomTypeDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{roomoption.Label}
+		return &NotFoundError{roomtype.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *RoomOptionDeleteOne) ExecX(ctx context.Context) {
+func (_d *RoomTypeDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

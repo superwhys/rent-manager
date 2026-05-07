@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // RoomCreate is the builder for creating a Room entity.
@@ -93,6 +94,12 @@ func (_c *RoomCreate) SetBuildingID(v int) *RoomCreate {
 	return _c
 }
 
+// SetRoomTypeID sets the "room_type_id" field.
+func (_c *RoomCreate) SetRoomTypeID(v int) *RoomCreate {
+	_c.mutation.SetRoomTypeID(v)
+	return _c
+}
+
 // SetIsActive sets the "is_active" field.
 func (_c *RoomCreate) SetIsActive(v bool) *RoomCreate {
 	_c.mutation.SetIsActive(v)
@@ -110,6 +117,11 @@ func (_c *RoomCreate) SetNillableIsActive(v *bool) *RoomCreate {
 // SetBuilding sets the "building" edge to the Building entity.
 func (_c *RoomCreate) SetBuilding(v *Building) *RoomCreate {
 	return _c.SetBuildingID(v.ID)
+}
+
+// SetRoomType sets the "room_type" edge to the RoomType entity.
+func (_c *RoomCreate) SetRoomType(v *RoomType) *RoomCreate {
+	return _c.SetRoomTypeID(v.ID)
 }
 
 // Mutation returns the RoomMutation object of the builder.
@@ -189,11 +201,17 @@ func (_c *RoomCreate) check() error {
 	if _, ok := _c.mutation.BuildingID(); !ok {
 		return &ValidationError{Name: "building_id", err: errors.New(`ent: missing required field "Room.building_id"`)}
 	}
+	if _, ok := _c.mutation.RoomTypeID(); !ok {
+		return &ValidationError{Name: "room_type_id", err: errors.New(`ent: missing required field "Room.room_type_id"`)}
+	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Room.is_active"`)}
 	}
 	if len(_c.mutation.BuildingIDs()) == 0 {
 		return &ValidationError{Name: "building", err: errors.New(`ent: missing required edge "Room.building"`)}
+	}
+	if len(_c.mutation.RoomTypeIDs()) == 0 {
+		return &ValidationError{Name: "room_type", err: errors.New(`ent: missing required edge "Room.room_type"`)}
 	}
 	return nil
 }
@@ -268,6 +286,23 @@ func (_c *RoomCreate) createSpec() (*Room, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.BuildingID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RoomTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   room.RoomTypeTable,
+			Columns: []string{room.RoomTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.RoomTypeID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

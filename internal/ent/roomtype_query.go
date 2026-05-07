@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -13,55 +14,57 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
-// RoomOptionQuery is the builder for querying RoomOption entities.
-type RoomOptionQuery struct {
+// RoomTypeQuery is the builder for querying RoomType entities.
+type RoomTypeQuery struct {
 	config
 	ctx         *QueryContext
-	order       []roomoption.OrderOption
+	order       []roomtype.OrderOption
 	inters      []Interceptor
-	predicates  []predicate.RoomOption
+	predicates  []predicate.RoomType
 	withAccount *AccountQuery
+	withRooms   *RoomQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the RoomOptionQuery builder.
-func (_q *RoomOptionQuery) Where(ps ...predicate.RoomOption) *RoomOptionQuery {
+// Where adds a new predicate for the RoomTypeQuery builder.
+func (_q *RoomTypeQuery) Where(ps ...predicate.RoomType) *RoomTypeQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *RoomOptionQuery) Limit(limit int) *RoomOptionQuery {
+func (_q *RoomTypeQuery) Limit(limit int) *RoomTypeQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *RoomOptionQuery) Offset(offset int) *RoomOptionQuery {
+func (_q *RoomTypeQuery) Offset(offset int) *RoomTypeQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *RoomOptionQuery) Unique(unique bool) *RoomOptionQuery {
+func (_q *RoomTypeQuery) Unique(unique bool) *RoomTypeQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *RoomOptionQuery) Order(o ...roomoption.OrderOption) *RoomOptionQuery {
+func (_q *RoomTypeQuery) Order(o ...roomtype.OrderOption) *RoomTypeQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
 // QueryAccount chains the current query on the "account" edge.
-func (_q *RoomOptionQuery) QueryAccount() *AccountQuery {
+func (_q *RoomTypeQuery) QueryAccount() *AccountQuery {
 	query := (&AccountClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -72,9 +75,9 @@ func (_q *RoomOptionQuery) QueryAccount() *AccountQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(roomoption.Table, roomoption.FieldID, selector),
+			sqlgraph.From(roomtype.Table, roomtype.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, roomoption.AccountTable, roomoption.AccountColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, roomtype.AccountTable, roomtype.AccountColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -82,21 +85,43 @@ func (_q *RoomOptionQuery) QueryAccount() *AccountQuery {
 	return query
 }
 
-// First returns the first RoomOption entity from the query.
-// Returns a *NotFoundError when no RoomOption was found.
-func (_q *RoomOptionQuery) First(ctx context.Context) (*RoomOption, error) {
+// QueryRooms chains the current query on the "rooms" edge.
+func (_q *RoomTypeQuery) QueryRooms() *RoomQuery {
+	query := (&RoomClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(roomtype.Table, roomtype.FieldID, selector),
+			sqlgraph.To(room.Table, room.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, roomtype.RoomsTable, roomtype.RoomsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// First returns the first RoomType entity from the query.
+// Returns a *NotFoundError when no RoomType was found.
+func (_q *RoomTypeQuery) First(ctx context.Context) (*RoomType, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{roomoption.Label}
+		return nil, &NotFoundError{roomtype.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *RoomOptionQuery) FirstX(ctx context.Context) *RoomOption {
+func (_q *RoomTypeQuery) FirstX(ctx context.Context) *RoomType {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -104,22 +129,22 @@ func (_q *RoomOptionQuery) FirstX(ctx context.Context) *RoomOption {
 	return node
 }
 
-// FirstID returns the first RoomOption ID from the query.
-// Returns a *NotFoundError when no RoomOption ID was found.
-func (_q *RoomOptionQuery) FirstID(ctx context.Context) (id int, err error) {
+// FirstID returns the first RoomType ID from the query.
+// Returns a *NotFoundError when no RoomType ID was found.
+func (_q *RoomTypeQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{roomoption.Label}
+		err = &NotFoundError{roomtype.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *RoomOptionQuery) FirstIDX(ctx context.Context) int {
+func (_q *RoomTypeQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -127,10 +152,10 @@ func (_q *RoomOptionQuery) FirstIDX(ctx context.Context) int {
 	return id
 }
 
-// Only returns a single RoomOption entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one RoomOption entity is found.
-// Returns a *NotFoundError when no RoomOption entities are found.
-func (_q *RoomOptionQuery) Only(ctx context.Context) (*RoomOption, error) {
+// Only returns a single RoomType entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one RoomType entity is found.
+// Returns a *NotFoundError when no RoomType entities are found.
+func (_q *RoomTypeQuery) Only(ctx context.Context) (*RoomType, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -139,14 +164,14 @@ func (_q *RoomOptionQuery) Only(ctx context.Context) (*RoomOption, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{roomoption.Label}
+		return nil, &NotFoundError{roomtype.Label}
 	default:
-		return nil, &NotSingularError{roomoption.Label}
+		return nil, &NotSingularError{roomtype.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *RoomOptionQuery) OnlyX(ctx context.Context) *RoomOption {
+func (_q *RoomTypeQuery) OnlyX(ctx context.Context) *RoomType {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -154,10 +179,10 @@ func (_q *RoomOptionQuery) OnlyX(ctx context.Context) *RoomOption {
 	return node
 }
 
-// OnlyID is like Only, but returns the only RoomOption ID in the query.
-// Returns a *NotSingularError when more than one RoomOption ID is found.
+// OnlyID is like Only, but returns the only RoomType ID in the query.
+// Returns a *NotSingularError when more than one RoomType ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *RoomOptionQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *RoomTypeQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -166,15 +191,15 @@ func (_q *RoomOptionQuery) OnlyID(ctx context.Context) (id int, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{roomoption.Label}
+		err = &NotFoundError{roomtype.Label}
 	default:
-		err = &NotSingularError{roomoption.Label}
+		err = &NotSingularError{roomtype.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *RoomOptionQuery) OnlyIDX(ctx context.Context) int {
+func (_q *RoomTypeQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -182,18 +207,18 @@ func (_q *RoomOptionQuery) OnlyIDX(ctx context.Context) int {
 	return id
 }
 
-// All executes the query and returns a list of RoomOptions.
-func (_q *RoomOptionQuery) All(ctx context.Context) ([]*RoomOption, error) {
+// All executes the query and returns a list of RoomTypes.
+func (_q *RoomTypeQuery) All(ctx context.Context) ([]*RoomType, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*RoomOption, *RoomOptionQuery]()
-	return withInterceptors[[]*RoomOption](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*RoomType, *RoomTypeQuery]()
+	return withInterceptors[[]*RoomType](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *RoomOptionQuery) AllX(ctx context.Context) []*RoomOption {
+func (_q *RoomTypeQuery) AllX(ctx context.Context) []*RoomType {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -201,20 +226,20 @@ func (_q *RoomOptionQuery) AllX(ctx context.Context) []*RoomOption {
 	return nodes
 }
 
-// IDs executes the query and returns a list of RoomOption IDs.
-func (_q *RoomOptionQuery) IDs(ctx context.Context) (ids []int, err error) {
+// IDs executes the query and returns a list of RoomType IDs.
+func (_q *RoomTypeQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(roomoption.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(roomtype.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *RoomOptionQuery) IDsX(ctx context.Context) []int {
+func (_q *RoomTypeQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -223,16 +248,16 @@ func (_q *RoomOptionQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (_q *RoomOptionQuery) Count(ctx context.Context) (int, error) {
+func (_q *RoomTypeQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*RoomOptionQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*RoomTypeQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *RoomOptionQuery) CountX(ctx context.Context) int {
+func (_q *RoomTypeQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -241,7 +266,7 @@ func (_q *RoomOptionQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *RoomOptionQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *RoomTypeQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -254,7 +279,7 @@ func (_q *RoomOptionQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *RoomOptionQuery) ExistX(ctx context.Context) bool {
+func (_q *RoomTypeQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -262,19 +287,20 @@ func (_q *RoomOptionQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the RoomOptionQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the RoomTypeQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *RoomOptionQuery) Clone() *RoomOptionQuery {
+func (_q *RoomTypeQuery) Clone() *RoomTypeQuery {
 	if _q == nil {
 		return nil
 	}
-	return &RoomOptionQuery{
+	return &RoomTypeQuery{
 		config:      _q.config,
 		ctx:         _q.ctx.Clone(),
-		order:       append([]roomoption.OrderOption{}, _q.order...),
+		order:       append([]roomtype.OrderOption{}, _q.order...),
 		inters:      append([]Interceptor{}, _q.inters...),
-		predicates:  append([]predicate.RoomOption{}, _q.predicates...),
+		predicates:  append([]predicate.RoomType{}, _q.predicates...),
 		withAccount: _q.withAccount.Clone(),
+		withRooms:   _q.withRooms.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -283,12 +309,23 @@ func (_q *RoomOptionQuery) Clone() *RoomOptionQuery {
 
 // WithAccount tells the query-builder to eager-load the nodes that are connected to
 // the "account" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *RoomOptionQuery) WithAccount(opts ...func(*AccountQuery)) *RoomOptionQuery {
+func (_q *RoomTypeQuery) WithAccount(opts ...func(*AccountQuery)) *RoomTypeQuery {
 	query := (&AccountClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
 	_q.withAccount = query
+	return _q
+}
+
+// WithRooms tells the query-builder to eager-load the nodes that are connected to
+// the "rooms" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RoomTypeQuery) WithRooms(opts ...func(*RoomQuery)) *RoomTypeQuery {
+	query := (&RoomClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRooms = query
 	return _q
 }
 
@@ -302,15 +339,15 @@ func (_q *RoomOptionQuery) WithAccount(opts ...func(*AccountQuery)) *RoomOptionQ
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.RoomOption.Query().
-//		GroupBy(roomoption.FieldCreatedAt).
+//	client.RoomType.Query().
+//		GroupBy(roomtype.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *RoomOptionQuery) GroupBy(field string, fields ...string) *RoomOptionGroupBy {
+func (_q *RoomTypeQuery) GroupBy(field string, fields ...string) *RoomTypeGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &RoomOptionGroupBy{build: _q}
+	grbuild := &RoomTypeGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = roomoption.Label
+	grbuild.label = roomtype.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -324,23 +361,23 @@ func (_q *RoomOptionQuery) GroupBy(field string, fields ...string) *RoomOptionGr
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.RoomOption.Query().
-//		Select(roomoption.FieldCreatedAt).
+//	client.RoomType.Query().
+//		Select(roomtype.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *RoomOptionQuery) Select(fields ...string) *RoomOptionSelect {
+func (_q *RoomTypeQuery) Select(fields ...string) *RoomTypeSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &RoomOptionSelect{RoomOptionQuery: _q}
-	sbuild.label = roomoption.Label
+	sbuild := &RoomTypeSelect{RoomTypeQuery: _q}
+	sbuild.label = roomtype.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a RoomOptionSelect configured with the given aggregations.
-func (_q *RoomOptionQuery) Aggregate(fns ...AggregateFunc) *RoomOptionSelect {
+// Aggregate returns a RoomTypeSelect configured with the given aggregations.
+func (_q *RoomTypeQuery) Aggregate(fns ...AggregateFunc) *RoomTypeSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *RoomOptionQuery) prepareQuery(ctx context.Context) error {
+func (_q *RoomTypeQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -352,7 +389,7 @@ func (_q *RoomOptionQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !roomoption.ValidColumn(f) {
+		if !roomtype.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -366,19 +403,20 @@ func (_q *RoomOptionQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *RoomOptionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*RoomOption, error) {
+func (_q *RoomTypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*RoomType, error) {
 	var (
-		nodes       = []*RoomOption{}
+		nodes       = []*RoomType{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withAccount != nil,
+			_q.withRooms != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*RoomOption).scanValues(nil, columns)
+		return (*RoomType).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &RoomOption{config: _q.config}
+		node := &RoomType{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -394,16 +432,23 @@ func (_q *RoomOptionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 	}
 	if query := _q.withAccount; query != nil {
 		if err := _q.loadAccount(ctx, query, nodes, nil,
-			func(n *RoomOption, e *Account) { n.Edges.Account = e }); err != nil {
+			func(n *RoomType, e *Account) { n.Edges.Account = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRooms; query != nil {
+		if err := _q.loadRooms(ctx, query, nodes,
+			func(n *RoomType) { n.Edges.Rooms = []*Room{} },
+			func(n *RoomType, e *Room) { n.Edges.Rooms = append(n.Edges.Rooms, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *RoomOptionQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*RoomOption, init func(*RoomOption), assign func(*RoomOption, *Account)) error {
+func (_q *RoomTypeQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*RoomType, init func(*RoomType), assign func(*RoomType, *Account)) error {
 	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*RoomOption)
+	nodeids := make(map[int][]*RoomType)
 	for i := range nodes {
 		fk := nodes[i].AccountID
 		if _, ok := nodeids[fk]; !ok {
@@ -430,8 +475,38 @@ func (_q *RoomOptionQuery) loadAccount(ctx context.Context, query *AccountQuery,
 	}
 	return nil
 }
+func (_q *RoomTypeQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes []*RoomType, init func(*RoomType), assign func(*RoomType, *Room)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*RoomType)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(room.FieldRoomTypeID)
+	}
+	query.Where(predicate.Room(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(roomtype.RoomsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RoomTypeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "room_type_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
-func (_q *RoomOptionQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *RoomTypeQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -440,8 +515,8 @@ func (_q *RoomOptionQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *RoomOptionQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(roomoption.Table, roomoption.Columns, sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt))
+func (_q *RoomTypeQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(roomtype.Table, roomtype.Columns, sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -450,14 +525,14 @@ func (_q *RoomOptionQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, roomoption.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, roomtype.FieldID)
 		for i := range fields {
-			if fields[i] != roomoption.FieldID {
+			if fields[i] != roomtype.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
 		if _q.withAccount != nil {
-			_spec.Node.AddColumnOnce(roomoption.FieldAccountID)
+			_spec.Node.AddColumnOnce(roomtype.FieldAccountID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -483,12 +558,12 @@ func (_q *RoomOptionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *RoomOptionQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *RoomTypeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(roomoption.Table)
+	t1 := builder.Table(roomtype.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = roomoption.Columns
+		columns = roomtype.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -515,28 +590,28 @@ func (_q *RoomOptionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// RoomOptionGroupBy is the group-by builder for RoomOption entities.
-type RoomOptionGroupBy struct {
+// RoomTypeGroupBy is the group-by builder for RoomType entities.
+type RoomTypeGroupBy struct {
 	selector
-	build *RoomOptionQuery
+	build *RoomTypeQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *RoomOptionGroupBy) Aggregate(fns ...AggregateFunc) *RoomOptionGroupBy {
+func (_g *RoomTypeGroupBy) Aggregate(fns ...AggregateFunc) *RoomTypeGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *RoomOptionGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *RoomTypeGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*RoomOptionQuery, *RoomOptionGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*RoomTypeQuery, *RoomTypeGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *RoomOptionGroupBy) sqlScan(ctx context.Context, root *RoomOptionQuery, v any) error {
+func (_g *RoomTypeGroupBy) sqlScan(ctx context.Context, root *RoomTypeQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -563,28 +638,28 @@ func (_g *RoomOptionGroupBy) sqlScan(ctx context.Context, root *RoomOptionQuery,
 	return sql.ScanSlice(rows, v)
 }
 
-// RoomOptionSelect is the builder for selecting fields of RoomOption entities.
-type RoomOptionSelect struct {
-	*RoomOptionQuery
+// RoomTypeSelect is the builder for selecting fields of RoomType entities.
+type RoomTypeSelect struct {
+	*RoomTypeQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *RoomOptionSelect) Aggregate(fns ...AggregateFunc) *RoomOptionSelect {
+func (_s *RoomTypeSelect) Aggregate(fns ...AggregateFunc) *RoomTypeSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *RoomOptionSelect) Scan(ctx context.Context, v any) error {
+func (_s *RoomTypeSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*RoomOptionQuery, *RoomOptionSelect](ctx, _s.RoomOptionQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*RoomTypeQuery, *RoomTypeSelect](ctx, _s.RoomTypeQuery, _s, _s.inters, v)
 }
 
-func (_s *RoomOptionSelect) sqlScan(ctx context.Context, root *RoomOptionQuery, v any) error {
+func (_s *RoomTypeSelect) sqlScan(ctx context.Context, root *RoomTypeQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

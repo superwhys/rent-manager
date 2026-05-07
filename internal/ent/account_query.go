@@ -15,18 +15,18 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // AccountQuery is the builder for querying Account entities.
 type AccountQuery struct {
 	config
-	ctx             *QueryContext
-	order           []account.OrderOption
-	inters          []Interceptor
-	predicates      []predicate.Account
-	withBuildings   *BuildingQuery
-	withRoomOptions *RoomOptionQuery
+	ctx           *QueryContext
+	order         []account.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.Account
+	withBuildings *BuildingQuery
+	withRoomTypes *RoomTypeQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -85,9 +85,9 @@ func (_q *AccountQuery) QueryBuildings() *BuildingQuery {
 	return query
 }
 
-// QueryRoomOptions chains the current query on the "room_options" edge.
-func (_q *AccountQuery) QueryRoomOptions() *RoomOptionQuery {
-	query := (&RoomOptionClient{config: _q.config}).Query()
+// QueryRoomTypes chains the current query on the "room_types" edge.
+func (_q *AccountQuery) QueryRoomTypes() *RoomTypeQuery {
+	query := (&RoomTypeClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -98,8 +98,8 @@ func (_q *AccountQuery) QueryRoomOptions() *RoomOptionQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(account.Table, account.FieldID, selector),
-			sqlgraph.To(roomoption.Table, roomoption.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, account.RoomOptionsTable, account.RoomOptionsColumn),
+			sqlgraph.To(roomtype.Table, roomtype.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.RoomTypesTable, account.RoomTypesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -294,13 +294,13 @@ func (_q *AccountQuery) Clone() *AccountQuery {
 		return nil
 	}
 	return &AccountQuery{
-		config:          _q.config,
-		ctx:             _q.ctx.Clone(),
-		order:           append([]account.OrderOption{}, _q.order...),
-		inters:          append([]Interceptor{}, _q.inters...),
-		predicates:      append([]predicate.Account{}, _q.predicates...),
-		withBuildings:   _q.withBuildings.Clone(),
-		withRoomOptions: _q.withRoomOptions.Clone(),
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]account.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.Account{}, _q.predicates...),
+		withBuildings: _q.withBuildings.Clone(),
+		withRoomTypes: _q.withRoomTypes.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -318,14 +318,14 @@ func (_q *AccountQuery) WithBuildings(opts ...func(*BuildingQuery)) *AccountQuer
 	return _q
 }
 
-// WithRoomOptions tells the query-builder to eager-load the nodes that are connected to
-// the "room_options" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *AccountQuery) WithRoomOptions(opts ...func(*RoomOptionQuery)) *AccountQuery {
-	query := (&RoomOptionClient{config: _q.config}).Query()
+// WithRoomTypes tells the query-builder to eager-load the nodes that are connected to
+// the "room_types" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithRoomTypes(opts ...func(*RoomTypeQuery)) *AccountQuery {
+	query := (&RoomTypeClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withRoomOptions = query
+	_q.withRoomTypes = query
 	return _q
 }
 
@@ -409,7 +409,7 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
 			_q.withBuildings != nil,
-			_q.withRoomOptions != nil,
+			_q.withRoomTypes != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -437,10 +437,10 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 			return nil, err
 		}
 	}
-	if query := _q.withRoomOptions; query != nil {
-		if err := _q.loadRoomOptions(ctx, query, nodes,
-			func(n *Account) { n.Edges.RoomOptions = []*RoomOption{} },
-			func(n *Account, e *RoomOption) { n.Edges.RoomOptions = append(n.Edges.RoomOptions, e) }); err != nil {
+	if query := _q.withRoomTypes; query != nil {
+		if err := _q.loadRoomTypes(ctx, query, nodes,
+			func(n *Account) { n.Edges.RoomTypes = []*RoomType{} },
+			func(n *Account, e *RoomType) { n.Edges.RoomTypes = append(n.Edges.RoomTypes, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -477,7 +477,7 @@ func (_q *AccountQuery) loadBuildings(ctx context.Context, query *BuildingQuery,
 	}
 	return nil
 }
-func (_q *AccountQuery) loadRoomOptions(ctx context.Context, query *RoomOptionQuery, nodes []*Account, init func(*Account), assign func(*Account, *RoomOption)) error {
+func (_q *AccountQuery) loadRoomTypes(ctx context.Context, query *RoomTypeQuery, nodes []*Account, init func(*Account), assign func(*Account, *RoomType)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Account)
 	for i := range nodes {
@@ -488,10 +488,10 @@ func (_q *AccountQuery) loadRoomOptions(ctx context.Context, query *RoomOptionQu
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(roomoption.FieldAccountID)
+		query.ctx.AppendFieldOnce(roomtype.FieldAccountID)
 	}
-	query.Where(predicate.RoomOption(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(account.RoomOptionsColumn), fks...))
+	query.Where(predicate.RoomType(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.RoomTypesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

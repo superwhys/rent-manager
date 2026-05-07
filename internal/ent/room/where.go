@@ -95,6 +95,11 @@ func BuildingID(v int) predicate.Room {
 	return predicate.Room(sql.FieldEQ(FieldBuildingID, v))
 }
 
+// RoomTypeID applies equality check predicate on the "room_type_id" field. It's identical to RoomTypeIDEQ.
+func RoomTypeID(v int) predicate.Room {
+	return predicate.Room(sql.FieldEQ(FieldRoomTypeID, v))
+}
+
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.Room {
 	return predicate.Room(sql.FieldEQ(FieldIsActive, v))
@@ -435,6 +440,26 @@ func BuildingIDNotIn(vs ...int) predicate.Room {
 	return predicate.Room(sql.FieldNotIn(FieldBuildingID, vs...))
 }
 
+// RoomTypeIDEQ applies the EQ predicate on the "room_type_id" field.
+func RoomTypeIDEQ(v int) predicate.Room {
+	return predicate.Room(sql.FieldEQ(FieldRoomTypeID, v))
+}
+
+// RoomTypeIDNEQ applies the NEQ predicate on the "room_type_id" field.
+func RoomTypeIDNEQ(v int) predicate.Room {
+	return predicate.Room(sql.FieldNEQ(FieldRoomTypeID, v))
+}
+
+// RoomTypeIDIn applies the In predicate on the "room_type_id" field.
+func RoomTypeIDIn(vs ...int) predicate.Room {
+	return predicate.Room(sql.FieldIn(FieldRoomTypeID, vs...))
+}
+
+// RoomTypeIDNotIn applies the NotIn predicate on the "room_type_id" field.
+func RoomTypeIDNotIn(vs ...int) predicate.Room {
+	return predicate.Room(sql.FieldNotIn(FieldRoomTypeID, vs...))
+}
+
 // IsActiveEQ applies the EQ predicate on the "is_active" field.
 func IsActiveEQ(v bool) predicate.Room {
 	return predicate.Room(sql.FieldEQ(FieldIsActive, v))
@@ -460,6 +485,29 @@ func HasBuilding() predicate.Room {
 func HasBuildingWith(preds ...predicate.Building) predicate.Room {
 	return predicate.Room(func(s *sql.Selector) {
 		step := newBuildingStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRoomType applies the HasEdge predicate on the "room_type" edge.
+func HasRoomType() predicate.Room {
+	return predicate.Room(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, RoomTypeTable, RoomTypeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRoomTypeWith applies the HasEdge predicate on the "room_type" edge with a given conditions (other predicates).
+func HasRoomTypeWith(preds ...predicate.RoomType) predicate.Room {
+	return predicate.Room(func(s *sql.Selector) {
+		step := newRoomTypeStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

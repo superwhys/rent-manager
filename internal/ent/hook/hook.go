@@ -69,16 +69,16 @@ func (f RoomFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoomMutation", m)
 }
 
-// The RoomOptionFunc type is an adapter to allow the use of ordinary
-// function as RoomOption mutator.
-type RoomOptionFunc func(context.Context, *ent.RoomOptionMutation) (ent.Value, error)
+// The RoomTypeFunc type is an adapter to allow the use of ordinary
+// function as RoomType mutator.
+type RoomTypeFunc func(context.Context, *ent.RoomTypeMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f RoomOptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.RoomOptionMutation); ok {
+func (f RoomTypeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RoomTypeMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoomOptionMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoomTypeMutation", m)
 }
 
 // Condition is a hook condition function.

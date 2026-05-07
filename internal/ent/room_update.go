@@ -14,6 +14,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // RoomUpdate is the builder for updating Room entities.
@@ -146,6 +147,20 @@ func (_u *RoomUpdate) SetNillableBuildingID(v *int) *RoomUpdate {
 	return _u
 }
 
+// SetRoomTypeID sets the "room_type_id" field.
+func (_u *RoomUpdate) SetRoomTypeID(v int) *RoomUpdate {
+	_u.mutation.SetRoomTypeID(v)
+	return _u
+}
+
+// SetNillableRoomTypeID sets the "room_type_id" field if the given value is not nil.
+func (_u *RoomUpdate) SetNillableRoomTypeID(v *int) *RoomUpdate {
+	if v != nil {
+		_u.SetRoomTypeID(*v)
+	}
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *RoomUpdate) SetIsActive(v bool) *RoomUpdate {
 	_u.mutation.SetIsActive(v)
@@ -165,6 +180,11 @@ func (_u *RoomUpdate) SetBuilding(v *Building) *RoomUpdate {
 	return _u.SetBuildingID(v.ID)
 }
 
+// SetRoomType sets the "room_type" edge to the RoomType entity.
+func (_u *RoomUpdate) SetRoomType(v *RoomType) *RoomUpdate {
+	return _u.SetRoomTypeID(v.ID)
+}
+
 // Mutation returns the RoomMutation object of the builder.
 func (_u *RoomUpdate) Mutation() *RoomMutation {
 	return _u.mutation
@@ -173,6 +193,12 @@ func (_u *RoomUpdate) Mutation() *RoomMutation {
 // ClearBuilding clears the "building" edge to the Building entity.
 func (_u *RoomUpdate) ClearBuilding() *RoomUpdate {
 	_u.mutation.ClearBuilding()
+	return _u
+}
+
+// ClearRoomType clears the "room_type" edge to the RoomType entity.
+func (_u *RoomUpdate) ClearRoomType() *RoomUpdate {
+	_u.mutation.ClearRoomType()
 	return _u
 }
 
@@ -221,6 +247,9 @@ func (_u *RoomUpdate) check() error {
 	}
 	if _u.mutation.BuildingCleared() && len(_u.mutation.BuildingIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Room.building"`)
+	}
+	if _u.mutation.RoomTypeCleared() && len(_u.mutation.RoomTypeIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Room.room_type"`)
 	}
 	return nil
 }
@@ -292,6 +321,35 @@ func (_u *RoomUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RoomTypeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   room.RoomTypeTable,
+			Columns: []string{room.RoomTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RoomTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   room.RoomTypeTable,
+			Columns: []string{room.RoomTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -436,6 +494,20 @@ func (_u *RoomUpdateOne) SetNillableBuildingID(v *int) *RoomUpdateOne {
 	return _u
 }
 
+// SetRoomTypeID sets the "room_type_id" field.
+func (_u *RoomUpdateOne) SetRoomTypeID(v int) *RoomUpdateOne {
+	_u.mutation.SetRoomTypeID(v)
+	return _u
+}
+
+// SetNillableRoomTypeID sets the "room_type_id" field if the given value is not nil.
+func (_u *RoomUpdateOne) SetNillableRoomTypeID(v *int) *RoomUpdateOne {
+	if v != nil {
+		_u.SetRoomTypeID(*v)
+	}
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *RoomUpdateOne) SetIsActive(v bool) *RoomUpdateOne {
 	_u.mutation.SetIsActive(v)
@@ -455,6 +527,11 @@ func (_u *RoomUpdateOne) SetBuilding(v *Building) *RoomUpdateOne {
 	return _u.SetBuildingID(v.ID)
 }
 
+// SetRoomType sets the "room_type" edge to the RoomType entity.
+func (_u *RoomUpdateOne) SetRoomType(v *RoomType) *RoomUpdateOne {
+	return _u.SetRoomTypeID(v.ID)
+}
+
 // Mutation returns the RoomMutation object of the builder.
 func (_u *RoomUpdateOne) Mutation() *RoomMutation {
 	return _u.mutation
@@ -463,6 +540,12 @@ func (_u *RoomUpdateOne) Mutation() *RoomMutation {
 // ClearBuilding clears the "building" edge to the Building entity.
 func (_u *RoomUpdateOne) ClearBuilding() *RoomUpdateOne {
 	_u.mutation.ClearBuilding()
+	return _u
+}
+
+// ClearRoomType clears the "room_type" edge to the RoomType entity.
+func (_u *RoomUpdateOne) ClearRoomType() *RoomUpdateOne {
+	_u.mutation.ClearRoomType()
 	return _u
 }
 
@@ -524,6 +607,9 @@ func (_u *RoomUpdateOne) check() error {
 	}
 	if _u.mutation.BuildingCleared() && len(_u.mutation.BuildingIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Room.building"`)
+	}
+	if _u.mutation.RoomTypeCleared() && len(_u.mutation.RoomTypeIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Room.room_type"`)
 	}
 	return nil
 }
@@ -612,6 +698,35 @@ func (_u *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RoomTypeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   room.RoomTypeTable,
+			Columns: []string{room.RoomTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RoomTypeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   room.RoomTypeTable,
+			Columns: []string{room.RoomTypeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

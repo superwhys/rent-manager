@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // AccountCreate is the builder for creating a Account entity.
@@ -111,19 +111,19 @@ func (_c *AccountCreate) AddBuildings(v ...*Building) *AccountCreate {
 	return _c.AddBuildingIDs(ids...)
 }
 
-// AddRoomOptionIDs adds the "room_options" edge to the RoomOption entity by IDs.
-func (_c *AccountCreate) AddRoomOptionIDs(ids ...int) *AccountCreate {
-	_c.mutation.AddRoomOptionIDs(ids...)
+// AddRoomTypeIDs adds the "room_types" edge to the RoomType entity by IDs.
+func (_c *AccountCreate) AddRoomTypeIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddRoomTypeIDs(ids...)
 	return _c
 }
 
-// AddRoomOptions adds the "room_options" edges to the RoomOption entity.
-func (_c *AccountCreate) AddRoomOptions(v ...*RoomOption) *AccountCreate {
+// AddRoomTypes adds the "room_types" edges to the RoomType entity.
+func (_c *AccountCreate) AddRoomTypes(v ...*RoomType) *AccountCreate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _c.AddRoomOptionIDs(ids...)
+	return _c.AddRoomTypeIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -280,15 +280,15 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := _c.mutation.RoomOptionsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.RoomTypesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   account.RoomOptionsTable,
-			Columns: []string{account.RoomOptionsColumn},
+			Table:   account.RoomTypesTable,
+			Columns: []string{account.RoomTypesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(roomoption.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

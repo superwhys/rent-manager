@@ -10,11 +10,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
-// RoomOption is the model entity for the RoomOption schema.
-type RoomOption struct {
+// RoomType is the model entity for the RoomType schema.
+type RoomType struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
@@ -29,23 +29,25 @@ type RoomOption struct {
 	// 所属账号ID
 	AccountID int `json:"account_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the RoomOptionQuery when eager-loading is set.
-	Edges        RoomOptionEdges `json:"edges"`
+	// The values are being populated by the RoomTypeQuery when eager-loading is set.
+	Edges        RoomTypeEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// RoomOptionEdges holds the relations/edges for other nodes in the graph.
-type RoomOptionEdges struct {
+// RoomTypeEdges holds the relations/edges for other nodes in the graph.
+type RoomTypeEdges struct {
 	// Account holds the value of the account edge.
 	Account *Account `json:"account,omitempty"`
+	// Rooms holds the value of the rooms edge.
+	Rooms []*Room `json:"rooms,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // AccountOrErr returns the Account value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e RoomOptionEdges) AccountOrErr() (*Account, error) {
+func (e RoomTypeEdges) AccountOrErr() (*Account, error) {
 	if e.Account != nil {
 		return e.Account, nil
 	} else if e.loadedTypes[0] {
@@ -54,16 +56,25 @@ func (e RoomOptionEdges) AccountOrErr() (*Account, error) {
 	return nil, &NotLoadedError{edge: "account"}
 }
 
+// RoomsOrErr returns the Rooms value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoomTypeEdges) RoomsOrErr() ([]*Room, error) {
+	if e.loadedTypes[1] {
+		return e.Rooms, nil
+	}
+	return nil, &NotLoadedError{edge: "rooms"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
-func (*RoomOption) scanValues(columns []string) ([]any, error) {
+func (*RoomType) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case roomoption.FieldID, roomoption.FieldAccountID:
+		case roomtype.FieldID, roomtype.FieldAccountID:
 			values[i] = new(sql.NullInt64)
-		case roomoption.FieldName:
+		case roomtype.FieldName:
 			values[i] = new(sql.NullString)
-		case roomoption.FieldCreatedAt, roomoption.FieldUpdatedAt, roomoption.FieldDeletedAt:
+		case roomtype.FieldCreatedAt, roomtype.FieldUpdatedAt, roomtype.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -73,45 +84,45 @@ func (*RoomOption) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the RoomOption fields.
-func (_m *RoomOption) assignValues(columns []string, values []any) error {
+// to the RoomType fields.
+func (_m *RoomType) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case roomoption.FieldID:
+		case roomtype.FieldID:
 			value, ok := values[i].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
-		case roomoption.FieldCreatedAt:
+		case roomtype.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				_m.CreatedAt = value.Time
 			}
-		case roomoption.FieldUpdatedAt:
+		case roomtype.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case roomoption.FieldDeletedAt:
+		case roomtype.FieldDeletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
 			} else if value.Valid {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case roomoption.FieldName:
+		case roomtype.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
 			}
-		case roomoption.FieldAccountID:
+		case roomtype.FieldAccountID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field account_id", values[i])
 			} else if value.Valid {
@@ -124,39 +135,44 @@ func (_m *RoomOption) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the RoomOption.
+// Value returns the ent.Value that was dynamically selected and assigned to the RoomType.
 // This includes values selected through modifiers, order, etc.
-func (_m *RoomOption) Value(name string) (ent.Value, error) {
+func (_m *RoomType) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryAccount queries the "account" edge of the RoomOption entity.
-func (_m *RoomOption) QueryAccount() *AccountQuery {
-	return NewRoomOptionClient(_m.config).QueryAccount(_m)
+// QueryAccount queries the "account" edge of the RoomType entity.
+func (_m *RoomType) QueryAccount() *AccountQuery {
+	return NewRoomTypeClient(_m.config).QueryAccount(_m)
 }
 
-// Update returns a builder for updating this RoomOption.
-// Note that you need to call RoomOption.Unwrap() before calling this method if this RoomOption
+// QueryRooms queries the "rooms" edge of the RoomType entity.
+func (_m *RoomType) QueryRooms() *RoomQuery {
+	return NewRoomTypeClient(_m.config).QueryRooms(_m)
+}
+
+// Update returns a builder for updating this RoomType.
+// Note that you need to call RoomType.Unwrap() before calling this method if this RoomType
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (_m *RoomOption) Update() *RoomOptionUpdateOne {
-	return NewRoomOptionClient(_m.config).UpdateOne(_m)
+func (_m *RoomType) Update() *RoomTypeUpdateOne {
+	return NewRoomTypeClient(_m.config).UpdateOne(_m)
 }
 
-// Unwrap unwraps the RoomOption entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the RoomType entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (_m *RoomOption) Unwrap() *RoomOption {
+func (_m *RoomType) Unwrap() *RoomType {
 	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: RoomOption is not a transactional entity")
+		panic("ent: RoomType is not a transactional entity")
 	}
 	_m.config.driver = _tx.drv
 	return _m
 }
 
 // String implements the fmt.Stringer.
-func (_m *RoomOption) String() string {
+func (_m *RoomType) String() string {
 	var builder strings.Builder
-	builder.WriteString("RoomOption(")
+	builder.WriteString("RoomType(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
@@ -178,5 +194,5 @@ func (_m *RoomOption) String() string {
 	return builder.String()
 }
 
-// RoomOptions is a parsable slice of RoomOption.
-type RoomOptions []*RoomOption
+// RoomTypes is a parsable slice of RoomType.
+type RoomTypes []*RoomType

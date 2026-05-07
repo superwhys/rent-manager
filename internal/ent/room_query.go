@@ -14,6 +14,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // RoomQuery is the builder for querying Room entities.
@@ -24,6 +25,7 @@ type RoomQuery struct {
 	inters       []Interceptor
 	predicates   []predicate.Room
 	withBuilding *BuildingQuery
+	withRoomType *RoomTypeQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,6 +77,28 @@ func (_q *RoomQuery) QueryBuilding() *BuildingQuery {
 			sqlgraph.From(room.Table, room.FieldID, selector),
 			sqlgraph.To(building.Table, building.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, room.BuildingTable, room.BuildingColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRoomType chains the current query on the "room_type" edge.
+func (_q *RoomQuery) QueryRoomType() *RoomTypeQuery {
+	query := (&RoomTypeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(room.Table, room.FieldID, selector),
+			sqlgraph.To(roomtype.Table, roomtype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, room.RoomTypeTable, room.RoomTypeColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -275,6 +299,7 @@ func (_q *RoomQuery) Clone() *RoomQuery {
 		inters:       append([]Interceptor{}, _q.inters...),
 		predicates:   append([]predicate.Room{}, _q.predicates...),
 		withBuilding: _q.withBuilding.Clone(),
+		withRoomType: _q.withRoomType.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -289,6 +314,17 @@ func (_q *RoomQuery) WithBuilding(opts ...func(*BuildingQuery)) *RoomQuery {
 		opt(query)
 	}
 	_q.withBuilding = query
+	return _q
+}
+
+// WithRoomType tells the query-builder to eager-load the nodes that are connected to
+// the "room_type" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RoomQuery) WithRoomType(opts ...func(*RoomTypeQuery)) *RoomQuery {
+	query := (&RoomTypeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRoomType = query
 	return _q
 }
 
@@ -370,8 +406,9 @@ func (_q *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 	var (
 		nodes       = []*Room{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withBuilding != nil,
+			_q.withRoomType != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -395,6 +432,12 @@ func (_q *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 	if query := _q.withBuilding; query != nil {
 		if err := _q.loadBuilding(ctx, query, nodes, nil,
 			func(n *Room, e *Building) { n.Edges.Building = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRoomType; query != nil {
+		if err := _q.loadRoomType(ctx, query, nodes, nil,
+			func(n *Room, e *RoomType) { n.Edges.RoomType = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -430,6 +473,35 @@ func (_q *RoomQuery) loadBuilding(ctx context.Context, query *BuildingQuery, nod
 	}
 	return nil
 }
+func (_q *RoomQuery) loadRoomType(ctx context.Context, query *RoomTypeQuery, nodes []*Room, init func(*Room), assign func(*Room, *RoomType)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Room)
+	for i := range nodes {
+		fk := nodes[i].RoomTypeID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(roomtype.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "room_type_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (_q *RoomQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -458,6 +530,9 @@ func (_q *RoomQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withBuilding != nil {
 			_spec.Node.AddColumnOnce(room.FieldBuildingID)
+		}
+		if _q.withRoomType != nil {
+			_spec.Node.AddColumnOnce(room.FieldRoomTypeID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

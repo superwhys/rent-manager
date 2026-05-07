@@ -15,19 +15,19 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
 
-// RoomOption holds the schema definition for the RoomOption entity.
-type RoomOption struct {
+// 房间类型实体
+type RoomType struct {
 	ent.Schema
 }
 
-func (RoomOption) Mixin() []ent.Mixin {
+func (RoomType) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.TimeMixin{},
 		mixin.SoftDeleteMixin{},
 	}
 }
 
-func (RoomOption) Fields() []ent.Field {
+func (RoomType) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").
 			NotEmpty().
@@ -38,12 +38,13 @@ func (RoomOption) Fields() []ent.Field {
 	}
 }
 
-func (RoomOption) Edges() []ent.Edge {
+func (RoomType) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("account", Account.Type).
 			Field("account_id").
-			Ref("room_options").
+			Ref("room_types").
 			Unique().
 			Required(),
+		edge.To("rooms", Room.Type),
 	}
 }

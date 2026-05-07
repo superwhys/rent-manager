@@ -30,8 +30,8 @@ const (
 	FieldIsActive = "is_active"
 	// EdgeBuildings holds the string denoting the buildings edge name in mutations.
 	EdgeBuildings = "buildings"
-	// EdgeRoomOptions holds the string denoting the room_options edge name in mutations.
-	EdgeRoomOptions = "room_options"
+	// EdgeRoomTypes holds the string denoting the room_types edge name in mutations.
+	EdgeRoomTypes = "room_types"
 	// Table holds the table name of the account in the database.
 	Table = "accounts"
 	// BuildingsTable is the table that holds the buildings relation/edge.
@@ -41,13 +41,13 @@ const (
 	BuildingsInverseTable = "buildings"
 	// BuildingsColumn is the table column denoting the buildings relation/edge.
 	BuildingsColumn = "account_id"
-	// RoomOptionsTable is the table that holds the room_options relation/edge.
-	RoomOptionsTable = "room_options"
-	// RoomOptionsInverseTable is the table name for the RoomOption entity.
-	// It exists in this package in order to avoid circular dependency with the "roomoption" package.
-	RoomOptionsInverseTable = "room_options"
-	// RoomOptionsColumn is the table column denoting the room_options relation/edge.
-	RoomOptionsColumn = "account_id"
+	// RoomTypesTable is the table that holds the room_types relation/edge.
+	RoomTypesTable = "room_types"
+	// RoomTypesInverseTable is the table name for the RoomType entity.
+	// It exists in this package in order to avoid circular dependency with the "roomtype" package.
+	RoomTypesInverseTable = "room_types"
+	// RoomTypesColumn is the table column denoting the room_types relation/edge.
+	RoomTypesColumn = "account_id"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -146,17 +146,17 @@ func ByBuildings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByRoomOptionsCount orders the results by room_options count.
-func ByRoomOptionsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByRoomTypesCount orders the results by room_types count.
+func ByRoomTypesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRoomOptionsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newRoomTypesStep(), opts...)
 	}
 }
 
-// ByRoomOptions orders the results by room_options terms.
-func ByRoomOptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByRoomTypes orders the results by room_types terms.
+func ByRoomTypes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRoomOptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newRoomTypesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newBuildingsStep() *sqlgraph.Step {
@@ -166,10 +166,10 @@ func newBuildingsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, BuildingsTable, BuildingsColumn),
 	)
 }
-func newRoomOptionsStep() *sqlgraph.Step {
+func newRoomTypesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RoomOptionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, RoomOptionsTable, RoomOptionsColumn),
+		sqlgraph.To(RoomTypesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RoomTypesTable, RoomTypesColumn),
 	)
 }

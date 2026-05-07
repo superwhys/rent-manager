@@ -448,21 +448,21 @@ func HasBuildingsWith(preds ...predicate.Building) predicate.Account {
 	})
 }
 
-// HasRoomOptions applies the HasEdge predicate on the "room_options" edge.
-func HasRoomOptions() predicate.Account {
+// HasRoomTypes applies the HasEdge predicate on the "room_types" edge.
+func HasRoomTypes() predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RoomOptionsTable, RoomOptionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, RoomTypesTable, RoomTypesColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasRoomOptionsWith applies the HasEdge predicate on the "room_options" edge with a given conditions (other predicates).
-func HasRoomOptionsWith(preds ...predicate.RoomOption) predicate.Account {
+// HasRoomTypesWith applies the HasEdge predicate on the "room_types" edge with a given conditions (other predicates).
+func HasRoomTypesWith(preds ...predicate.RoomType) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		step := newRoomOptionsStep()
+		step := newRoomTypesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

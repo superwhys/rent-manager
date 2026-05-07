@@ -7,7 +7,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
 
-// Permission holds the schema definition for the Permission entity.
+// 权限实体
 type Permission struct {
 	ent.Schema
 }

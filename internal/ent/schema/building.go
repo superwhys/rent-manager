@@ -7,7 +7,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
 
-// Building holds the schema definition for the Building entity.
+// 楼栋实体
 type Building struct {
 	ent.Schema
 }
