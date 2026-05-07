@@ -16,6 +16,10 @@ type Tx struct {
 	Account *AccountClient
 	// Building is the client for interacting with the Building builders.
 	Building *BuildingClient
+	// MeterItem is the client for interacting with the MeterItem builders.
+	MeterItem *MeterItemClient
+	// MeterReading is the client for interacting with the MeterReading builders.
+	MeterReading *MeterReadingClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// Role is the client for interacting with the Role builders.
@@ -157,6 +161,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Account = NewAccountClient(tx.config)
 	tx.Building = NewBuildingClient(tx.config)
+	tx.MeterItem = NewMeterItemClient(tx.config)
+	tx.MeterReading = NewMeterReadingClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.Room = NewRoomClient(tx.config)

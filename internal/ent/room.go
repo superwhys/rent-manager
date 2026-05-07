@@ -37,7 +37,7 @@ type Room struct {
 	BuildingID int `json:"building_id,omitempty"`
 	// 所属房间类型ID
 	RoomTypeID int `json:"room_type_id,omitempty"`
-	// IsActive holds the value of the "is_active" field.
+	// 房间是否激活
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoomQuery when eager-loading is set.
@@ -51,9 +51,13 @@ type RoomEdges struct {
 	Building *Building `json:"building,omitempty"`
 	// RoomType holds the value of the room_type edge.
 	RoomType *RoomType `json:"room_type,omitempty"`
+	// MeterItems holds the value of the meter_items edge.
+	MeterItems []*MeterItem `json:"meter_items,omitempty"`
+	// MeterReadings holds the value of the meter_readings edge.
+	MeterReadings []*MeterReading `json:"meter_readings,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
 // BuildingOrErr returns the Building value or an error if the edge
@@ -76,6 +80,24 @@ func (e RoomEdges) RoomTypeOrErr() (*RoomType, error) {
 		return nil, &NotFoundError{label: roomtype.Label}
 	}
 	return nil, &NotLoadedError{edge: "room_type"}
+}
+
+// MeterItemsOrErr returns the MeterItems value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoomEdges) MeterItemsOrErr() ([]*MeterItem, error) {
+	if e.loadedTypes[2] {
+		return e.MeterItems, nil
+	}
+	return nil, &NotLoadedError{edge: "meter_items"}
+}
+
+// MeterReadingsOrErr returns the MeterReadings value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoomEdges) MeterReadingsOrErr() ([]*MeterReading, error) {
+	if e.loadedTypes[3] {
+		return e.MeterReadings, nil
+	}
+	return nil, &NotLoadedError{edge: "meter_readings"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -194,6 +216,16 @@ func (_m *Room) QueryBuilding() *BuildingQuery {
 // QueryRoomType queries the "room_type" edge of the Room entity.
 func (_m *Room) QueryRoomType() *RoomTypeQuery {
 	return NewRoomClient(_m.config).QueryRoomType(_m)
+}
+
+// QueryMeterItems queries the "meter_items" edge of the Room entity.
+func (_m *Room) QueryMeterItems() *MeterItemQuery {
+	return NewRoomClient(_m.config).QueryMeterItems(_m)
+}
+
+// QueryMeterReadings queries the "meter_readings" edge of the Room entity.
+func (_m *Room) QueryMeterReadings() *MeterReadingQuery {
+	return NewRoomClient(_m.config).QueryMeterReadings(_m)
 }
 
 // Update returns a builder for updating this Room.

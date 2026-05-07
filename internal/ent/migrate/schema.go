@@ -51,6 +51,79 @@ var (
 			},
 		},
 	}
+	// MeterItemsColumns holds the columns for the "meter_items" table.
+	MeterItemsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "code", Type: field.TypeString},
+		{Name: "unit", Type: field.TypeString},
+		{Name: "is_system", Type: field.TypeBool, Default: false},
+		{Name: "calc_type", Type: field.TypeEnum, Enums: []string{"DIFFERENCE", "DIRECT"}, Default: "DIFFERENCE"},
+		{Name: "remark", Type: field.TypeString, Nullable: true},
+		{Name: "account_id", Type: field.TypeInt},
+	}
+	// MeterItemsTable holds the schema information for the "meter_items" table.
+	MeterItemsTable = &schema.Table{
+		Name:       "meter_items",
+		Columns:    MeterItemsColumns,
+		PrimaryKey: []*schema.Column{MeterItemsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "meter_items_accounts_meter_items",
+				Columns:    []*schema.Column{MeterItemsColumns[9]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "meteritem_account_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{MeterItemsColumns[9], MeterItemsColumns[4]},
+			},
+		},
+	}
+	// MeterReadingsColumns holds the columns for the "meter_readings" table.
+	MeterReadingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "period_month", Type: field.TypeString},
+		{Name: "previous_reading", Type: field.TypeFloat64, Nullable: true},
+		{Name: "current_reading", Type: field.TypeFloat64},
+		{Name: "usage_amount", Type: field.TypeFloat64, Nullable: true},
+		{Name: "reading_time", Type: field.TypeTime},
+		{Name: "reader_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "source", Type: field.TypeEnum, Enums: []string{"MANUAL", "IMPORT", "AUTO"}, Default: "MANUAL"},
+		{Name: "remark", Type: field.TypeString, Nullable: true},
+		{Name: "room_id", Type: field.TypeInt},
+	}
+	// MeterReadingsTable holds the schema information for the "meter_readings" table.
+	MeterReadingsTable = &schema.Table{
+		Name:       "meter_readings",
+		Columns:    MeterReadingsColumns,
+		PrimaryKey: []*schema.Column{MeterReadingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "meter_readings_rooms_meter_readings",
+				Columns:    []*schema.Column{MeterReadingsColumns[9]},
+				RefColumns: []*schema.Column{RoomsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "meterreading_room_id_period_month",
+				Unique:  true,
+				Columns: []*schema.Column{MeterReadingsColumns[9], MeterReadingsColumns[1]},
+			},
+			{
+				Name:    "meterreading_period_month",
+				Unique:  false,
+				Columns: []*schema.Column{MeterReadingsColumns[1]},
+			},
+		},
+	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -75,7 +148,6 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 255},
-		{Name: "account_id", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
@@ -166,23 +238,55 @@ var (
 			},
 		},
 	}
+	// RoomMeterItemsColumns holds the columns for the "room_meter_items" table.
+	RoomMeterItemsColumns = []*schema.Column{
+		{Name: "room_id", Type: field.TypeInt},
+		{Name: "meter_item_id", Type: field.TypeInt},
+	}
+	// RoomMeterItemsTable holds the schema information for the "room_meter_items" table.
+	RoomMeterItemsTable = &schema.Table{
+		Name:       "room_meter_items",
+		Columns:    RoomMeterItemsColumns,
+		PrimaryKey: []*schema.Column{RoomMeterItemsColumns[0], RoomMeterItemsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "room_meter_items_room_id",
+				Columns:    []*schema.Column{RoomMeterItemsColumns[0]},
+				RefColumns: []*schema.Column{RoomsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "room_meter_items_meter_item_id",
+				Columns:    []*schema.Column{RoomMeterItemsColumns[1]},
+				RefColumns: []*schema.Column{MeterItemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccountsTable,
 		BuildingsTable,
+		MeterItemsTable,
+		MeterReadingsTable,
 		PermissionsTable,
 		RolesTable,
 		RoomsTable,
 		RoomTypesTable,
 		RolePermissionsTable,
+		RoomMeterItemsTable,
 	}
 )
 
 func init() {
 	BuildingsTable.ForeignKeys[0].RefTable = AccountsTable
+	MeterItemsTable.ForeignKeys[0].RefTable = AccountsTable
+	MeterReadingsTable.ForeignKeys[0].RefTable = RoomsTable
 	RoomsTable.ForeignKeys[0].RefTable = BuildingsTable
 	RoomsTable.ForeignKeys[1].RefTable = RoomTypesTable
 	RoomTypesTable.ForeignKeys[0].RefTable = AccountsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
+	RoomMeterItemsTable.ForeignKeys[0].RefTable = RoomsTable
+	RoomMeterItemsTable.ForeignKeys[1].RefTable = MeterItemsTable
 }

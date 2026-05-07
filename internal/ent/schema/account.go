@@ -47,5 +47,6 @@ func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("buildings", Building.Type),
 		edge.To("room_types", RoomType.Type),
+		edge.To("meter_items", MeterItem.Type),
 	}
 }

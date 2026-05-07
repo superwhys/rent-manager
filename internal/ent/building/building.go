@@ -20,6 +20,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
+	// FieldAccountID holds the string denoting the account_id field in the database.
+	FieldAccountID = "account_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldAddress holds the string denoting the address field in the database.
@@ -28,8 +30,6 @@ const (
 	FieldCity = "city"
 	// FieldProvince holds the string denoting the province field in the database.
 	FieldProvince = "province"
-	// FieldAccountID holds the string denoting the account_id field in the database.
-	FieldAccountID = "account_id"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
 	// EdgeRooms holds the string denoting the rooms edge name in mutations.
@@ -58,11 +58,11 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
+	FieldAccountID,
 	FieldName,
 	FieldAddress,
 	FieldCity,
 	FieldProvince,
-	FieldAccountID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -115,6 +115,11 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
+// ByAccountID orders the results by the account_id field.
+func ByAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAccountID, opts...).ToFunc()
+}
+
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
@@ -133,11 +138,6 @@ func ByCity(opts ...sql.OrderTermOption) OrderOption {
 // ByProvince orders the results by the province field.
 func ByProvince(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProvince, opts...).ToFunc()
-}
-
-// ByAccountID orders the results by the account_id field.
-func ByAccountID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAccountID, opts...).ToFunc()
 }
 
 // ByAccountField orders the results by account field.

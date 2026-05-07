@@ -70,6 +70,11 @@ func DeletedAt(v time.Time) predicate.Building {
 	return predicate.Building(sql.FieldEQ(FieldDeletedAt, v))
 }
 
+// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
+func AccountID(v int) predicate.Building {
+	return predicate.Building(sql.FieldEQ(FieldAccountID, v))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Building {
 	return predicate.Building(sql.FieldEQ(FieldName, v))
@@ -88,11 +93,6 @@ func City(v string) predicate.Building {
 // Province applies equality check predicate on the "province" field. It's identical to ProvinceEQ.
 func Province(v string) predicate.Building {
 	return predicate.Building(sql.FieldEQ(FieldProvince, v))
-}
-
-// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
-func AccountID(v int) predicate.Building {
-	return predicate.Building(sql.FieldEQ(FieldAccountID, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -223,6 +223,26 @@ func DeletedAtIsNil() predicate.Building {
 // DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
 func DeletedAtNotNil() predicate.Building {
 	return predicate.Building(sql.FieldNotNull(FieldDeletedAt))
+}
+
+// AccountIDEQ applies the EQ predicate on the "account_id" field.
+func AccountIDEQ(v int) predicate.Building {
+	return predicate.Building(sql.FieldEQ(FieldAccountID, v))
+}
+
+// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
+func AccountIDNEQ(v int) predicate.Building {
+	return predicate.Building(sql.FieldNEQ(FieldAccountID, v))
+}
+
+// AccountIDIn applies the In predicate on the "account_id" field.
+func AccountIDIn(vs ...int) predicate.Building {
+	return predicate.Building(sql.FieldIn(FieldAccountID, vs...))
+}
+
+// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
+func AccountIDNotIn(vs ...int) predicate.Building {
+	return predicate.Building(sql.FieldNotIn(FieldAccountID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -483,26 +503,6 @@ func ProvinceEqualFold(v string) predicate.Building {
 // ProvinceContainsFold applies the ContainsFold predicate on the "province" field.
 func ProvinceContainsFold(v string) predicate.Building {
 	return predicate.Building(sql.FieldContainsFold(FieldProvince, v))
-}
-
-// AccountIDEQ applies the EQ predicate on the "account_id" field.
-func AccountIDEQ(v int) predicate.Building {
-	return predicate.Building(sql.FieldEQ(FieldAccountID, v))
-}
-
-// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
-func AccountIDNEQ(v int) predicate.Building {
-	return predicate.Building(sql.FieldNEQ(FieldAccountID, v))
-}
-
-// AccountIDIn applies the In predicate on the "account_id" field.
-func AccountIDIn(vs ...int) predicate.Building {
-	return predicate.Building(sql.FieldIn(FieldAccountID, vs...))
-}
-
-// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
-func AccountIDNotIn(vs ...int) predicate.Building {
-	return predicate.Building(sql.FieldNotIn(FieldAccountID, vs...))
 }
 
 // HasAccount applies the HasEdge predicate on the "account" edge.

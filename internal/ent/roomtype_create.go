@@ -64,15 +64,15 @@ func (_c *RoomTypeCreate) SetNillableDeletedAt(v *time.Time) *RoomTypeCreate {
 	return _c
 }
 
-// SetName sets the "name" field.
-func (_c *RoomTypeCreate) SetName(v string) *RoomTypeCreate {
-	_c.mutation.SetName(v)
-	return _c
-}
-
 // SetAccountID sets the "account_id" field.
 func (_c *RoomTypeCreate) SetAccountID(v int) *RoomTypeCreate {
 	_c.mutation.SetAccountID(v)
+	return _c
+}
+
+// SetName sets the "name" field.
+func (_c *RoomTypeCreate) SetName(v string) *RoomTypeCreate {
+	_c.mutation.SetName(v)
 	return _c
 }
 
@@ -149,6 +149,9 @@ func (_c *RoomTypeCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "RoomType.updated_at"`)}
 	}
+	if _, ok := _c.mutation.AccountID(); !ok {
+		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "RoomType.account_id"`)}
+	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "RoomType.name"`)}
 	}
@@ -156,9 +159,6 @@ func (_c *RoomTypeCreate) check() error {
 		if err := roomtype.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomType.name": %w`, err)}
 		}
-	}
-	if _, ok := _c.mutation.AccountID(); !ok {
-		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "RoomType.account_id"`)}
 	}
 	if len(_c.mutation.AccountIDs()) == 0 {
 		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "RoomType.account"`)}

@@ -25,8 +25,6 @@ type Role struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// 角色名字
 	Name string `json:"name,omitempty"`
-	// 所属账号ID
-	AccountID int `json:"account_id,omitempty"`
 	// 角色是否激活
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -60,7 +58,7 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case role.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case role.FieldID, role.FieldAccountID:
+		case role.FieldID:
 			values[i] = new(sql.NullInt64)
 		case role.FieldName:
 			values[i] = new(sql.NullString)
@@ -111,12 +109,6 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
-			}
-		case role.FieldAccountID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field account_id", values[i])
-			} else if value.Valid {
-				_m.AccountID = int(value.Int64)
 			}
 		case role.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -178,9 +170,6 @@ func (_m *Role) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
-	builder.WriteString(", ")
-	builder.WriteString("account_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))

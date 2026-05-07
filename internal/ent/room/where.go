@@ -516,6 +516,52 @@ func HasRoomTypeWith(preds ...predicate.RoomType) predicate.Room {
 	})
 }
 
+// HasMeterItems applies the HasEdge predicate on the "meter_items" edge.
+func HasMeterItems() predicate.Room {
+	return predicate.Room(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, MeterItemsTable, MeterItemsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMeterItemsWith applies the HasEdge predicate on the "meter_items" edge with a given conditions (other predicates).
+func HasMeterItemsWith(preds ...predicate.MeterItem) predicate.Room {
+	return predicate.Room(func(s *sql.Selector) {
+		step := newMeterItemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMeterReadings applies the HasEdge predicate on the "meter_readings" edge.
+func HasMeterReadings() predicate.Room {
+	return predicate.Room(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MeterReadingsTable, MeterReadingsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMeterReadingsWith applies the HasEdge predicate on the "meter_readings" edge with a given conditions (other predicates).
+func HasMeterReadingsWith(preds ...predicate.MeterReading) predicate.Room {
+	return predicate.Room(func(s *sql.Selector) {
+		step := newMeterReadingsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Room) predicate.Room {
 	return predicate.Room(sql.AndPredicates(predicates...))

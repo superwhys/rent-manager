@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
@@ -122,6 +124,36 @@ func (_c *RoomCreate) SetBuilding(v *Building) *RoomCreate {
 // SetRoomType sets the "room_type" edge to the RoomType entity.
 func (_c *RoomCreate) SetRoomType(v *RoomType) *RoomCreate {
 	return _c.SetRoomTypeID(v.ID)
+}
+
+// AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by IDs.
+func (_c *RoomCreate) AddMeterItemIDs(ids ...int) *RoomCreate {
+	_c.mutation.AddMeterItemIDs(ids...)
+	return _c
+}
+
+// AddMeterItems adds the "meter_items" edges to the MeterItem entity.
+func (_c *RoomCreate) AddMeterItems(v ...*MeterItem) *RoomCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMeterItemIDs(ids...)
+}
+
+// AddMeterReadingIDs adds the "meter_readings" edge to the MeterReading entity by IDs.
+func (_c *RoomCreate) AddMeterReadingIDs(ids ...int) *RoomCreate {
+	_c.mutation.AddMeterReadingIDs(ids...)
+	return _c
+}
+
+// AddMeterReadings adds the "meter_readings" edges to the MeterReading entity.
+func (_c *RoomCreate) AddMeterReadings(v ...*MeterReading) *RoomCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMeterReadingIDs(ids...)
 }
 
 // Mutation returns the RoomMutation object of the builder.
@@ -303,6 +335,38 @@ func (_c *RoomCreate) createSpec() (*Room, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.RoomTypeID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MeterItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MeterItemsTable,
+			Columns: room.MeterItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MeterReadingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.MeterReadingsTable,
+			Columns: []string{room.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

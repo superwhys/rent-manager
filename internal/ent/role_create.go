@@ -69,12 +69,6 @@ func (_c *RoleCreate) SetName(v string) *RoleCreate {
 	return _c
 }
 
-// SetAccountID sets the "account_id" field.
-func (_c *RoleCreate) SetAccountID(v int) *RoleCreate {
-	_c.mutation.SetAccountID(v)
-	return _c
-}
-
 // SetIsActive sets the "is_active" field.
 func (_c *RoleCreate) SetIsActive(v bool) *RoleCreate {
 	_c.mutation.SetIsActive(v)
@@ -169,9 +163,6 @@ func (_c *RoleCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Role.name": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.AccountID(); !ok {
-		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "Role.account_id"`)}
-	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Role.is_active"`)}
 	}
@@ -216,10 +207,6 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(role.FieldName, field.TypeString, value)
 		_node.Name = value
-	}
-	if value, ok := _c.mutation.AccountID(); ok {
-		_spec.SetField(role.FieldAccountID, field.TypeInt, value)
-		_node.AccountID = value
 	}
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(role.FieldIsActive, field.TypeBool, value)

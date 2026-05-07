@@ -24,6 +24,8 @@ type Building struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	// 所属账号ID
+	AccountID int `json:"account_id,omitempty"`
 	// 楼栋名字
 	Name string `json:"name,omitempty"`
 	// 楼栋地址
@@ -32,8 +34,6 @@ type Building struct {
 	City string `json:"city,omitempty"`
 	// 楼栋省份
 	Province string `json:"province,omitempty"`
-	// 所属账号ID
-	AccountID int `json:"account_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the BuildingQuery when eager-loading is set.
 	Edges        BuildingEdges `json:"edges"`
@@ -122,6 +122,12 @@ func (_m *Building) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
+		case building.FieldAccountID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field account_id", values[i])
+			} else if value.Valid {
+				_m.AccountID = int(value.Int64)
+			}
 		case building.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -145,12 +151,6 @@ func (_m *Building) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field province", values[i])
 			} else if value.Valid {
 				_m.Province = value.String
-			}
-		case building.FieldAccountID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field account_id", values[i])
-			} else if value.Valid {
-				_m.AccountID = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -209,6 +209,9 @@ func (_m *Building) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
+	builder.WriteString("account_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
@@ -220,9 +223,6 @@ func (_m *Building) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("province=")
 	builder.WriteString(_m.Province)
-	builder.WriteString(", ")
-	builder.WriteString("account_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
 	builder.WriteByte(')')
 	return builder.String()
 }

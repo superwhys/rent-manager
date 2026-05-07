@@ -14,6 +14,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
@@ -78,12 +80,14 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			account.Table:    account.ValidColumn,
-			building.Table:   building.ValidColumn,
-			permission.Table: permission.ValidColumn,
-			role.Table:       role.ValidColumn,
-			room.Table:       room.ValidColumn,
-			roomtype.Table:   roomtype.ValidColumn,
+			account.Table:      account.ValidColumn,
+			building.Table:     building.ValidColumn,
+			meteritem.Table:    meteritem.ValidColumn,
+			meterreading.Table: meterreading.ValidColumn,
+			permission.Table:   permission.ValidColumn,
+			role.Table:         role.ValidColumn,
+			room.Table:         room.ValidColumn,
+			roomtype.Table:     roomtype.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

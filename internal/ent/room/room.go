@@ -38,6 +38,10 @@ const (
 	EdgeBuilding = "building"
 	// EdgeRoomType holds the string denoting the room_type edge name in mutations.
 	EdgeRoomType = "room_type"
+	// EdgeMeterItems holds the string denoting the meter_items edge name in mutations.
+	EdgeMeterItems = "meter_items"
+	// EdgeMeterReadings holds the string denoting the meter_readings edge name in mutations.
+	EdgeMeterReadings = "meter_readings"
 	// Table holds the table name of the room in the database.
 	Table = "rooms"
 	// BuildingTable is the table that holds the building relation/edge.
@@ -54,6 +58,18 @@ const (
 	RoomTypeInverseTable = "room_types"
 	// RoomTypeColumn is the table column denoting the room_type relation/edge.
 	RoomTypeColumn = "room_type_id"
+	// MeterItemsTable is the table that holds the meter_items relation/edge. The primary key declared below.
+	MeterItemsTable = "room_meter_items"
+	// MeterItemsInverseTable is the table name for the MeterItem entity.
+	// It exists in this package in order to avoid circular dependency with the "meteritem" package.
+	MeterItemsInverseTable = "meter_items"
+	// MeterReadingsTable is the table that holds the meter_readings relation/edge.
+	MeterReadingsTable = "meter_readings"
+	// MeterReadingsInverseTable is the table name for the MeterReading entity.
+	// It exists in this package in order to avoid circular dependency with the "meterreading" package.
+	MeterReadingsInverseTable = "meter_readings"
+	// MeterReadingsColumn is the table column denoting the meter_readings relation/edge.
+	MeterReadingsColumn = "room_id"
 )
 
 // Columns holds all SQL columns for room fields.
@@ -70,6 +86,12 @@ var Columns = []string{
 	FieldRoomTypeID,
 	FieldIsActive,
 }
+
+var (
+	// MeterItemsPrimaryKey and MeterItemsColumn2 are the table columns denoting the
+	// primary key for the meter_items relation (M2M).
+	MeterItemsPrimaryKey = []string{"room_id", "meter_item_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -165,6 +187,34 @@ func ByRoomTypeField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRoomTypeStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByMeterItemsCount orders the results by meter_items count.
+func ByMeterItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMeterItemsStep(), opts...)
+	}
+}
+
+// ByMeterItems orders the results by meter_items terms.
+func ByMeterItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMeterItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByMeterReadingsCount orders the results by meter_readings count.
+func ByMeterReadingsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMeterReadingsStep(), opts...)
+	}
+}
+
+// ByMeterReadings orders the results by meter_readings terms.
+func ByMeterReadings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMeterReadingsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBuildingStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -177,5 +227,19 @@ func newRoomTypeStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoomTypeInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, RoomTypeTable, RoomTypeColumn),
+	)
+}
+func newMeterItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MeterItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, MeterItemsTable, MeterItemsPrimaryKey...),
+	)
+}
+func newMeterReadingsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MeterReadingsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MeterReadingsTable, MeterReadingsColumn),
 	)
 }

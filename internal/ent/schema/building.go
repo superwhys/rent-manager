@@ -16,6 +16,7 @@ func (Building) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.TimeMixin{},
 		mixin.SoftDeleteMixin{},
+		mixin.AccountMixin{},
 	}
 }
 
@@ -38,8 +39,6 @@ func (Building) Fields() []ent.Field {
 			NotEmpty().
 			MaxLen(255).
 			Comment("楼栋省份"),
-		field.Int("account_id").
-			Comment("所属账号ID"),
 	}
 }
 

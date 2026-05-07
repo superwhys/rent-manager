@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
@@ -29,37 +31,42 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeAccount    = "Account"
-	TypeBuilding   = "Building"
-	TypePermission = "Permission"
-	TypeRole       = "Role"
-	TypeRoom       = "Room"
-	TypeRoomType   = "RoomType"
+	TypeAccount      = "Account"
+	TypeBuilding     = "Building"
+	TypeMeterItem    = "MeterItem"
+	TypeMeterReading = "MeterReading"
+	TypePermission   = "Permission"
+	TypeRole         = "Role"
+	TypeRoom         = "Room"
+	TypeRoomType     = "RoomType"
 )
 
 // AccountMutation represents an operation that mutates the Account nodes in the graph.
 type AccountMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *int
-	created_at        *time.Time
-	updated_at        *time.Time
-	deleted_at        *time.Time
-	name              *string
-	email             *string
-	password          *string
-	is_active         *bool
-	clearedFields     map[string]struct{}
-	buildings         map[int]struct{}
-	removedbuildings  map[int]struct{}
-	clearedbuildings  bool
-	room_types        map[int]struct{}
-	removedroom_types map[int]struct{}
-	clearedroom_types bool
-	done              bool
-	oldValue          func(context.Context) (*Account, error)
-	predicates        []predicate.Account
+	op                 Op
+	typ                string
+	id                 *int
+	created_at         *time.Time
+	updated_at         *time.Time
+	deleted_at         *time.Time
+	name               *string
+	email              *string
+	password           *string
+	is_active          *bool
+	clearedFields      map[string]struct{}
+	buildings          map[int]struct{}
+	removedbuildings   map[int]struct{}
+	clearedbuildings   bool
+	room_types         map[int]struct{}
+	removedroom_types  map[int]struct{}
+	clearedroom_types  bool
+	meter_items        map[int]struct{}
+	removedmeter_items map[int]struct{}
+	clearedmeter_items bool
+	done               bool
+	oldValue           func(context.Context) (*Account, error)
+	predicates         []predicate.Account
 }
 
 var _ ent.Mutation = (*AccountMutation)(nil)
@@ -533,6 +540,60 @@ func (m *AccountMutation) ResetRoomTypes() {
 	m.removedroom_types = nil
 }
 
+// AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by ids.
+func (m *AccountMutation) AddMeterItemIDs(ids ...int) {
+	if m.meter_items == nil {
+		m.meter_items = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.meter_items[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMeterItems clears the "meter_items" edge to the MeterItem entity.
+func (m *AccountMutation) ClearMeterItems() {
+	m.clearedmeter_items = true
+}
+
+// MeterItemsCleared reports if the "meter_items" edge to the MeterItem entity was cleared.
+func (m *AccountMutation) MeterItemsCleared() bool {
+	return m.clearedmeter_items
+}
+
+// RemoveMeterItemIDs removes the "meter_items" edge to the MeterItem entity by IDs.
+func (m *AccountMutation) RemoveMeterItemIDs(ids ...int) {
+	if m.removedmeter_items == nil {
+		m.removedmeter_items = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.meter_items, ids[i])
+		m.removedmeter_items[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMeterItems returns the removed IDs of the "meter_items" edge to the MeterItem entity.
+func (m *AccountMutation) RemovedMeterItemsIDs() (ids []int) {
+	for id := range m.removedmeter_items {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MeterItemsIDs returns the "meter_items" edge IDs in the mutation.
+func (m *AccountMutation) MeterItemsIDs() (ids []int) {
+	for id := range m.meter_items {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMeterItems resets all changes to the "meter_items" edge.
+func (m *AccountMutation) ResetMeterItems() {
+	m.meter_items = nil
+	m.clearedmeter_items = false
+	m.removedmeter_items = nil
+}
+
 // Where appends a list predicates to the AccountMutation builder.
 func (m *AccountMutation) Where(ps ...predicate.Account) {
 	m.predicates = append(m.predicates, ps...)
@@ -777,12 +838,15 @@ func (m *AccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.buildings != nil {
 		edges = append(edges, account.EdgeBuildings)
 	}
 	if m.room_types != nil {
 		edges = append(edges, account.EdgeRoomTypes)
+	}
+	if m.meter_items != nil {
+		edges = append(edges, account.EdgeMeterItems)
 	}
 	return edges
 }
@@ -803,18 +867,27 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case account.EdgeMeterItems:
+		ids := make([]ent.Value, 0, len(m.meter_items))
+		for id := range m.meter_items {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedbuildings != nil {
 		edges = append(edges, account.EdgeBuildings)
 	}
 	if m.removedroom_types != nil {
 		edges = append(edges, account.EdgeRoomTypes)
+	}
+	if m.removedmeter_items != nil {
+		edges = append(edges, account.EdgeMeterItems)
 	}
 	return edges
 }
@@ -835,18 +908,27 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case account.EdgeMeterItems:
+		ids := make([]ent.Value, 0, len(m.removedmeter_items))
+		for id := range m.removedmeter_items {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedbuildings {
 		edges = append(edges, account.EdgeBuildings)
 	}
 	if m.clearedroom_types {
 		edges = append(edges, account.EdgeRoomTypes)
+	}
+	if m.clearedmeter_items {
+		edges = append(edges, account.EdgeMeterItems)
 	}
 	return edges
 }
@@ -859,6 +941,8 @@ func (m *AccountMutation) EdgeCleared(name string) bool {
 		return m.clearedbuildings
 	case account.EdgeRoomTypes:
 		return m.clearedroom_types
+	case account.EdgeMeterItems:
+		return m.clearedmeter_items
 	}
 	return false
 }
@@ -880,6 +964,9 @@ func (m *AccountMutation) ResetEdge(name string) error {
 		return nil
 	case account.EdgeRoomTypes:
 		m.ResetRoomTypes()
+		return nil
+	case account.EdgeMeterItems:
+		m.ResetMeterItems()
 		return nil
 	}
 	return fmt.Errorf("unknown Account edge %s", name)
@@ -1128,6 +1215,42 @@ func (m *BuildingMutation) ResetDeletedAt() {
 	delete(m.clearedFields, building.FieldDeletedAt)
 }
 
+// SetAccountID sets the "account_id" field.
+func (m *BuildingMutation) SetAccountID(i int) {
+	m.account = &i
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *BuildingMutation) AccountID() (r int, exists bool) {
+	v := m.account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the Building entity.
+// If the Building object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BuildingMutation) OldAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *BuildingMutation) ResetAccountID() {
+	m.account = nil
+}
+
 // SetName sets the "name" field.
 func (m *BuildingMutation) SetName(s string) {
 	m.name = &s
@@ -1272,42 +1395,6 @@ func (m *BuildingMutation) ResetProvince() {
 	m.province = nil
 }
 
-// SetAccountID sets the "account_id" field.
-func (m *BuildingMutation) SetAccountID(i int) {
-	m.account = &i
-}
-
-// AccountID returns the value of the "account_id" field in the mutation.
-func (m *BuildingMutation) AccountID() (r int, exists bool) {
-	v := m.account
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAccountID returns the old "account_id" field's value of the Building entity.
-// If the Building object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BuildingMutation) OldAccountID(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAccountID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
-	}
-	return oldValue.AccountID, nil
-}
-
-// ResetAccountID resets all changes to the "account_id" field.
-func (m *BuildingMutation) ResetAccountID() {
-	m.account = nil
-}
-
 // ClearAccount clears the "account" edge to the Account entity.
 func (m *BuildingMutation) ClearAccount() {
 	m.clearedaccount = true
@@ -1433,6 +1520,9 @@ func (m *BuildingMutation) Fields() []string {
 	if m.deleted_at != nil {
 		fields = append(fields, building.FieldDeletedAt)
 	}
+	if m.account != nil {
+		fields = append(fields, building.FieldAccountID)
+	}
 	if m.name != nil {
 		fields = append(fields, building.FieldName)
 	}
@@ -1444,9 +1534,6 @@ func (m *BuildingMutation) Fields() []string {
 	}
 	if m.province != nil {
 		fields = append(fields, building.FieldProvince)
-	}
-	if m.account != nil {
-		fields = append(fields, building.FieldAccountID)
 	}
 	return fields
 }
@@ -1462,6 +1549,8 @@ func (m *BuildingMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdatedAt()
 	case building.FieldDeletedAt:
 		return m.DeletedAt()
+	case building.FieldAccountID:
+		return m.AccountID()
 	case building.FieldName:
 		return m.Name()
 	case building.FieldAddress:
@@ -1470,8 +1559,6 @@ func (m *BuildingMutation) Field(name string) (ent.Value, bool) {
 		return m.City()
 	case building.FieldProvince:
 		return m.Province()
-	case building.FieldAccountID:
-		return m.AccountID()
 	}
 	return nil, false
 }
@@ -1487,6 +1574,8 @@ func (m *BuildingMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldUpdatedAt(ctx)
 	case building.FieldDeletedAt:
 		return m.OldDeletedAt(ctx)
+	case building.FieldAccountID:
+		return m.OldAccountID(ctx)
 	case building.FieldName:
 		return m.OldName(ctx)
 	case building.FieldAddress:
@@ -1495,8 +1584,6 @@ func (m *BuildingMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldCity(ctx)
 	case building.FieldProvince:
 		return m.OldProvince(ctx)
-	case building.FieldAccountID:
-		return m.OldAccountID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Building field %s", name)
 }
@@ -1527,6 +1614,13 @@ func (m *BuildingMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDeletedAt(v)
 		return nil
+	case building.FieldAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
 	case building.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -1554,13 +1648,6 @@ func (m *BuildingMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProvince(v)
-		return nil
-	case building.FieldAccountID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAccountID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Building field %s", name)
@@ -1632,6 +1719,9 @@ func (m *BuildingMutation) ResetField(name string) error {
 	case building.FieldDeletedAt:
 		m.ResetDeletedAt()
 		return nil
+	case building.FieldAccountID:
+		m.ResetAccountID()
+		return nil
 	case building.FieldName:
 		m.ResetName()
 		return nil
@@ -1643,9 +1733,6 @@ func (m *BuildingMutation) ResetField(name string) error {
 		return nil
 	case building.FieldProvince:
 		m.ResetProvince()
-		return nil
-	case building.FieldAccountID:
-		m.ResetAccountID()
 		return nil
 	}
 	return fmt.Errorf("unknown Building field %s", name)
@@ -1751,6 +1838,1976 @@ func (m *BuildingMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Building edge %s", name)
+}
+
+// MeterItemMutation represents an operation that mutates the MeterItem nodes in the graph.
+type MeterItemMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	created_at     *time.Time
+	updated_at     *time.Time
+	deleted_at     *time.Time
+	code           *string
+	unit           *string
+	is_system      *bool
+	calc_type      *meteritem.CalcType
+	remark         *string
+	clearedFields  map[string]struct{}
+	account        *int
+	clearedaccount bool
+	rooms          map[int]struct{}
+	removedrooms   map[int]struct{}
+	clearedrooms   bool
+	done           bool
+	oldValue       func(context.Context) (*MeterItem, error)
+	predicates     []predicate.MeterItem
+}
+
+var _ ent.Mutation = (*MeterItemMutation)(nil)
+
+// meteritemOption allows management of the mutation configuration using functional options.
+type meteritemOption func(*MeterItemMutation)
+
+// newMeterItemMutation creates new mutation for the MeterItem entity.
+func newMeterItemMutation(c config, op Op, opts ...meteritemOption) *MeterItemMutation {
+	m := &MeterItemMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMeterItem,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMeterItemID sets the ID field of the mutation.
+func withMeterItemID(id int) meteritemOption {
+	return func(m *MeterItemMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MeterItem
+		)
+		m.oldValue = func(ctx context.Context) (*MeterItem, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MeterItem.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMeterItem sets the old MeterItem of the mutation.
+func withMeterItem(node *MeterItem) meteritemOption {
+	return func(m *MeterItemMutation) {
+		m.oldValue = func(context.Context) (*MeterItem, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MeterItemMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MeterItemMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MeterItemMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MeterItemMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MeterItem.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MeterItemMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MeterItemMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MeterItemMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *MeterItemMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *MeterItemMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *MeterItemMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *MeterItemMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *MeterItemMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *MeterItemMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[meteritem.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *MeterItemMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[meteritem.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *MeterItemMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, meteritem.FieldDeletedAt)
+}
+
+// SetAccountID sets the "account_id" field.
+func (m *MeterItemMutation) SetAccountID(i int) {
+	m.account = &i
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *MeterItemMutation) AccountID() (r int, exists bool) {
+	v := m.account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *MeterItemMutation) ResetAccountID() {
+	m.account = nil
+}
+
+// SetCode sets the "code" field.
+func (m *MeterItemMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *MeterItemMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *MeterItemMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetUnit sets the "unit" field.
+func (m *MeterItemMutation) SetUnit(s string) {
+	m.unit = &s
+}
+
+// Unit returns the value of the "unit" field in the mutation.
+func (m *MeterItemMutation) Unit() (r string, exists bool) {
+	v := m.unit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUnit returns the old "unit" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldUnit(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUnit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUnit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUnit: %w", err)
+	}
+	return oldValue.Unit, nil
+}
+
+// ResetUnit resets all changes to the "unit" field.
+func (m *MeterItemMutation) ResetUnit() {
+	m.unit = nil
+}
+
+// SetIsSystem sets the "is_system" field.
+func (m *MeterItemMutation) SetIsSystem(b bool) {
+	m.is_system = &b
+}
+
+// IsSystem returns the value of the "is_system" field in the mutation.
+func (m *MeterItemMutation) IsSystem() (r bool, exists bool) {
+	v := m.is_system
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsSystem returns the old "is_system" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldIsSystem(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsSystem is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsSystem requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsSystem: %w", err)
+	}
+	return oldValue.IsSystem, nil
+}
+
+// ResetIsSystem resets all changes to the "is_system" field.
+func (m *MeterItemMutation) ResetIsSystem() {
+	m.is_system = nil
+}
+
+// SetCalcType sets the "calc_type" field.
+func (m *MeterItemMutation) SetCalcType(mt meteritem.CalcType) {
+	m.calc_type = &mt
+}
+
+// CalcType returns the value of the "calc_type" field in the mutation.
+func (m *MeterItemMutation) CalcType() (r meteritem.CalcType, exists bool) {
+	v := m.calc_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCalcType returns the old "calc_type" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldCalcType(ctx context.Context) (v meteritem.CalcType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCalcType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCalcType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCalcType: %w", err)
+	}
+	return oldValue.CalcType, nil
+}
+
+// ResetCalcType resets all changes to the "calc_type" field.
+func (m *MeterItemMutation) ResetCalcType() {
+	m.calc_type = nil
+}
+
+// SetRemark sets the "remark" field.
+func (m *MeterItemMutation) SetRemark(s string) {
+	m.remark = &s
+}
+
+// Remark returns the value of the "remark" field in the mutation.
+func (m *MeterItemMutation) Remark() (r string, exists bool) {
+	v := m.remark
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRemark returns the old "remark" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldRemark(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRemark is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRemark requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRemark: %w", err)
+	}
+	return oldValue.Remark, nil
+}
+
+// ClearRemark clears the value of the "remark" field.
+func (m *MeterItemMutation) ClearRemark() {
+	m.remark = nil
+	m.clearedFields[meteritem.FieldRemark] = struct{}{}
+}
+
+// RemarkCleared returns if the "remark" field was cleared in this mutation.
+func (m *MeterItemMutation) RemarkCleared() bool {
+	_, ok := m.clearedFields[meteritem.FieldRemark]
+	return ok
+}
+
+// ResetRemark resets all changes to the "remark" field.
+func (m *MeterItemMutation) ResetRemark() {
+	m.remark = nil
+	delete(m.clearedFields, meteritem.FieldRemark)
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (m *MeterItemMutation) ClearAccount() {
+	m.clearedaccount = true
+	m.clearedFields[meteritem.FieldAccountID] = struct{}{}
+}
+
+// AccountCleared reports if the "account" edge to the Account entity was cleared.
+func (m *MeterItemMutation) AccountCleared() bool {
+	return m.clearedaccount
+}
+
+// AccountIDs returns the "account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AccountID instead. It exists only for internal usage by the builders.
+func (m *MeterItemMutation) AccountIDs() (ids []int) {
+	if id := m.account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAccount resets all changes to the "account" edge.
+func (m *MeterItemMutation) ResetAccount() {
+	m.account = nil
+	m.clearedaccount = false
+}
+
+// AddRoomIDs adds the "rooms" edge to the Room entity by ids.
+func (m *MeterItemMutation) AddRoomIDs(ids ...int) {
+	if m.rooms == nil {
+		m.rooms = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.rooms[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRooms clears the "rooms" edge to the Room entity.
+func (m *MeterItemMutation) ClearRooms() {
+	m.clearedrooms = true
+}
+
+// RoomsCleared reports if the "rooms" edge to the Room entity was cleared.
+func (m *MeterItemMutation) RoomsCleared() bool {
+	return m.clearedrooms
+}
+
+// RemoveRoomIDs removes the "rooms" edge to the Room entity by IDs.
+func (m *MeterItemMutation) RemoveRoomIDs(ids ...int) {
+	if m.removedrooms == nil {
+		m.removedrooms = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.rooms, ids[i])
+		m.removedrooms[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRooms returns the removed IDs of the "rooms" edge to the Room entity.
+func (m *MeterItemMutation) RemovedRoomsIDs() (ids []int) {
+	for id := range m.removedrooms {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RoomsIDs returns the "rooms" edge IDs in the mutation.
+func (m *MeterItemMutation) RoomsIDs() (ids []int) {
+	for id := range m.rooms {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRooms resets all changes to the "rooms" edge.
+func (m *MeterItemMutation) ResetRooms() {
+	m.rooms = nil
+	m.clearedrooms = false
+	m.removedrooms = nil
+}
+
+// Where appends a list predicates to the MeterItemMutation builder.
+func (m *MeterItemMutation) Where(ps ...predicate.MeterItem) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MeterItemMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MeterItemMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MeterItem, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MeterItemMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MeterItemMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MeterItem).
+func (m *MeterItemMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MeterItemMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.created_at != nil {
+		fields = append(fields, meteritem.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, meteritem.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, meteritem.FieldDeletedAt)
+	}
+	if m.account != nil {
+		fields = append(fields, meteritem.FieldAccountID)
+	}
+	if m.code != nil {
+		fields = append(fields, meteritem.FieldCode)
+	}
+	if m.unit != nil {
+		fields = append(fields, meteritem.FieldUnit)
+	}
+	if m.is_system != nil {
+		fields = append(fields, meteritem.FieldIsSystem)
+	}
+	if m.calc_type != nil {
+		fields = append(fields, meteritem.FieldCalcType)
+	}
+	if m.remark != nil {
+		fields = append(fields, meteritem.FieldRemark)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MeterItemMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case meteritem.FieldCreatedAt:
+		return m.CreatedAt()
+	case meteritem.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case meteritem.FieldDeletedAt:
+		return m.DeletedAt()
+	case meteritem.FieldAccountID:
+		return m.AccountID()
+	case meteritem.FieldCode:
+		return m.Code()
+	case meteritem.FieldUnit:
+		return m.Unit()
+	case meteritem.FieldIsSystem:
+		return m.IsSystem()
+	case meteritem.FieldCalcType:
+		return m.CalcType()
+	case meteritem.FieldRemark:
+		return m.Remark()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MeterItemMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case meteritem.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case meteritem.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case meteritem.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case meteritem.FieldAccountID:
+		return m.OldAccountID(ctx)
+	case meteritem.FieldCode:
+		return m.OldCode(ctx)
+	case meteritem.FieldUnit:
+		return m.OldUnit(ctx)
+	case meteritem.FieldIsSystem:
+		return m.OldIsSystem(ctx)
+	case meteritem.FieldCalcType:
+		return m.OldCalcType(ctx)
+	case meteritem.FieldRemark:
+		return m.OldRemark(ctx)
+	}
+	return nil, fmt.Errorf("unknown MeterItem field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MeterItemMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case meteritem.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case meteritem.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case meteritem.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case meteritem.FieldAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
+	case meteritem.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case meteritem.FieldUnit:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUnit(v)
+		return nil
+	case meteritem.FieldIsSystem:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsSystem(v)
+		return nil
+	case meteritem.FieldCalcType:
+		v, ok := value.(meteritem.CalcType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCalcType(v)
+		return nil
+	case meteritem.FieldRemark:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRemark(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MeterItem field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MeterItemMutation) AddedFields() []string {
+	var fields []string
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MeterItemMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MeterItemMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown MeterItem numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MeterItemMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(meteritem.FieldDeletedAt) {
+		fields = append(fields, meteritem.FieldDeletedAt)
+	}
+	if m.FieldCleared(meteritem.FieldRemark) {
+		fields = append(fields, meteritem.FieldRemark)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MeterItemMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MeterItemMutation) ClearField(name string) error {
+	switch name {
+	case meteritem.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case meteritem.FieldRemark:
+		m.ClearRemark()
+		return nil
+	}
+	return fmt.Errorf("unknown MeterItem nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MeterItemMutation) ResetField(name string) error {
+	switch name {
+	case meteritem.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case meteritem.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case meteritem.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case meteritem.FieldAccountID:
+		m.ResetAccountID()
+		return nil
+	case meteritem.FieldCode:
+		m.ResetCode()
+		return nil
+	case meteritem.FieldUnit:
+		m.ResetUnit()
+		return nil
+	case meteritem.FieldIsSystem:
+		m.ResetIsSystem()
+		return nil
+	case meteritem.FieldCalcType:
+		m.ResetCalcType()
+		return nil
+	case meteritem.FieldRemark:
+		m.ResetRemark()
+		return nil
+	}
+	return fmt.Errorf("unknown MeterItem field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MeterItemMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.account != nil {
+		edges = append(edges, meteritem.EdgeAccount)
+	}
+	if m.rooms != nil {
+		edges = append(edges, meteritem.EdgeRooms)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MeterItemMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case meteritem.EdgeAccount:
+		if id := m.account; id != nil {
+			return []ent.Value{*id}
+		}
+	case meteritem.EdgeRooms:
+		ids := make([]ent.Value, 0, len(m.rooms))
+		for id := range m.rooms {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MeterItemMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedrooms != nil {
+		edges = append(edges, meteritem.EdgeRooms)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MeterItemMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case meteritem.EdgeRooms:
+		ids := make([]ent.Value, 0, len(m.removedrooms))
+		for id := range m.removedrooms {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MeterItemMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedaccount {
+		edges = append(edges, meteritem.EdgeAccount)
+	}
+	if m.clearedrooms {
+		edges = append(edges, meteritem.EdgeRooms)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MeterItemMutation) EdgeCleared(name string) bool {
+	switch name {
+	case meteritem.EdgeAccount:
+		return m.clearedaccount
+	case meteritem.EdgeRooms:
+		return m.clearedrooms
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MeterItemMutation) ClearEdge(name string) error {
+	switch name {
+	case meteritem.EdgeAccount:
+		m.ClearAccount()
+		return nil
+	}
+	return fmt.Errorf("unknown MeterItem unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MeterItemMutation) ResetEdge(name string) error {
+	switch name {
+	case meteritem.EdgeAccount:
+		m.ResetAccount()
+		return nil
+	case meteritem.EdgeRooms:
+		m.ResetRooms()
+		return nil
+	}
+	return fmt.Errorf("unknown MeterItem edge %s", name)
+}
+
+// MeterReadingMutation represents an operation that mutates the MeterReading nodes in the graph.
+type MeterReadingMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *int
+	period_month        *string
+	previous_reading    *float64
+	addprevious_reading *float64
+	current_reading     *float64
+	addcurrent_reading  *float64
+	usage_amount        *float64
+	addusage_amount     *float64
+	reading_time        *time.Time
+	reader_id           *int64
+	addreader_id        *int64
+	source              *meterreading.Source
+	remark              *string
+	clearedFields       map[string]struct{}
+	room                *int
+	clearedroom         bool
+	done                bool
+	oldValue            func(context.Context) (*MeterReading, error)
+	predicates          []predicate.MeterReading
+}
+
+var _ ent.Mutation = (*MeterReadingMutation)(nil)
+
+// meterreadingOption allows management of the mutation configuration using functional options.
+type meterreadingOption func(*MeterReadingMutation)
+
+// newMeterReadingMutation creates new mutation for the MeterReading entity.
+func newMeterReadingMutation(c config, op Op, opts ...meterreadingOption) *MeterReadingMutation {
+	m := &MeterReadingMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMeterReading,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMeterReadingID sets the ID field of the mutation.
+func withMeterReadingID(id int) meterreadingOption {
+	return func(m *MeterReadingMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MeterReading
+		)
+		m.oldValue = func(ctx context.Context) (*MeterReading, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MeterReading.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMeterReading sets the old MeterReading of the mutation.
+func withMeterReading(node *MeterReading) meterreadingOption {
+	return func(m *MeterReadingMutation) {
+		m.oldValue = func(context.Context) (*MeterReading, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MeterReadingMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MeterReadingMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MeterReadingMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MeterReadingMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MeterReading.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetRoomID sets the "room_id" field.
+func (m *MeterReadingMutation) SetRoomID(i int) {
+	m.room = &i
+}
+
+// RoomID returns the value of the "room_id" field in the mutation.
+func (m *MeterReadingMutation) RoomID() (r int, exists bool) {
+	v := m.room
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRoomID returns the old "room_id" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldRoomID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRoomID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRoomID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRoomID: %w", err)
+	}
+	return oldValue.RoomID, nil
+}
+
+// ResetRoomID resets all changes to the "room_id" field.
+func (m *MeterReadingMutation) ResetRoomID() {
+	m.room = nil
+}
+
+// SetPeriodMonth sets the "period_month" field.
+func (m *MeterReadingMutation) SetPeriodMonth(s string) {
+	m.period_month = &s
+}
+
+// PeriodMonth returns the value of the "period_month" field in the mutation.
+func (m *MeterReadingMutation) PeriodMonth() (r string, exists bool) {
+	v := m.period_month
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPeriodMonth returns the old "period_month" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldPeriodMonth(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPeriodMonth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPeriodMonth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPeriodMonth: %w", err)
+	}
+	return oldValue.PeriodMonth, nil
+}
+
+// ResetPeriodMonth resets all changes to the "period_month" field.
+func (m *MeterReadingMutation) ResetPeriodMonth() {
+	m.period_month = nil
+}
+
+// SetPreviousReading sets the "previous_reading" field.
+func (m *MeterReadingMutation) SetPreviousReading(f float64) {
+	m.previous_reading = &f
+	m.addprevious_reading = nil
+}
+
+// PreviousReading returns the value of the "previous_reading" field in the mutation.
+func (m *MeterReadingMutation) PreviousReading() (r float64, exists bool) {
+	v := m.previous_reading
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPreviousReading returns the old "previous_reading" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldPreviousReading(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPreviousReading is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPreviousReading requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPreviousReading: %w", err)
+	}
+	return oldValue.PreviousReading, nil
+}
+
+// AddPreviousReading adds f to the "previous_reading" field.
+func (m *MeterReadingMutation) AddPreviousReading(f float64) {
+	if m.addprevious_reading != nil {
+		*m.addprevious_reading += f
+	} else {
+		m.addprevious_reading = &f
+	}
+}
+
+// AddedPreviousReading returns the value that was added to the "previous_reading" field in this mutation.
+func (m *MeterReadingMutation) AddedPreviousReading() (r float64, exists bool) {
+	v := m.addprevious_reading
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearPreviousReading clears the value of the "previous_reading" field.
+func (m *MeterReadingMutation) ClearPreviousReading() {
+	m.previous_reading = nil
+	m.addprevious_reading = nil
+	m.clearedFields[meterreading.FieldPreviousReading] = struct{}{}
+}
+
+// PreviousReadingCleared returns if the "previous_reading" field was cleared in this mutation.
+func (m *MeterReadingMutation) PreviousReadingCleared() bool {
+	_, ok := m.clearedFields[meterreading.FieldPreviousReading]
+	return ok
+}
+
+// ResetPreviousReading resets all changes to the "previous_reading" field.
+func (m *MeterReadingMutation) ResetPreviousReading() {
+	m.previous_reading = nil
+	m.addprevious_reading = nil
+	delete(m.clearedFields, meterreading.FieldPreviousReading)
+}
+
+// SetCurrentReading sets the "current_reading" field.
+func (m *MeterReadingMutation) SetCurrentReading(f float64) {
+	m.current_reading = &f
+	m.addcurrent_reading = nil
+}
+
+// CurrentReading returns the value of the "current_reading" field in the mutation.
+func (m *MeterReadingMutation) CurrentReading() (r float64, exists bool) {
+	v := m.current_reading
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentReading returns the old "current_reading" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldCurrentReading(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentReading is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentReading requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentReading: %w", err)
+	}
+	return oldValue.CurrentReading, nil
+}
+
+// AddCurrentReading adds f to the "current_reading" field.
+func (m *MeterReadingMutation) AddCurrentReading(f float64) {
+	if m.addcurrent_reading != nil {
+		*m.addcurrent_reading += f
+	} else {
+		m.addcurrent_reading = &f
+	}
+}
+
+// AddedCurrentReading returns the value that was added to the "current_reading" field in this mutation.
+func (m *MeterReadingMutation) AddedCurrentReading() (r float64, exists bool) {
+	v := m.addcurrent_reading
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCurrentReading resets all changes to the "current_reading" field.
+func (m *MeterReadingMutation) ResetCurrentReading() {
+	m.current_reading = nil
+	m.addcurrent_reading = nil
+}
+
+// SetUsageAmount sets the "usage_amount" field.
+func (m *MeterReadingMutation) SetUsageAmount(f float64) {
+	m.usage_amount = &f
+	m.addusage_amount = nil
+}
+
+// UsageAmount returns the value of the "usage_amount" field in the mutation.
+func (m *MeterReadingMutation) UsageAmount() (r float64, exists bool) {
+	v := m.usage_amount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUsageAmount returns the old "usage_amount" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldUsageAmount(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUsageAmount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUsageAmount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUsageAmount: %w", err)
+	}
+	return oldValue.UsageAmount, nil
+}
+
+// AddUsageAmount adds f to the "usage_amount" field.
+func (m *MeterReadingMutation) AddUsageAmount(f float64) {
+	if m.addusage_amount != nil {
+		*m.addusage_amount += f
+	} else {
+		m.addusage_amount = &f
+	}
+}
+
+// AddedUsageAmount returns the value that was added to the "usage_amount" field in this mutation.
+func (m *MeterReadingMutation) AddedUsageAmount() (r float64, exists bool) {
+	v := m.addusage_amount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearUsageAmount clears the value of the "usage_amount" field.
+func (m *MeterReadingMutation) ClearUsageAmount() {
+	m.usage_amount = nil
+	m.addusage_amount = nil
+	m.clearedFields[meterreading.FieldUsageAmount] = struct{}{}
+}
+
+// UsageAmountCleared returns if the "usage_amount" field was cleared in this mutation.
+func (m *MeterReadingMutation) UsageAmountCleared() bool {
+	_, ok := m.clearedFields[meterreading.FieldUsageAmount]
+	return ok
+}
+
+// ResetUsageAmount resets all changes to the "usage_amount" field.
+func (m *MeterReadingMutation) ResetUsageAmount() {
+	m.usage_amount = nil
+	m.addusage_amount = nil
+	delete(m.clearedFields, meterreading.FieldUsageAmount)
+}
+
+// SetReadingTime sets the "reading_time" field.
+func (m *MeterReadingMutation) SetReadingTime(t time.Time) {
+	m.reading_time = &t
+}
+
+// ReadingTime returns the value of the "reading_time" field in the mutation.
+func (m *MeterReadingMutation) ReadingTime() (r time.Time, exists bool) {
+	v := m.reading_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReadingTime returns the old "reading_time" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldReadingTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReadingTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReadingTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReadingTime: %w", err)
+	}
+	return oldValue.ReadingTime, nil
+}
+
+// ResetReadingTime resets all changes to the "reading_time" field.
+func (m *MeterReadingMutation) ResetReadingTime() {
+	m.reading_time = nil
+}
+
+// SetReaderID sets the "reader_id" field.
+func (m *MeterReadingMutation) SetReaderID(i int64) {
+	m.reader_id = &i
+	m.addreader_id = nil
+}
+
+// ReaderID returns the value of the "reader_id" field in the mutation.
+func (m *MeterReadingMutation) ReaderID() (r int64, exists bool) {
+	v := m.reader_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReaderID returns the old "reader_id" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldReaderID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReaderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReaderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReaderID: %w", err)
+	}
+	return oldValue.ReaderID, nil
+}
+
+// AddReaderID adds i to the "reader_id" field.
+func (m *MeterReadingMutation) AddReaderID(i int64) {
+	if m.addreader_id != nil {
+		*m.addreader_id += i
+	} else {
+		m.addreader_id = &i
+	}
+}
+
+// AddedReaderID returns the value that was added to the "reader_id" field in this mutation.
+func (m *MeterReadingMutation) AddedReaderID() (r int64, exists bool) {
+	v := m.addreader_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearReaderID clears the value of the "reader_id" field.
+func (m *MeterReadingMutation) ClearReaderID() {
+	m.reader_id = nil
+	m.addreader_id = nil
+	m.clearedFields[meterreading.FieldReaderID] = struct{}{}
+}
+
+// ReaderIDCleared returns if the "reader_id" field was cleared in this mutation.
+func (m *MeterReadingMutation) ReaderIDCleared() bool {
+	_, ok := m.clearedFields[meterreading.FieldReaderID]
+	return ok
+}
+
+// ResetReaderID resets all changes to the "reader_id" field.
+func (m *MeterReadingMutation) ResetReaderID() {
+	m.reader_id = nil
+	m.addreader_id = nil
+	delete(m.clearedFields, meterreading.FieldReaderID)
+}
+
+// SetSource sets the "source" field.
+func (m *MeterReadingMutation) SetSource(value meterreading.Source) {
+	m.source = &value
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *MeterReadingMutation) Source() (r meterreading.Source, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldSource(ctx context.Context) (v meterreading.Source, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *MeterReadingMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetRemark sets the "remark" field.
+func (m *MeterReadingMutation) SetRemark(s string) {
+	m.remark = &s
+}
+
+// Remark returns the value of the "remark" field in the mutation.
+func (m *MeterReadingMutation) Remark() (r string, exists bool) {
+	v := m.remark
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRemark returns the old "remark" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldRemark(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRemark is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRemark requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRemark: %w", err)
+	}
+	return oldValue.Remark, nil
+}
+
+// ClearRemark clears the value of the "remark" field.
+func (m *MeterReadingMutation) ClearRemark() {
+	m.remark = nil
+	m.clearedFields[meterreading.FieldRemark] = struct{}{}
+}
+
+// RemarkCleared returns if the "remark" field was cleared in this mutation.
+func (m *MeterReadingMutation) RemarkCleared() bool {
+	_, ok := m.clearedFields[meterreading.FieldRemark]
+	return ok
+}
+
+// ResetRemark resets all changes to the "remark" field.
+func (m *MeterReadingMutation) ResetRemark() {
+	m.remark = nil
+	delete(m.clearedFields, meterreading.FieldRemark)
+}
+
+// ClearRoom clears the "room" edge to the Room entity.
+func (m *MeterReadingMutation) ClearRoom() {
+	m.clearedroom = true
+	m.clearedFields[meterreading.FieldRoomID] = struct{}{}
+}
+
+// RoomCleared reports if the "room" edge to the Room entity was cleared.
+func (m *MeterReadingMutation) RoomCleared() bool {
+	return m.clearedroom
+}
+
+// RoomIDs returns the "room" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RoomID instead. It exists only for internal usage by the builders.
+func (m *MeterReadingMutation) RoomIDs() (ids []int) {
+	if id := m.room; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRoom resets all changes to the "room" edge.
+func (m *MeterReadingMutation) ResetRoom() {
+	m.room = nil
+	m.clearedroom = false
+}
+
+// Where appends a list predicates to the MeterReadingMutation builder.
+func (m *MeterReadingMutation) Where(ps ...predicate.MeterReading) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MeterReadingMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MeterReadingMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MeterReading, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MeterReadingMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MeterReadingMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MeterReading).
+func (m *MeterReadingMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MeterReadingMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.room != nil {
+		fields = append(fields, meterreading.FieldRoomID)
+	}
+	if m.period_month != nil {
+		fields = append(fields, meterreading.FieldPeriodMonth)
+	}
+	if m.previous_reading != nil {
+		fields = append(fields, meterreading.FieldPreviousReading)
+	}
+	if m.current_reading != nil {
+		fields = append(fields, meterreading.FieldCurrentReading)
+	}
+	if m.usage_amount != nil {
+		fields = append(fields, meterreading.FieldUsageAmount)
+	}
+	if m.reading_time != nil {
+		fields = append(fields, meterreading.FieldReadingTime)
+	}
+	if m.reader_id != nil {
+		fields = append(fields, meterreading.FieldReaderID)
+	}
+	if m.source != nil {
+		fields = append(fields, meterreading.FieldSource)
+	}
+	if m.remark != nil {
+		fields = append(fields, meterreading.FieldRemark)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MeterReadingMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case meterreading.FieldRoomID:
+		return m.RoomID()
+	case meterreading.FieldPeriodMonth:
+		return m.PeriodMonth()
+	case meterreading.FieldPreviousReading:
+		return m.PreviousReading()
+	case meterreading.FieldCurrentReading:
+		return m.CurrentReading()
+	case meterreading.FieldUsageAmount:
+		return m.UsageAmount()
+	case meterreading.FieldReadingTime:
+		return m.ReadingTime()
+	case meterreading.FieldReaderID:
+		return m.ReaderID()
+	case meterreading.FieldSource:
+		return m.Source()
+	case meterreading.FieldRemark:
+		return m.Remark()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MeterReadingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case meterreading.FieldRoomID:
+		return m.OldRoomID(ctx)
+	case meterreading.FieldPeriodMonth:
+		return m.OldPeriodMonth(ctx)
+	case meterreading.FieldPreviousReading:
+		return m.OldPreviousReading(ctx)
+	case meterreading.FieldCurrentReading:
+		return m.OldCurrentReading(ctx)
+	case meterreading.FieldUsageAmount:
+		return m.OldUsageAmount(ctx)
+	case meterreading.FieldReadingTime:
+		return m.OldReadingTime(ctx)
+	case meterreading.FieldReaderID:
+		return m.OldReaderID(ctx)
+	case meterreading.FieldSource:
+		return m.OldSource(ctx)
+	case meterreading.FieldRemark:
+		return m.OldRemark(ctx)
+	}
+	return nil, fmt.Errorf("unknown MeterReading field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MeterReadingMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case meterreading.FieldRoomID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRoomID(v)
+		return nil
+	case meterreading.FieldPeriodMonth:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPeriodMonth(v)
+		return nil
+	case meterreading.FieldPreviousReading:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPreviousReading(v)
+		return nil
+	case meterreading.FieldCurrentReading:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentReading(v)
+		return nil
+	case meterreading.FieldUsageAmount:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUsageAmount(v)
+		return nil
+	case meterreading.FieldReadingTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReadingTime(v)
+		return nil
+	case meterreading.FieldReaderID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReaderID(v)
+		return nil
+	case meterreading.FieldSource:
+		v, ok := value.(meterreading.Source)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case meterreading.FieldRemark:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRemark(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MeterReading field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MeterReadingMutation) AddedFields() []string {
+	var fields []string
+	if m.addprevious_reading != nil {
+		fields = append(fields, meterreading.FieldPreviousReading)
+	}
+	if m.addcurrent_reading != nil {
+		fields = append(fields, meterreading.FieldCurrentReading)
+	}
+	if m.addusage_amount != nil {
+		fields = append(fields, meterreading.FieldUsageAmount)
+	}
+	if m.addreader_id != nil {
+		fields = append(fields, meterreading.FieldReaderID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MeterReadingMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case meterreading.FieldPreviousReading:
+		return m.AddedPreviousReading()
+	case meterreading.FieldCurrentReading:
+		return m.AddedCurrentReading()
+	case meterreading.FieldUsageAmount:
+		return m.AddedUsageAmount()
+	case meterreading.FieldReaderID:
+		return m.AddedReaderID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MeterReadingMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case meterreading.FieldPreviousReading:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPreviousReading(v)
+		return nil
+	case meterreading.FieldCurrentReading:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCurrentReading(v)
+		return nil
+	case meterreading.FieldUsageAmount:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUsageAmount(v)
+		return nil
+	case meterreading.FieldReaderID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReaderID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MeterReading numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MeterReadingMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(meterreading.FieldPreviousReading) {
+		fields = append(fields, meterreading.FieldPreviousReading)
+	}
+	if m.FieldCleared(meterreading.FieldUsageAmount) {
+		fields = append(fields, meterreading.FieldUsageAmount)
+	}
+	if m.FieldCleared(meterreading.FieldReaderID) {
+		fields = append(fields, meterreading.FieldReaderID)
+	}
+	if m.FieldCleared(meterreading.FieldRemark) {
+		fields = append(fields, meterreading.FieldRemark)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MeterReadingMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MeterReadingMutation) ClearField(name string) error {
+	switch name {
+	case meterreading.FieldPreviousReading:
+		m.ClearPreviousReading()
+		return nil
+	case meterreading.FieldUsageAmount:
+		m.ClearUsageAmount()
+		return nil
+	case meterreading.FieldReaderID:
+		m.ClearReaderID()
+		return nil
+	case meterreading.FieldRemark:
+		m.ClearRemark()
+		return nil
+	}
+	return fmt.Errorf("unknown MeterReading nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MeterReadingMutation) ResetField(name string) error {
+	switch name {
+	case meterreading.FieldRoomID:
+		m.ResetRoomID()
+		return nil
+	case meterreading.FieldPeriodMonth:
+		m.ResetPeriodMonth()
+		return nil
+	case meterreading.FieldPreviousReading:
+		m.ResetPreviousReading()
+		return nil
+	case meterreading.FieldCurrentReading:
+		m.ResetCurrentReading()
+		return nil
+	case meterreading.FieldUsageAmount:
+		m.ResetUsageAmount()
+		return nil
+	case meterreading.FieldReadingTime:
+		m.ResetReadingTime()
+		return nil
+	case meterreading.FieldReaderID:
+		m.ResetReaderID()
+		return nil
+	case meterreading.FieldSource:
+		m.ResetSource()
+		return nil
+	case meterreading.FieldRemark:
+		m.ResetRemark()
+		return nil
+	}
+	return fmt.Errorf("unknown MeterReading field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MeterReadingMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.room != nil {
+		edges = append(edges, meterreading.EdgeRoom)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MeterReadingMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case meterreading.EdgeRoom:
+		if id := m.room; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MeterReadingMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MeterReadingMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MeterReadingMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedroom {
+		edges = append(edges, meterreading.EdgeRoom)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MeterReadingMutation) EdgeCleared(name string) bool {
+	switch name {
+	case meterreading.EdgeRoom:
+		return m.clearedroom
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MeterReadingMutation) ClearEdge(name string) error {
+	switch name {
+	case meterreading.EdgeRoom:
+		m.ClearRoom()
+		return nil
+	}
+	return fmt.Errorf("unknown MeterReading unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MeterReadingMutation) ResetEdge(name string) error {
+	switch name {
+	case meterreading.EdgeRoom:
+		m.ResetRoom()
+		return nil
+	}
+	return fmt.Errorf("unknown MeterReading edge %s", name)
 }
 
 // PermissionMutation represents an operation that mutates the Permission nodes in the graph.
@@ -2528,8 +4585,6 @@ type RoleMutation struct {
 	updated_at         *time.Time
 	deleted_at         *time.Time
 	name               *string
-	account_id         *int
-	addaccount_id      *int
 	is_active          *bool
 	clearedFields      map[string]struct{}
 	permissions        map[int]struct{}
@@ -2795,62 +4850,6 @@ func (m *RoleMutation) ResetName() {
 	m.name = nil
 }
 
-// SetAccountID sets the "account_id" field.
-func (m *RoleMutation) SetAccountID(i int) {
-	m.account_id = &i
-	m.addaccount_id = nil
-}
-
-// AccountID returns the value of the "account_id" field in the mutation.
-func (m *RoleMutation) AccountID() (r int, exists bool) {
-	v := m.account_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAccountID returns the old "account_id" field's value of the Role entity.
-// If the Role object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RoleMutation) OldAccountID(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAccountID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
-	}
-	return oldValue.AccountID, nil
-}
-
-// AddAccountID adds i to the "account_id" field.
-func (m *RoleMutation) AddAccountID(i int) {
-	if m.addaccount_id != nil {
-		*m.addaccount_id += i
-	} else {
-		m.addaccount_id = &i
-	}
-}
-
-// AddedAccountID returns the value that was added to the "account_id" field in this mutation.
-func (m *RoleMutation) AddedAccountID() (r int, exists bool) {
-	v := m.addaccount_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetAccountID resets all changes to the "account_id" field.
-func (m *RoleMutation) ResetAccountID() {
-	m.account_id = nil
-	m.addaccount_id = nil
-}
-
 // SetIsActive sets the "is_active" field.
 func (m *RoleMutation) SetIsActive(b bool) {
 	m.is_active = &b
@@ -2975,7 +4974,7 @@ func (m *RoleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RoleMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, role.FieldCreatedAt)
 	}
@@ -2987,9 +4986,6 @@ func (m *RoleMutation) Fields() []string {
 	}
 	if m.name != nil {
 		fields = append(fields, role.FieldName)
-	}
-	if m.account_id != nil {
-		fields = append(fields, role.FieldAccountID)
 	}
 	if m.is_active != nil {
 		fields = append(fields, role.FieldIsActive)
@@ -3010,8 +5006,6 @@ func (m *RoleMutation) Field(name string) (ent.Value, bool) {
 		return m.DeletedAt()
 	case role.FieldName:
 		return m.Name()
-	case role.FieldAccountID:
-		return m.AccountID()
 	case role.FieldIsActive:
 		return m.IsActive()
 	}
@@ -3031,8 +5025,6 @@ func (m *RoleMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldDeletedAt(ctx)
 	case role.FieldName:
 		return m.OldName(ctx)
-	case role.FieldAccountID:
-		return m.OldAccountID(ctx)
 	case role.FieldIsActive:
 		return m.OldIsActive(ctx)
 	}
@@ -3072,13 +5064,6 @@ func (m *RoleMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case role.FieldAccountID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAccountID(v)
-		return nil
 	case role.FieldIsActive:
 		v, ok := value.(bool)
 		if !ok {
@@ -3093,21 +5078,13 @@ func (m *RoleMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *RoleMutation) AddedFields() []string {
-	var fields []string
-	if m.addaccount_id != nil {
-		fields = append(fields, role.FieldAccountID)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *RoleMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case role.FieldAccountID:
-		return m.AddedAccountID()
-	}
 	return nil, false
 }
 
@@ -3116,13 +5093,6 @@ func (m *RoleMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *RoleMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case role.FieldAccountID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddAccountID(v)
-		return nil
 	}
 	return fmt.Errorf("unknown Role numeric field %s", name)
 }
@@ -3170,9 +5140,6 @@ func (m *RoleMutation) ResetField(name string) error {
 		return nil
 	case role.FieldName:
 		m.ResetName()
-		return nil
-	case role.FieldAccountID:
-		m.ResetAccountID()
 		return nil
 	case role.FieldIsActive:
 		m.ResetIsActive()
@@ -3268,28 +5235,34 @@ func (m *RoleMutation) ResetEdge(name string) error {
 // RoomMutation represents an operation that mutates the Room nodes in the graph.
 type RoomMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int
-	created_at       *time.Time
-	updated_at       *time.Time
-	deleted_at       *time.Time
-	room_no          *string
-	floor            *int
-	addfloor         *int
-	price            *int
-	addprice         *int
-	size             *int
-	addsize          *int
-	is_active        *bool
-	clearedFields    map[string]struct{}
-	building         *int
-	clearedbuilding  bool
-	room_type        *int
-	clearedroom_type bool
-	done             bool
-	oldValue         func(context.Context) (*Room, error)
-	predicates       []predicate.Room
+	op                    Op
+	typ                   string
+	id                    *int
+	created_at            *time.Time
+	updated_at            *time.Time
+	deleted_at            *time.Time
+	room_no               *string
+	floor                 *int
+	addfloor              *int
+	price                 *int
+	addprice              *int
+	size                  *int
+	addsize               *int
+	is_active             *bool
+	clearedFields         map[string]struct{}
+	building              *int
+	clearedbuilding       bool
+	room_type             *int
+	clearedroom_type      bool
+	meter_items           map[int]struct{}
+	removedmeter_items    map[int]struct{}
+	clearedmeter_items    bool
+	meter_readings        map[int]struct{}
+	removedmeter_readings map[int]struct{}
+	clearedmeter_readings bool
+	done                  bool
+	oldValue              func(context.Context) (*Room, error)
+	predicates            []predicate.Room
 }
 
 var _ ent.Mutation = (*RoomMutation)(nil)
@@ -3877,6 +5850,114 @@ func (m *RoomMutation) ResetRoomType() {
 	m.clearedroom_type = false
 }
 
+// AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by ids.
+func (m *RoomMutation) AddMeterItemIDs(ids ...int) {
+	if m.meter_items == nil {
+		m.meter_items = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.meter_items[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMeterItems clears the "meter_items" edge to the MeterItem entity.
+func (m *RoomMutation) ClearMeterItems() {
+	m.clearedmeter_items = true
+}
+
+// MeterItemsCleared reports if the "meter_items" edge to the MeterItem entity was cleared.
+func (m *RoomMutation) MeterItemsCleared() bool {
+	return m.clearedmeter_items
+}
+
+// RemoveMeterItemIDs removes the "meter_items" edge to the MeterItem entity by IDs.
+func (m *RoomMutation) RemoveMeterItemIDs(ids ...int) {
+	if m.removedmeter_items == nil {
+		m.removedmeter_items = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.meter_items, ids[i])
+		m.removedmeter_items[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMeterItems returns the removed IDs of the "meter_items" edge to the MeterItem entity.
+func (m *RoomMutation) RemovedMeterItemsIDs() (ids []int) {
+	for id := range m.removedmeter_items {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MeterItemsIDs returns the "meter_items" edge IDs in the mutation.
+func (m *RoomMutation) MeterItemsIDs() (ids []int) {
+	for id := range m.meter_items {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMeterItems resets all changes to the "meter_items" edge.
+func (m *RoomMutation) ResetMeterItems() {
+	m.meter_items = nil
+	m.clearedmeter_items = false
+	m.removedmeter_items = nil
+}
+
+// AddMeterReadingIDs adds the "meter_readings" edge to the MeterReading entity by ids.
+func (m *RoomMutation) AddMeterReadingIDs(ids ...int) {
+	if m.meter_readings == nil {
+		m.meter_readings = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.meter_readings[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMeterReadings clears the "meter_readings" edge to the MeterReading entity.
+func (m *RoomMutation) ClearMeterReadings() {
+	m.clearedmeter_readings = true
+}
+
+// MeterReadingsCleared reports if the "meter_readings" edge to the MeterReading entity was cleared.
+func (m *RoomMutation) MeterReadingsCleared() bool {
+	return m.clearedmeter_readings
+}
+
+// RemoveMeterReadingIDs removes the "meter_readings" edge to the MeterReading entity by IDs.
+func (m *RoomMutation) RemoveMeterReadingIDs(ids ...int) {
+	if m.removedmeter_readings == nil {
+		m.removedmeter_readings = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.meter_readings, ids[i])
+		m.removedmeter_readings[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMeterReadings returns the removed IDs of the "meter_readings" edge to the MeterReading entity.
+func (m *RoomMutation) RemovedMeterReadingsIDs() (ids []int) {
+	for id := range m.removedmeter_readings {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MeterReadingsIDs returns the "meter_readings" edge IDs in the mutation.
+func (m *RoomMutation) MeterReadingsIDs() (ids []int) {
+	for id := range m.meter_readings {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMeterReadings resets all changes to the "meter_readings" edge.
+func (m *RoomMutation) ResetMeterReadings() {
+	m.meter_readings = nil
+	m.clearedmeter_readings = false
+	m.removedmeter_readings = nil
+}
+
 // Where appends a list predicates to the RoomMutation builder.
 func (m *RoomMutation) Where(ps ...predicate.Room) {
 	m.predicates = append(m.predicates, ps...)
@@ -4211,12 +6292,18 @@ func (m *RoomMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RoomMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 4)
 	if m.building != nil {
 		edges = append(edges, room.EdgeBuilding)
 	}
 	if m.room_type != nil {
 		edges = append(edges, room.EdgeRoomType)
+	}
+	if m.meter_items != nil {
+		edges = append(edges, room.EdgeMeterItems)
+	}
+	if m.meter_readings != nil {
+		edges = append(edges, room.EdgeMeterReadings)
 	}
 	return edges
 }
@@ -4233,30 +6320,68 @@ func (m *RoomMutation) AddedIDs(name string) []ent.Value {
 		if id := m.room_type; id != nil {
 			return []ent.Value{*id}
 		}
+	case room.EdgeMeterItems:
+		ids := make([]ent.Value, 0, len(m.meter_items))
+		for id := range m.meter_items {
+			ids = append(ids, id)
+		}
+		return ids
+	case room.EdgeMeterReadings:
+		ids := make([]ent.Value, 0, len(m.meter_readings))
+		for id := range m.meter_readings {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RoomMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 4)
+	if m.removedmeter_items != nil {
+		edges = append(edges, room.EdgeMeterItems)
+	}
+	if m.removedmeter_readings != nil {
+		edges = append(edges, room.EdgeMeterReadings)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *RoomMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case room.EdgeMeterItems:
+		ids := make([]ent.Value, 0, len(m.removedmeter_items))
+		for id := range m.removedmeter_items {
+			ids = append(ids, id)
+		}
+		return ids
+	case room.EdgeMeterReadings:
+		ids := make([]ent.Value, 0, len(m.removedmeter_readings))
+		for id := range m.removedmeter_readings {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RoomMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 4)
 	if m.clearedbuilding {
 		edges = append(edges, room.EdgeBuilding)
 	}
 	if m.clearedroom_type {
 		edges = append(edges, room.EdgeRoomType)
+	}
+	if m.clearedmeter_items {
+		edges = append(edges, room.EdgeMeterItems)
+	}
+	if m.clearedmeter_readings {
+		edges = append(edges, room.EdgeMeterReadings)
 	}
 	return edges
 }
@@ -4269,6 +6394,10 @@ func (m *RoomMutation) EdgeCleared(name string) bool {
 		return m.clearedbuilding
 	case room.EdgeRoomType:
 		return m.clearedroom_type
+	case room.EdgeMeterItems:
+		return m.clearedmeter_items
+	case room.EdgeMeterReadings:
+		return m.clearedmeter_readings
 	}
 	return false
 }
@@ -4296,6 +6425,12 @@ func (m *RoomMutation) ResetEdge(name string) error {
 		return nil
 	case room.EdgeRoomType:
 		m.ResetRoomType()
+		return nil
+	case room.EdgeMeterItems:
+		m.ResetMeterItems()
+		return nil
+	case room.EdgeMeterReadings:
+		m.ResetMeterReadings()
 		return nil
 	}
 	return fmt.Errorf("unknown Room edge %s", name)
@@ -4541,42 +6676,6 @@ func (m *RoomTypeMutation) ResetDeletedAt() {
 	delete(m.clearedFields, roomtype.FieldDeletedAt)
 }
 
-// SetName sets the "name" field.
-func (m *RoomTypeMutation) SetName(s string) {
-	m.name = &s
-}
-
-// Name returns the value of the "name" field in the mutation.
-func (m *RoomTypeMutation) Name() (r string, exists bool) {
-	v := m.name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldName returns the old "name" field's value of the RoomType entity.
-// If the RoomType object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RoomTypeMutation) OldName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
-	}
-	return oldValue.Name, nil
-}
-
-// ResetName resets all changes to the "name" field.
-func (m *RoomTypeMutation) ResetName() {
-	m.name = nil
-}
-
 // SetAccountID sets the "account_id" field.
 func (m *RoomTypeMutation) SetAccountID(i int) {
 	m.account = &i
@@ -4611,6 +6710,42 @@ func (m *RoomTypeMutation) OldAccountID(ctx context.Context) (v int, err error) 
 // ResetAccountID resets all changes to the "account_id" field.
 func (m *RoomTypeMutation) ResetAccountID() {
 	m.account = nil
+}
+
+// SetName sets the "name" field.
+func (m *RoomTypeMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *RoomTypeMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the RoomType entity.
+// If the RoomType object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RoomTypeMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *RoomTypeMutation) ResetName() {
+	m.name = nil
 }
 
 // ClearAccount clears the "account" edge to the Account entity.
@@ -4738,11 +6873,11 @@ func (m *RoomTypeMutation) Fields() []string {
 	if m.deleted_at != nil {
 		fields = append(fields, roomtype.FieldDeletedAt)
 	}
-	if m.name != nil {
-		fields = append(fields, roomtype.FieldName)
-	}
 	if m.account != nil {
 		fields = append(fields, roomtype.FieldAccountID)
+	}
+	if m.name != nil {
+		fields = append(fields, roomtype.FieldName)
 	}
 	return fields
 }
@@ -4758,10 +6893,10 @@ func (m *RoomTypeMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdatedAt()
 	case roomtype.FieldDeletedAt:
 		return m.DeletedAt()
-	case roomtype.FieldName:
-		return m.Name()
 	case roomtype.FieldAccountID:
 		return m.AccountID()
+	case roomtype.FieldName:
+		return m.Name()
 	}
 	return nil, false
 }
@@ -4777,10 +6912,10 @@ func (m *RoomTypeMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldUpdatedAt(ctx)
 	case roomtype.FieldDeletedAt:
 		return m.OldDeletedAt(ctx)
-	case roomtype.FieldName:
-		return m.OldName(ctx)
 	case roomtype.FieldAccountID:
 		return m.OldAccountID(ctx)
+	case roomtype.FieldName:
+		return m.OldName(ctx)
 	}
 	return nil, fmt.Errorf("unknown RoomType field %s", name)
 }
@@ -4811,19 +6946,19 @@ func (m *RoomTypeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDeletedAt(v)
 		return nil
-	case roomtype.FieldName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetName(v)
-		return nil
 	case roomtype.FieldAccountID:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAccountID(v)
+		return nil
+	case roomtype.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
 		return nil
 	}
 	return fmt.Errorf("unknown RoomType field %s", name)
@@ -4895,11 +7030,11 @@ func (m *RoomTypeMutation) ResetField(name string) error {
 	case roomtype.FieldDeletedAt:
 		m.ResetDeletedAt()
 		return nil
-	case roomtype.FieldName:
-		m.ResetName()
-		return nil
 	case roomtype.FieldAccountID:
 		m.ResetAccountID()
+		return nil
+	case roomtype.FieldName:
+		m.ResetName()
 		return nil
 	}
 	return fmt.Errorf("unknown RoomType field %s", name)

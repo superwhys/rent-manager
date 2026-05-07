@@ -64,6 +64,12 @@ func (_c *BuildingCreate) SetNillableDeletedAt(v *time.Time) *BuildingCreate {
 	return _c
 }
 
+// SetAccountID sets the "account_id" field.
+func (_c *BuildingCreate) SetAccountID(v int) *BuildingCreate {
+	_c.mutation.SetAccountID(v)
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *BuildingCreate) SetName(v string) *BuildingCreate {
 	_c.mutation.SetName(v)
@@ -85,12 +91,6 @@ func (_c *BuildingCreate) SetCity(v string) *BuildingCreate {
 // SetProvince sets the "province" field.
 func (_c *BuildingCreate) SetProvince(v string) *BuildingCreate {
 	_c.mutation.SetProvince(v)
-	return _c
-}
-
-// SetAccountID sets the "account_id" field.
-func (_c *BuildingCreate) SetAccountID(v int) *BuildingCreate {
-	_c.mutation.SetAccountID(v)
 	return _c
 }
 
@@ -167,6 +167,9 @@ func (_c *BuildingCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Building.updated_at"`)}
 	}
+	if _, ok := _c.mutation.AccountID(); !ok {
+		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "Building.account_id"`)}
+	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Building.name"`)}
 	}
@@ -198,9 +201,6 @@ func (_c *BuildingCreate) check() error {
 		if err := building.ProvinceValidator(v); err != nil {
 			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Building.province": %w`, err)}
 		}
-	}
-	if _, ok := _c.mutation.AccountID(); !ok {
-		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "Building.account_id"`)}
 	}
 	if len(_c.mutation.AccountIDs()) == 0 {
 		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "Building.account"`)}

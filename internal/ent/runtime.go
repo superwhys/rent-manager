@@ -7,6 +7,8 @@ import (
 
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
@@ -178,6 +180,39 @@ func init() {
 			return nil
 		}
 	}()
+	meteritemMixin := schema.MeterItem{}.Mixin()
+	meteritemMixinFields0 := meteritemMixin[0].Fields()
+	_ = meteritemMixinFields0
+	meteritemFields := schema.MeterItem{}.Fields()
+	_ = meteritemFields
+	// meteritemDescCreatedAt is the schema descriptor for created_at field.
+	meteritemDescCreatedAt := meteritemMixinFields0[0].Descriptor()
+	// meteritem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	meteritem.DefaultCreatedAt = meteritemDescCreatedAt.Default.(func() time.Time)
+	// meteritemDescUpdatedAt is the schema descriptor for updated_at field.
+	meteritemDescUpdatedAt := meteritemMixinFields0[1].Descriptor()
+	// meteritem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	meteritem.DefaultUpdatedAt = meteritemDescUpdatedAt.Default.(func() time.Time)
+	// meteritem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	meteritem.UpdateDefaultUpdatedAt = meteritemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// meteritemDescCode is the schema descriptor for code field.
+	meteritemDescCode := meteritemFields[0].Descriptor()
+	// meteritem.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	meteritem.CodeValidator = meteritemDescCode.Validators[0].(func(string) error)
+	// meteritemDescUnit is the schema descriptor for unit field.
+	meteritemDescUnit := meteritemFields[1].Descriptor()
+	// meteritem.UnitValidator is a validator for the "unit" field. It is called by the builders before save.
+	meteritem.UnitValidator = meteritemDescUnit.Validators[0].(func(string) error)
+	// meteritemDescIsSystem is the schema descriptor for is_system field.
+	meteritemDescIsSystem := meteritemFields[2].Descriptor()
+	// meteritem.DefaultIsSystem holds the default value on creation for the is_system field.
+	meteritem.DefaultIsSystem = meteritemDescIsSystem.Default.(bool)
+	meterreadingFields := schema.MeterReading{}.Fields()
+	_ = meterreadingFields
+	// meterreadingDescPeriodMonth is the schema descriptor for period_month field.
+	meterreadingDescPeriodMonth := meterreadingFields[1].Descriptor()
+	// meterreading.PeriodMonthValidator is a validator for the "period_month" field. It is called by the builders before save.
+	meterreading.PeriodMonthValidator = meterreadingDescPeriodMonth.Validators[0].(func(string) error)
 	permissionMixin := schema.Permission{}.Mixin()
 	permissionMixinFields0 := permissionMixin[0].Fields()
 	_ = permissionMixinFields0
@@ -285,7 +320,7 @@ func init() {
 		}
 	}()
 	// roleDescIsActive is the schema descriptor for is_active field.
-	roleDescIsActive := roleFields[2].Descriptor()
+	roleDescIsActive := roleFields[1].Descriptor()
 	// role.DefaultIsActive holds the default value on creation for the is_active field.
 	role.DefaultIsActive = roleDescIsActive.Default.(bool)
 	roomMixin := schema.Room{}.Mixin()

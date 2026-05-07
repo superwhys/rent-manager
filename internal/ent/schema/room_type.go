@@ -24,6 +24,7 @@ func (RoomType) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.TimeMixin{},
 		mixin.SoftDeleteMixin{},
+		mixin.AccountMixin{},
 	}
 }
 
@@ -33,8 +34,6 @@ func (RoomType) Fields() []ent.Field {
 			NotEmpty().
 			MaxLen(12).
 			Comment("房间选项名字"),
-		field.Int("account_id").
-			Comment("所属账号ID"),
 	}
 }
 

@@ -70,14 +70,14 @@ func DeletedAt(v time.Time) predicate.RoomType {
 	return predicate.RoomType(sql.FieldEQ(FieldDeletedAt, v))
 }
 
-// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
-func Name(v string) predicate.RoomType {
-	return predicate.RoomType(sql.FieldEQ(FieldName, v))
-}
-
 // AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
 func AccountID(v int) predicate.RoomType {
 	return predicate.RoomType(sql.FieldEQ(FieldAccountID, v))
+}
+
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
+func Name(v string) predicate.RoomType {
+	return predicate.RoomType(sql.FieldEQ(FieldName, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -210,6 +210,26 @@ func DeletedAtNotNil() predicate.RoomType {
 	return predicate.RoomType(sql.FieldNotNull(FieldDeletedAt))
 }
 
+// AccountIDEQ applies the EQ predicate on the "account_id" field.
+func AccountIDEQ(v int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldEQ(FieldAccountID, v))
+}
+
+// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
+func AccountIDNEQ(v int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldNEQ(FieldAccountID, v))
+}
+
+// AccountIDIn applies the In predicate on the "account_id" field.
+func AccountIDIn(vs ...int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldIn(FieldAccountID, vs...))
+}
+
+// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
+func AccountIDNotIn(vs ...int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldNotIn(FieldAccountID, vs...))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.RoomType {
 	return predicate.RoomType(sql.FieldEQ(FieldName, v))
@@ -273,26 +293,6 @@ func NameEqualFold(v string) predicate.RoomType {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.RoomType {
 	return predicate.RoomType(sql.FieldContainsFold(FieldName, v))
-}
-
-// AccountIDEQ applies the EQ predicate on the "account_id" field.
-func AccountIDEQ(v int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldEQ(FieldAccountID, v))
-}
-
-// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
-func AccountIDNEQ(v int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldNEQ(FieldAccountID, v))
-}
-
-// AccountIDIn applies the In predicate on the "account_id" field.
-func AccountIDIn(vs ...int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldIn(FieldAccountID, vs...))
-}
-
-// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
-func AccountIDNotIn(vs ...int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldNotIn(FieldAccountID, vs...))
 }
 
 // HasAccount applies the HasEdge predicate on the "account" edge.

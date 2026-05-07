@@ -26,8 +26,6 @@ func (Role) Fields() []ent.Field {
 			NotEmpty().
 			MaxLen(255).
 			Comment("角色名字"),
-		field.Int("account_id").
-			Comment("所属账号ID"),
 		field.Bool("is_active").
 			Default(true).
 			Comment("角色是否激活"),

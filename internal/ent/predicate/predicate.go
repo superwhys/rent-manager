@@ -12,6 +12,12 @@ type Account func(*sql.Selector)
 // Building is the predicate function for building builders.
 type Building func(*sql.Selector)
 
+// MeterItem is the predicate function for meteritem builders.
+type MeterItem func(*sql.Selector)
+
+// MeterReading is the predicate function for meterreading builders.
+type MeterReading func(*sql.Selector)
+
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)
 

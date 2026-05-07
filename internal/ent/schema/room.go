@@ -26,16 +26,22 @@ func (Room) Fields() []ent.Field {
 			NotEmpty().
 			MaxLen(255).
 			Comment("房间号"),
+
 		field.Int("floor").
 			Comment("楼层"),
+
 		field.Int("price").
 			Comment("租金价格"),
+
 		field.Int("size").
 			Comment("房间大小(平方米)"),
+
 		field.Int("building_id").
 			Comment("所属楼栋ID"),
+
 		field.Int("room_type_id").
 			Comment("所属房间类型ID"),
+
 		field.Bool("is_active").
 			Default(true).
 			Comment("房间是否激活"),
@@ -55,5 +61,7 @@ func (Room) Edges() []ent.Edge {
 			Ref("rooms").
 			Unique().
 			Required(),
+		edge.To("meter_items", MeterItem.Type),
+		edge.To("meter_readings", MeterReading.Type),
 	}
 }

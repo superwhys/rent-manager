@@ -32,6 +32,8 @@ const (
 	EdgeBuildings = "buildings"
 	// EdgeRoomTypes holds the string denoting the room_types edge name in mutations.
 	EdgeRoomTypes = "room_types"
+	// EdgeMeterItems holds the string denoting the meter_items edge name in mutations.
+	EdgeMeterItems = "meter_items"
 	// Table holds the table name of the account in the database.
 	Table = "accounts"
 	// BuildingsTable is the table that holds the buildings relation/edge.
@@ -48,6 +50,13 @@ const (
 	RoomTypesInverseTable = "room_types"
 	// RoomTypesColumn is the table column denoting the room_types relation/edge.
 	RoomTypesColumn = "account_id"
+	// MeterItemsTable is the table that holds the meter_items relation/edge.
+	MeterItemsTable = "meter_items"
+	// MeterItemsInverseTable is the table name for the MeterItem entity.
+	// It exists in this package in order to avoid circular dependency with the "meteritem" package.
+	MeterItemsInverseTable = "meter_items"
+	// MeterItemsColumn is the table column denoting the meter_items relation/edge.
+	MeterItemsColumn = "account_id"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -159,6 +168,20 @@ func ByRoomTypes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRoomTypesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMeterItemsCount orders the results by meter_items count.
+func ByMeterItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMeterItemsStep(), opts...)
+	}
+}
+
+// ByMeterItems orders the results by meter_items terms.
+func ByMeterItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMeterItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBuildingsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -171,5 +194,12 @@ func newRoomTypesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoomTypesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RoomTypesTable, RoomTypesColumn),
+	)
+}
+func newMeterItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MeterItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MeterItemsTable, MeterItemsColumn),
 	)
 }

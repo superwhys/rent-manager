@@ -56,20 +56,6 @@ func (_u *RoomTypeUpdate) ClearDeletedAt() *RoomTypeUpdate {
 	return _u
 }
 
-// SetName sets the "name" field.
-func (_u *RoomTypeUpdate) SetName(v string) *RoomTypeUpdate {
-	_u.mutation.SetName(v)
-	return _u
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (_u *RoomTypeUpdate) SetNillableName(v *string) *RoomTypeUpdate {
-	if v != nil {
-		_u.SetName(*v)
-	}
-	return _u
-}
-
 // SetAccountID sets the "account_id" field.
 func (_u *RoomTypeUpdate) SetAccountID(v int) *RoomTypeUpdate {
 	_u.mutation.SetAccountID(v)
@@ -80,6 +66,20 @@ func (_u *RoomTypeUpdate) SetAccountID(v int) *RoomTypeUpdate {
 func (_u *RoomTypeUpdate) SetNillableAccountID(v *int) *RoomTypeUpdate {
 	if v != nil {
 		_u.SetAccountID(*v)
+	}
+	return _u
+}
+
+// SetName sets the "name" field.
+func (_u *RoomTypeUpdate) SetName(v string) *RoomTypeUpdate {
+	_u.mutation.SetName(v)
+	return _u
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (_u *RoomTypeUpdate) SetNillableName(v *string) *RoomTypeUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
 	return _u
 }
@@ -329,20 +329,6 @@ func (_u *RoomTypeUpdateOne) ClearDeletedAt() *RoomTypeUpdateOne {
 	return _u
 }
 
-// SetName sets the "name" field.
-func (_u *RoomTypeUpdateOne) SetName(v string) *RoomTypeUpdateOne {
-	_u.mutation.SetName(v)
-	return _u
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (_u *RoomTypeUpdateOne) SetNillableName(v *string) *RoomTypeUpdateOne {
-	if v != nil {
-		_u.SetName(*v)
-	}
-	return _u
-}
-
 // SetAccountID sets the "account_id" field.
 func (_u *RoomTypeUpdateOne) SetAccountID(v int) *RoomTypeUpdateOne {
 	_u.mutation.SetAccountID(v)
@@ -353,6 +339,20 @@ func (_u *RoomTypeUpdateOne) SetAccountID(v int) *RoomTypeUpdateOne {
 func (_u *RoomTypeUpdateOne) SetNillableAccountID(v *int) *RoomTypeUpdateOne {
 	if v != nil {
 		_u.SetAccountID(*v)
+	}
+	return _u
+}
+
+// SetName sets the "name" field.
+func (_u *RoomTypeUpdateOne) SetName(v string) *RoomTypeUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (_u *RoomTypeUpdateOne) SetNillableName(v *string) *RoomTypeUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
 	return _u
 }

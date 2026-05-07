@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
@@ -185,6 +187,36 @@ func (_u *RoomUpdate) SetRoomType(v *RoomType) *RoomUpdate {
 	return _u.SetRoomTypeID(v.ID)
 }
 
+// AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by IDs.
+func (_u *RoomUpdate) AddMeterItemIDs(ids ...int) *RoomUpdate {
+	_u.mutation.AddMeterItemIDs(ids...)
+	return _u
+}
+
+// AddMeterItems adds the "meter_items" edges to the MeterItem entity.
+func (_u *RoomUpdate) AddMeterItems(v ...*MeterItem) *RoomUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMeterItemIDs(ids...)
+}
+
+// AddMeterReadingIDs adds the "meter_readings" edge to the MeterReading entity by IDs.
+func (_u *RoomUpdate) AddMeterReadingIDs(ids ...int) *RoomUpdate {
+	_u.mutation.AddMeterReadingIDs(ids...)
+	return _u
+}
+
+// AddMeterReadings adds the "meter_readings" edges to the MeterReading entity.
+func (_u *RoomUpdate) AddMeterReadings(v ...*MeterReading) *RoomUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMeterReadingIDs(ids...)
+}
+
 // Mutation returns the RoomMutation object of the builder.
 func (_u *RoomUpdate) Mutation() *RoomMutation {
 	return _u.mutation
@@ -200,6 +232,48 @@ func (_u *RoomUpdate) ClearBuilding() *RoomUpdate {
 func (_u *RoomUpdate) ClearRoomType() *RoomUpdate {
 	_u.mutation.ClearRoomType()
 	return _u
+}
+
+// ClearMeterItems clears all "meter_items" edges to the MeterItem entity.
+func (_u *RoomUpdate) ClearMeterItems() *RoomUpdate {
+	_u.mutation.ClearMeterItems()
+	return _u
+}
+
+// RemoveMeterItemIDs removes the "meter_items" edge to MeterItem entities by IDs.
+func (_u *RoomUpdate) RemoveMeterItemIDs(ids ...int) *RoomUpdate {
+	_u.mutation.RemoveMeterItemIDs(ids...)
+	return _u
+}
+
+// RemoveMeterItems removes "meter_items" edges to MeterItem entities.
+func (_u *RoomUpdate) RemoveMeterItems(v ...*MeterItem) *RoomUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMeterItemIDs(ids...)
+}
+
+// ClearMeterReadings clears all "meter_readings" edges to the MeterReading entity.
+func (_u *RoomUpdate) ClearMeterReadings() *RoomUpdate {
+	_u.mutation.ClearMeterReadings()
+	return _u
+}
+
+// RemoveMeterReadingIDs removes the "meter_readings" edge to MeterReading entities by IDs.
+func (_u *RoomUpdate) RemoveMeterReadingIDs(ids ...int) *RoomUpdate {
+	_u.mutation.RemoveMeterReadingIDs(ids...)
+	return _u
+}
+
+// RemoveMeterReadings removes "meter_readings" edges to MeterReading entities.
+func (_u *RoomUpdate) RemoveMeterReadings(v ...*MeterReading) *RoomUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMeterReadingIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -350,6 +424,96 @@ func (_u *RoomUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MeterItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MeterItemsTable,
+			Columns: room.MeterItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMeterItemsIDs(); len(nodes) > 0 && !_u.mutation.MeterItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MeterItemsTable,
+			Columns: room.MeterItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MeterItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MeterItemsTable,
+			Columns: room.MeterItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MeterReadingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.MeterReadingsTable,
+			Columns: []string{room.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMeterReadingsIDs(); len(nodes) > 0 && !_u.mutation.MeterReadingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.MeterReadingsTable,
+			Columns: []string{room.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MeterReadingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.MeterReadingsTable,
+			Columns: []string{room.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -532,6 +696,36 @@ func (_u *RoomUpdateOne) SetRoomType(v *RoomType) *RoomUpdateOne {
 	return _u.SetRoomTypeID(v.ID)
 }
 
+// AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by IDs.
+func (_u *RoomUpdateOne) AddMeterItemIDs(ids ...int) *RoomUpdateOne {
+	_u.mutation.AddMeterItemIDs(ids...)
+	return _u
+}
+
+// AddMeterItems adds the "meter_items" edges to the MeterItem entity.
+func (_u *RoomUpdateOne) AddMeterItems(v ...*MeterItem) *RoomUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMeterItemIDs(ids...)
+}
+
+// AddMeterReadingIDs adds the "meter_readings" edge to the MeterReading entity by IDs.
+func (_u *RoomUpdateOne) AddMeterReadingIDs(ids ...int) *RoomUpdateOne {
+	_u.mutation.AddMeterReadingIDs(ids...)
+	return _u
+}
+
+// AddMeterReadings adds the "meter_readings" edges to the MeterReading entity.
+func (_u *RoomUpdateOne) AddMeterReadings(v ...*MeterReading) *RoomUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMeterReadingIDs(ids...)
+}
+
 // Mutation returns the RoomMutation object of the builder.
 func (_u *RoomUpdateOne) Mutation() *RoomMutation {
 	return _u.mutation
@@ -547,6 +741,48 @@ func (_u *RoomUpdateOne) ClearBuilding() *RoomUpdateOne {
 func (_u *RoomUpdateOne) ClearRoomType() *RoomUpdateOne {
 	_u.mutation.ClearRoomType()
 	return _u
+}
+
+// ClearMeterItems clears all "meter_items" edges to the MeterItem entity.
+func (_u *RoomUpdateOne) ClearMeterItems() *RoomUpdateOne {
+	_u.mutation.ClearMeterItems()
+	return _u
+}
+
+// RemoveMeterItemIDs removes the "meter_items" edge to MeterItem entities by IDs.
+func (_u *RoomUpdateOne) RemoveMeterItemIDs(ids ...int) *RoomUpdateOne {
+	_u.mutation.RemoveMeterItemIDs(ids...)
+	return _u
+}
+
+// RemoveMeterItems removes "meter_items" edges to MeterItem entities.
+func (_u *RoomUpdateOne) RemoveMeterItems(v ...*MeterItem) *RoomUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMeterItemIDs(ids...)
+}
+
+// ClearMeterReadings clears all "meter_readings" edges to the MeterReading entity.
+func (_u *RoomUpdateOne) ClearMeterReadings() *RoomUpdateOne {
+	_u.mutation.ClearMeterReadings()
+	return _u
+}
+
+// RemoveMeterReadingIDs removes the "meter_readings" edge to MeterReading entities by IDs.
+func (_u *RoomUpdateOne) RemoveMeterReadingIDs(ids ...int) *RoomUpdateOne {
+	_u.mutation.RemoveMeterReadingIDs(ids...)
+	return _u
+}
+
+// RemoveMeterReadings removes "meter_readings" edges to MeterReading entities.
+func (_u *RoomUpdateOne) RemoveMeterReadings(v ...*MeterReading) *RoomUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMeterReadingIDs(ids...)
 }
 
 // Where appends a list predicates to the RoomUpdate builder.
@@ -727,6 +963,96 @@ func (_u *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MeterItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MeterItemsTable,
+			Columns: room.MeterItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMeterItemsIDs(); len(nodes) > 0 && !_u.mutation.MeterItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MeterItemsTable,
+			Columns: room.MeterItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MeterItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MeterItemsTable,
+			Columns: room.MeterItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MeterReadingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.MeterReadingsTable,
+			Columns: []string{room.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMeterReadingsIDs(); len(nodes) > 0 && !_u.mutation.MeterReadingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.MeterReadingsTable,
+			Columns: []string{room.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MeterReadingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.MeterReadingsTable,
+			Columns: []string{room.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

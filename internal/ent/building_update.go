@@ -56,6 +56,20 @@ func (_u *BuildingUpdate) ClearDeletedAt() *BuildingUpdate {
 	return _u
 }
 
+// SetAccountID sets the "account_id" field.
+func (_u *BuildingUpdate) SetAccountID(v int) *BuildingUpdate {
+	_u.mutation.SetAccountID(v)
+	return _u
+}
+
+// SetNillableAccountID sets the "account_id" field if the given value is not nil.
+func (_u *BuildingUpdate) SetNillableAccountID(v *int) *BuildingUpdate {
+	if v != nil {
+		_u.SetAccountID(*v)
+	}
+	return _u
+}
+
 // SetName sets the "name" field.
 func (_u *BuildingUpdate) SetName(v string) *BuildingUpdate {
 	_u.mutation.SetName(v)
@@ -108,20 +122,6 @@ func (_u *BuildingUpdate) SetProvince(v string) *BuildingUpdate {
 func (_u *BuildingUpdate) SetNillableProvince(v *string) *BuildingUpdate {
 	if v != nil {
 		_u.SetProvince(*v)
-	}
-	return _u
-}
-
-// SetAccountID sets the "account_id" field.
-func (_u *BuildingUpdate) SetAccountID(v int) *BuildingUpdate {
-	_u.mutation.SetAccountID(v)
-	return _u
-}
-
-// SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (_u *BuildingUpdate) SetNillableAccountID(v *int) *BuildingUpdate {
-	if v != nil {
-		_u.SetAccountID(*v)
 	}
 	return _u
 }
@@ -395,6 +395,20 @@ func (_u *BuildingUpdateOne) ClearDeletedAt() *BuildingUpdateOne {
 	return _u
 }
 
+// SetAccountID sets the "account_id" field.
+func (_u *BuildingUpdateOne) SetAccountID(v int) *BuildingUpdateOne {
+	_u.mutation.SetAccountID(v)
+	return _u
+}
+
+// SetNillableAccountID sets the "account_id" field if the given value is not nil.
+func (_u *BuildingUpdateOne) SetNillableAccountID(v *int) *BuildingUpdateOne {
+	if v != nil {
+		_u.SetAccountID(*v)
+	}
+	return _u
+}
+
 // SetName sets the "name" field.
 func (_u *BuildingUpdateOne) SetName(v string) *BuildingUpdateOne {
 	_u.mutation.SetName(v)
@@ -447,20 +461,6 @@ func (_u *BuildingUpdateOne) SetProvince(v string) *BuildingUpdateOne {
 func (_u *BuildingUpdateOne) SetNillableProvince(v *string) *BuildingUpdateOne {
 	if v != nil {
 		_u.SetProvince(*v)
-	}
-	return _u
-}
-
-// SetAccountID sets the "account_id" field.
-func (_u *BuildingUpdateOne) SetAccountID(v int) *BuildingUpdateOne {
-	_u.mutation.SetAccountID(v)
-	return _u
-}
-
-// SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (_u *BuildingUpdateOne) SetNillableAccountID(v *int) *BuildingUpdateOne {
-	if v != nil {
-		_u.SetAccountID(*v)
 	}
 	return _u
 }

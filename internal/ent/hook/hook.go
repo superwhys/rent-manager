@@ -33,6 +33,30 @@ func (f BuildingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BuildingMutation", m)
 }
 
+// The MeterItemFunc type is an adapter to allow the use of ordinary
+// function as MeterItem mutator.
+type MeterItemFunc func(context.Context, *ent.MeterItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MeterItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MeterItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MeterItemMutation", m)
+}
+
+// The MeterReadingFunc type is an adapter to allow the use of ordinary
+// function as MeterReading mutator.
+type MeterReadingFunc func(context.Context, *ent.MeterReadingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MeterReadingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MeterReadingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MeterReadingMutation", m)
+}
+
 // The PermissionFunc type is an adapter to allow the use of ordinary
 // function as Permission mutator.
 type PermissionFunc func(context.Context, *ent.PermissionMutation) (ent.Value, error)

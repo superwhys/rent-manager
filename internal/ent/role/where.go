@@ -75,11 +75,6 @@ func Name(v string) predicate.Role {
 	return predicate.Role(sql.FieldEQ(FieldName, v))
 }
 
-// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
-func AccountID(v int) predicate.Role {
-	return predicate.Role(sql.FieldEQ(FieldAccountID, v))
-}
-
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.Role {
 	return predicate.Role(sql.FieldEQ(FieldIsActive, v))
@@ -278,46 +273,6 @@ func NameEqualFold(v string) predicate.Role {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.Role {
 	return predicate.Role(sql.FieldContainsFold(FieldName, v))
-}
-
-// AccountIDEQ applies the EQ predicate on the "account_id" field.
-func AccountIDEQ(v int) predicate.Role {
-	return predicate.Role(sql.FieldEQ(FieldAccountID, v))
-}
-
-// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
-func AccountIDNEQ(v int) predicate.Role {
-	return predicate.Role(sql.FieldNEQ(FieldAccountID, v))
-}
-
-// AccountIDIn applies the In predicate on the "account_id" field.
-func AccountIDIn(vs ...int) predicate.Role {
-	return predicate.Role(sql.FieldIn(FieldAccountID, vs...))
-}
-
-// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
-func AccountIDNotIn(vs ...int) predicate.Role {
-	return predicate.Role(sql.FieldNotIn(FieldAccountID, vs...))
-}
-
-// AccountIDGT applies the GT predicate on the "account_id" field.
-func AccountIDGT(v int) predicate.Role {
-	return predicate.Role(sql.FieldGT(FieldAccountID, v))
-}
-
-// AccountIDGTE applies the GTE predicate on the "account_id" field.
-func AccountIDGTE(v int) predicate.Role {
-	return predicate.Role(sql.FieldGTE(FieldAccountID, v))
-}
-
-// AccountIDLT applies the LT predicate on the "account_id" field.
-func AccountIDLT(v int) predicate.Role {
-	return predicate.Role(sql.FieldLT(FieldAccountID, v))
-}
-
-// AccountIDLTE applies the LTE predicate on the "account_id" field.
-func AccountIDLTE(v int) predicate.Role {
-	return predicate.Role(sql.FieldLTE(FieldAccountID, v))
 }
 
 // IsActiveEQ applies the EQ predicate on the "is_active" field.
