@@ -11,26 +11,29 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
-	"github.com/superwhys/rent-manager-server/api/middleware"
-	"github.com/superwhys/rent-manager-server/api/permission"
-	"github.com/superwhys/rent-manager-server/api/user"
-
-	permissionRouter "github.com/superwhys/rent-manager-server/api/permission/routers"
-	userRouter "github.com/superwhys/rent-manager-server/api/user/routers"
+	"github.com/superwhys/rent-manager-server/api/middlewares"
+	"github.com/superwhys/rent-manager-server/config"
+	"github.com/ulule/limiter/v3"
 )
 
-type handlerApp interface {
-	permissionRouter.App
-	userRouter.App
-}
-
-func SetupRouter(handlerApp handlerApp) *gin.Engine {
-	middlewareManager := middleware.NewManager()
-
+// SetupRouter godoc
+// @title Rent Manager Server API
+// @version 1.0
+// @description Rent Manager Server
+// @BasePath /api
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+func SetupRouter(
+	jwtConfig *config.JwtConfig,
+	httpLimiter *limiter.Limiter,
+) *gin.Engine {
 	engine := ginutils.NewServerHandler(
-		ginutils.WithLoggingRequest(true),
-		permission.Router(handlerApp, middlewareManager),
-		user.Router(handlerApp, middlewareManager),
+		ginutils.WithMiddleware(
+			middlewares.RateLimitMiddleware(httpLimiter, nil),
+			middlewares.TokenVerifyMiddleware(jwtConfig),
+			middlewares.PermissionMiddleware(),
+		),
 	)
 
 	return engine
