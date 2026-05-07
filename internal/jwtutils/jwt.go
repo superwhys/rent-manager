@@ -10,7 +10,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/errcode"
 )
 
-func GenerateTokenPair(signingKey []byte, accessTimeout, refreshTimeout time.Duration, userID uint) (string, string, string, error) {
+func GenerateTokenPair(signingKey []byte, accessTimeout, refreshTimeout time.Duration, userID int) (string, string, string, error) {
 	if len(signingKey) == 0 {
 		return "", "", "", fmt.Errorf("signing key is required")
 	}
@@ -53,7 +53,7 @@ func GenerateTokenPair(signingKey []byte, accessTimeout, refreshTimeout time.Dur
 	return accessToken, refreshToken, sessionID, nil
 }
 
-func GenerateAccessToken(signingKey []byte, timeout time.Duration, userID uint, sessionID string) (string, error) {
+func GenerateAccessToken(signingKey []byte, timeout time.Duration, userID int, sessionID string) (string, error) {
 	if len(signingKey) == 0 {
 		return "", fmt.Errorf("signing key is required")
 	}

@@ -48,9 +48,11 @@ type MeterItemEdges struct {
 	Account *Account `json:"account,omitempty"`
 	// Rooms holds the value of the rooms edge.
 	Rooms []*Room `json:"rooms,omitempty"`
+	// Building holds the value of the building edge.
+	Building []*Building `json:"building,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -71,6 +73,15 @@ func (e MeterItemEdges) RoomsOrErr() ([]*Room, error) {
 		return e.Rooms, nil
 	}
 	return nil, &NotLoadedError{edge: "rooms"}
+}
+
+// BuildingOrErr returns the Building value or an error if the edge
+// was not loaded in eager-loading.
+func (e MeterItemEdges) BuildingOrErr() ([]*Building, error) {
+	if e.loadedTypes[2] {
+		return e.Building, nil
+	}
+	return nil, &NotLoadedError{edge: "building"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -184,6 +195,11 @@ func (_m *MeterItem) QueryAccount() *AccountQuery {
 // QueryRooms queries the "rooms" edge of the MeterItem entity.
 func (_m *MeterItem) QueryRooms() *RoomQuery {
 	return NewMeterItemClient(_m.config).QueryRooms(_m)
+}
+
+// QueryBuilding queries the "building" edge of the MeterItem entity.
+func (_m *MeterItem) QueryBuilding() *BuildingQuery {
+	return NewMeterItemClient(_m.config).QueryBuilding(_m)
 }
 
 // Update returns a builder for updating this MeterItem.

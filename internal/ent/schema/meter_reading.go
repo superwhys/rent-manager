@@ -16,6 +16,8 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/models/consts"
 )
 
+// 抄表数据实体
+// 用于记录房间的抄表数据
 type MeterReading struct {
 	ent.Schema
 }

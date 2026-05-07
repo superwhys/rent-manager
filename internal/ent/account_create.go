@@ -83,6 +83,12 @@ func (_c *AccountCreate) SetPassword(v string) *AccountCreate {
 	return _c
 }
 
+// SetWechatOpenid sets the "wechat_openid" field.
+func (_c *AccountCreate) SetWechatOpenid(v string) *AccountCreate {
+	_c.mutation.SetWechatOpenid(v)
+	return _c
+}
+
 // SetIsActive sets the "is_active" field.
 func (_c *AccountCreate) SetIsActive(v bool) *AccountCreate {
 	_c.mutation.SetIsActive(v)
@@ -223,6 +229,14 @@ func (_c *AccountCreate) check() error {
 			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "Account.password": %w`, err)}
 		}
 	}
+	if _, ok := _c.mutation.WechatOpenid(); !ok {
+		return &ValidationError{Name: "wechat_openid", err: errors.New(`ent: missing required field "Account.wechat_openid"`)}
+	}
+	if v, ok := _c.mutation.WechatOpenid(); ok {
+		if err := account.WechatOpenidValidator(v); err != nil {
+			return &ValidationError{Name: "wechat_openid", err: fmt.Errorf(`ent: validator failed for field "Account.wechat_openid": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Account.is_active"`)}
 	}
@@ -275,6 +289,10 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Password(); ok {
 		_spec.SetField(account.FieldPassword, field.TypeString, value)
 		_node.Password = value
+	}
+	if value, ok := _c.mutation.WechatOpenid(); ok {
+		_spec.SetField(account.FieldWechatOpenid, field.TypeString, value)
+		_node.WechatOpenid = value
 	}
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(account.FieldIsActive, field.TypeBool, value)

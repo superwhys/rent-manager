@@ -18,18 +18,24 @@ import (
 	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/rent-manager-server/api"
 	"github.com/superwhys/rent-manager-server/config"
+	"github.com/superwhys/rent-manager-server/internal/app/services"
 	"github.com/superwhys/rent-manager-server/internal/entutils"
+	"github.com/superwhys/rent-manager-server/internal/infra/repo"
 	"github.com/superwhys/rent-manager-server/internal/ratelimit"
 )
 
 var (
-	jwtConfigFlag   = flags.Struct("jwt", (*config.JwtConfig)(nil), "jwt config")
-	redisConfigFlag = flags.Struct("redis", (*redisutils.RedisConfig)(nil), "redis config")
-	mysqlConfFlag   = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
+	wechatConfigFlag = flags.Struct("wechat", (*config.WechatConfig)(nil), "wechat config")
+	jwtConfigFlag    = flags.Struct("jwt", (*config.JwtConfig)(nil), "jwt config")
+	redisConfigFlag  = flags.Struct("redis", (*redisutils.RedisConfig)(nil), "redis config")
+	mysqlConfFlag    = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
 )
 
 func main() {
 	flags.Parse()
+
+	wechatConfig := new(config.WechatConfig)
+	logging.PanicError(wechatConfigFlag(wechatConfig))
 
 	jwtConfig := new(config.JwtConfig)
 	logging.PanicError(jwtConfigFlag(jwtConfig))
@@ -57,7 +63,18 @@ func main() {
 	httpLimiter, err := ratelimit.NewRedisLimiter(10, time.Second*10, redisClient, "http_rate")
 	logging.PanicError(err)
 
-	router := api.SetupRouter(jwtConfig, httpLimiter)
+	roomRepo := repo.NewRoomRepository(client)
+	accountRepo := repo.NewAccountRepository(client)
+
+	roomService := services.NewRoomService(roomRepo)
+	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
+
+	router := api.SetupRouter(
+		jwtConfig,
+		httpLimiter,
+		authService,
+		roomService,
+	)
 
 	srv := cores.NewCores(
 		cores.WithHttpHandler("/api", router),

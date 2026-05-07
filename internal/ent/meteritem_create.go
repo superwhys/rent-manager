@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 )
@@ -142,6 +143,21 @@ func (_c *MeterItemCreate) AddRooms(v ...*Room) *MeterItemCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddRoomIDs(ids...)
+}
+
+// AddBuildingIDs adds the "building" edge to the Building entity by IDs.
+func (_c *MeterItemCreate) AddBuildingIDs(ids ...int) *MeterItemCreate {
+	_c.mutation.AddBuildingIDs(ids...)
+	return _c
+}
+
+// AddBuilding adds the "building" edges to the Building entity.
+func (_c *MeterItemCreate) AddBuilding(v ...*Building) *MeterItemCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBuildingIDs(ids...)
 }
 
 // Mutation returns the MeterItemMutation object of the builder.
@@ -322,6 +338,22 @@ func (_c *MeterItemCreate) createSpec() (*MeterItem, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BuildingIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   meteritem.BuildingTable,
+			Columns: meteritem.BuildingPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

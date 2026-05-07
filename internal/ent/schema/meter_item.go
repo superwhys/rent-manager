@@ -18,6 +18,7 @@ import (
 )
 
 // 抄表项实体
+// 用于设置房间需要抄表的项目
 type MeterItem struct {
 	ent.Schema
 }
@@ -72,6 +73,12 @@ func (MeterItem) Edges() []ent.Edge {
 
 		// 抄表项-房间 多对多关系
 		edge.From("rooms", Room.Type).
+			Ref("meter_items"),
+
+		// 抄表项-楼栋 多对多关系
+		// 用于给楼栋设置默认的抄表项
+		// 楼栋内的房间可以选择继承默认的或者单独设置
+		edge.From("building", Building.Type).
 			Ref("meter_items"),
 	}
 }

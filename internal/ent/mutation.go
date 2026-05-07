@@ -53,6 +53,7 @@ type AccountMutation struct {
 	name               *string
 	email              *string
 	password           *string
+	wechat_openid      *string
 	is_active          *bool
 	clearedFields      map[string]struct{}
 	buildings          map[int]struct{}
@@ -396,6 +397,42 @@ func (m *AccountMutation) ResetPassword() {
 	m.password = nil
 }
 
+// SetWechatOpenid sets the "wechat_openid" field.
+func (m *AccountMutation) SetWechatOpenid(s string) {
+	m.wechat_openid = &s
+}
+
+// WechatOpenid returns the value of the "wechat_openid" field in the mutation.
+func (m *AccountMutation) WechatOpenid() (r string, exists bool) {
+	v := m.wechat_openid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWechatOpenid returns the old "wechat_openid" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldWechatOpenid(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWechatOpenid is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWechatOpenid requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWechatOpenid: %w", err)
+	}
+	return oldValue.WechatOpenid, nil
+}
+
+// ResetWechatOpenid resets all changes to the "wechat_openid" field.
+func (m *AccountMutation) ResetWechatOpenid() {
+	m.wechat_openid = nil
+}
+
 // SetIsActive sets the "is_active" field.
 func (m *AccountMutation) SetIsActive(b bool) {
 	m.is_active = &b
@@ -628,7 +665,7 @@ func (m *AccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccountMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 8)
 	if m.created_at != nil {
 		fields = append(fields, account.FieldCreatedAt)
 	}
@@ -646,6 +683,9 @@ func (m *AccountMutation) Fields() []string {
 	}
 	if m.password != nil {
 		fields = append(fields, account.FieldPassword)
+	}
+	if m.wechat_openid != nil {
+		fields = append(fields, account.FieldWechatOpenid)
 	}
 	if m.is_active != nil {
 		fields = append(fields, account.FieldIsActive)
@@ -670,6 +710,8 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 		return m.Email()
 	case account.FieldPassword:
 		return m.Password()
+	case account.FieldWechatOpenid:
+		return m.WechatOpenid()
 	case account.FieldIsActive:
 		return m.IsActive()
 	}
@@ -693,6 +735,8 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldEmail(ctx)
 	case account.FieldPassword:
 		return m.OldPassword(ctx)
+	case account.FieldWechatOpenid:
+		return m.OldWechatOpenid(ctx)
 	case account.FieldIsActive:
 		return m.OldIsActive(ctx)
 	}
@@ -745,6 +789,13 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPassword(v)
+		return nil
+	case account.FieldWechatOpenid:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWechatOpenid(v)
 		return nil
 	case account.FieldIsActive:
 		v, ok := value.(bool)
@@ -828,6 +879,9 @@ func (m *AccountMutation) ResetField(name string) error {
 		return nil
 	case account.FieldPassword:
 		m.ResetPassword()
+		return nil
+	case account.FieldWechatOpenid:
+		m.ResetWechatOpenid()
 		return nil
 	case account.FieldIsActive:
 		m.ResetIsActive()
@@ -975,25 +1029,28 @@ func (m *AccountMutation) ResetEdge(name string) error {
 // BuildingMutation represents an operation that mutates the Building nodes in the graph.
 type BuildingMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	created_at     *time.Time
-	updated_at     *time.Time
-	deleted_at     *time.Time
-	name           *string
-	address        *string
-	city           *string
-	province       *string
-	clearedFields  map[string]struct{}
-	account        *int
-	clearedaccount bool
-	rooms          map[int]struct{}
-	removedrooms   map[int]struct{}
-	clearedrooms   bool
-	done           bool
-	oldValue       func(context.Context) (*Building, error)
-	predicates     []predicate.Building
+	op                 Op
+	typ                string
+	id                 *int
+	created_at         *time.Time
+	updated_at         *time.Time
+	deleted_at         *time.Time
+	name               *string
+	address            *string
+	city               *string
+	province           *string
+	clearedFields      map[string]struct{}
+	account            *int
+	clearedaccount     bool
+	rooms              map[int]struct{}
+	removedrooms       map[int]struct{}
+	clearedrooms       bool
+	meter_items        map[int]struct{}
+	removedmeter_items map[int]struct{}
+	clearedmeter_items bool
+	done               bool
+	oldValue           func(context.Context) (*Building, error)
+	predicates         []predicate.Building
 }
 
 var _ ent.Mutation = (*BuildingMutation)(nil)
@@ -1476,6 +1533,60 @@ func (m *BuildingMutation) ResetRooms() {
 	m.removedrooms = nil
 }
 
+// AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by ids.
+func (m *BuildingMutation) AddMeterItemIDs(ids ...int) {
+	if m.meter_items == nil {
+		m.meter_items = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.meter_items[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMeterItems clears the "meter_items" edge to the MeterItem entity.
+func (m *BuildingMutation) ClearMeterItems() {
+	m.clearedmeter_items = true
+}
+
+// MeterItemsCleared reports if the "meter_items" edge to the MeterItem entity was cleared.
+func (m *BuildingMutation) MeterItemsCleared() bool {
+	return m.clearedmeter_items
+}
+
+// RemoveMeterItemIDs removes the "meter_items" edge to the MeterItem entity by IDs.
+func (m *BuildingMutation) RemoveMeterItemIDs(ids ...int) {
+	if m.removedmeter_items == nil {
+		m.removedmeter_items = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.meter_items, ids[i])
+		m.removedmeter_items[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMeterItems returns the removed IDs of the "meter_items" edge to the MeterItem entity.
+func (m *BuildingMutation) RemovedMeterItemsIDs() (ids []int) {
+	for id := range m.removedmeter_items {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MeterItemsIDs returns the "meter_items" edge IDs in the mutation.
+func (m *BuildingMutation) MeterItemsIDs() (ids []int) {
+	for id := range m.meter_items {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMeterItems resets all changes to the "meter_items" edge.
+func (m *BuildingMutation) ResetMeterItems() {
+	m.meter_items = nil
+	m.clearedmeter_items = false
+	m.removedmeter_items = nil
+}
+
 // Where appends a list predicates to the BuildingMutation builder.
 func (m *BuildingMutation) Where(ps ...predicate.Building) {
 	m.predicates = append(m.predicates, ps...)
@@ -1740,12 +1851,15 @@ func (m *BuildingMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BuildingMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.account != nil {
 		edges = append(edges, building.EdgeAccount)
 	}
 	if m.rooms != nil {
 		edges = append(edges, building.EdgeRooms)
+	}
+	if m.meter_items != nil {
+		edges = append(edges, building.EdgeMeterItems)
 	}
 	return edges
 }
@@ -1764,15 +1878,24 @@ func (m *BuildingMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case building.EdgeMeterItems:
+		ids := make([]ent.Value, 0, len(m.meter_items))
+		for id := range m.meter_items {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BuildingMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedrooms != nil {
 		edges = append(edges, building.EdgeRooms)
+	}
+	if m.removedmeter_items != nil {
+		edges = append(edges, building.EdgeMeterItems)
 	}
 	return edges
 }
@@ -1787,18 +1910,27 @@ func (m *BuildingMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case building.EdgeMeterItems:
+		ids := make([]ent.Value, 0, len(m.removedmeter_items))
+		for id := range m.removedmeter_items {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BuildingMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedaccount {
 		edges = append(edges, building.EdgeAccount)
 	}
 	if m.clearedrooms {
 		edges = append(edges, building.EdgeRooms)
+	}
+	if m.clearedmeter_items {
+		edges = append(edges, building.EdgeMeterItems)
 	}
 	return edges
 }
@@ -1811,6 +1943,8 @@ func (m *BuildingMutation) EdgeCleared(name string) bool {
 		return m.clearedaccount
 	case building.EdgeRooms:
 		return m.clearedrooms
+	case building.EdgeMeterItems:
+		return m.clearedmeter_items
 	}
 	return false
 }
@@ -1836,6 +1970,9 @@ func (m *BuildingMutation) ResetEdge(name string) error {
 	case building.EdgeRooms:
 		m.ResetRooms()
 		return nil
+	case building.EdgeMeterItems:
+		m.ResetMeterItems()
+		return nil
 	}
 	return fmt.Errorf("unknown Building edge %s", name)
 }
@@ -1843,26 +1980,29 @@ func (m *BuildingMutation) ResetEdge(name string) error {
 // MeterItemMutation represents an operation that mutates the MeterItem nodes in the graph.
 type MeterItemMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	created_at     *time.Time
-	updated_at     *time.Time
-	deleted_at     *time.Time
-	code           *string
-	unit           *string
-	is_system      *bool
-	calc_type      *meteritem.CalcType
-	remark         *string
-	clearedFields  map[string]struct{}
-	account        *int
-	clearedaccount bool
-	rooms          map[int]struct{}
-	removedrooms   map[int]struct{}
-	clearedrooms   bool
-	done           bool
-	oldValue       func(context.Context) (*MeterItem, error)
-	predicates     []predicate.MeterItem
+	op              Op
+	typ             string
+	id              *int
+	created_at      *time.Time
+	updated_at      *time.Time
+	deleted_at      *time.Time
+	code            *string
+	unit            *string
+	is_system       *bool
+	calc_type       *meteritem.CalcType
+	remark          *string
+	clearedFields   map[string]struct{}
+	account         *int
+	clearedaccount  bool
+	rooms           map[int]struct{}
+	removedrooms    map[int]struct{}
+	clearedrooms    bool
+	building        map[int]struct{}
+	removedbuilding map[int]struct{}
+	clearedbuilding bool
+	done            bool
+	oldValue        func(context.Context) (*MeterItem, error)
+	predicates      []predicate.MeterItem
 }
 
 var _ ent.Mutation = (*MeterItemMutation)(nil)
@@ -2394,6 +2534,60 @@ func (m *MeterItemMutation) ResetRooms() {
 	m.removedrooms = nil
 }
 
+// AddBuildingIDs adds the "building" edge to the Building entity by ids.
+func (m *MeterItemMutation) AddBuildingIDs(ids ...int) {
+	if m.building == nil {
+		m.building = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.building[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBuilding clears the "building" edge to the Building entity.
+func (m *MeterItemMutation) ClearBuilding() {
+	m.clearedbuilding = true
+}
+
+// BuildingCleared reports if the "building" edge to the Building entity was cleared.
+func (m *MeterItemMutation) BuildingCleared() bool {
+	return m.clearedbuilding
+}
+
+// RemoveBuildingIDs removes the "building" edge to the Building entity by IDs.
+func (m *MeterItemMutation) RemoveBuildingIDs(ids ...int) {
+	if m.removedbuilding == nil {
+		m.removedbuilding = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.building, ids[i])
+		m.removedbuilding[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBuilding returns the removed IDs of the "building" edge to the Building entity.
+func (m *MeterItemMutation) RemovedBuildingIDs() (ids []int) {
+	for id := range m.removedbuilding {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BuildingIDs returns the "building" edge IDs in the mutation.
+func (m *MeterItemMutation) BuildingIDs() (ids []int) {
+	for id := range m.building {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBuilding resets all changes to the "building" edge.
+func (m *MeterItemMutation) ResetBuilding() {
+	m.building = nil
+	m.clearedbuilding = false
+	m.removedbuilding = nil
+}
+
 // Where appends a list predicates to the MeterItemMutation builder.
 func (m *MeterItemMutation) Where(ps ...predicate.MeterItem) {
 	m.predicates = append(m.predicates, ps...)
@@ -2681,12 +2875,15 @@ func (m *MeterItemMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *MeterItemMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.account != nil {
 		edges = append(edges, meteritem.EdgeAccount)
 	}
 	if m.rooms != nil {
 		edges = append(edges, meteritem.EdgeRooms)
+	}
+	if m.building != nil {
+		edges = append(edges, meteritem.EdgeBuilding)
 	}
 	return edges
 }
@@ -2705,15 +2902,24 @@ func (m *MeterItemMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case meteritem.EdgeBuilding:
+		ids := make([]ent.Value, 0, len(m.building))
+		for id := range m.building {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *MeterItemMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedrooms != nil {
 		edges = append(edges, meteritem.EdgeRooms)
+	}
+	if m.removedbuilding != nil {
+		edges = append(edges, meteritem.EdgeBuilding)
 	}
 	return edges
 }
@@ -2728,18 +2934,27 @@ func (m *MeterItemMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case meteritem.EdgeBuilding:
+		ids := make([]ent.Value, 0, len(m.removedbuilding))
+		for id := range m.removedbuilding {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *MeterItemMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedaccount {
 		edges = append(edges, meteritem.EdgeAccount)
 	}
 	if m.clearedrooms {
 		edges = append(edges, meteritem.EdgeRooms)
+	}
+	if m.clearedbuilding {
+		edges = append(edges, meteritem.EdgeBuilding)
 	}
 	return edges
 }
@@ -2752,6 +2967,8 @@ func (m *MeterItemMutation) EdgeCleared(name string) bool {
 		return m.clearedaccount
 	case meteritem.EdgeRooms:
 		return m.clearedrooms
+	case meteritem.EdgeBuilding:
+		return m.clearedbuilding
 	}
 	return false
 }
@@ -2776,6 +2993,9 @@ func (m *MeterItemMutation) ResetEdge(name string) error {
 		return nil
 	case meteritem.EdgeRooms:
 		m.ResetRooms()
+		return nil
+	case meteritem.EdgeBuilding:
+		m.ResetBuilding()
 		return nil
 	}
 	return fmt.Errorf("unknown MeterItem edge %s", name)

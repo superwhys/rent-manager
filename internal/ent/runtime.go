@@ -89,8 +89,26 @@ func init() {
 			return nil
 		}
 	}()
+	// accountDescWechatOpenid is the schema descriptor for wechat_openid field.
+	accountDescWechatOpenid := accountFields[3].Descriptor()
+	// account.WechatOpenidValidator is a validator for the "wechat_openid" field. It is called by the builders before save.
+	account.WechatOpenidValidator = func() func(string) error {
+		validators := accountDescWechatOpenid.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(wechat_openid string) error {
+			for _, fn := range fns {
+				if err := fn(wechat_openid); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// accountDescIsActive is the schema descriptor for is_active field.
-	accountDescIsActive := accountFields[3].Descriptor()
+	accountDescIsActive := accountFields[4].Descriptor()
 	// account.DefaultIsActive holds the default value on creation for the is_active field.
 	account.DefaultIsActive = accountDescIsActive.Default.(bool)
 	buildingMixin := schema.Building{}.Mixin()

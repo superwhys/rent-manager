@@ -50,6 +50,9 @@ func (Building) Edges() []ent.Edge {
 			Ref("buildings").
 			Unique().
 			Required(),
+
 		edge.To("rooms", Room.Type),
+
+		edge.To("meter_items", MeterItem.Type),
 	}
 }

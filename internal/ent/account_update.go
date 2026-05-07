@@ -99,6 +99,20 @@ func (_u *AccountUpdate) SetNillablePassword(v *string) *AccountUpdate {
 	return _u
 }
 
+// SetWechatOpenid sets the "wechat_openid" field.
+func (_u *AccountUpdate) SetWechatOpenid(v string) *AccountUpdate {
+	_u.mutation.SetWechatOpenid(v)
+	return _u
+}
+
+// SetNillableWechatOpenid sets the "wechat_openid" field if the given value is not nil.
+func (_u *AccountUpdate) SetNillableWechatOpenid(v *string) *AccountUpdate {
+	if v != nil {
+		_u.SetWechatOpenid(*v)
+	}
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *AccountUpdate) SetIsActive(v bool) *AccountUpdate {
 	_u.mutation.SetIsActive(v)
@@ -279,6 +293,11 @@ func (_u *AccountUpdate) check() error {
 			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "Account.password": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.WechatOpenid(); ok {
+		if err := account.WechatOpenidValidator(v); err != nil {
+			return &ValidationError{Name: "wechat_openid", err: fmt.Errorf(`ent: validator failed for field "Account.wechat_openid": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -311,6 +330,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Password(); ok {
 		_spec.SetField(account.FieldPassword, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.WechatOpenid(); ok {
+		_spec.SetField(account.FieldWechatOpenid, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(account.FieldIsActive, field.TypeBool, value)
@@ -538,6 +560,20 @@ func (_u *AccountUpdateOne) SetNillablePassword(v *string) *AccountUpdateOne {
 	return _u
 }
 
+// SetWechatOpenid sets the "wechat_openid" field.
+func (_u *AccountUpdateOne) SetWechatOpenid(v string) *AccountUpdateOne {
+	_u.mutation.SetWechatOpenid(v)
+	return _u
+}
+
+// SetNillableWechatOpenid sets the "wechat_openid" field if the given value is not nil.
+func (_u *AccountUpdateOne) SetNillableWechatOpenid(v *string) *AccountUpdateOne {
+	if v != nil {
+		_u.SetWechatOpenid(*v)
+	}
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *AccountUpdateOne) SetIsActive(v bool) *AccountUpdateOne {
 	_u.mutation.SetIsActive(v)
@@ -731,6 +767,11 @@ func (_u *AccountUpdateOne) check() error {
 			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "Account.password": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.WechatOpenid(); ok {
+		if err := account.WechatOpenidValidator(v); err != nil {
+			return &ValidationError{Name: "wechat_openid", err: fmt.Errorf(`ent: validator failed for field "Account.wechat_openid": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -780,6 +821,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 	}
 	if value, ok := _u.mutation.Password(); ok {
 		_spec.SetField(account.FieldPassword, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.WechatOpenid(); ok {
+		_spec.SetField(account.FieldWechatOpenid, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(account.FieldIsActive, field.TypeBool, value)

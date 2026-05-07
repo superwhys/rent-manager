@@ -1,10 +1,198 @@
 basePath: /api
+definitions:
+  ginutils.Ret-any:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message: {}
+    type: object
+  ginutils.Ret-array_response_RoomResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.RoomResponse'
+        type: array
+      message: {}
+    type: object
+  ginutils.Ret-response_RoomResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.RoomResponse'
+      message: {}
+    type: object
+  requests.CreateRoomCommand:
+    properties:
+      building_id:
+        minimum: 1
+        type: integer
+      floor:
+        type: integer
+      price:
+        minimum: 1
+        type: integer
+      room_no:
+        type: string
+      room_type_id:
+        minimum: 1
+        type: integer
+      size:
+        type: integer
+    required:
+    - building_id
+    - price
+    - room_no
+    - room_type_id
+    type: object
+  requests.UpdateRoomCommand:
+    properties:
+      building_id:
+        type: integer
+      floor:
+        type: integer
+      is_active:
+        type: boolean
+      price:
+        type: integer
+      room_no:
+        type: string
+      room_type_id:
+        type: integer
+      roomID:
+        minimum: 1
+        type: integer
+      size:
+        type: integer
+    required:
+    - roomID
+    type: object
+  response.RoomResponse:
+    properties:
+      building_id:
+        type: integer
+      floor:
+        type: integer
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      price:
+        type: integer
+      room_no:
+        type: string
+      room_type_id:
+        type: integer
+      size:
+        type: integer
+    type: object
 info:
   contact: {}
   description: Rent Manager Server
   title: Rent Manager Server API
   version: "1.0"
-paths: {}
+paths:
+  /rooms:
+    get:
+      description: 查询房间列表
+      parameters:
+      - in: query
+        minimum: 1
+        name: building_id
+        required: true
+        type: integer
+      - in: query
+        name: is_active
+        type: boolean
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: offset
+        type: integer
+      - in: query
+        name: room_type_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_RoomResponse'
+      summary: 查询房间列表
+      tags:
+      - Room
+    post:
+      consumes:
+      - application/json
+      description: 创建房间
+      parameters:
+      - description: 创建房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateRoomCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+      summary: 创建房间
+      tags:
+      - Room
+  /rooms/{room_id}:
+    delete:
+      description: 删除房间
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      summary: 删除房间
+      tags:
+      - Room
+    get:
+      description: 查询单个房间
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+      summary: 查询房间
+      tags:
+      - Room
+    put:
+      consumes:
+      - application/json
+      description: 更新房间
+      parameters:
+      - description: 更新房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UpdateRoomCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+      summary: 更新房间
+      tags:
+      - Room
 securityDefinitions:
   BearerAuth:
     in: header

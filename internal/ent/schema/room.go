@@ -51,17 +51,24 @@ func (Room) Fields() []ent.Field {
 // Edges of the Room.
 func (Room) Edges() []ent.Edge {
 	return []ent.Edge{
+		// 房间-楼栋 多对一关系
 		edge.From("building", Building.Type).
 			Field("building_id").
 			Ref("rooms").
 			Unique().
 			Required(),
+
+		// 房间-房间类型 多对一关系
 		edge.From("room_type", RoomType.Type).
 			Field("room_type_id").
 			Ref("rooms").
 			Unique().
 			Required(),
+
+		// 房间-抄表项 多对多关系
 		edge.To("meter_items", MeterItem.Type),
+
+		// 房间-抄表数据 多对多关系
 		edge.To("meter_readings", MeterReading.Type),
 	}
 }

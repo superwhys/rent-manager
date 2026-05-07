@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
-	"github.com/superwhys/rent-manager-server/api/response"
 	"github.com/superwhys/rent-manager-server/internal/errcode"
+	"github.com/superwhys/rent-manager-server/internal/models/response"
 	"github.com/ulule/limiter/v3"
 
 	ginlimiter "github.com/ulule/limiter/v3/drivers/middleware/gin"
@@ -49,6 +49,7 @@ func RateLimitMiddleware(
 	if instance == nil {
 		logging.PanicError(fmt.Errorf("limiter instance is nil"))
 	}
+
 	return ginlimiter.NewMiddleware(
 		instance,
 		ginlimiter.WithKeyGetter(keyGenerator(excludedPaths)),

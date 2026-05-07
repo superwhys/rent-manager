@@ -11,6 +11,6 @@ const (
 
 type AccountTokenClaims struct {
 	jwt.RegisteredClaims
-	UserID    uint   `json:"user_id"`
+	UserID    int    `json:"user_id"`
 	TokenType string `json:"token_type"`
 }

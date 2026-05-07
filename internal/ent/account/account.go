@@ -26,6 +26,8 @@ const (
 	FieldEmail = "email"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
+	// FieldWechatOpenid holds the string denoting the wechat_openid field in the database.
+	FieldWechatOpenid = "wechat_openid"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
 	// EdgeBuildings holds the string denoting the buildings edge name in mutations.
@@ -68,6 +70,7 @@ var Columns = []string{
 	FieldName,
 	FieldEmail,
 	FieldPassword,
+	FieldWechatOpenid,
 	FieldIsActive,
 }
 
@@ -94,6 +97,8 @@ var (
 	EmailValidator func(string) error
 	// PasswordValidator is a validator for the "password" field. It is called by the builders before save.
 	PasswordValidator func(string) error
+	// WechatOpenidValidator is a validator for the "wechat_openid" field. It is called by the builders before save.
+	WechatOpenidValidator func(string) error
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
 )
@@ -134,6 +139,11 @@ func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 // ByPassword orders the results by the password field.
 func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPassword, opts...).ToFunc()
+}
+
+// ByWechatOpenid orders the results by the wechat_openid field.
+func ByWechatOpenid(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWechatOpenid, opts...).ToFunc()
 }
 
 // ByIsActive orders the results by the is_active field.

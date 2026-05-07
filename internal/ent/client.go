@@ -584,6 +584,22 @@ func (c *BuildingClient) QueryRooms(_m *Building) *RoomQuery {
 	return query
 }
 
+// QueryMeterItems queries the meter_items edge of a Building.
+func (c *BuildingClient) QueryMeterItems(_m *Building) *MeterItemQuery {
+	query := (&MeterItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(building.Table, building.FieldID, id),
+			sqlgraph.To(meteritem.Table, meteritem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, building.MeterItemsTable, building.MeterItemsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *BuildingClient) Hooks() []Hook {
 	return c.hooks.Building
@@ -742,6 +758,22 @@ func (c *MeterItemClient) QueryRooms(_m *MeterItem) *RoomQuery {
 			sqlgraph.From(meteritem.Table, meteritem.FieldID, id),
 			sqlgraph.To(room.Table, room.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.RoomsTable, meteritem.RoomsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBuilding queries the building edge of a MeterItem.
+func (c *MeterItemClient) QueryBuilding(_m *MeterItem) *BuildingQuery {
+	query := (&BuildingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(meteritem.Table, meteritem.FieldID, id),
+			sqlgraph.To(building.Table, building.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.BuildingTable, meteritem.BuildingPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

@@ -17,6 +17,7 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 255},
 		{Name: "email", Type: field.TypeString},
 		{Name: "password", Type: field.TypeString, Size: 255},
+		{Name: "wechat_openid", Type: field.TypeString, Size: 255},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 	}
 	// AccountsTable holds the schema information for the "accounts" table.
@@ -24,6 +25,13 @@ var (
 		Name:       "accounts",
 		Columns:    AccountsColumns,
 		PrimaryKey: []*schema.Column{AccountsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "account_wechat_openid",
+				Unique:  true,
+				Columns: []*schema.Column{AccountsColumns[7]},
+			},
+		},
 	}
 	// BuildingsColumns holds the columns for the "buildings" table.
 	BuildingsColumns = []*schema.Column{
@@ -213,6 +221,31 @@ var (
 			},
 		},
 	}
+	// BuildingMeterItemsColumns holds the columns for the "building_meter_items" table.
+	BuildingMeterItemsColumns = []*schema.Column{
+		{Name: "building_id", Type: field.TypeInt},
+		{Name: "meter_item_id", Type: field.TypeInt},
+	}
+	// BuildingMeterItemsTable holds the schema information for the "building_meter_items" table.
+	BuildingMeterItemsTable = &schema.Table{
+		Name:       "building_meter_items",
+		Columns:    BuildingMeterItemsColumns,
+		PrimaryKey: []*schema.Column{BuildingMeterItemsColumns[0], BuildingMeterItemsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "building_meter_items_building_id",
+				Columns:    []*schema.Column{BuildingMeterItemsColumns[0]},
+				RefColumns: []*schema.Column{BuildingsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "building_meter_items_meter_item_id",
+				Columns:    []*schema.Column{BuildingMeterItemsColumns[1]},
+				RefColumns: []*schema.Column{MeterItemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// RolePermissionsColumns holds the columns for the "role_permissions" table.
 	RolePermissionsColumns = []*schema.Column{
 		{Name: "role_id", Type: field.TypeInt},
@@ -273,6 +306,7 @@ var (
 		RolesTable,
 		RoomsTable,
 		RoomTypesTable,
+		BuildingMeterItemsTable,
 		RolePermissionsTable,
 		RoomMeterItemsTable,
 	}
@@ -285,6 +319,8 @@ func init() {
 	RoomsTable.ForeignKeys[0].RefTable = BuildingsTable
 	RoomsTable.ForeignKeys[1].RefTable = RoomTypesTable
 	RoomTypesTable.ForeignKeys[0].RefTable = AccountsTable
+	BuildingMeterItemsTable.ForeignKeys[0].RefTable = BuildingsTable
+	BuildingMeterItemsTable.ForeignKeys[1].RefTable = MeterItemsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 	RoomMeterItemsTable.ForeignKeys[0].RefTable = RoomsTable

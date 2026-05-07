@@ -551,6 +551,29 @@ func HasRoomsWith(preds ...predicate.Room) predicate.Building {
 	})
 }
 
+// HasMeterItems applies the HasEdge predicate on the "meter_items" edge.
+func HasMeterItems() predicate.Building {
+	return predicate.Building(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, MeterItemsTable, MeterItemsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMeterItemsWith applies the HasEdge predicate on the "meter_items" edge with a given conditions (other predicates).
+func HasMeterItemsWith(preds ...predicate.MeterItem) predicate.Building {
+	return predicate.Building(func(s *sql.Selector) {
+		step := newMeterItemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Building) predicate.Building {
 	return predicate.Building(sql.AndPredicates(predicates...))

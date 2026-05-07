@@ -85,6 +85,11 @@ func Password(v string) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldPassword, v))
 }
 
+// WechatOpenid applies equality check predicate on the "wechat_openid" field. It's identical to WechatOpenidEQ.
+func WechatOpenid(v string) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldWechatOpenid, v))
+}
+
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldIsActive, v))
@@ -413,6 +418,71 @@ func PasswordEqualFold(v string) predicate.Account {
 // PasswordContainsFold applies the ContainsFold predicate on the "password" field.
 func PasswordContainsFold(v string) predicate.Account {
 	return predicate.Account(sql.FieldContainsFold(FieldPassword, v))
+}
+
+// WechatOpenidEQ applies the EQ predicate on the "wechat_openid" field.
+func WechatOpenidEQ(v string) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldWechatOpenid, v))
+}
+
+// WechatOpenidNEQ applies the NEQ predicate on the "wechat_openid" field.
+func WechatOpenidNEQ(v string) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldWechatOpenid, v))
+}
+
+// WechatOpenidIn applies the In predicate on the "wechat_openid" field.
+func WechatOpenidIn(vs ...string) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldWechatOpenid, vs...))
+}
+
+// WechatOpenidNotIn applies the NotIn predicate on the "wechat_openid" field.
+func WechatOpenidNotIn(vs ...string) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldWechatOpenid, vs...))
+}
+
+// WechatOpenidGT applies the GT predicate on the "wechat_openid" field.
+func WechatOpenidGT(v string) predicate.Account {
+	return predicate.Account(sql.FieldGT(FieldWechatOpenid, v))
+}
+
+// WechatOpenidGTE applies the GTE predicate on the "wechat_openid" field.
+func WechatOpenidGTE(v string) predicate.Account {
+	return predicate.Account(sql.FieldGTE(FieldWechatOpenid, v))
+}
+
+// WechatOpenidLT applies the LT predicate on the "wechat_openid" field.
+func WechatOpenidLT(v string) predicate.Account {
+	return predicate.Account(sql.FieldLT(FieldWechatOpenid, v))
+}
+
+// WechatOpenidLTE applies the LTE predicate on the "wechat_openid" field.
+func WechatOpenidLTE(v string) predicate.Account {
+	return predicate.Account(sql.FieldLTE(FieldWechatOpenid, v))
+}
+
+// WechatOpenidContains applies the Contains predicate on the "wechat_openid" field.
+func WechatOpenidContains(v string) predicate.Account {
+	return predicate.Account(sql.FieldContains(FieldWechatOpenid, v))
+}
+
+// WechatOpenidHasPrefix applies the HasPrefix predicate on the "wechat_openid" field.
+func WechatOpenidHasPrefix(v string) predicate.Account {
+	return predicate.Account(sql.FieldHasPrefix(FieldWechatOpenid, v))
+}
+
+// WechatOpenidHasSuffix applies the HasSuffix predicate on the "wechat_openid" field.
+func WechatOpenidHasSuffix(v string) predicate.Account {
+	return predicate.Account(sql.FieldHasSuffix(FieldWechatOpenid, v))
+}
+
+// WechatOpenidEqualFold applies the EqualFold predicate on the "wechat_openid" field.
+func WechatOpenidEqualFold(v string) predicate.Account {
+	return predicate.Account(sql.FieldEqualFold(FieldWechatOpenid, v))
+}
+
+// WechatOpenidContainsFold applies the ContainsFold predicate on the "wechat_openid" field.
+func WechatOpenidContainsFold(v string) predicate.Account {
+	return predicate.Account(sql.FieldContainsFold(FieldWechatOpenid, v))
 }
 
 // IsActiveEQ applies the EQ predicate on the "is_active" field.

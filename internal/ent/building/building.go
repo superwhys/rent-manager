@@ -34,6 +34,8 @@ const (
 	EdgeAccount = "account"
 	// EdgeRooms holds the string denoting the rooms edge name in mutations.
 	EdgeRooms = "rooms"
+	// EdgeMeterItems holds the string denoting the meter_items edge name in mutations.
+	EdgeMeterItems = "meter_items"
 	// Table holds the table name of the building in the database.
 	Table = "buildings"
 	// AccountTable is the table that holds the account relation/edge.
@@ -50,6 +52,11 @@ const (
 	RoomsInverseTable = "rooms"
 	// RoomsColumn is the table column denoting the rooms relation/edge.
 	RoomsColumn = "building_id"
+	// MeterItemsTable is the table that holds the meter_items relation/edge. The primary key declared below.
+	MeterItemsTable = "building_meter_items"
+	// MeterItemsInverseTable is the table name for the MeterItem entity.
+	// It exists in this package in order to avoid circular dependency with the "meteritem" package.
+	MeterItemsInverseTable = "meter_items"
 )
 
 // Columns holds all SQL columns for building fields.
@@ -64,6 +71,12 @@ var Columns = []string{
 	FieldCity,
 	FieldProvince,
 }
+
+var (
+	// MeterItemsPrimaryKey and MeterItemsColumn2 are the table columns denoting the
+	// primary key for the meter_items relation (M2M).
+	MeterItemsPrimaryKey = []string{"building_id", "meter_item_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -160,6 +173,20 @@ func ByRooms(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRoomsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMeterItemsCount orders the results by meter_items count.
+func ByMeterItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMeterItemsStep(), opts...)
+	}
+}
+
+// ByMeterItems orders the results by meter_items terms.
+func ByMeterItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMeterItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -172,5 +199,12 @@ func newRoomsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoomsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RoomsTable, RoomsColumn),
+	)
+}
+func newMeterItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MeterItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, MeterItemsTable, MeterItemsPrimaryKey...),
 	)
 }

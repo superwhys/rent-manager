@@ -29,6 +29,8 @@ type Account struct {
 	Email string `json:"email,omitempty"`
 	// 账号密码
 	Password string `json:"password,omitempty"`
+	// 微信开放ID
+	WechatOpenid string `json:"wechat_openid,omitempty"`
 	// 账号是否激活
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -86,7 +88,7 @@ func (*Account) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case account.FieldID:
 			values[i] = new(sql.NullInt64)
-		case account.FieldName, account.FieldEmail, account.FieldPassword:
+		case account.FieldName, account.FieldEmail, account.FieldPassword, account.FieldWechatOpenid:
 			values[i] = new(sql.NullString)
 		case account.FieldCreatedAt, account.FieldUpdatedAt, account.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -147,6 +149,12 @@ func (_m *Account) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field password", values[i])
 			} else if value.Valid {
 				_m.Password = value.String
+			}
+		case account.FieldWechatOpenid:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field wechat_openid", values[i])
+			} else if value.Valid {
+				_m.WechatOpenid = value.String
 			}
 		case account.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -224,6 +232,9 @@ func (_m *Account) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("password=")
 	builder.WriteString(_m.Password)
+	builder.WriteString(", ")
+	builder.WriteString("wechat_openid=")
+	builder.WriteString(_m.WechatOpenid)
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))

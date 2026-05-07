@@ -7,7 +7,292 @@
         "version": "1.0"
     },
     "basePath": "/api",
-    "paths": {},
+    "paths": {
+        "/rooms": {
+            "get": {
+                "description": "查询房间列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "查询房间列表",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "building_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "room_type_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_RoomResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "创建房间",
+                "parameters": [
+                    {
+                        "description": "创建房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateRoomCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{room_id}": {
+            "get": {
+                "description": "查询单个房间",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "查询房间",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "更新房间",
+                "parameters": [
+                    {
+                        "description": "更新房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateRoomCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除房间",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "删除房间",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ginutils.Ret-any": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_RoomResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RoomResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_RoomResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.RoomResponse"
+                },
+                "message": {}
+            }
+        },
+        "requests.CreateRoomCommand": {
+            "type": "object",
+            "required": [
+                "building_id",
+                "price",
+                "room_no",
+                "room_type_id"
+            ],
+            "properties": {
+                "building_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "floor": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "room_type_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "requests.UpdateRoomCommand": {
+            "type": "object",
+            "required": [
+                "roomID"
+            ],
+            "properties": {
+                "building_id": {
+                    "type": "integer"
+                },
+                "floor": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "roomID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "room_type_id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.RoomResponse": {
+            "type": "object",
+            "properties": {
+                "building_id": {
+                    "type": "integer"
+                },
+                "floor": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "room_type_id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
     "securityDefinitions": {
         "BearerAuth": {
             "type": "apiKey",

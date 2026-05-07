@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
@@ -21,12 +22,13 @@ import (
 // MeterItemQuery is the builder for querying MeterItem entities.
 type MeterItemQuery struct {
 	config
-	ctx         *QueryContext
-	order       []meteritem.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.MeterItem
-	withAccount *AccountQuery
-	withRooms   *RoomQuery
+	ctx          *QueryContext
+	order        []meteritem.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.MeterItem
+	withAccount  *AccountQuery
+	withRooms    *RoomQuery
+	withBuilding *BuildingQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -100,6 +102,28 @@ func (_q *MeterItemQuery) QueryRooms() *RoomQuery {
 			sqlgraph.From(meteritem.Table, meteritem.FieldID, selector),
 			sqlgraph.To(room.Table, room.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.RoomsTable, meteritem.RoomsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBuilding chains the current query on the "building" edge.
+func (_q *MeterItemQuery) QueryBuilding() *BuildingQuery {
+	query := (&BuildingClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(meteritem.Table, meteritem.FieldID, selector),
+			sqlgraph.To(building.Table, building.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.BuildingTable, meteritem.BuildingPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -294,13 +318,14 @@ func (_q *MeterItemQuery) Clone() *MeterItemQuery {
 		return nil
 	}
 	return &MeterItemQuery{
-		config:      _q.config,
-		ctx:         _q.ctx.Clone(),
-		order:       append([]meteritem.OrderOption{}, _q.order...),
-		inters:      append([]Interceptor{}, _q.inters...),
-		predicates:  append([]predicate.MeterItem{}, _q.predicates...),
-		withAccount: _q.withAccount.Clone(),
-		withRooms:   _q.withRooms.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]meteritem.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.MeterItem{}, _q.predicates...),
+		withAccount:  _q.withAccount.Clone(),
+		withRooms:    _q.withRooms.Clone(),
+		withBuilding: _q.withBuilding.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -326,6 +351,17 @@ func (_q *MeterItemQuery) WithRooms(opts ...func(*RoomQuery)) *MeterItemQuery {
 		opt(query)
 	}
 	_q.withRooms = query
+	return _q
+}
+
+// WithBuilding tells the query-builder to eager-load the nodes that are connected to
+// the "building" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *MeterItemQuery) WithBuilding(opts ...func(*BuildingQuery)) *MeterItemQuery {
+	query := (&BuildingClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBuilding = query
 	return _q
 }
 
@@ -407,9 +443,10 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 	var (
 		nodes       = []*MeterItem{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withAccount != nil,
 			_q.withRooms != nil,
+			_q.withBuilding != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -440,6 +477,13 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 		if err := _q.loadRooms(ctx, query, nodes,
 			func(n *MeterItem) { n.Edges.Rooms = []*Room{} },
 			func(n *MeterItem, e *Room) { n.Edges.Rooms = append(n.Edges.Rooms, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withBuilding; query != nil {
+		if err := _q.loadBuilding(ctx, query, nodes,
+			func(n *MeterItem) { n.Edges.Building = []*Building{} },
+			func(n *MeterItem, e *Building) { n.Edges.Building = append(n.Edges.Building, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -529,6 +573,67 @@ func (_q *MeterItemQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "rooms" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (_q *MeterItemQuery) loadBuilding(ctx context.Context, query *BuildingQuery, nodes []*MeterItem, init func(*MeterItem), assign func(*MeterItem, *Building)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*MeterItem)
+	nids := make(map[int]map[*MeterItem]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(meteritem.BuildingTable)
+		s.Join(joinT).On(s.C(building.FieldID), joinT.C(meteritem.BuildingPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(meteritem.BuildingPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(meteritem.BuildingPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*MeterItem]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Building](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "building" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)

@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
 
@@ -28,14 +29,22 @@ func (Account) Fields() []ent.Field {
 			NotEmpty().
 			MaxLen(255).
 			Comment("账号名字"),
+
 		field.String("email").
 			NotEmpty().
 			Match(regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)).
 			Comment("账号邮箱"),
+
 		field.String("password").
 			NotEmpty().
 			MaxLen(255).
 			Comment("账号密码"),
+
+		field.String("wechat_openid").
+			NotEmpty().
+			MaxLen(255).
+			Comment("微信开放ID"),
+
 		field.Bool("is_active").
 			Default(true).
 			Comment("账号是否激活"),
@@ -48,5 +57,11 @@ func (Account) Edges() []ent.Edge {
 		edge.To("buildings", Building.Type),
 		edge.To("room_types", RoomType.Type),
 		edge.To("meter_items", MeterItem.Type),
+	}
+}
+
+func (Account) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("wechat_openid").Unique(),
 	}
 }
