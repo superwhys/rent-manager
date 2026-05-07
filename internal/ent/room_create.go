@@ -87,6 +87,12 @@ func (_c *RoomCreate) SetSize(v int) *RoomCreate {
 	return _c
 }
 
+// SetBuildingID sets the "building_id" field.
+func (_c *RoomCreate) SetBuildingID(v int) *RoomCreate {
+	_c.mutation.SetBuildingID(v)
+	return _c
+}
+
 // SetIsActive sets the "is_active" field.
 func (_c *RoomCreate) SetIsActive(v bool) *RoomCreate {
 	_c.mutation.SetIsActive(v)
@@ -97,20 +103,6 @@ func (_c *RoomCreate) SetIsActive(v bool) *RoomCreate {
 func (_c *RoomCreate) SetNillableIsActive(v *bool) *RoomCreate {
 	if v != nil {
 		_c.SetIsActive(*v)
-	}
-	return _c
-}
-
-// SetBuildingID sets the "building" edge to the Building entity by ID.
-func (_c *RoomCreate) SetBuildingID(id int) *RoomCreate {
-	_c.mutation.SetBuildingID(id)
-	return _c
-}
-
-// SetNillableBuildingID sets the "building" edge to the Building entity by ID if the given value is not nil.
-func (_c *RoomCreate) SetNillableBuildingID(id *int) *RoomCreate {
-	if id != nil {
-		_c = _c.SetBuildingID(*id)
 	}
 	return _c
 }
@@ -194,8 +186,14 @@ func (_c *RoomCreate) check() error {
 	if _, ok := _c.mutation.Size(); !ok {
 		return &ValidationError{Name: "size", err: errors.New(`ent: missing required field "Room.size"`)}
 	}
+	if _, ok := _c.mutation.BuildingID(); !ok {
+		return &ValidationError{Name: "building_id", err: errors.New(`ent: missing required field "Room.building_id"`)}
+	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Room.is_active"`)}
+	}
+	if len(_c.mutation.BuildingIDs()) == 0 {
+		return &ValidationError{Name: "building", err: errors.New(`ent: missing required edge "Room.building"`)}
 	}
 	return nil
 }
@@ -269,7 +267,7 @@ func (_c *RoomCreate) createSpec() (*Room, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.building_rooms = &nodes[0]
+		_node.BuildingID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

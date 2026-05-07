@@ -28,6 +28,8 @@ const (
 	FieldPrice = "price"
 	// FieldSize holds the string denoting the size field in the database.
 	FieldSize = "size"
+	// FieldBuildingID holds the string denoting the building_id field in the database.
+	FieldBuildingID = "building_id"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
 	// EdgeBuilding holds the string denoting the building edge name in mutations.
@@ -40,7 +42,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "building" package.
 	BuildingInverseTable = "buildings"
 	// BuildingColumn is the table column denoting the building relation/edge.
-	BuildingColumn = "building_rooms"
+	BuildingColumn = "building_id"
 )
 
 // Columns holds all SQL columns for room fields.
@@ -53,24 +55,14 @@ var Columns = []string{
 	FieldFloor,
 	FieldPrice,
 	FieldSize,
+	FieldBuildingID,
 	FieldIsActive,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "rooms"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"building_rooms",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -131,6 +123,11 @@ func ByPrice(opts ...sql.OrderTermOption) OrderOption {
 // BySize orders the results by the size field.
 func BySize(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSize, opts...).ToFunc()
+}
+
+// ByBuildingID orders the results by the building_id field.
+func ByBuildingID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBuildingID, opts...).ToFunc()
 }
 
 // ByIsActive orders the results by the is_active field.

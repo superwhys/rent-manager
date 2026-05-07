@@ -28,17 +28,28 @@ const (
 	FieldCity = "city"
 	// FieldProvince holds the string denoting the province field in the database.
 	FieldProvince = "province"
+	// FieldAccountID holds the string denoting the account_id field in the database.
+	FieldAccountID = "account_id"
+	// EdgeAccount holds the string denoting the account edge name in mutations.
+	EdgeAccount = "account"
 	// EdgeRooms holds the string denoting the rooms edge name in mutations.
 	EdgeRooms = "rooms"
 	// Table holds the table name of the building in the database.
 	Table = "buildings"
+	// AccountTable is the table that holds the account relation/edge.
+	AccountTable = "buildings"
+	// AccountInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountInverseTable = "accounts"
+	// AccountColumn is the table column denoting the account relation/edge.
+	AccountColumn = "account_id"
 	// RoomsTable is the table that holds the rooms relation/edge.
 	RoomsTable = "rooms"
 	// RoomsInverseTable is the table name for the Room entity.
 	// It exists in this package in order to avoid circular dependency with the "room" package.
 	RoomsInverseTable = "rooms"
 	// RoomsColumn is the table column denoting the rooms relation/edge.
-	RoomsColumn = "building_rooms"
+	RoomsColumn = "building_id"
 )
 
 // Columns holds all SQL columns for building fields.
@@ -51,6 +62,7 @@ var Columns = []string{
 	FieldAddress,
 	FieldCity,
 	FieldProvince,
+	FieldAccountID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -123,6 +135,18 @@ func ByProvince(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProvince, opts...).ToFunc()
 }
 
+// ByAccountID orders the results by the account_id field.
+func ByAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAccountID, opts...).ToFunc()
+}
+
+// ByAccountField orders the results by account field.
+func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByRoomsCount orders the results by rooms count.
 func ByRoomsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -135,6 +159,13 @@ func ByRooms(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newRoomsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newAccountStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccountInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+	)
 }
 func newRoomsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/building"
 )
 
 // AccountCreate is the builder for creating a Account entity.
@@ -92,6 +93,21 @@ func (_c *AccountCreate) SetNillableIsActive(v *bool) *AccountCreate {
 		_c.SetIsActive(*v)
 	}
 	return _c
+}
+
+// AddBuildingIDs adds the "buildings" edge to the Building entity by IDs.
+func (_c *AccountCreate) AddBuildingIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddBuildingIDs(ids...)
+	return _c
+}
+
+// AddBuildings adds the "buildings" edges to the Building entity.
+func (_c *AccountCreate) AddBuildings(v ...*Building) *AccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBuildingIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -231,6 +247,22 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(account.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
+	}
+	if nodes := _c.mutation.BuildingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.BuildingsTable,
+			Columns: []string{account.BuildingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

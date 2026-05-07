@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,16 +13,18 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 )
 
 // AccountQuery is the builder for querying Account entities.
 type AccountQuery struct {
 	config
-	ctx        *QueryContext
-	order      []account.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Account
+	ctx           *QueryContext
+	order         []account.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.Account
+	withBuildings *BuildingQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +59,28 @@ func (_q *AccountQuery) Unique(unique bool) *AccountQuery {
 func (_q *AccountQuery) Order(o ...account.OrderOption) *AccountQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryBuildings chains the current query on the "buildings" edge.
+func (_q *AccountQuery) QueryBuildings() *BuildingQuery {
+	query := (&BuildingClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, selector),
+			sqlgraph.To(building.Table, building.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.BuildingsTable, account.BuildingsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Account entity from the query.
@@ -245,15 +270,27 @@ func (_q *AccountQuery) Clone() *AccountQuery {
 		return nil
 	}
 	return &AccountQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]account.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Account{}, _q.predicates...),
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]account.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.Account{}, _q.predicates...),
+		withBuildings: _q.withBuildings.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithBuildings tells the query-builder to eager-load the nodes that are connected to
+// the "buildings" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithBuildings(opts ...func(*BuildingQuery)) *AccountQuery {
+	query := (&BuildingClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBuildings = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +369,11 @@ func (_q *AccountQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Account, error) {
 	var (
-		nodes = []*Account{}
-		_spec = _q.querySpec()
+		nodes       = []*Account{}
+		_spec       = _q.querySpec()
+		loadedTypes = [1]bool{
+			_q.withBuildings != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Account).scanValues(nil, columns)
@@ -341,6 +381,7 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Account{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +393,45 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withBuildings; query != nil {
+		if err := _q.loadBuildings(ctx, query, nodes,
+			func(n *Account) { n.Edges.Buildings = []*Building{} },
+			func(n *Account, e *Building) { n.Edges.Buildings = append(n.Edges.Buildings, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (_q *AccountQuery) loadBuildings(ctx context.Context, query *BuildingQuery, nodes []*Account, init func(*Account), assign func(*Account, *Building)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Account)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(building.FieldAccountID)
+	}
+	query.Where(predicate.Building(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.BuildingsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AccountID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "account_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (_q *AccountQuery) sqlCount(ctx context.Context) (int, error) {

@@ -132,6 +132,20 @@ func (_u *RoomUpdate) AddSize(v int) *RoomUpdate {
 	return _u
 }
 
+// SetBuildingID sets the "building_id" field.
+func (_u *RoomUpdate) SetBuildingID(v int) *RoomUpdate {
+	_u.mutation.SetBuildingID(v)
+	return _u
+}
+
+// SetNillableBuildingID sets the "building_id" field if the given value is not nil.
+func (_u *RoomUpdate) SetNillableBuildingID(v *int) *RoomUpdate {
+	if v != nil {
+		_u.SetBuildingID(*v)
+	}
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *RoomUpdate) SetIsActive(v bool) *RoomUpdate {
 	_u.mutation.SetIsActive(v)
@@ -142,20 +156,6 @@ func (_u *RoomUpdate) SetIsActive(v bool) *RoomUpdate {
 func (_u *RoomUpdate) SetNillableIsActive(v *bool) *RoomUpdate {
 	if v != nil {
 		_u.SetIsActive(*v)
-	}
-	return _u
-}
-
-// SetBuildingID sets the "building" edge to the Building entity by ID.
-func (_u *RoomUpdate) SetBuildingID(id int) *RoomUpdate {
-	_u.mutation.SetBuildingID(id)
-	return _u
-}
-
-// SetNillableBuildingID sets the "building" edge to the Building entity by ID if the given value is not nil.
-func (_u *RoomUpdate) SetNillableBuildingID(id *int) *RoomUpdate {
-	if id != nil {
-		_u = _u.SetBuildingID(*id)
 	}
 	return _u
 }
@@ -218,6 +218,9 @@ func (_u *RoomUpdate) check() error {
 		if err := room.RoomNoValidator(v); err != nil {
 			return &ValidationError{Name: "room_no", err: fmt.Errorf(`ent: validator failed for field "Room.room_no": %w`, err)}
 		}
+	}
+	if _u.mutation.BuildingCleared() && len(_u.mutation.BuildingIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Room.building"`)
 	}
 	return nil
 }
@@ -419,6 +422,20 @@ func (_u *RoomUpdateOne) AddSize(v int) *RoomUpdateOne {
 	return _u
 }
 
+// SetBuildingID sets the "building_id" field.
+func (_u *RoomUpdateOne) SetBuildingID(v int) *RoomUpdateOne {
+	_u.mutation.SetBuildingID(v)
+	return _u
+}
+
+// SetNillableBuildingID sets the "building_id" field if the given value is not nil.
+func (_u *RoomUpdateOne) SetNillableBuildingID(v *int) *RoomUpdateOne {
+	if v != nil {
+		_u.SetBuildingID(*v)
+	}
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *RoomUpdateOne) SetIsActive(v bool) *RoomUpdateOne {
 	_u.mutation.SetIsActive(v)
@@ -429,20 +446,6 @@ func (_u *RoomUpdateOne) SetIsActive(v bool) *RoomUpdateOne {
 func (_u *RoomUpdateOne) SetNillableIsActive(v *bool) *RoomUpdateOne {
 	if v != nil {
 		_u.SetIsActive(*v)
-	}
-	return _u
-}
-
-// SetBuildingID sets the "building" edge to the Building entity by ID.
-func (_u *RoomUpdateOne) SetBuildingID(id int) *RoomUpdateOne {
-	_u.mutation.SetBuildingID(id)
-	return _u
-}
-
-// SetNillableBuildingID sets the "building" edge to the Building entity by ID if the given value is not nil.
-func (_u *RoomUpdateOne) SetNillableBuildingID(id *int) *RoomUpdateOne {
-	if id != nil {
-		_u = _u.SetBuildingID(*id)
 	}
 	return _u
 }
@@ -518,6 +521,9 @@ func (_u *RoomUpdateOne) check() error {
 		if err := room.RoomNoValidator(v); err != nil {
 			return &ValidationError{Name: "room_no", err: fmt.Errorf(`ent: validator failed for field "Room.room_no": %w`, err)}
 		}
+	}
+	if _u.mutation.BuildingCleared() && len(_u.mutation.BuildingIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Room.building"`)
 	}
 	return nil
 }

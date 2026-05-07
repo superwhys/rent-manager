@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -27,8 +28,17 @@ const (
 	FieldPassword = "password"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
+	// EdgeBuildings holds the string denoting the buildings edge name in mutations.
+	EdgeBuildings = "buildings"
 	// Table holds the table name of the account in the database.
 	Table = "accounts"
+	// BuildingsTable is the table that holds the buildings relation/edge.
+	BuildingsTable = "buildings"
+	// BuildingsInverseTable is the table name for the Building entity.
+	// It exists in this package in order to avoid circular dependency with the "building" package.
+	BuildingsInverseTable = "buildings"
+	// BuildingsColumn is the table column denoting the buildings relation/edge.
+	BuildingsColumn = "account_id"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -111,4 +121,25 @@ func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 // ByIsActive orders the results by the is_active field.
 func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
+// ByBuildingsCount orders the results by buildings count.
+func ByBuildingsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBuildingsStep(), opts...)
+	}
+}
+
+// ByBuildings orders the results by buildings terms.
+func ByBuildings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBuildingsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newBuildingsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BuildingsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BuildingsTable, BuildingsColumn),
+	)
 }

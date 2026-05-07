@@ -90,6 +90,11 @@ func Province(v string) predicate.Building {
 	return predicate.Building(sql.FieldEQ(FieldProvince, v))
 }
 
+// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
+func AccountID(v int) predicate.Building {
+	return predicate.Building(sql.FieldEQ(FieldAccountID, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Building {
 	return predicate.Building(sql.FieldEQ(FieldCreatedAt, v))
@@ -478,6 +483,49 @@ func ProvinceEqualFold(v string) predicate.Building {
 // ProvinceContainsFold applies the ContainsFold predicate on the "province" field.
 func ProvinceContainsFold(v string) predicate.Building {
 	return predicate.Building(sql.FieldContainsFold(FieldProvince, v))
+}
+
+// AccountIDEQ applies the EQ predicate on the "account_id" field.
+func AccountIDEQ(v int) predicate.Building {
+	return predicate.Building(sql.FieldEQ(FieldAccountID, v))
+}
+
+// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
+func AccountIDNEQ(v int) predicate.Building {
+	return predicate.Building(sql.FieldNEQ(FieldAccountID, v))
+}
+
+// AccountIDIn applies the In predicate on the "account_id" field.
+func AccountIDIn(vs ...int) predicate.Building {
+	return predicate.Building(sql.FieldIn(FieldAccountID, vs...))
+}
+
+// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
+func AccountIDNotIn(vs ...int) predicate.Building {
+	return predicate.Building(sql.FieldNotIn(FieldAccountID, vs...))
+}
+
+// HasAccount applies the HasEdge predicate on the "account" edge.
+func HasAccount() predicate.Building {
+	return predicate.Building(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
+func HasAccountWith(preds ...predicate.Account) predicate.Building {
+	return predicate.Building(func(s *sql.Selector) {
+		step := newAccountStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // HasRooms applies the HasEdge predicate on the "rooms" edge.

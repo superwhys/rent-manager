@@ -10,6 +10,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomoption"
 	"github.com/superwhys/rent-manager-server/internal/ent/schema"
 )
 
@@ -321,7 +322,40 @@ func init() {
 		}
 	}()
 	// roomDescIsActive is the schema descriptor for is_active field.
-	roomDescIsActive := roomFields[4].Descriptor()
+	roomDescIsActive := roomFields[5].Descriptor()
 	// room.DefaultIsActive holds the default value on creation for the is_active field.
 	room.DefaultIsActive = roomDescIsActive.Default.(bool)
+	roomoptionMixin := schema.RoomOption{}.Mixin()
+	roomoptionMixinFields0 := roomoptionMixin[0].Fields()
+	_ = roomoptionMixinFields0
+	roomoptionFields := schema.RoomOption{}.Fields()
+	_ = roomoptionFields
+	// roomoptionDescCreatedAt is the schema descriptor for created_at field.
+	roomoptionDescCreatedAt := roomoptionMixinFields0[0].Descriptor()
+	// roomoption.DefaultCreatedAt holds the default value on creation for the created_at field.
+	roomoption.DefaultCreatedAt = roomoptionDescCreatedAt.Default.(func() time.Time)
+	// roomoptionDescUpdatedAt is the schema descriptor for updated_at field.
+	roomoptionDescUpdatedAt := roomoptionMixinFields0[1].Descriptor()
+	// roomoption.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	roomoption.DefaultUpdatedAt = roomoptionDescUpdatedAt.Default.(func() time.Time)
+	// roomoption.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	roomoption.UpdateDefaultUpdatedAt = roomoptionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// roomoptionDescName is the schema descriptor for name field.
+	roomoptionDescName := roomoptionFields[0].Descriptor()
+	// roomoption.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	roomoption.NameValidator = func() func(string) error {
+		validators := roomoptionDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 }

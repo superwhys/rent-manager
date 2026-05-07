@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 )
 
@@ -110,9 +111,45 @@ func (_u *AccountUpdate) SetNillableIsActive(v *bool) *AccountUpdate {
 	return _u
 }
 
+// AddBuildingIDs adds the "buildings" edge to the Building entity by IDs.
+func (_u *AccountUpdate) AddBuildingIDs(ids ...int) *AccountUpdate {
+	_u.mutation.AddBuildingIDs(ids...)
+	return _u
+}
+
+// AddBuildings adds the "buildings" edges to the Building entity.
+func (_u *AccountUpdate) AddBuildings(v ...*Building) *AccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBuildingIDs(ids...)
+}
+
 // Mutation returns the AccountMutation object of the builder.
 func (_u *AccountUpdate) Mutation() *AccountMutation {
 	return _u.mutation
+}
+
+// ClearBuildings clears all "buildings" edges to the Building entity.
+func (_u *AccountUpdate) ClearBuildings() *AccountUpdate {
+	_u.mutation.ClearBuildings()
+	return _u
+}
+
+// RemoveBuildingIDs removes the "buildings" edge to Building entities by IDs.
+func (_u *AccountUpdate) RemoveBuildingIDs(ids ...int) *AccountUpdate {
+	_u.mutation.RemoveBuildingIDs(ids...)
+	return _u
+}
+
+// RemoveBuildings removes "buildings" edges to Building entities.
+func (_u *AccountUpdate) RemoveBuildings(v ...*Building) *AccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBuildingIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -203,6 +240,51 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(account.FieldIsActive, field.TypeBool, value)
+	}
+	if _u.mutation.BuildingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.BuildingsTable,
+			Columns: []string{account.BuildingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBuildingsIDs(); len(nodes) > 0 && !_u.mutation.BuildingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.BuildingsTable,
+			Columns: []string{account.BuildingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BuildingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.BuildingsTable,
+			Columns: []string{account.BuildingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -306,9 +388,45 @@ func (_u *AccountUpdateOne) SetNillableIsActive(v *bool) *AccountUpdateOne {
 	return _u
 }
 
+// AddBuildingIDs adds the "buildings" edge to the Building entity by IDs.
+func (_u *AccountUpdateOne) AddBuildingIDs(ids ...int) *AccountUpdateOne {
+	_u.mutation.AddBuildingIDs(ids...)
+	return _u
+}
+
+// AddBuildings adds the "buildings" edges to the Building entity.
+func (_u *AccountUpdateOne) AddBuildings(v ...*Building) *AccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBuildingIDs(ids...)
+}
+
 // Mutation returns the AccountMutation object of the builder.
 func (_u *AccountUpdateOne) Mutation() *AccountMutation {
 	return _u.mutation
+}
+
+// ClearBuildings clears all "buildings" edges to the Building entity.
+func (_u *AccountUpdateOne) ClearBuildings() *AccountUpdateOne {
+	_u.mutation.ClearBuildings()
+	return _u
+}
+
+// RemoveBuildingIDs removes the "buildings" edge to Building entities by IDs.
+func (_u *AccountUpdateOne) RemoveBuildingIDs(ids ...int) *AccountUpdateOne {
+	_u.mutation.RemoveBuildingIDs(ids...)
+	return _u
+}
+
+// RemoveBuildings removes "buildings" edges to Building entities.
+func (_u *AccountUpdateOne) RemoveBuildings(v ...*Building) *AccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBuildingIDs(ids...)
 }
 
 // Where appends a list predicates to the AccountUpdate builder.
@@ -429,6 +547,51 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(account.FieldIsActive, field.TypeBool, value)
+	}
+	if _u.mutation.BuildingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.BuildingsTable,
+			Columns: []string{account.BuildingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBuildingsIDs(); len(nodes) > 0 && !_u.mutation.BuildingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.BuildingsTable,
+			Columns: []string{account.BuildingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BuildingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.BuildingsTable,
+			Columns: []string{account.BuildingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Account{config: _u.config}
 	_spec.Assign = _node.assignValues

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
@@ -20,11 +21,12 @@ import (
 // BuildingQuery is the builder for querying Building entities.
 type BuildingQuery struct {
 	config
-	ctx        *QueryContext
-	order      []building.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Building
-	withRooms  *RoomQuery
+	ctx         *QueryContext
+	order       []building.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Building
+	withAccount *AccountQuery
+	withRooms   *RoomQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -59,6 +61,28 @@ func (_q *BuildingQuery) Unique(unique bool) *BuildingQuery {
 func (_q *BuildingQuery) Order(o ...building.OrderOption) *BuildingQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryAccount chains the current query on the "account" edge.
+func (_q *BuildingQuery) QueryAccount() *AccountQuery {
+	query := (&AccountClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(building.Table, building.FieldID, selector),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, building.AccountTable, building.AccountColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryRooms chains the current query on the "rooms" edge.
@@ -270,16 +294,28 @@ func (_q *BuildingQuery) Clone() *BuildingQuery {
 		return nil
 	}
 	return &BuildingQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]building.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Building{}, _q.predicates...),
-		withRooms:  _q.withRooms.Clone(),
+		config:      _q.config,
+		ctx:         _q.ctx.Clone(),
+		order:       append([]building.OrderOption{}, _q.order...),
+		inters:      append([]Interceptor{}, _q.inters...),
+		predicates:  append([]predicate.Building{}, _q.predicates...),
+		withAccount: _q.withAccount.Clone(),
+		withRooms:   _q.withRooms.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithAccount tells the query-builder to eager-load the nodes that are connected to
+// the "account" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *BuildingQuery) WithAccount(opts ...func(*AccountQuery)) *BuildingQuery {
+	query := (&AccountClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAccount = query
+	return _q
 }
 
 // WithRooms tells the query-builder to eager-load the nodes that are connected to
@@ -371,7 +407,8 @@ func (_q *BuildingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Bui
 	var (
 		nodes       = []*Building{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
+			_q.withAccount != nil,
 			_q.withRooms != nil,
 		}
 	)
@@ -393,6 +430,12 @@ func (_q *BuildingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Bui
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withAccount; query != nil {
+		if err := _q.loadAccount(ctx, query, nodes, nil,
+			func(n *Building, e *Account) { n.Edges.Account = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withRooms; query != nil {
 		if err := _q.loadRooms(ctx, query, nodes,
 			func(n *Building) { n.Edges.Rooms = []*Room{} },
@@ -403,6 +446,35 @@ func (_q *BuildingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Bui
 	return nodes, nil
 }
 
+func (_q *BuildingQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*Building, init func(*Building), assign func(*Building, *Account)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Building)
+	for i := range nodes {
+		fk := nodes[i].AccountID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(account.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "account_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (_q *BuildingQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes []*Building, init func(*Building), assign func(*Building, *Room)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Building)
@@ -413,7 +485,9 @@ func (_q *BuildingQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes 
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(room.FieldBuildingID)
+	}
 	query.Where(predicate.Room(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(building.RoomsColumn), fks...))
 	}))
@@ -422,13 +496,10 @@ func (_q *BuildingQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes 
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.building_rooms
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "building_rooms" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.BuildingID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "building_rooms" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "building_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -459,6 +530,9 @@ func (_q *BuildingQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != building.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withAccount != nil {
+			_spec.Node.AddColumnOnce(building.FieldAccountID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

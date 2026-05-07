@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 )
 
@@ -422,6 +423,29 @@ func IsActiveEQ(v bool) predicate.Account {
 // IsActiveNEQ applies the NEQ predicate on the "is_active" field.
 func IsActiveNEQ(v bool) predicate.Account {
 	return predicate.Account(sql.FieldNEQ(FieldIsActive, v))
+}
+
+// HasBuildings applies the HasEdge predicate on the "buildings" edge.
+func HasBuildings() predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BuildingsTable, BuildingsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBuildingsWith applies the HasEdge predicate on the "buildings" edge with a given conditions (other predicates).
+func HasBuildingsWith(preds ...predicate.Building) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := newBuildingsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

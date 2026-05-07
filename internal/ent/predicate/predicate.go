@@ -20,3 +20,6 @@ type Role func(*sql.Selector)
 
 // Room is the predicate function for room builders.
 type Room func(*sql.Selector)
+
+// RoomOption is the predicate function for roomoption builders.
+type RoomOption func(*sql.Selector)

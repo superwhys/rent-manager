@@ -90,6 +90,11 @@ func Size(v int) predicate.Room {
 	return predicate.Room(sql.FieldEQ(FieldSize, v))
 }
 
+// BuildingID applies equality check predicate on the "building_id" field. It's identical to BuildingIDEQ.
+func BuildingID(v int) predicate.Room {
+	return predicate.Room(sql.FieldEQ(FieldBuildingID, v))
+}
+
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.Room {
 	return predicate.Room(sql.FieldEQ(FieldIsActive, v))
@@ -408,6 +413,26 @@ func SizeLT(v int) predicate.Room {
 // SizeLTE applies the LTE predicate on the "size" field.
 func SizeLTE(v int) predicate.Room {
 	return predicate.Room(sql.FieldLTE(FieldSize, v))
+}
+
+// BuildingIDEQ applies the EQ predicate on the "building_id" field.
+func BuildingIDEQ(v int) predicate.Room {
+	return predicate.Room(sql.FieldEQ(FieldBuildingID, v))
+}
+
+// BuildingIDNEQ applies the NEQ predicate on the "building_id" field.
+func BuildingIDNEQ(v int) predicate.Room {
+	return predicate.Room(sql.FieldNEQ(FieldBuildingID, v))
+}
+
+// BuildingIDIn applies the In predicate on the "building_id" field.
+func BuildingIDIn(vs ...int) predicate.Room {
+	return predicate.Room(sql.FieldIn(FieldBuildingID, vs...))
+}
+
+// BuildingIDNotIn applies the NotIn predicate on the "building_id" field.
+func BuildingIDNotIn(vs ...int) predicate.Room {
+	return predicate.Room(sql.FieldNotIn(FieldBuildingID, vs...))
 }
 
 // IsActiveEQ applies the EQ predicate on the "is_active" field.

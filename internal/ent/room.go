@@ -24,21 +24,22 @@ type Room struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// RoomNo holds the value of the "room_no" field.
+	// 房间号
 	RoomNo string `json:"room_no,omitempty"`
-	// Floor holds the value of the "floor" field.
+	// 楼层
 	Floor int `json:"floor,omitempty"`
-	// Price holds the value of the "price" field.
+	// 租金价格
 	Price int `json:"price,omitempty"`
-	// Size holds the value of the "size" field.
+	// 房间大小(平方米)
 	Size int `json:"size,omitempty"`
+	// 所属楼栋ID
+	BuildingID int `json:"building_id,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoomQuery when eager-loading is set.
-	Edges          RoomEdges `json:"edges"`
-	building_rooms *int
-	selectValues   sql.SelectValues
+	Edges        RoomEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // RoomEdges holds the relations/edges for other nodes in the graph.
@@ -68,14 +69,12 @@ func (*Room) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case room.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case room.FieldID, room.FieldFloor, room.FieldPrice, room.FieldSize:
+		case room.FieldID, room.FieldFloor, room.FieldPrice, room.FieldSize, room.FieldBuildingID:
 			values[i] = new(sql.NullInt64)
 		case room.FieldRoomNo:
 			values[i] = new(sql.NullString)
 		case room.FieldCreatedAt, room.FieldUpdatedAt, room.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
-		case room.ForeignKeys[0]: // building_rooms
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -140,18 +139,17 @@ func (_m *Room) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Size = int(value.Int64)
 			}
+		case room.FieldBuildingID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field building_id", values[i])
+			} else if value.Valid {
+				_m.BuildingID = int(value.Int64)
+			}
 		case room.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
 				_m.IsActive = value.Bool
-			}
-		case room.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field building_rooms", value)
-			} else if value.Valid {
-				_m.building_rooms = new(int)
-				*_m.building_rooms = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -216,6 +214,9 @@ func (_m *Room) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("size=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Size))
+	builder.WriteString(", ")
+	builder.WriteString("building_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.BuildingID))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))

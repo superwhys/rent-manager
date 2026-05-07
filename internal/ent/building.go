@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 )
 
@@ -31,6 +32,8 @@ type Building struct {
 	City string `json:"city,omitempty"`
 	// Province holds the value of the "province" field.
 	Province string `json:"province,omitempty"`
+	// 所属账号ID
+	AccountID int `json:"account_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the BuildingQuery when eager-loading is set.
 	Edges        BuildingEdges `json:"edges"`
@@ -39,17 +42,30 @@ type Building struct {
 
 // BuildingEdges holds the relations/edges for other nodes in the graph.
 type BuildingEdges struct {
+	// Account holds the value of the account edge.
+	Account *Account `json:"account,omitempty"`
 	// Rooms holds the value of the rooms edge.
 	Rooms []*Room `json:"rooms,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
+}
+
+// AccountOrErr returns the Account value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e BuildingEdges) AccountOrErr() (*Account, error) {
+	if e.Account != nil {
+		return e.Account, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: account.Label}
+	}
+	return nil, &NotLoadedError{edge: "account"}
 }
 
 // RoomsOrErr returns the Rooms value or an error if the edge
 // was not loaded in eager-loading.
 func (e BuildingEdges) RoomsOrErr() ([]*Room, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Rooms, nil
 	}
 	return nil, &NotLoadedError{edge: "rooms"}
@@ -60,7 +76,7 @@ func (*Building) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case building.FieldID:
+		case building.FieldID, building.FieldAccountID:
 			values[i] = new(sql.NullInt64)
 		case building.FieldName, building.FieldAddress, building.FieldCity, building.FieldProvince:
 			values[i] = new(sql.NullString)
@@ -130,6 +146,12 @@ func (_m *Building) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Province = value.String
 			}
+		case building.FieldAccountID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field account_id", values[i])
+			} else if value.Valid {
+				_m.AccountID = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -141,6 +163,11 @@ func (_m *Building) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Building) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryAccount queries the "account" edge of the Building entity.
+func (_m *Building) QueryAccount() *AccountQuery {
+	return NewBuildingClient(_m.config).QueryAccount(_m)
 }
 
 // QueryRooms queries the "rooms" edge of the Building entity.
@@ -193,6 +220,9 @@ func (_m *Building) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("province=")
 	builder.WriteString(_m.Province)
+	builder.WriteString(", ")
+	builder.WriteString("account_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
 	builder.WriteByte(')')
 	return builder.String()
 }

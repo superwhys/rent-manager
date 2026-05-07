@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 )
@@ -85,6 +86,17 @@ func (_c *BuildingCreate) SetCity(v string) *BuildingCreate {
 func (_c *BuildingCreate) SetProvince(v string) *BuildingCreate {
 	_c.mutation.SetProvince(v)
 	return _c
+}
+
+// SetAccountID sets the "account_id" field.
+func (_c *BuildingCreate) SetAccountID(v int) *BuildingCreate {
+	_c.mutation.SetAccountID(v)
+	return _c
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (_c *BuildingCreate) SetAccount(v *Account) *BuildingCreate {
+	return _c.SetAccountID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -187,6 +199,12 @@ func (_c *BuildingCreate) check() error {
 			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Building.province": %w`, err)}
 		}
 	}
+	if _, ok := _c.mutation.AccountID(); !ok {
+		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "Building.account_id"`)}
+	}
+	if len(_c.mutation.AccountIDs()) == 0 {
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "Building.account"`)}
+	}
 	return nil
 }
 
@@ -240,6 +258,23 @@ func (_c *BuildingCreate) createSpec() (*Building, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Province(); ok {
 		_spec.SetField(building.FieldProvince, field.TypeString, value)
 		_node.Province = value
+	}
+	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   building.AccountTable,
+			Columns: []string{building.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.AccountID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.RoomsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

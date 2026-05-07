@@ -24,7 +24,6 @@ type RoomQuery struct {
 	inters       []Interceptor
 	predicates   []predicate.Room
 	withBuilding *BuildingQuery
-	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -370,18 +369,11 @@ func (_q *RoomQuery) prepareQuery(ctx context.Context) error {
 func (_q *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, error) {
 	var (
 		nodes       = []*Room{}
-		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
 			_q.withBuilding != nil,
 		}
 	)
-	if _q.withBuilding != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, room.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Room).scanValues(nil, columns)
 	}
@@ -413,10 +405,7 @@ func (_q *RoomQuery) loadBuilding(ctx context.Context, query *BuildingQuery, nod
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Room)
 	for i := range nodes {
-		if nodes[i].building_rooms == nil {
-			continue
-		}
-		fk := *nodes[i].building_rooms
+		fk := nodes[i].BuildingID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -433,7 +422,7 @@ func (_q *RoomQuery) loadBuilding(ctx context.Context, query *BuildingQuery, nod
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "building_rooms" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "building_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -466,6 +455,9 @@ func (_q *RoomQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != room.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withBuilding != nil {
+			_spec.Node.AddColumnOnce(room.FieldBuildingID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

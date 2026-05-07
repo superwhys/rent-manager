@@ -35,12 +35,21 @@ var (
 		{Name: "address", Type: field.TypeString, Size: 255},
 		{Name: "city", Type: field.TypeString, Size: 255},
 		{Name: "province", Type: field.TypeString, Size: 255},
+		{Name: "account_id", Type: field.TypeInt},
 	}
 	// BuildingsTable holds the schema information for the "buildings" table.
 	BuildingsTable = &schema.Table{
 		Name:       "buildings",
 		Columns:    BuildingsColumns,
 		PrimaryKey: []*schema.Column{BuildingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "buildings_accounts_buildings",
+				Columns:    []*schema.Column{BuildingsColumns[8]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
@@ -85,7 +94,7 @@ var (
 		{Name: "price", Type: field.TypeInt},
 		{Name: "size", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
-		{Name: "building_rooms", Type: field.TypeInt, Nullable: true},
+		{Name: "building_id", Type: field.TypeInt},
 	}
 	// RoomsTable holds the schema information for the "rooms" table.
 	RoomsTable = &schema.Table{
@@ -97,9 +106,23 @@ var (
 				Symbol:     "rooms_buildings_rooms",
 				Columns:    []*schema.Column{RoomsColumns[9]},
 				RefColumns: []*schema.Column{BuildingsColumns[0]},
-				OnDelete:   schema.SetNull,
+				OnDelete:   schema.NoAction,
 			},
 		},
+	}
+	// RoomOptionsColumns holds the columns for the "room_options" table.
+	RoomOptionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Size: 12},
+	}
+	// RoomOptionsTable holds the schema information for the "room_options" table.
+	RoomOptionsTable = &schema.Table{
+		Name:       "room_options",
+		Columns:    RoomOptionsColumns,
+		PrimaryKey: []*schema.Column{RoomOptionsColumns[0]},
 	}
 	// RolePermissionsColumns holds the columns for the "role_permissions" table.
 	RolePermissionsColumns = []*schema.Column{
@@ -133,11 +156,13 @@ var (
 		PermissionsTable,
 		RolesTable,
 		RoomsTable,
+		RoomOptionsTable,
 		RolePermissionsTable,
 	}
 )
 
 func init() {
+	BuildingsTable.ForeignKeys[0].RefTable = AccountsTable
 	RoomsTable.ForeignKeys[0].RefTable = BuildingsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable

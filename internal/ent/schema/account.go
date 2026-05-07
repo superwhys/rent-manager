@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
@@ -32,5 +33,7 @@ func (Account) Fields() []ent.Field {
 
 // Edges of the Account.
 func (Account) Edges() []ent.Edge {
-	return []ent.Edge{}
+	return []ent.Edge{
+		edge.To("buildings", Building.Type),
+	}
 }

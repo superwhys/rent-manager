@@ -26,12 +26,18 @@ func (Building) Fields() []ent.Field {
 		field.String("address").NotEmpty().MaxLen(255),
 		field.String("city").NotEmpty().MaxLen(255),
 		field.String("province").NotEmpty().MaxLen(255),
+		field.Int("account_id").Comment("所属账号ID"),
 	}
 }
 
 // Edges of the Building.
 func (Building) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.From("account", Account.Type).
+			Field("account_id").
+			Ref("buildings").
+			Unique().
+			Required(),
 		edge.To("rooms", Room.Type),
 	}
 }
