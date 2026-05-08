@@ -31,6 +31,7 @@ func SetupRouter(
 	httpLimiter *limiter.Limiter,
 	authService *services.AuthService,
 	roomService *services.RoomService,
+	rbacService *services.RBACService,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(middlewares.RateLimitMiddleware(httpLimiter, nil)),
@@ -40,9 +41,10 @@ func SetupRouter(
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(
 				middlewares.TokenVerifyMiddleware(jwtConfig),
-				middlewares.PermissionMiddleware(),
+				middlewares.PermissionMiddleware(rbacService),
 			),
 			routers.RoomGroupRouter(roomService),
+			routers.AdminGroupRouter(rbacService),
 		),
 	)
 

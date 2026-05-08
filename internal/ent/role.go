@@ -37,9 +37,11 @@ type Role struct {
 type RoleEdges struct {
 	// Permissions holds the value of the permissions edge.
 	Permissions []*Permission `json:"permissions,omitempty"`
+	// Accounts holds the value of the accounts edge.
+	Accounts []*Account `json:"accounts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // PermissionsOrErr returns the Permissions value or an error if the edge
@@ -49,6 +51,15 @@ func (e RoleEdges) PermissionsOrErr() ([]*Permission, error) {
 		return e.Permissions, nil
 	}
 	return nil, &NotLoadedError{edge: "permissions"}
+}
+
+// AccountsOrErr returns the Accounts value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoleEdges) AccountsOrErr() ([]*Account, error) {
+	if e.loadedTypes[1] {
+		return e.Accounts, nil
+	}
+	return nil, &NotLoadedError{edge: "accounts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -132,6 +143,11 @@ func (_m *Role) Value(name string) (ent.Value, error) {
 // QueryPermissions queries the "permissions" edge of the Role entity.
 func (_m *Role) QueryPermissions() *PermissionQuery {
 	return NewRoleClient(_m.config).QueryPermissions(_m)
+}
+
+// QueryAccounts queries the "accounts" edge of the Role entity.
+func (_m *Role) QueryAccounts() *AccountQuery {
+	return NewRoleClient(_m.config).QueryAccounts(_m)
 }
 
 // Update returns a builder for updating this Role.

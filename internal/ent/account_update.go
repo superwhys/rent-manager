@@ -15,6 +15,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
+	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
@@ -172,6 +173,21 @@ func (_u *AccountUpdate) AddMeterItems(v ...*MeterItem) *AccountUpdate {
 	return _u.AddMeterItemIDs(ids...)
 }
 
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (_u *AccountUpdate) AddRoleIDs(ids ...int) *AccountUpdate {
+	_u.mutation.AddRoleIDs(ids...)
+	return _u
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (_u *AccountUpdate) AddRoles(v ...*Role) *AccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRoleIDs(ids...)
+}
+
 // Mutation returns the AccountMutation object of the builder.
 func (_u *AccountUpdate) Mutation() *AccountMutation {
 	return _u.mutation
@@ -238,6 +254,27 @@ func (_u *AccountUpdate) RemoveMeterItems(v ...*MeterItem) *AccountUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMeterItemIDs(ids...)
+}
+
+// ClearRoles clears all "roles" edges to the Role entity.
+func (_u *AccountUpdate) ClearRoles() *AccountUpdate {
+	_u.mutation.ClearRoles()
+	return _u
+}
+
+// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
+func (_u *AccountUpdate) RemoveRoleIDs(ids ...int) *AccountUpdate {
+	_u.mutation.RemoveRoleIDs(ids...)
+	return _u
+}
+
+// RemoveRoles removes "roles" edges to Role entities.
+func (_u *AccountUpdate) RemoveRoles(v ...*Role) *AccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRoleIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -472,6 +509,51 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   account.RolesTable,
+			Columns: account.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   account.RolesTable,
+			Columns: account.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   account.RolesTable,
+			Columns: account.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{account.Label}
@@ -633,6 +715,21 @@ func (_u *AccountUpdateOne) AddMeterItems(v ...*MeterItem) *AccountUpdateOne {
 	return _u.AddMeterItemIDs(ids...)
 }
 
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (_u *AccountUpdateOne) AddRoleIDs(ids ...int) *AccountUpdateOne {
+	_u.mutation.AddRoleIDs(ids...)
+	return _u
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (_u *AccountUpdateOne) AddRoles(v ...*Role) *AccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRoleIDs(ids...)
+}
+
 // Mutation returns the AccountMutation object of the builder.
 func (_u *AccountUpdateOne) Mutation() *AccountMutation {
 	return _u.mutation
@@ -699,6 +796,27 @@ func (_u *AccountUpdateOne) RemoveMeterItems(v ...*MeterItem) *AccountUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMeterItemIDs(ids...)
+}
+
+// ClearRoles clears all "roles" edges to the Role entity.
+func (_u *AccountUpdateOne) ClearRoles() *AccountUpdateOne {
+	_u.mutation.ClearRoles()
+	return _u
+}
+
+// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
+func (_u *AccountUpdateOne) RemoveRoleIDs(ids ...int) *AccountUpdateOne {
+	_u.mutation.RemoveRoleIDs(ids...)
+	return _u
+}
+
+// RemoveRoles removes "roles" edges to Role entities.
+func (_u *AccountUpdateOne) RemoveRoles(v ...*Role) *AccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRoleIDs(ids...)
 }
 
 // Where appends a list predicates to the AccountUpdate builder.
@@ -956,6 +1074,51 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   account.RolesTable,
+			Columns: account.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   account.RolesTable,
+			Columns: account.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   account.RolesTable,
+			Columns: account.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -419,6 +419,22 @@ func (c *AccountClient) QueryMeterItems(_m *Account) *MeterItemQuery {
 	return query
 }
 
+// QueryRoles queries the roles edge of a Account.
+func (c *AccountClient) QueryRoles(_m *Account) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, account.RolesTable, account.RolesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *AccountClient) Hooks() []Hook {
 	return c.hooks.Account
@@ -1221,6 +1237,22 @@ func (c *RoleClient) QueryPermissions(_m *Role) *PermissionQuery {
 			sqlgraph.From(role.Table, role.FieldID, id),
 			sqlgraph.To(permission.Table, permission.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.PermissionsTable, role.PermissionsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccounts queries the accounts edge of a Role.
+func (c *RoleClient) QueryAccounts(_m *Role) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, role.AccountsTable, role.AccountsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

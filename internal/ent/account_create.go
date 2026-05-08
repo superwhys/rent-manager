@@ -13,6 +13,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
@@ -146,6 +147,21 @@ func (_c *AccountCreate) AddMeterItems(v ...*MeterItem) *AccountCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddMeterItemIDs(ids...)
+}
+
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (_c *AccountCreate) AddRoleIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddRoleIDs(ids...)
+	return _c
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (_c *AccountCreate) AddRoles(v ...*Role) *AccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRoleIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -339,6 +355,22 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   account.RolesTable,
+			Columns: account.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 )
@@ -96,6 +97,21 @@ func (_c *RoleCreate) AddPermissions(v ...*Permission) *RoleCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddPermissionIDs(ids...)
+}
+
+// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
+func (_c *RoleCreate) AddAccountIDs(ids ...int) *RoleCreate {
+	_c.mutation.AddAccountIDs(ids...)
+	return _c
+}
+
+// AddAccounts adds the "accounts" edges to the Account entity.
+func (_c *RoleCreate) AddAccounts(v ...*Account) *RoleCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAccountIDs(ids...)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -221,6 +237,22 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AccountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   role.AccountsTable,
+			Columns: role.AccountsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

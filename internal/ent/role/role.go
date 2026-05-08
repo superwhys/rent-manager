@@ -26,6 +26,8 @@ const (
 	FieldIsActive = "is_active"
 	// EdgePermissions holds the string denoting the permissions edge name in mutations.
 	EdgePermissions = "permissions"
+	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
+	EdgeAccounts = "accounts"
 	// Table holds the table name of the role in the database.
 	Table = "roles"
 	// PermissionsTable is the table that holds the permissions relation/edge. The primary key declared below.
@@ -33,6 +35,11 @@ const (
 	// PermissionsInverseTable is the table name for the Permission entity.
 	// It exists in this package in order to avoid circular dependency with the "permission" package.
 	PermissionsInverseTable = "permissions"
+	// AccountsTable is the table that holds the accounts relation/edge. The primary key declared below.
+	AccountsTable = "account_roles"
+	// AccountsInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountsInverseTable = "accounts"
 )
 
 // Columns holds all SQL columns for role fields.
@@ -49,6 +56,9 @@ var (
 	// PermissionsPrimaryKey and PermissionsColumn2 are the table columns denoting the
 	// primary key for the permissions relation (M2M).
 	PermissionsPrimaryKey = []string{"role_id", "permission_id"}
+	// AccountsPrimaryKey and AccountsColumn2 are the table columns denoting the
+	// primary key for the accounts relation (M2M).
+	AccountsPrimaryKey = []string{"account_id", "role_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -120,10 +130,31 @@ func ByPermissions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPermissionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAccountsCount orders the results by accounts count.
+func ByAccountsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAccountsStep(), opts...)
+	}
+}
+
+// ByAccounts orders the results by accounts terms.
+func ByAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newPermissionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PermissionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, PermissionsTable, PermissionsPrimaryKey...),
+	)
+}
+func newAccountsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccountsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, AccountsTable, AccountsPrimaryKey...),
 	)
 }

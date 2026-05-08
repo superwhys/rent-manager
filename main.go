@@ -65,15 +65,18 @@ func main() {
 
 	roomRepo := repo.NewRoomRepository(client)
 	accountRepo := repo.NewAccountRepository(client)
+	rbacRepo := repo.NewRBACRepository(client)
 
 	roomService := services.NewRoomService(roomRepo)
 	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
+	rbacService := services.NewRBACService(rbacRepo)
 
 	router := api.SetupRouter(
 		jwtConfig,
 		httpLimiter,
 		authService,
 		roomService,
+		rbacService,
 	)
 
 	srv := cores.NewCores(

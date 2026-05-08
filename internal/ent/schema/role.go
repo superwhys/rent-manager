@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
 )
 
@@ -36,5 +37,13 @@ func (Role) Fields() []ent.Field {
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("permissions", Permission.Type),
+		edge.From("accounts", Account.Type).
+			Ref("roles"),
+	}
+}
+
+func (Role) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("name").Unique(),
 	}
 }

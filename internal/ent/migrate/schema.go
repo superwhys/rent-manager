@@ -148,6 +148,18 @@ var (
 		Name:       "permissions",
 		Columns:    PermissionsColumns,
 		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "permission_code",
+				Unique:  true,
+				Columns: []*schema.Column{PermissionsColumns[4]},
+			},
+			{
+				Name:    "permission_api_path",
+				Unique:  true,
+				Columns: []*schema.Column{PermissionsColumns[5]},
+			},
+		},
 	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
@@ -163,6 +175,13 @@ var (
 		Name:       "roles",
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "role_name",
+				Unique:  true,
+				Columns: []*schema.Column{RolesColumns[4]},
+			},
+		},
 	}
 	// RoomsColumns holds the columns for the "rooms" table.
 	RoomsColumns = []*schema.Column{
@@ -218,6 +237,31 @@ var (
 				Columns:    []*schema.Column{RoomTypesColumns[5]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// AccountRolesColumns holds the columns for the "account_roles" table.
+	AccountRolesColumns = []*schema.Column{
+		{Name: "account_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeInt},
+	}
+	// AccountRolesTable holds the schema information for the "account_roles" table.
+	AccountRolesTable = &schema.Table{
+		Name:       "account_roles",
+		Columns:    AccountRolesColumns,
+		PrimaryKey: []*schema.Column{AccountRolesColumns[0], AccountRolesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "account_roles_account_id",
+				Columns:    []*schema.Column{AccountRolesColumns[0]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "account_roles_role_id",
+				Columns:    []*schema.Column{AccountRolesColumns[1]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -306,6 +350,7 @@ var (
 		RolesTable,
 		RoomsTable,
 		RoomTypesTable,
+		AccountRolesTable,
 		BuildingMeterItemsTable,
 		RolePermissionsTable,
 		RoomMeterItemsTable,
@@ -319,6 +364,8 @@ func init() {
 	RoomsTable.ForeignKeys[0].RefTable = BuildingsTable
 	RoomsTable.ForeignKeys[1].RefTable = RoomTypesTable
 	RoomTypesTable.ForeignKeys[0].RefTable = AccountsTable
+	AccountRolesTable.ForeignKeys[0].RefTable = AccountsTable
+	AccountRolesTable.ForeignKeys[1].RefTable = RolesTable
 	BuildingMeterItemsTable.ForeignKeys[0].RefTable = BuildingsTable
 	BuildingMeterItemsTable.ForeignKeys[1].RefTable = MeterItemsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
