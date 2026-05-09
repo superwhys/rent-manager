@@ -27,3 +27,9 @@ type AccountRolesCommand struct {
 	AccountID int   `uri:"account_id" validate:"required,min=1"`
 	RoleIDs   []int `json:"role_ids" validate:"required,min=1,dive,min=1"`
 }
+
+type PermissionCheckRequest struct {
+	AccountID int
+	APIPath   string
+	Version   int64
+}

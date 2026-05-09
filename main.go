@@ -9,6 +9,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/miebyte/goutils/cores"
@@ -19,9 +20,9 @@ import (
 	"github.com/superwhys/rent-manager-server/api"
 	"github.com/superwhys/rent-manager-server/config"
 	"github.com/superwhys/rent-manager-server/internal/app/services"
-	"github.com/superwhys/rent-manager-server/internal/entutils"
+	"github.com/superwhys/rent-manager-server/internal/infra/entutils"
+	"github.com/superwhys/rent-manager-server/internal/infra/ratelimit"
 	"github.com/superwhys/rent-manager-server/internal/infra/repo"
-	"github.com/superwhys/rent-manager-server/internal/ratelimit"
 )
 
 var (
@@ -69,7 +70,8 @@ func main() {
 
 	roomService := services.NewRoomService(roomRepo)
 	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
-	rbacService := services.NewRBACService(rbacRepo)
+	rbacService := services.NewRBACService(rbacRepo, redisClient)
+	logging.PanicError(rbacService.InitSystemRBAC(context.Background()))
 
 	router := api.SetupRouter(
 		jwtConfig,

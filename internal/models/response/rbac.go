@@ -1,6 +1,6 @@
 package response
 
-import entclient "github.com/superwhys/rent-manager-server/internal/ent"
+import domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac"
 
 type RoleResponse struct {
 	ID       int    `json:"id"`
@@ -16,7 +16,7 @@ type PermissionResponse struct {
 	IsActive    bool   `json:"is_active"`
 }
 
-func ToRoleResponse(role *entclient.Role) *RoleResponse {
+func ToRoleResponse(role *domainrbac.Role) *RoleResponse {
 	if role == nil {
 		return nil
 	}
@@ -27,7 +27,7 @@ func ToRoleResponse(role *entclient.Role) *RoleResponse {
 	}
 }
 
-func ToRoleListResponse(roles []*entclient.Role) []*RoleResponse {
+func ToRoleListResponse(roles []*domainrbac.Role) []*RoleResponse {
 	resp := make([]*RoleResponse, 0, len(roles))
 	for _, role := range roles {
 		resp = append(resp, ToRoleResponse(role))
@@ -35,7 +35,7 @@ func ToRoleListResponse(roles []*entclient.Role) []*RoleResponse {
 	return resp
 }
 
-func ToPermissionResponse(permission *entclient.Permission) *PermissionResponse {
+func ToPermissionResponse(permission *domainrbac.Permission) *PermissionResponse {
 	if permission == nil {
 		return nil
 	}
@@ -48,7 +48,7 @@ func ToPermissionResponse(permission *entclient.Permission) *PermissionResponse 
 	}
 }
 
-func ToPermissionListResponse(permissions []*entclient.Permission) []*PermissionResponse {
+func ToPermissionListResponse(permissions []*domainrbac.Permission) []*PermissionResponse {
 	resp := make([]*PermissionResponse, 0, len(permissions))
 	for _, permission := range permissions {
 		resp = append(resp, ToPermissionResponse(permission))

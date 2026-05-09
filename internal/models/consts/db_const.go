@@ -7,4 +7,9 @@ const (
 	SourceManual = "MANUAL" // 手动录入
 	SourceImport = "IMPORT" // 导入
 	SourceAuto   = "AUTO"   // 自动计算
+
+	SystemRoleSuperAdmin                = "SuperAdmin"
+	SystemPermissionAllowAllCode        = "SYSTEM_ALLOW_ALL"
+	SystemPermissionAllowAllAPIPath     = "*"
+	SystemPermissionAllowAllDescription = "Allow all APIs"
 )

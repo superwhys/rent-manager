@@ -15,6 +15,283 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/accounts/{account_id}/roles": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "给账号分配角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账号ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.AccountRolesCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/permissions/batch": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "批量创建权限",
+                "parameters": [
+                    {
+                        "description": "权限列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreatePermissionsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/roles/batch": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "批量创建角色",
+                "parameters": [
+                    {
+                        "description": "角色列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateRolesCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_RoleResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/roles/{role_id}/permissions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "给角色添加权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.RolePermissionsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "删除角色的部分权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.RolePermissionsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "使用 refresh token 刷新 access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "刷新 access token",
+                "parameters": [
+                    {
+                        "description": "刷新 Token 请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.RefreshTokenReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/wx-login": {
+            "post": {
+                "description": "微信登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "微信登录",
+                "parameters": [
+                    {
+                        "description": "微信登录请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.WechatLoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/rooms": {
             "get": {
                 "description": "查询房间列表",
@@ -178,6 +455,36 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-array_response_PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PermissionResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_RoleResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RoleResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-array_response_RoomResponse": {
             "type": "object",
             "properties": {
@@ -203,6 +510,110 @@ const docTemplate = `{
                     "$ref": "#/definitions/response.RoomResponse"
                 },
                 "message": {}
+            }
+        },
+        "ginutils.Ret-response_TokenResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.TokenResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-string": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "string"
+                },
+                "message": {}
+            }
+        },
+        "requests.AccountRolesCommand": {
+            "type": "object",
+            "required": [
+                "accountID",
+                "role_ids"
+            ],
+            "properties": {
+                "accountID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "role_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "requests.CreatePermissionItem": {
+            "type": "object",
+            "required": [
+                "api_path",
+                "code",
+                "description"
+            ],
+            "properties": {
+                "api_path": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.CreatePermissionsCommand": {
+            "type": "object",
+            "required": [
+                "permissions"
+            ],
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/requests.CreatePermissionItem"
+                    }
+                }
+            }
+        },
+        "requests.CreateRoleItem": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.CreateRolesCommand": {
+            "type": "object",
+            "required": [
+                "roles"
+            ],
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/requests.CreateRoleItem"
+                    }
+                }
             }
         },
         "requests.CreateRoomCommand": {
@@ -234,6 +645,34 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "requests.RefreshTokenReq": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.RolePermissionsCommand": {
+            "type": "object",
+            "required": [
+                "permission_ids",
+                "roleID"
+            ],
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "roleID": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },
@@ -270,6 +709,48 @@ const docTemplate = `{
                 }
             }
         },
+        "requests.WechatLoginReq": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "api_path": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.RoleResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "response.RoomResponse": {
             "type": "object",
             "properties": {
@@ -296,6 +777,17 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
                 }
             }
         }

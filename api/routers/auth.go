@@ -27,8 +27,8 @@ func AuthGroupRouter(authService *services.AuthService) ginutils.Option {
 // @Tags Account
 // @Accept json
 // @Produce json
-// @Param request body dto.WechatLoginReq true "微信登录请求体"
-// @Success 200 {object} ginutils.Ret[dto.TokenResponse]
+// @Param request body requests.WechatLoginReq true "微信登录请求体"
+// @Success 200 {object} ginutils.Ret[response.TokenResponse]
 // @Router /auth/wx-login [post]
 func WechatLoginHandler(authService *services.AuthService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.WechatLoginReq) {
@@ -46,8 +46,8 @@ func WechatLoginHandler(authService *services.AuthService) gin.HandlerFunc {
 // @Tags Account
 // @Accept json
 // @Produce json
-// @Param request body dto.RefreshTokenReq true "刷新 Token 请求体"
-// @Success 200 {object} ginutils.Ret[dto.TokenResponse]
+// @Param request body requests.RefreshTokenReq true "刷新 Token 请求体"
+// @Success 200 {object} ginutils.Ret[response.TokenResponse]
 // @Router /auth/refresh [post]
 func AccountRefreshHandler(authService *services.AuthService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RefreshTokenReq) {

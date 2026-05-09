@@ -13,7 +13,6 @@ import (
 
 type PermissionChecker interface {
 	HasPermission(ctx context.Context, accountID int, apiPath string) (bool, error)
-	HasAccountRoles(ctx context.Context) (bool, error)
 }
 
 func PermissionMiddleware(checker PermissionChecker) gin.HandlerFunc {
@@ -33,19 +32,6 @@ func PermissionMiddleware(checker PermissionChecker) gin.HandlerFunc {
 			apiPath = c.Request.URL.Path
 		}
 
-		if isBootstrapAdminPath(apiPath) {
-			hasAccountRoles, err := checker.HasAccountRoles(c.Request.Context())
-			if err != nil {
-				logging.Errorf("check account roles failed: %v", err)
-				c.AbortWithStatusJSON(http.StatusInternalServerError, response.ErrorResponseWithCode(errcode.ErrSysInternal))
-				return
-			}
-			if !hasAccountRoles {
-				c.Next()
-				return
-			}
-		}
-
 		hasPermission, err := checker.HasPermission(c.Request.Context(), claims.UserID, apiPath)
 		if err != nil {
 			logging.Errorf("check permission failed: %v", err)
@@ -58,14 +44,5 @@ func PermissionMiddleware(checker PermissionChecker) gin.HandlerFunc {
 		}
 
 		c.Next()
-	}
-}
-
-func isBootstrapAdminPath(apiPath string) bool {
-	switch apiPath {
-	case "/admin/roles/batch", "/admin/permissions/batch", "/admin/accounts/:account_id/roles":
-		return true
-	default:
-		return false
 	}
 }

@@ -7,6 +7,26 @@ definitions:
       data: {}
       message: {}
     type: object
+  ginutils.Ret-array_response_PermissionResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.PermissionResponse'
+        type: array
+      message: {}
+    type: object
+  ginutils.Ret-array_response_RoleResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.RoleResponse'
+        type: array
+      message: {}
+    type: object
   ginutils.Ret-array_response_RoomResponse:
     properties:
       code:
@@ -24,6 +44,76 @@ definitions:
       data:
         $ref: '#/definitions/response.RoomResponse'
       message: {}
+    type: object
+  ginutils.Ret-response_TokenResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.TokenResponse'
+      message: {}
+    type: object
+  ginutils.Ret-string:
+    properties:
+      code:
+        type: integer
+      data:
+        type: string
+      message: {}
+    type: object
+  requests.AccountRolesCommand:
+    properties:
+      accountID:
+        minimum: 1
+        type: integer
+      role_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    required:
+    - accountID
+    - role_ids
+    type: object
+  requests.CreatePermissionItem:
+    properties:
+      api_path:
+        type: string
+      code:
+        type: string
+      description:
+        type: string
+    required:
+    - api_path
+    - code
+    - description
+    type: object
+  requests.CreatePermissionsCommand:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/requests.CreatePermissionItem'
+        minItems: 1
+        type: array
+    required:
+    - permissions
+    type: object
+  requests.CreateRoleItem:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  requests.CreateRolesCommand:
+    properties:
+      roles:
+        items:
+          $ref: '#/definitions/requests.CreateRoleItem'
+        minItems: 1
+        type: array
+    required:
+    - roles
     type: object
   requests.CreateRoomCommand:
     properties:
@@ -48,6 +138,25 @@ definitions:
     - room_no
     - room_type_id
     type: object
+  requests.RefreshTokenReq:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  requests.RolePermissionsCommand:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      roleID:
+        minimum: 1
+        type: integer
+    required:
+    - permission_ids
+    - roleID
+    type: object
   requests.UpdateRoomCommand:
     properties:
       building_id:
@@ -70,6 +179,33 @@ definitions:
     required:
     - roomID
     type: object
+  requests.WechatLoginReq:
+    properties:
+      code:
+        type: string
+    type: object
+  response.PermissionResponse:
+    properties:
+      api_path:
+        type: string
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+    type: object
+  response.RoleResponse:
+    properties:
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
   response.RoomResponse:
     properties:
       building_id:
@@ -89,12 +225,192 @@ definitions:
       size:
         type: integer
     type: object
+  response.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
 info:
   contact: {}
   description: Rent Manager Server
   title: Rent Manager Server API
   version: "1.0"
 paths:
+  /admin/accounts/{account_id}/roles:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账号ID
+        in: path
+        name: account_id
+        required: true
+        type: integer
+      - description: 角色ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AccountRolesCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 给账号分配角色
+      tags:
+      - admin
+  /admin/permissions/batch:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreatePermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionResponse'
+      security:
+      - BearerAuth: []
+      summary: 批量创建权限
+      tags:
+      - admin
+  /admin/roles/{role_id}/permissions:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 角色ID
+        in: path
+        name: role_id
+        required: true
+        type: integer
+      - description: 权限ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.RolePermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 删除角色的部分权限
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 角色ID
+        in: path
+        name: role_id
+        required: true
+        type: integer
+      - description: 权限ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.RolePermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 给角色添加权限
+      tags:
+      - admin
+  /admin/roles/batch:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 角色列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateRolesCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_RoleResponse'
+      security:
+      - BearerAuth: []
+      summary: 批量创建角色
+      tags:
+      - admin
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用 refresh token 刷新 access token
+      parameters:
+      - description: 刷新 Token 请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.RefreshTokenReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_TokenResponse'
+      summary: 刷新 access token
+      tags:
+      - Account
+  /auth/wx-login:
+    post:
+      consumes:
+      - application/json
+      description: 微信登录
+      parameters:
+      - description: 微信登录请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.WechatLoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_TokenResponse'
+      summary: 微信登录
+      tags:
+      - Account
   /rooms:
     get:
       description: 查询房间列表

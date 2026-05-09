@@ -29,7 +29,7 @@ func AdminGroupRouter(rbacService *services.RBACService) ginutils.Option {
 // @Produce json
 // @Security BearerAuth
 // @Param request body requests.CreateRolesCommand true "角色列表"
-// @Success 200 {object} response.Ret[[]response.RoleResponse]
+// @Success 200 {object} ginutils.Ret[[]response.RoleResponse]
 // @Router /admin/roles/batch [post]
 func CreateRolesHandler(rbacService *services.RBACService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreateRolesCommand) {
@@ -48,7 +48,7 @@ func CreateRolesHandler(rbacService *services.RBACService) gin.HandlerFunc {
 // @Produce json
 // @Security BearerAuth
 // @Param request body requests.CreatePermissionsCommand true "权限列表"
-// @Success 200 {object} response.Ret[[]response.PermissionResponse]
+// @Success 200 {object} ginutils.Ret[[]response.PermissionResponse]
 // @Router /admin/permissions/batch [post]
 func CreatePermissionsHandler(rbacService *services.RBACService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreatePermissionsCommand) {
@@ -68,7 +68,7 @@ func CreatePermissionsHandler(rbacService *services.RBACService) gin.HandlerFunc
 // @Security BearerAuth
 // @Param role_id path int true "角色ID"
 // @Param request body requests.RolePermissionsCommand true "权限ID列表"
-// @Success 200 {object} response.Ret[string]
+// @Success 200 {object} ginutils.Ret[string]
 // @Router /admin/roles/{role_id}/permissions [post]
 func AddPermissionsToRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RolePermissionsCommand) {
@@ -88,7 +88,7 @@ func AddPermissionsToRoleHandler(rbacService *services.RBACService) gin.HandlerF
 // @Security BearerAuth
 // @Param role_id path int true "角色ID"
 // @Param request body requests.RolePermissionsCommand true "权限ID列表"
-// @Success 200 {object} response.Ret[string]
+// @Success 200 {object} ginutils.Ret[string]
 // @Router /admin/roles/{role_id}/permissions [delete]
 func RemovePermissionsFromRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RolePermissionsCommand) {
@@ -108,7 +108,7 @@ func RemovePermissionsFromRoleHandler(rbacService *services.RBACService) gin.Han
 // @Security BearerAuth
 // @Param account_id path int true "账号ID"
 // @Param request body requests.AccountRolesCommand true "角色ID列表"
-// @Success 200 {object} response.Ret[string]
+// @Success 200 {object} ginutils.Ret[string]
 // @Router /admin/accounts/{account_id}/roles [post]
 func AssignRolesToAccountHandler(rbacService *services.RBACService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.AccountRolesCommand) {
