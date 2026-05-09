@@ -13,6 +13,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `make generate` or `go generate ./internal/ent` — regenerate Ent code after changing schemas under `internal/ent/schema`.
 - `go generate ./api` — regenerate Swagger docs from annotations in `api/`.
 
+## Code Style
+
+- Add clear comments for code you write or modify, especially exported Go identifiers, business rules, non-obvious control flow, and integration boundaries.
+
 ## Architecture
 
 This is a Go 1.26 Gin API server for a rent-management backend. `main.go` wires configuration, Redis rate limiting, MySQL/Ent, repositories, services, and the HTTP server. The Gin engine is mounted under `/api` via `cores.WithHttpHandler("/api", router)`.
