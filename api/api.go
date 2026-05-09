@@ -31,6 +31,7 @@ func SetupRouter(
 	httpLimiter *limiter.Limiter,
 	authService *services.AuthService,
 	roomService *services.RoomService,
+	buildingService *services.BuildingService,
 	rbacService *services.RBACService,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
@@ -43,6 +44,7 @@ func SetupRouter(
 				middlewares.TokenVerifyMiddleware(jwtConfig),
 				middlewares.PermissionMiddleware(rbacService),
 			),
+			routers.BuildingGroupRouter(buildingService),
 			routers.RoomGroupRouter(roomService),
 			routers.AdminGroupRouter(rbacService),
 		),

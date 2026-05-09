@@ -7,6 +7,16 @@ definitions:
       data: {}
       message: {}
     type: object
+  ginutils.Ret-array_response_BuildingResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.BuildingResponse'
+        type: array
+      message: {}
+    type: object
   ginutils.Ret-array_response_PermissionResponse:
     properties:
       code:
@@ -35,6 +45,14 @@ definitions:
         items:
           $ref: '#/definitions/response.RoomResponse'
         type: array
+      message: {}
+    type: object
+  ginutils.Ret-response_BuildingResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.BuildingResponse'
       message: {}
     type: object
   ginutils.Ret-response_RoomResponse:
@@ -74,6 +92,30 @@ definitions:
     required:
     - accountID
     - role_ids
+    type: object
+  requests.CreateBuildingCommand:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      city:
+        maxLength: 255
+        type: string
+      default_meter_item_ids:
+        items:
+          type: integer
+        type: array
+      name:
+        maxLength: 255
+        type: string
+      province:
+        maxLength: 255
+        type: string
+    required:
+    - address
+    - city
+    - name
+    - province
     type: object
   requests.CreatePermissionItem:
     properties:
@@ -138,6 +180,31 @@ definitions:
     - room_no
     - room_type_id
     type: object
+  requests.CreateRoomInBuildingCommand:
+    properties:
+      buildingID:
+        minimum: 1
+        type: integer
+      floor:
+        type: integer
+      price:
+        minimum: 1
+        type: integer
+      room_no:
+        type: string
+      room_type_id:
+        minimum: 1
+        type: integer
+      size:
+        minimum: 1
+        type: integer
+    required:
+    - buildingID
+    - price
+    - room_no
+    - room_type_id
+    - size
+    type: object
   requests.RefreshTokenReq:
     properties:
       refresh_token:
@@ -156,6 +223,34 @@ definitions:
     required:
     - permission_ids
     - roleID
+    type: object
+  requests.UpdateBuildingCommand:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      buildingID:
+        minimum: 1
+        type: integer
+      city:
+        maxLength: 255
+        type: string
+      default_meter_item_ids:
+        items:
+          type: integer
+        type: array
+      name:
+        maxLength: 255
+        type: string
+      province:
+        maxLength: 255
+        type: string
+    required:
+    - address
+    - buildingID
+    - city
+    - name
+    - province
     type: object
   requests.UpdateRoomCommand:
     properties:
@@ -182,6 +277,40 @@ definitions:
   requests.WechatLoginReq:
     properties:
       code:
+        type: string
+    type: object
+  response.BuildingMeterItemResponse:
+    properties:
+      calc_type:
+        type: string
+      code:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      remark:
+        type: string
+      unit:
+        type: string
+    type: object
+  response.BuildingResponse:
+    properties:
+      account_id:
+        type: integer
+      address:
+        type: string
+      city:
+        type: string
+      default_meter_items:
+        items:
+          $ref: '#/definitions/response.BuildingMeterItemResponse'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+      province:
         type: string
     type: object
   response.PermissionResponse:
@@ -411,6 +540,158 @@ paths:
       summary: 微信登录
       tags:
       - Account
+  /buildings:
+    get:
+      description: 查询楼栋列表
+      parameters:
+      - in: query
+        name: city
+        type: string
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: name
+        type: string
+      - in: query
+        name: offset
+        type: integer
+      - in: query
+        name: province
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_BuildingResponse'
+      security:
+      - BearerAuth: []
+      summary: 查询楼栋列表
+      tags:
+      - Building
+    post:
+      consumes:
+      - application/json
+      description: 创建楼栋并设置默认抄表项
+      parameters:
+      - description: 创建楼栋请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateBuildingCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_BuildingResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建楼栋
+      tags:
+      - Building
+  /buildings/{building_id}:
+    delete:
+      description: 删除没有房间的楼栋
+      parameters:
+      - description: 楼栋 ID
+        in: path
+        name: building_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 删除楼栋
+      tags:
+      - Building
+    get:
+      description: 查询楼栋详情
+      parameters:
+      - description: 楼栋 ID
+        in: path
+        name: building_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_BuildingResponse'
+      security:
+      - BearerAuth: []
+      summary: 查询楼栋详情
+      tags:
+      - Building
+    put:
+      consumes:
+      - application/json
+      description: 更新楼栋并整体替换默认抄表项
+      parameters:
+      - description: 楼栋 ID
+        in: path
+        name: building_id
+        required: true
+        type: integer
+      - description: 更新楼栋请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UpdateBuildingCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_BuildingResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新楼栋
+      tags:
+      - Building
+  /buildings/{building_id}/rooms:
+    post:
+      consumes:
+      - application/json
+      description: 在指定楼栋下创建房间
+      parameters:
+      - description: 楼栋 ID
+        in: path
+        name: building_id
+        required: true
+        type: integer
+      - description: 创建房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateRoomInBuildingCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+      security:
+      - BearerAuth: []
+      summary: 在楼栋下创建房间
+      tags:
+      - Building
   /rooms:
     get:
       description: 查询房间列表

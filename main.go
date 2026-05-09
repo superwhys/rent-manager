@@ -65,10 +65,12 @@ func main() {
 	logging.PanicError(err)
 
 	roomRepo := repo.NewRoomRepository(client)
+	buildingRepo := repo.NewBuildingRepository(client)
 	accountRepo := repo.NewAccountRepository(client)
 	rbacRepo := repo.NewRBACRepository(client)
 
 	roomService := services.NewRoomService(roomRepo)
+	buildingService := services.NewBuildingService(buildingRepo, roomService)
 	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
 	rbacService := services.NewRBACService(rbacRepo, redisClient)
 	logging.PanicError(rbacService.InitSystemRBAC(context.Background()))
@@ -78,6 +80,7 @@ func main() {
 		httpLimiter,
 		authService,
 		roomService,
+		buildingService,
 		rbacService,
 	)
 
