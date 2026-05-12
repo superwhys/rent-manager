@@ -10,9 +10,9 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 )
 
@@ -65,9 +65,9 @@ func (_c *MeterItemCreate) SetNillableDeletedAt(v *time.Time) *MeterItemCreate {
 	return _c
 }
 
-// SetAccountID sets the "account_id" field.
-func (_c *MeterItemCreate) SetAccountID(v int) *MeterItemCreate {
-	_c.mutation.SetAccountID(v)
+// SetOrganizationID sets the "organization_id" field.
+func (_c *MeterItemCreate) SetOrganizationID(v int) *MeterItemCreate {
+	_c.mutation.SetOrganizationID(v)
 	return _c
 }
 
@@ -125,9 +125,9 @@ func (_c *MeterItemCreate) SetNillableRemark(v *string) *MeterItemCreate {
 	return _c
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_c *MeterItemCreate) SetAccount(v *Account) *MeterItemCreate {
-	return _c.SetAccountID(v.ID)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_c *MeterItemCreate) SetOrganization(v *Organization) *MeterItemCreate {
+	return _c.SetOrganizationID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -221,8 +221,8 @@ func (_c *MeterItemCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "MeterItem.updated_at"`)}
 	}
-	if _, ok := _c.mutation.AccountID(); !ok {
-		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "MeterItem.account_id"`)}
+	if _, ok := _c.mutation.OrganizationID(); !ok {
+		return &ValidationError{Name: "organization_id", err: errors.New(`ent: missing required field "MeterItem.organization_id"`)}
 	}
 	if _, ok := _c.mutation.Code(); !ok {
 		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "MeterItem.code"`)}
@@ -251,8 +251,8 @@ func (_c *MeterItemCreate) check() error {
 			return &ValidationError{Name: "calc_type", err: fmt.Errorf(`ent: validator failed for field "MeterItem.calc_type": %w`, err)}
 		}
 	}
-	if len(_c.mutation.AccountIDs()) == 0 {
-		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "MeterItem.account"`)}
+	if len(_c.mutation.OrganizationIDs()) == 0 {
+		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "MeterItem.organization"`)}
 	}
 	return nil
 }
@@ -312,21 +312,21 @@ func (_c *MeterItemCreate) createSpec() (*MeterItem, *sqlgraph.CreateSpec) {
 		_spec.SetField(meteritem.FieldRemark, field.TypeString, value)
 		_node.Remark = &value
 	}
-	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   meteritem.AccountTable,
-			Columns: []string{meteritem.AccountColumn},
+			Table:   meteritem.OrganizationTable,
+			Columns: []string{meteritem.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.AccountID = nodes[0]
+		_node.OrganizationID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.RoomsIDs(); len(nodes) > 0 {

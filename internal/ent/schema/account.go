@@ -7,7 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
+	"github.com/superwhys/rent-manager-server/internal/ent/schema/mixin"
 )
 
 // 账号实体
@@ -25,6 +25,11 @@ func (Account) Mixin() []ent.Mixin {
 // Fields of the Account.
 func (Account) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("organization_id").
+			Optional().
+			Nillable().
+			Comment("所属组织ID"),
+
 		field.String("name").
 			NotEmpty().
 			MaxLen(255).
@@ -54,9 +59,10 @@ func (Account) Fields() []ent.Field {
 // Edges of the Account.
 func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("buildings", Building.Type),
-		edge.To("room_types", RoomType.Type),
-		edge.To("meter_items", MeterItem.Type),
+		edge.From("organization", Organization.Type).
+			Field("organization_id").
+			Ref("accounts").
+			Unique(),
 		edge.To("roles", Role.Type),
 	}
 }
@@ -64,5 +70,6 @@ func (Account) Edges() []ent.Edge {
 func (Account) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("wechat_openid").Unique(),
+		index.Fields("organization_id"),
 	}
 }

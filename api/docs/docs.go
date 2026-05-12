@@ -31,7 +31,7 @@ const docTemplate = `{
                 "tags": [
                     "admin"
                 ],
-                "summary": "给账号分配角色",
+                "summary": "给组织内账号分配角色",
                 "parameters": [
                     {
                         "type": "integer",
@@ -131,94 +131,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ginutils.Ret-array_response_RoleResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/roles/{role_id}/permissions": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "给角色添加权限",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "角色ID",
-                        "name": "role_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "权限ID列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.RolePermissionsCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "删除角色的部分权限",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "角色ID",
-                        "name": "role_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "权限ID列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.RolePermissionsCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-string"
                         }
                     }
                 }
@@ -327,6 +239,13 @@ const docTemplate = `{
                         "type": "integer",
                         "name": "offset",
                         "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "organization_id",
+                        "in": "query",
+                        "required": true
                     },
                     {
                         "type": "string",
@@ -537,8 +456,159 @@ const docTemplate = `{
                 }
             }
         },
+        "/meter-items": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "查询当前账号的抄表项列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MeterItem"
+                ],
+                "summary": "查询抄表项列表",
+                "parameters": [
+                    {
+                        "enum": [
+                            "DIFFERENCE",
+                            "DIRECT"
+                        ],
+                        "type": "string",
+                        "name": "calc_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "is_system",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "organization_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_MeterItemResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "为当前账号创建抄表项",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MeterItem"
+                ],
+                "summary": "创建抄表项",
+                "parameters": [
+                    {
+                        "description": "创建抄表项请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateMeterItemCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_MeterItemResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/meter-items/{meter_item_id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新当前账号的抄表项",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MeterItem"
+                ],
+                "summary": "更新抄表项",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "抄表项 ID",
+                        "name": "meter_item_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新抄表项请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateMeterItemCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_MeterItemResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/rooms": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "查询房间列表",
                 "produces": [
                     "application/json"
@@ -571,6 +641,13 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "organization_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
                         "type": "integer",
                         "name": "room_type_id",
                         "in": "query"
@@ -586,6 +663,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建房间",
                 "consumes": [
                     "application/json"
@@ -620,6 +702,11 @@ const docTemplate = `{
         },
         "/rooms/{room_id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "查询单个房间",
                 "produces": [
                     "application/json"
@@ -628,6 +715,15 @@ const docTemplate = `{
                     "Room"
                 ],
                 "summary": "查询房间",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间 ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -638,6 +734,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新房间",
                 "consumes": [
                     "application/json"
@@ -650,6 +751,13 @@ const docTemplate = `{
                 ],
                 "summary": "更新房间",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间 ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "更新房间请求体",
                         "name": "request",
@@ -670,6 +778,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除房间",
                 "produces": [
                     "application/json"
@@ -678,6 +791,15 @@ const docTemplate = `{
                     "Room"
                 ],
                 "summary": "删除房间",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间 ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -710,6 +832,21 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/response.BuildingResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_MeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.MeterItemResponse"
                     }
                 },
                 "message": {}
@@ -772,6 +909,18 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-response_MeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.MeterItemResponse"
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-response_RoomResponse": {
             "type": "object",
             "properties": {
@@ -812,10 +961,15 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "accountID",
+                "organization_id",
                 "role_ids"
             ],
             "properties": {
                 "accountID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "organization_id": {
                     "type": "integer",
                     "minimum": 1
                 },
@@ -834,6 +988,7 @@ const docTemplate = `{
                 "address",
                 "city",
                 "name",
+                "organization_id",
                 "province"
             ],
             "properties": {
@@ -855,7 +1010,43 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255
                 },
+                "organization_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "province": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "requests.CreateMeterItemCommand": {
+            "type": "object",
+            "required": [
+                "code",
+                "organization_id",
+                "unit"
+            ],
+            "properties": {
+                "calc_type": {
+                    "type": "string",
+                    "enum": [
+                        "DIFFERENCE",
+                        "DIRECT"
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "organization_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
                     "type": "string",
                     "maxLength": 255
                 }
@@ -901,6 +1092,9 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "is_default_owner": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 }
@@ -909,9 +1103,14 @@ const docTemplate = `{
         "requests.CreateRolesCommand": {
             "type": "object",
             "required": [
+                "organization_id",
                 "roles"
             ],
             "properties": {
+                "organization_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "roles": {
                     "type": "array",
                     "minItems": 1,
@@ -925,6 +1124,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "building_id",
+                "organization_id",
                 "price",
                 "room_no",
                 "room_type_id"
@@ -936,6 +1136,16 @@ const docTemplate = `{
                 },
                 "floor": {
                     "type": "integer"
+                },
+                "meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "organization_id": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "price": {
                     "type": "integer",
@@ -957,6 +1167,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "buildingID",
+                "organization_id",
                 "price",
                 "room_no",
                 "room_type_id",
@@ -969,6 +1180,16 @@ const docTemplate = `{
                 },
                 "floor": {
                     "type": "integer"
+                },
+                "meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "organization_id": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "price": {
                     "type": "integer",
@@ -995,26 +1216,6 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.RolePermissionsCommand": {
-            "type": "object",
-            "required": [
-                "permission_ids",
-                "roleID"
-            ],
-            "properties": {
-                "permission_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "roleID": {
-                    "type": "integer",
-                    "minimum": 1
-                }
-            }
-        },
         "requests.UpdateBuildingCommand": {
             "type": "object",
             "required": [
@@ -1022,6 +1223,7 @@ const docTemplate = `{
                 "buildingID",
                 "city",
                 "name",
+                "organization_id",
                 "province"
             ],
             "properties": {
@@ -1047,7 +1249,48 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255
                 },
+                "organization_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "province": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "requests.UpdateMeterItemCommand": {
+            "type": "object",
+            "required": [
+                "code",
+                "meterItemID",
+                "organization_id",
+                "unit"
+            ],
+            "properties": {
+                "calc_type": {
+                    "type": "string",
+                    "enum": [
+                        "DIFFERENCE",
+                        "DIRECT"
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "meterItemID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "organization_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
                     "type": "string",
                     "maxLength": 255
                 }
@@ -1056,6 +1299,7 @@ const docTemplate = `{
         "requests.UpdateRoomCommand": {
             "type": "object",
             "required": [
+                "organization_id",
                 "roomID"
             ],
             "properties": {
@@ -1067,6 +1311,16 @@ const docTemplate = `{
                 },
                 "is_active": {
                     "type": "boolean"
+                },
+                "meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "organization_id": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "price": {
                     "type": "integer"
@@ -1120,9 +1374,6 @@ const docTemplate = `{
         "response.BuildingResponse": {
             "type": "object",
             "properties": {
-                "account_id": {
-                    "type": "integer"
-                },
                 "address": {
                     "type": "string"
                 },
@@ -1141,7 +1392,36 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "organization_id": {
+                    "type": "integer"
+                },
                 "province": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.MeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "calc_type": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "organization_id": {
+                    "type": "integer"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
                     "type": "string"
                 }
             }
@@ -1175,8 +1455,14 @@ const docTemplate = `{
                 "is_active": {
                     "type": "boolean"
                 },
+                "is_default_owner": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
+                },
+                "organization_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -1194,6 +1480,12 @@ const docTemplate = `{
                 },
                 "is_active": {
                     "type": "boolean"
+                },
+                "meter_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.MeterItemResponse"
+                    }
                 },
                 "price": {
                     "type": "integer"

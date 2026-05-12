@@ -13,7 +13,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
+	"github.com/superwhys/rent-manager-server/internal/ent/schema/mixin"
 	"github.com/superwhys/rent-manager-server/internal/models/consts"
 )
 
@@ -27,7 +27,7 @@ func (MeterItem) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.TimeMixin{},
 		mixin.SoftDeleteMixin{},
-		mixin.AccountMixin{},
+		mixin.OrganizationMixin{},
 	}
 }
 
@@ -59,14 +59,14 @@ func (MeterItem) Fields() []ent.Field {
 
 func (MeterItem) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("account_id", "code").Unique(),
+		index.Fields("organization_id", "code").Unique(),
 	}
 }
 
 func (MeterItem) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).
-			Field("account_id").
+		edge.From("organization", Organization.Type).
+			Field("organization_id").
 			Ref("meter_items").
 			Unique().
 			Required(),

@@ -4,7 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
+	"github.com/superwhys/rent-manager-server/internal/ent/schema/mixin"
 )
 
 // 楼栋实体
@@ -16,7 +16,7 @@ func (Building) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.TimeMixin{},
 		mixin.SoftDeleteMixin{},
-		mixin.AccountMixin{},
+		mixin.OrganizationMixin{},
 	}
 }
 
@@ -45,8 +45,8 @@ func (Building) Fields() []ent.Field {
 // Edges of the Building.
 func (Building) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).
-			Field("account_id").
+		edge.From("organization", Organization.Type).
+			Field("organization_id").
 			Ref("buildings").
 			Unique().
 			Required(),

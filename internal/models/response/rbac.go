@@ -3,9 +3,20 @@ package response
 import domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac"
 
 type RoleResponse struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	IsActive bool   `json:"is_active"`
+	ID             int    `json:"id"`
+	OrganizationID int    `json:"organization_id"`
+	Name           string `json:"name"`
+	IsDefaultOwner bool   `json:"is_default_owner"`
+	IsActive       bool   `json:"is_active"`
+}
+
+type PermissionGroupResponse struct {
+	ID          int     `json:"id"`
+	Code        string  `json:"code"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	SortOrder   int     `json:"sort_order"`
+	IsActive    bool    `json:"is_active"`
 }
 
 type PermissionResponse struct {
@@ -21,9 +32,11 @@ func ToRoleResponse(role *domainrbac.Role) *RoleResponse {
 		return nil
 	}
 	return &RoleResponse{
-		ID:       role.ID,
-		Name:     role.Name,
-		IsActive: role.IsActive,
+		ID:             role.ID,
+		OrganizationID: role.OrganizationID,
+		Name:           role.Name,
+		IsDefaultOwner: role.IsDefaultOwner,
+		IsActive:       role.IsActive,
 	}
 }
 
@@ -31,6 +44,28 @@ func ToRoleListResponse(roles []*domainrbac.Role) []*RoleResponse {
 	resp := make([]*RoleResponse, 0, len(roles))
 	for _, role := range roles {
 		resp = append(resp, ToRoleResponse(role))
+	}
+	return resp
+}
+
+func ToPermissionGroupResponse(group *domainrbac.PermissionGroup) *PermissionGroupResponse {
+	if group == nil {
+		return nil
+	}
+	return &PermissionGroupResponse{
+		ID:          group.ID,
+		Code:        group.Code,
+		Name:        group.Name,
+		Description: group.Description,
+		SortOrder:   group.SortOrder,
+		IsActive:    group.IsActive,
+	}
+}
+
+func ToPermissionGroupListResponse(groups []*domainrbac.PermissionGroup) []*PermissionGroupResponse {
+	resp := make([]*PermissionGroupResponse, 0, len(groups))
+	for _, group := range groups {
+		resp = append(resp, ToPermissionGroupResponse(group))
 	}
 	return resp
 }

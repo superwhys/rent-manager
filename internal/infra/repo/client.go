@@ -1,4 +1,4 @@
-package entutils
+package repo
 
 import (
 	"context"
@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/miebyte/goutils/mysqlutils"
 	"github.com/superwhys/rent-manager-server/internal/ent"
+
+	entsql "entgo.io/ent/dialect/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // OpenMysqlClient 根据 MySQL 配置初始化 ent 客户端。

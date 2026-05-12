@@ -4,6 +4,7 @@ import (
 	"context"
 
 	domainbuilding "github.com/superwhys/rent-manager-server/internal/domain/building"
+	domainmeteritem "github.com/superwhys/rent-manager-server/internal/domain/meteritem"
 	entclient "github.com/superwhys/rent-manager-server/internal/ent"
 	entbuilding "github.com/superwhys/rent-manager-server/internal/ent/building"
 	entmeteritem "github.com/superwhys/rent-manager-server/internal/ent/meteritem"
@@ -19,12 +20,12 @@ func NewBuildingRepository(client *entclient.Client) *BuildingRepository {
 }
 
 func (r *BuildingRepository) Create(ctx context.Context, createBuilding *domainbuilding.Building) (*domainbuilding.Building, error) {
-	if err := r.ensureMeterItemsOwned(ctx, createBuilding.AccountID, createBuilding.DefaultMeterItemIDs); err != nil {
+	if err := r.ensureMeterItemsOwned(ctx, createBuilding.OrganizationID, createBuilding.DefaultMeterItemIDs); err != nil {
 		return nil, err
 	}
 
 	builder := r.client.Building.Create().
-		SetAccountID(createBuilding.AccountID).
+		SetOrganizationID(createBuilding.OrganizationID).
 		SetName(createBuilding.Name).
 		SetAddress(createBuilding.Address).
 		SetCity(createBuilding.City).
@@ -36,13 +37,13 @@ func (r *BuildingRepository) Create(ctx context.Context, createBuilding *domainb
 	if err != nil {
 		return nil, err
 	}
-	return r.Get(ctx, createBuilding.AccountID, record.ID)
+	return r.Get(ctx, createBuilding.OrganizationID, record.ID)
 }
 
-func (r *BuildingRepository) Get(ctx context.Context, accountID int, id int) (*domainbuilding.Building, error) {
+func (r *BuildingRepository) Get(ctx context.Context, organizationID int, id int) (*domainbuilding.Building, error) {
 	record, err := r.client.Building.Query().
 		Where(entbuilding.ID(id)).
-		Where(entbuilding.AccountID(accountID)).
+		Where(entbuilding.OrganizationID(organizationID)).
 		Where(entbuilding.DeletedAtIsNil()).
 		WithMeterItems(func(query *entclient.MeterItemQuery) {
 			query.Where(entmeteritem.DeletedAtIsNil())
@@ -57,7 +58,7 @@ func (r *BuildingRepository) Get(ctx context.Context, accountID int, id int) (*d
 
 func (r *BuildingRepository) List(ctx context.Context, query domainbuilding.ListQuery) ([]*domainbuilding.Building, error) {
 	builder := r.client.Building.Query().
-		Where(entbuilding.AccountID(query.AccountID)).
+		Where(entbuilding.OrganizationID(query.OrganizationID)).
 		Where(entbuilding.DeletedAtIsNil()).
 		WithMeterItems(func(query *entclient.MeterItemQuery) {
 			query.Where(entmeteritem.DeletedAtIsNil())
@@ -91,16 +92,16 @@ func (r *BuildingRepository) List(ctx context.Context, query domainbuilding.List
 }
 
 func (r *BuildingRepository) Update(ctx context.Context, updateBuilding *domainbuilding.Building) (*domainbuilding.Building, error) {
-	if _, err := r.Get(ctx, updateBuilding.AccountID, updateBuilding.ID); err != nil {
+	if _, err := r.Get(ctx, updateBuilding.OrganizationID, updateBuilding.ID); err != nil {
 		return nil, err
 	}
-	if err := r.ensureMeterItemsOwned(ctx, updateBuilding.AccountID, updateBuilding.DefaultMeterItemIDs); err != nil {
+	if err := r.ensureMeterItemsOwned(ctx, updateBuilding.OrganizationID, updateBuilding.DefaultMeterItemIDs); err != nil {
 		return nil, err
 	}
 
 	builder := r.client.Building.Update().
 		Where(entbuilding.ID(updateBuilding.ID)).
-		Where(entbuilding.AccountID(updateBuilding.AccountID)).
+		Where(entbuilding.OrganizationID(updateBuilding.OrganizationID)).
 		Where(entbuilding.DeletedAtIsNil()).
 		SetName(updateBuilding.Name).
 		SetAddress(updateBuilding.Address).
@@ -113,11 +114,11 @@ func (r *BuildingRepository) Update(ctx context.Context, updateBuilding *domainb
 	if _, err := builder.Save(ctx); err != nil {
 		return nil, mapBuildingError(err)
 	}
-	return r.Get(ctx, updateBuilding.AccountID, updateBuilding.ID)
+	return r.Get(ctx, updateBuilding.OrganizationID, updateBuilding.ID)
 }
 
-func (r *BuildingRepository) Delete(ctx context.Context, accountID int, id int) error {
-	if _, err := r.Get(ctx, accountID, id); err != nil {
+func (r *BuildingRepository) Delete(ctx context.Context, organizationID int, id int) error {
+	if _, err := r.Get(ctx, organizationID, id); err != nil {
 		return err
 	}
 	exists, err := r.client.Room.Query().
@@ -133,7 +134,7 @@ func (r *BuildingRepository) Delete(ctx context.Context, accountID int, id int) 
 
 	affected, err := r.client.Building.Update().
 		Where(entbuilding.ID(id)).
-		Where(entbuilding.AccountID(accountID)).
+		Where(entbuilding.OrganizationID(organizationID)).
 		Where(entbuilding.DeletedAtIsNil()).
 		SetDeletedAt(entbuilding.DefaultUpdatedAt()).
 		Save(ctx)
@@ -146,20 +147,12 @@ func (r *BuildingRepository) Delete(ctx context.Context, accountID int, id int) 
 	return nil
 }
 
-func (r *BuildingRepository) ensureMeterItemsOwned(ctx context.Context, accountID int, ids []int) error {
-	if len(ids) == 0 {
-		return nil
-	}
-	count, err := r.client.MeterItem.Query().
-		Where(entmeteritem.IDIn(ids...)).
-		Where(entmeteritem.AccountID(accountID)).
-		Where(entmeteritem.DeletedAtIsNil()).
-		Count(ctx)
-	if err != nil {
+func (r *BuildingRepository) ensureMeterItemsOwned(ctx context.Context, organizationID int, ids []int) error {
+	if err := ensureMeterItemsOwned(ctx, r.client, organizationID, ids); err != nil {
+		if err == domainmeteritem.ErrNotFound {
+			return domainbuilding.ErrMeterItemNotFound
+		}
 		return err
-	}
-	if count != len(ids) {
-		return domainbuilding.ErrMeterItemNotFound
 	}
 	return nil
 }
@@ -169,14 +162,14 @@ func toDomainBuilding(record *entclient.Building) *domainbuilding.Building {
 		return nil
 	}
 	building := &domainbuilding.Building{
-		ID:        record.ID,
-		AccountID: record.AccountID,
-		Name:      record.Name,
-		Address:   record.Address,
-		City:      record.City,
-		Province:  record.Province,
-		CreatedAt: record.CreatedAt,
-		UpdatedAt: record.UpdatedAt,
+		ID:             record.ID,
+		OrganizationID: record.OrganizationID,
+		Name:           record.Name,
+		Address:        record.Address,
+		City:           record.City,
+		Province:       record.Province,
+		CreatedAt:      record.CreatedAt,
+		UpdatedAt:      record.UpdatedAt,
 	}
 	if len(record.Edges.MeterItems) > 0 {
 		building.DefaultMeterItems = make([]*domainbuilding.MeterItem, 0, len(record.Edges.MeterItems))

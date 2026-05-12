@@ -6,14 +6,15 @@ import (
 )
 
 type RoomResponse struct {
-	ID         int    `json:"id"`
-	RoomNo     string `json:"room_no"`
-	Floor      int    `json:"floor"`
-	Price      int    `json:"price"`
-	Size       int    `json:"size"`
-	BuildingID int    `json:"building_id"`
-	RoomTypeID int    `json:"room_type_id"`
-	IsActive   bool   `json:"is_active"`
+	ID         int                 `json:"id"`
+	RoomNo     string              `json:"room_no"`
+	Floor      int                 `json:"floor"`
+	Price      int                 `json:"price"`
+	Size       int                 `json:"size"`
+	BuildingID int                 `json:"building_id"`
+	RoomTypeID int                 `json:"room_type_id"`
+	IsActive   bool                `json:"is_active"`
+	MeterItems []MeterItemResponse `json:"meter_items"`
 }
 
 func ToRoomResponse(room *domainroom.Room) RoomResponse {
@@ -26,6 +27,7 @@ func ToRoomResponse(room *domainroom.Room) RoomResponse {
 		BuildingID: room.BuildingID,
 		RoomTypeID: room.RoomTypeID,
 		IsActive:   room.IsActive,
+		MeterItems: ToMeterItemListResponse(room.MeterItems),
 	}
 }
 

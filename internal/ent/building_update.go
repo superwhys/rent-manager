@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 )
@@ -57,16 +57,16 @@ func (_u *BuildingUpdate) ClearDeletedAt() *BuildingUpdate {
 	return _u
 }
 
-// SetAccountID sets the "account_id" field.
-func (_u *BuildingUpdate) SetAccountID(v int) *BuildingUpdate {
-	_u.mutation.SetAccountID(v)
+// SetOrganizationID sets the "organization_id" field.
+func (_u *BuildingUpdate) SetOrganizationID(v int) *BuildingUpdate {
+	_u.mutation.SetOrganizationID(v)
 	return _u
 }
 
-// SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (_u *BuildingUpdate) SetNillableAccountID(v *int) *BuildingUpdate {
+// SetNillableOrganizationID sets the "organization_id" field if the given value is not nil.
+func (_u *BuildingUpdate) SetNillableOrganizationID(v *int) *BuildingUpdate {
 	if v != nil {
-		_u.SetAccountID(*v)
+		_u.SetOrganizationID(*v)
 	}
 	return _u
 }
@@ -127,9 +127,9 @@ func (_u *BuildingUpdate) SetNillableProvince(v *string) *BuildingUpdate {
 	return _u
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_u *BuildingUpdate) SetAccount(v *Account) *BuildingUpdate {
-	return _u.SetAccountID(v.ID)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_u *BuildingUpdate) SetOrganization(v *Organization) *BuildingUpdate {
+	return _u.SetOrganizationID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -167,9 +167,9 @@ func (_u *BuildingUpdate) Mutation() *BuildingMutation {
 	return _u.mutation
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (_u *BuildingUpdate) ClearAccount() *BuildingUpdate {
-	_u.mutation.ClearAccount()
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (_u *BuildingUpdate) ClearOrganization() *BuildingUpdate {
+	_u.mutation.ClearOrganization()
 	return _u
 }
 
@@ -273,8 +273,8 @@ func (_u *BuildingUpdate) check() error {
 			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Building.province": %w`, err)}
 		}
 	}
-	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Building.account"`)
+	if _u.mutation.OrganizationCleared() && len(_u.mutation.OrganizationIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Building.organization"`)
 	}
 	return nil
 }
@@ -312,28 +312,28 @@ func (_u *BuildingUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Province(); ok {
 		_spec.SetField(building.FieldProvince, field.TypeString, value)
 	}
-	if _u.mutation.AccountCleared() {
+	if _u.mutation.OrganizationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   building.AccountTable,
-			Columns: []string{building.AccountColumn},
+			Table:   building.OrganizationTable,
+			Columns: []string{building.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   building.AccountTable,
-			Columns: []string{building.AccountColumn},
+			Table:   building.OrganizationTable,
+			Columns: []string{building.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -477,16 +477,16 @@ func (_u *BuildingUpdateOne) ClearDeletedAt() *BuildingUpdateOne {
 	return _u
 }
 
-// SetAccountID sets the "account_id" field.
-func (_u *BuildingUpdateOne) SetAccountID(v int) *BuildingUpdateOne {
-	_u.mutation.SetAccountID(v)
+// SetOrganizationID sets the "organization_id" field.
+func (_u *BuildingUpdateOne) SetOrganizationID(v int) *BuildingUpdateOne {
+	_u.mutation.SetOrganizationID(v)
 	return _u
 }
 
-// SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (_u *BuildingUpdateOne) SetNillableAccountID(v *int) *BuildingUpdateOne {
+// SetNillableOrganizationID sets the "organization_id" field if the given value is not nil.
+func (_u *BuildingUpdateOne) SetNillableOrganizationID(v *int) *BuildingUpdateOne {
 	if v != nil {
-		_u.SetAccountID(*v)
+		_u.SetOrganizationID(*v)
 	}
 	return _u
 }
@@ -547,9 +547,9 @@ func (_u *BuildingUpdateOne) SetNillableProvince(v *string) *BuildingUpdateOne {
 	return _u
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_u *BuildingUpdateOne) SetAccount(v *Account) *BuildingUpdateOne {
-	return _u.SetAccountID(v.ID)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_u *BuildingUpdateOne) SetOrganization(v *Organization) *BuildingUpdateOne {
+	return _u.SetOrganizationID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -587,9 +587,9 @@ func (_u *BuildingUpdateOne) Mutation() *BuildingMutation {
 	return _u.mutation
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (_u *BuildingUpdateOne) ClearAccount() *BuildingUpdateOne {
-	_u.mutation.ClearAccount()
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (_u *BuildingUpdateOne) ClearOrganization() *BuildingUpdateOne {
+	_u.mutation.ClearOrganization()
 	return _u
 }
 
@@ -706,8 +706,8 @@ func (_u *BuildingUpdateOne) check() error {
 			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Building.province": %w`, err)}
 		}
 	}
-	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Building.account"`)
+	if _u.mutation.OrganizationCleared() && len(_u.mutation.OrganizationIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Building.organization"`)
 	}
 	return nil
 }
@@ -762,28 +762,28 @@ func (_u *BuildingUpdateOne) sqlSave(ctx context.Context) (_node *Building, err 
 	if value, ok := _u.mutation.Province(); ok {
 		_spec.SetField(building.FieldProvince, field.TypeString, value)
 	}
-	if _u.mutation.AccountCleared() {
+	if _u.mutation.OrganizationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   building.AccountTable,
-			Columns: []string{building.AccountColumn},
+			Table:   building.OrganizationTable,
+			Columns: []string{building.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   building.AccountTable,
-			Columns: []string{building.AccountColumn},
+			Table:   building.OrganizationTable,
+			Columns: []string{building.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

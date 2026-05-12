@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 )
 
 // Account is the model entity for the Account schema.
@@ -23,6 +24,8 @@ type Account struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	// 所属组织ID
+	OrganizationID *int `json:"organization_id,omitempty"`
 	// 账号名字
 	Name string `json:"name,omitempty"`
 	// 账号邮箱
@@ -41,50 +44,30 @@ type Account struct {
 
 // AccountEdges holds the relations/edges for other nodes in the graph.
 type AccountEdges struct {
-	// Buildings holds the value of the buildings edge.
-	Buildings []*Building `json:"buildings,omitempty"`
-	// RoomTypes holds the value of the room_types edge.
-	RoomTypes []*RoomType `json:"room_types,omitempty"`
-	// MeterItems holds the value of the meter_items edge.
-	MeterItems []*MeterItem `json:"meter_items,omitempty"`
+	// Organization holds the value of the organization edge.
+	Organization *Organization `json:"organization,omitempty"`
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [2]bool
 }
 
-// BuildingsOrErr returns the Buildings value or an error if the edge
-// was not loaded in eager-loading.
-func (e AccountEdges) BuildingsOrErr() ([]*Building, error) {
-	if e.loadedTypes[0] {
-		return e.Buildings, nil
+// OrganizationOrErr returns the Organization value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e AccountEdges) OrganizationOrErr() (*Organization, error) {
+	if e.Organization != nil {
+		return e.Organization, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: organization.Label}
 	}
-	return nil, &NotLoadedError{edge: "buildings"}
-}
-
-// RoomTypesOrErr returns the RoomTypes value or an error if the edge
-// was not loaded in eager-loading.
-func (e AccountEdges) RoomTypesOrErr() ([]*RoomType, error) {
-	if e.loadedTypes[1] {
-		return e.RoomTypes, nil
-	}
-	return nil, &NotLoadedError{edge: "room_types"}
-}
-
-// MeterItemsOrErr returns the MeterItems value or an error if the edge
-// was not loaded in eager-loading.
-func (e AccountEdges) MeterItemsOrErr() ([]*MeterItem, error) {
-	if e.loadedTypes[2] {
-		return e.MeterItems, nil
-	}
-	return nil, &NotLoadedError{edge: "meter_items"}
+	return nil, &NotLoadedError{edge: "organization"}
 }
 
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e AccountEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[1] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -97,7 +80,7 @@ func (*Account) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case account.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case account.FieldID:
+		case account.FieldID, account.FieldOrganizationID:
 			values[i] = new(sql.NullInt64)
 		case account.FieldName, account.FieldEmail, account.FieldPassword, account.FieldWechatOpenid:
 			values[i] = new(sql.NullString)
@@ -143,6 +126,13 @@ func (_m *Account) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
+		case account.FieldOrganizationID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field organization_id", values[i])
+			} else if value.Valid {
+				_m.OrganizationID = new(int)
+				*_m.OrganizationID = int(value.Int64)
+			}
 		case account.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -186,19 +176,9 @@ func (_m *Account) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryBuildings queries the "buildings" edge of the Account entity.
-func (_m *Account) QueryBuildings() *BuildingQuery {
-	return NewAccountClient(_m.config).QueryBuildings(_m)
-}
-
-// QueryRoomTypes queries the "room_types" edge of the Account entity.
-func (_m *Account) QueryRoomTypes() *RoomTypeQuery {
-	return NewAccountClient(_m.config).QueryRoomTypes(_m)
-}
-
-// QueryMeterItems queries the "meter_items" edge of the Account entity.
-func (_m *Account) QueryMeterItems() *MeterItemQuery {
-	return NewAccountClient(_m.config).QueryMeterItems(_m)
+// QueryOrganization queries the "organization" edge of the Account entity.
+func (_m *Account) QueryOrganization() *OrganizationQuery {
+	return NewAccountClient(_m.config).QueryOrganization(_m)
 }
 
 // QueryRoles queries the "roles" edge of the Account entity.
@@ -238,6 +218,11 @@ func (_m *Account) String() string {
 	if v := _m.DeletedAt; v != nil {
 		builder.WriteString("deleted_at=")
 		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.OrganizationID; v != nil {
+		builder.WriteString("organization_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("name=")

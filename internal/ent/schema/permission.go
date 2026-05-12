@@ -5,7 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/superwhys/rent-manager-server/internal/ent/mixin"
+	"github.com/superwhys/rent-manager-server/internal/ent/schema/mixin"
 )
 
 // 权限实体
@@ -44,7 +44,7 @@ func (Permission) Fields() []ent.Field {
 // Edges of the Permission.
 func (Permission) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("roles", Role.Type).
+		edge.From("permission_groups", PermissionGroup.Type).
 			Ref("permissions"),
 	}
 }

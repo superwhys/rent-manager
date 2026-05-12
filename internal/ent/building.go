@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 )
 
 // Building is the model entity for the Building schema.
@@ -24,8 +24,8 @@ type Building struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// 所属账号ID
-	AccountID int `json:"account_id,omitempty"`
+	// 所属组织 id
+	OrganizationID int `json:"organization_id,omitempty"`
 	// 楼栋名字
 	Name string `json:"name,omitempty"`
 	// 楼栋地址
@@ -42,8 +42,8 @@ type Building struct {
 
 // BuildingEdges holds the relations/edges for other nodes in the graph.
 type BuildingEdges struct {
-	// Account holds the value of the account edge.
-	Account *Account `json:"account,omitempty"`
+	// Organization holds the value of the organization edge.
+	Organization *Organization `json:"organization,omitempty"`
 	// Rooms holds the value of the rooms edge.
 	Rooms []*Room `json:"rooms,omitempty"`
 	// MeterItems holds the value of the meter_items edge.
@@ -53,15 +53,15 @@ type BuildingEdges struct {
 	loadedTypes [3]bool
 }
 
-// AccountOrErr returns the Account value or an error if the edge
+// OrganizationOrErr returns the Organization value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e BuildingEdges) AccountOrErr() (*Account, error) {
-	if e.Account != nil {
-		return e.Account, nil
+func (e BuildingEdges) OrganizationOrErr() (*Organization, error) {
+	if e.Organization != nil {
+		return e.Organization, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: account.Label}
+		return nil, &NotFoundError{label: organization.Label}
 	}
-	return nil, &NotLoadedError{edge: "account"}
+	return nil, &NotLoadedError{edge: "organization"}
 }
 
 // RoomsOrErr returns the Rooms value or an error if the edge
@@ -87,7 +87,7 @@ func (*Building) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case building.FieldID, building.FieldAccountID:
+		case building.FieldID, building.FieldOrganizationID:
 			values[i] = new(sql.NullInt64)
 		case building.FieldName, building.FieldAddress, building.FieldCity, building.FieldProvince:
 			values[i] = new(sql.NullString)
@@ -133,11 +133,11 @@ func (_m *Building) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case building.FieldAccountID:
+		case building.FieldOrganizationID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field account_id", values[i])
+				return fmt.Errorf("unexpected type %T for field organization_id", values[i])
 			} else if value.Valid {
-				_m.AccountID = int(value.Int64)
+				_m.OrganizationID = int(value.Int64)
 			}
 		case building.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -176,9 +176,9 @@ func (_m *Building) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryAccount queries the "account" edge of the Building entity.
-func (_m *Building) QueryAccount() *AccountQuery {
-	return NewBuildingClient(_m.config).QueryAccount(_m)
+// QueryOrganization queries the "organization" edge of the Building entity.
+func (_m *Building) QueryOrganization() *OrganizationQuery {
+	return NewBuildingClient(_m.config).QueryOrganization(_m)
 }
 
 // QueryRooms queries the "rooms" edge of the Building entity.
@@ -225,8 +225,8 @@ func (_m *Building) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("account_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
+	builder.WriteString("organization_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OrganizationID))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)

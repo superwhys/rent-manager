@@ -15,9 +15,12 @@ func AdminGroupRouter(rbacService *services.RBACService) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithPrefix("/admin"),
 		ginutils.WithHandler(http.MethodPost, "/roles/batch", CreateRolesHandler(rbacService)),
+		ginutils.WithHandler(http.MethodPost, "/permission-groups/batch", CreatePermissionGroupsHandler(rbacService)),
 		ginutils.WithHandler(http.MethodPost, "/permissions/batch", CreatePermissionsHandler(rbacService)),
-		ginutils.WithHandler(http.MethodPost, "/roles/:role_id/permissions", AddPermissionsToRoleHandler(rbacService)),
-		ginutils.WithHandler(http.MethodDelete, "/roles/:role_id/permissions", RemovePermissionsFromRoleHandler(rbacService)),
+		ginutils.WithHandler(http.MethodPost, "/permission-groups/:permission_group_id/permissions", AddPermissionsToPermissionGroupHandler(rbacService)),
+		ginutils.WithHandler(http.MethodDelete, "/permission-groups/:permission_group_id/permissions", RemovePermissionsFromPermissionGroupHandler(rbacService)),
+		ginutils.WithHandler(http.MethodPost, "/roles/:role_id/permission-groups", AddPermissionGroupsToRoleHandler(rbacService)),
+		ginutils.WithHandler(http.MethodDelete, "/roles/:role_id/permission-groups", RemovePermissionGroupsFromRoleHandler(rbacService)),
 		ginutils.WithHandler(http.MethodPost, "/accounts/:account_id/roles", AssignRolesToAccountHandler(rbacService)),
 	)
 }
@@ -41,6 +44,16 @@ func CreateRolesHandler(rbacService *services.RBACService) gin.HandlerFunc {
 	})
 }
 
+func CreatePermissionGroupsHandler(rbacService *services.RBACService) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreatePermissionGroupsCommand) {
+		groups, err := rbacService.CreatePermissionGroups(c.Request.Context(), req)
+		if response.HandleRouterError(c, err, "create permission groups failed", errcode.ErrSysInternal) {
+			return
+		}
+		c.JSON(http.StatusOK, response.ResponseWithData(response.ToPermissionGroupListResponse(groups)))
+	})
+}
+
 // CreatePermissionsHandler godoc
 // @Summary 批量创建权限
 // @Tags admin
@@ -60,40 +73,40 @@ func CreatePermissionsHandler(rbacService *services.RBACService) gin.HandlerFunc
 	})
 }
 
-// AddPermissionsToRoleHandler godoc
-// @Summary 给角色添加权限
-// @Tags admin
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param role_id path int true "角色ID"
-// @Param request body requests.RolePermissionsCommand true "权限ID列表"
-// @Success 200 {object} ginutils.Ret[string]
-// @Router /admin/roles/{role_id}/permissions [post]
-func AddPermissionsToRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RolePermissionsCommand) {
-		err := rbacService.AddPermissionsToRole(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "add permissions to role failed", errcode.ErrSysInternal) {
+func AddPermissionsToPermissionGroupHandler(rbacService *services.RBACService) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *requests.PermissionGroupPermissionsCommand) {
+		err := rbacService.AddPermissionsToPermissionGroup(c.Request.Context(), req)
+		if response.HandleRouterError(c, err, "add permissions to permission group failed", errcode.ErrSysInternal) {
 			return
 		}
 		c.JSON(http.StatusOK, response.ResponseSuccess())
 	})
 }
 
-// RemovePermissionsFromRoleHandler godoc
-// @Summary 删除角色的部分权限
-// @Tags admin
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param role_id path int true "角色ID"
-// @Param request body requests.RolePermissionsCommand true "权限ID列表"
-// @Success 200 {object} ginutils.Ret[string]
-// @Router /admin/roles/{role_id}/permissions [delete]
-func RemovePermissionsFromRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RolePermissionsCommand) {
-		err := rbacService.RemovePermissionsFromRole(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "remove permissions from role failed", errcode.ErrSysInternal) {
+func RemovePermissionsFromPermissionGroupHandler(rbacService *services.RBACService) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *requests.PermissionGroupPermissionsCommand) {
+		err := rbacService.RemovePermissionsFromPermissionGroup(c.Request.Context(), req)
+		if response.HandleRouterError(c, err, "remove permissions from permission group failed", errcode.ErrSysInternal) {
+			return
+		}
+		c.JSON(http.StatusOK, response.ResponseSuccess())
+	})
+}
+
+func AddPermissionGroupsToRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RolePermissionGroupsCommand) {
+		err := rbacService.AddPermissionGroupsToRole(c.Request.Context(), req)
+		if response.HandleRouterError(c, err, "add permission groups to role failed", errcode.ErrSysInternal) {
+			return
+		}
+		c.JSON(http.StatusOK, response.ResponseSuccess())
+	})
+}
+
+func RemovePermissionGroupsFromRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RolePermissionGroupsCommand) {
+		err := rbacService.RemovePermissionGroupsFromRole(c.Request.Context(), req)
+		if response.HandleRouterError(c, err, "remove permission groups from role failed", errcode.ErrSysInternal) {
 			return
 		}
 		c.JSON(http.StatusOK, response.ResponseSuccess())
@@ -101,7 +114,7 @@ func RemovePermissionsFromRoleHandler(rbacService *services.RBACService) gin.Han
 }
 
 // AssignRolesToAccountHandler godoc
-// @Summary 给账号分配角色
+// @Summary 给组织内账号分配角色
 // @Tags admin
 // @Accept json
 // @Produce json

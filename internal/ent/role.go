@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 )
 
@@ -23,8 +24,12 @@ type Role struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	// 所属组织ID
+	OrganizationID int `json:"organization_id,omitempty"`
 	// 角色名字
 	Name string `json:"name,omitempty"`
+	// 是否默认楼栋长角色
+	IsDefaultOwner bool `json:"is_default_owner,omitempty"`
 	// 角色是否激活
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -35,22 +40,26 @@ type Role struct {
 
 // RoleEdges holds the relations/edges for other nodes in the graph.
 type RoleEdges struct {
-	// Permissions holds the value of the permissions edge.
-	Permissions []*Permission `json:"permissions,omitempty"`
+	// Organization holds the value of the organization edge.
+	Organization *Organization `json:"organization,omitempty"`
 	// Accounts holds the value of the accounts edge.
 	Accounts []*Account `json:"accounts,omitempty"`
+	// PermissionGroups holds the value of the permission_groups edge.
+	PermissionGroups []*PermissionGroup `json:"permission_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
-// PermissionsOrErr returns the Permissions value or an error if the edge
-// was not loaded in eager-loading.
-func (e RoleEdges) PermissionsOrErr() ([]*Permission, error) {
-	if e.loadedTypes[0] {
-		return e.Permissions, nil
+// OrganizationOrErr returns the Organization value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RoleEdges) OrganizationOrErr() (*Organization, error) {
+	if e.Organization != nil {
+		return e.Organization, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: organization.Label}
 	}
-	return nil, &NotLoadedError{edge: "permissions"}
+	return nil, &NotLoadedError{edge: "organization"}
 }
 
 // AccountsOrErr returns the Accounts value or an error if the edge
@@ -62,14 +71,23 @@ func (e RoleEdges) AccountsOrErr() ([]*Account, error) {
 	return nil, &NotLoadedError{edge: "accounts"}
 }
 
+// PermissionGroupsOrErr returns the PermissionGroups value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoleEdges) PermissionGroupsOrErr() ([]*PermissionGroup, error) {
+	if e.loadedTypes[2] {
+		return e.PermissionGroups, nil
+	}
+	return nil, &NotLoadedError{edge: "permission_groups"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Role) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case role.FieldIsActive:
+		case role.FieldIsDefaultOwner, role.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case role.FieldID:
+		case role.FieldID, role.FieldOrganizationID:
 			values[i] = new(sql.NullInt64)
 		case role.FieldName:
 			values[i] = new(sql.NullString)
@@ -115,11 +133,23 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
+		case role.FieldOrganizationID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field organization_id", values[i])
+			} else if value.Valid {
+				_m.OrganizationID = int(value.Int64)
+			}
 		case role.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
+			}
+		case role.FieldIsDefaultOwner:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_default_owner", values[i])
+			} else if value.Valid {
+				_m.IsDefaultOwner = value.Bool
 			}
 		case role.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -140,14 +170,19 @@ func (_m *Role) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryPermissions queries the "permissions" edge of the Role entity.
-func (_m *Role) QueryPermissions() *PermissionQuery {
-	return NewRoleClient(_m.config).QueryPermissions(_m)
+// QueryOrganization queries the "organization" edge of the Role entity.
+func (_m *Role) QueryOrganization() *OrganizationQuery {
+	return NewRoleClient(_m.config).QueryOrganization(_m)
 }
 
 // QueryAccounts queries the "accounts" edge of the Role entity.
 func (_m *Role) QueryAccounts() *AccountQuery {
 	return NewRoleClient(_m.config).QueryAccounts(_m)
+}
+
+// QueryPermissionGroups queries the "permission_groups" edge of the Role entity.
+func (_m *Role) QueryPermissionGroups() *PermissionGroupQuery {
+	return NewRoleClient(_m.config).QueryPermissionGroups(_m)
 }
 
 // Update returns a builder for updating this Role.
@@ -184,8 +219,14 @@ func (_m *Role) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
+	builder.WriteString("organization_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OrganizationID))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
+	builder.WriteString(", ")
+	builder.WriteString("is_default_owner=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsDefaultOwner))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))

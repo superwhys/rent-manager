@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 )
@@ -57,16 +57,16 @@ func (_u *MeterItemUpdate) ClearDeletedAt() *MeterItemUpdate {
 	return _u
 }
 
-// SetAccountID sets the "account_id" field.
-func (_u *MeterItemUpdate) SetAccountID(v int) *MeterItemUpdate {
-	_u.mutation.SetAccountID(v)
+// SetOrganizationID sets the "organization_id" field.
+func (_u *MeterItemUpdate) SetOrganizationID(v int) *MeterItemUpdate {
+	_u.mutation.SetOrganizationID(v)
 	return _u
 }
 
-// SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (_u *MeterItemUpdate) SetNillableAccountID(v *int) *MeterItemUpdate {
+// SetNillableOrganizationID sets the "organization_id" field if the given value is not nil.
+func (_u *MeterItemUpdate) SetNillableOrganizationID(v *int) *MeterItemUpdate {
 	if v != nil {
-		_u.SetAccountID(*v)
+		_u.SetOrganizationID(*v)
 	}
 	return _u
 }
@@ -147,9 +147,9 @@ func (_u *MeterItemUpdate) ClearRemark() *MeterItemUpdate {
 	return _u
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_u *MeterItemUpdate) SetAccount(v *Account) *MeterItemUpdate {
-	return _u.SetAccountID(v.ID)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_u *MeterItemUpdate) SetOrganization(v *Organization) *MeterItemUpdate {
+	return _u.SetOrganizationID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -187,9 +187,9 @@ func (_u *MeterItemUpdate) Mutation() *MeterItemMutation {
 	return _u.mutation
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (_u *MeterItemUpdate) ClearAccount() *MeterItemUpdate {
-	_u.mutation.ClearAccount()
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (_u *MeterItemUpdate) ClearOrganization() *MeterItemUpdate {
+	_u.mutation.ClearOrganization()
 	return _u
 }
 
@@ -288,8 +288,8 @@ func (_u *MeterItemUpdate) check() error {
 			return &ValidationError{Name: "calc_type", err: fmt.Errorf(`ent: validator failed for field "MeterItem.calc_type": %w`, err)}
 		}
 	}
-	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "MeterItem.account"`)
+	if _u.mutation.OrganizationCleared() && len(_u.mutation.OrganizationIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "MeterItem.organization"`)
 	}
 	return nil
 }
@@ -333,28 +333,28 @@ func (_u *MeterItemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.RemarkCleared() {
 		_spec.ClearField(meteritem.FieldRemark, field.TypeString)
 	}
-	if _u.mutation.AccountCleared() {
+	if _u.mutation.OrganizationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   meteritem.AccountTable,
-			Columns: []string{meteritem.AccountColumn},
+			Table:   meteritem.OrganizationTable,
+			Columns: []string{meteritem.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   meteritem.AccountTable,
-			Columns: []string{meteritem.AccountColumn},
+			Table:   meteritem.OrganizationTable,
+			Columns: []string{meteritem.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -498,16 +498,16 @@ func (_u *MeterItemUpdateOne) ClearDeletedAt() *MeterItemUpdateOne {
 	return _u
 }
 
-// SetAccountID sets the "account_id" field.
-func (_u *MeterItemUpdateOne) SetAccountID(v int) *MeterItemUpdateOne {
-	_u.mutation.SetAccountID(v)
+// SetOrganizationID sets the "organization_id" field.
+func (_u *MeterItemUpdateOne) SetOrganizationID(v int) *MeterItemUpdateOne {
+	_u.mutation.SetOrganizationID(v)
 	return _u
 }
 
-// SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (_u *MeterItemUpdateOne) SetNillableAccountID(v *int) *MeterItemUpdateOne {
+// SetNillableOrganizationID sets the "organization_id" field if the given value is not nil.
+func (_u *MeterItemUpdateOne) SetNillableOrganizationID(v *int) *MeterItemUpdateOne {
 	if v != nil {
-		_u.SetAccountID(*v)
+		_u.SetOrganizationID(*v)
 	}
 	return _u
 }
@@ -588,9 +588,9 @@ func (_u *MeterItemUpdateOne) ClearRemark() *MeterItemUpdateOne {
 	return _u
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_u *MeterItemUpdateOne) SetAccount(v *Account) *MeterItemUpdateOne {
-	return _u.SetAccountID(v.ID)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_u *MeterItemUpdateOne) SetOrganization(v *Organization) *MeterItemUpdateOne {
+	return _u.SetOrganizationID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -628,9 +628,9 @@ func (_u *MeterItemUpdateOne) Mutation() *MeterItemMutation {
 	return _u.mutation
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (_u *MeterItemUpdateOne) ClearAccount() *MeterItemUpdateOne {
-	_u.mutation.ClearAccount()
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (_u *MeterItemUpdateOne) ClearOrganization() *MeterItemUpdateOne {
+	_u.mutation.ClearOrganization()
 	return _u
 }
 
@@ -742,8 +742,8 @@ func (_u *MeterItemUpdateOne) check() error {
 			return &ValidationError{Name: "calc_type", err: fmt.Errorf(`ent: validator failed for field "MeterItem.calc_type": %w`, err)}
 		}
 	}
-	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "MeterItem.account"`)
+	if _u.mutation.OrganizationCleared() && len(_u.mutation.OrganizationIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "MeterItem.organization"`)
 	}
 	return nil
 }
@@ -804,28 +804,28 @@ func (_u *MeterItemUpdateOne) sqlSave(ctx context.Context) (_node *MeterItem, er
 	if _u.mutation.RemarkCleared() {
 		_spec.ClearField(meteritem.FieldRemark, field.TypeString)
 	}
-	if _u.mutation.AccountCleared() {
+	if _u.mutation.OrganizationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   meteritem.AccountTable,
-			Columns: []string{meteritem.AccountColumn},
+			Table:   meteritem.OrganizationTable,
+			Columns: []string{meteritem.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   meteritem.AccountTable,
-			Columns: []string{meteritem.AccountColumn},
+			Table:   meteritem.OrganizationTable,
+			Columns: []string{meteritem.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

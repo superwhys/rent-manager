@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
@@ -56,16 +56,16 @@ func (_u *RoomTypeUpdate) ClearDeletedAt() *RoomTypeUpdate {
 	return _u
 }
 
-// SetAccountID sets the "account_id" field.
-func (_u *RoomTypeUpdate) SetAccountID(v int) *RoomTypeUpdate {
-	_u.mutation.SetAccountID(v)
+// SetOrganizationID sets the "organization_id" field.
+func (_u *RoomTypeUpdate) SetOrganizationID(v int) *RoomTypeUpdate {
+	_u.mutation.SetOrganizationID(v)
 	return _u
 }
 
-// SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (_u *RoomTypeUpdate) SetNillableAccountID(v *int) *RoomTypeUpdate {
+// SetNillableOrganizationID sets the "organization_id" field if the given value is not nil.
+func (_u *RoomTypeUpdate) SetNillableOrganizationID(v *int) *RoomTypeUpdate {
 	if v != nil {
-		_u.SetAccountID(*v)
+		_u.SetOrganizationID(*v)
 	}
 	return _u
 }
@@ -84,9 +84,9 @@ func (_u *RoomTypeUpdate) SetNillableName(v *string) *RoomTypeUpdate {
 	return _u
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_u *RoomTypeUpdate) SetAccount(v *Account) *RoomTypeUpdate {
-	return _u.SetAccountID(v.ID)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_u *RoomTypeUpdate) SetOrganization(v *Organization) *RoomTypeUpdate {
+	return _u.SetOrganizationID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -109,9 +109,9 @@ func (_u *RoomTypeUpdate) Mutation() *RoomTypeMutation {
 	return _u.mutation
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (_u *RoomTypeUpdate) ClearAccount() *RoomTypeUpdate {
-	_u.mutation.ClearAccount()
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (_u *RoomTypeUpdate) ClearOrganization() *RoomTypeUpdate {
+	_u.mutation.ClearOrganization()
 	return _u
 }
 
@@ -179,8 +179,8 @@ func (_u *RoomTypeUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomType.name": %w`, err)}
 		}
 	}
-	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "RoomType.account"`)
+	if _u.mutation.OrganizationCleared() && len(_u.mutation.OrganizationIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "RoomType.organization"`)
 	}
 	return nil
 }
@@ -209,28 +209,28 @@ func (_u *RoomTypeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(roomtype.FieldName, field.TypeString, value)
 	}
-	if _u.mutation.AccountCleared() {
+	if _u.mutation.OrganizationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   roomtype.AccountTable,
-			Columns: []string{roomtype.AccountColumn},
+			Table:   roomtype.OrganizationTable,
+			Columns: []string{roomtype.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   roomtype.AccountTable,
-			Columns: []string{roomtype.AccountColumn},
+			Table:   roomtype.OrganizationTable,
+			Columns: []string{roomtype.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -329,16 +329,16 @@ func (_u *RoomTypeUpdateOne) ClearDeletedAt() *RoomTypeUpdateOne {
 	return _u
 }
 
-// SetAccountID sets the "account_id" field.
-func (_u *RoomTypeUpdateOne) SetAccountID(v int) *RoomTypeUpdateOne {
-	_u.mutation.SetAccountID(v)
+// SetOrganizationID sets the "organization_id" field.
+func (_u *RoomTypeUpdateOne) SetOrganizationID(v int) *RoomTypeUpdateOne {
+	_u.mutation.SetOrganizationID(v)
 	return _u
 }
 
-// SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (_u *RoomTypeUpdateOne) SetNillableAccountID(v *int) *RoomTypeUpdateOne {
+// SetNillableOrganizationID sets the "organization_id" field if the given value is not nil.
+func (_u *RoomTypeUpdateOne) SetNillableOrganizationID(v *int) *RoomTypeUpdateOne {
 	if v != nil {
-		_u.SetAccountID(*v)
+		_u.SetOrganizationID(*v)
 	}
 	return _u
 }
@@ -357,9 +357,9 @@ func (_u *RoomTypeUpdateOne) SetNillableName(v *string) *RoomTypeUpdateOne {
 	return _u
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_u *RoomTypeUpdateOne) SetAccount(v *Account) *RoomTypeUpdateOne {
-	return _u.SetAccountID(v.ID)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_u *RoomTypeUpdateOne) SetOrganization(v *Organization) *RoomTypeUpdateOne {
+	return _u.SetOrganizationID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -382,9 +382,9 @@ func (_u *RoomTypeUpdateOne) Mutation() *RoomTypeMutation {
 	return _u.mutation
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (_u *RoomTypeUpdateOne) ClearAccount() *RoomTypeUpdateOne {
-	_u.mutation.ClearAccount()
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (_u *RoomTypeUpdateOne) ClearOrganization() *RoomTypeUpdateOne {
+	_u.mutation.ClearOrganization()
 	return _u
 }
 
@@ -465,8 +465,8 @@ func (_u *RoomTypeUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomType.name": %w`, err)}
 		}
 	}
-	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "RoomType.account"`)
+	if _u.mutation.OrganizationCleared() && len(_u.mutation.OrganizationIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "RoomType.organization"`)
 	}
 	return nil
 }
@@ -512,28 +512,28 @@ func (_u *RoomTypeUpdateOne) sqlSave(ctx context.Context) (_node *RoomType, err 
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(roomtype.FieldName, field.TypeString, value)
 	}
-	if _u.mutation.AccountCleared() {
+	if _u.mutation.OrganizationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   roomtype.AccountTable,
-			Columns: []string{roomtype.AccountColumn},
+			Table:   roomtype.OrganizationTable,
+			Columns: []string{roomtype.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   roomtype.AccountTable,
-			Columns: []string{roomtype.AccountColumn},
+			Table:   roomtype.OrganizationTable,
+			Columns: []string{roomtype.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

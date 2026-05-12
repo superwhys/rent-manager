@@ -20,7 +20,6 @@ import (
 	"github.com/superwhys/rent-manager-server/api"
 	"github.com/superwhys/rent-manager-server/config"
 	"github.com/superwhys/rent-manager-server/internal/app/services"
-	"github.com/superwhys/rent-manager-server/internal/infra/entutils"
 	"github.com/superwhys/rent-manager-server/internal/infra/ratelimit"
 	"github.com/superwhys/rent-manager-server/internal/infra/repo"
 )
@@ -53,24 +52,26 @@ func main() {
 	logging.PanicError(mysqlConfFlag(mysqlConf))
 
 	// 初始化 mysql 客户端
-	client, err := entutils.OpenMysqlClient(mysqlConf)
+	client, err := repo.OpenMysqlClient(mysqlConf)
 	logging.PanicError(err)
 	defer client.Close()
 
 	// 自动迁移数据库表结构
 	// TODO: 需要在生产环境中禁用此功能
-	logging.PanicError(entutils.MigrateSchema(client))
+	logging.PanicError(repo.MigrateSchema(client))
 
 	httpLimiter, err := ratelimit.NewRedisLimiter(10, time.Second*10, redisClient, "http_rate")
 	logging.PanicError(err)
 
 	roomRepo := repo.NewRoomRepository(client)
 	buildingRepo := repo.NewBuildingRepository(client)
+	meterItemRepo := repo.NewMeterItemRepository(client)
 	accountRepo := repo.NewAccountRepository(client)
 	rbacRepo := repo.NewRBACRepository(client)
 
 	roomService := services.NewRoomService(roomRepo)
 	buildingService := services.NewBuildingService(buildingRepo, roomService)
+	meterItemService := services.NewMeterItemService(meterItemRepo)
 	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
 	rbacService := services.NewRBACService(rbacRepo, redisClient)
 	logging.PanicError(rbacService.InitSystemRBAC(context.Background()))
@@ -81,6 +82,7 @@ func main() {
 		authService,
 		roomService,
 		buildingService,
+		meterItemService,
 		rbacService,
 	)
 

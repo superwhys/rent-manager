@@ -39,8 +39,12 @@ Supporting packages:
 
 Persistence uses Ent with MySQL. `internal/entutils/client.go` creates the Ent client and `main.go` currently calls auto-migration on startup. Soft deletes are represented by `deleted_at`; repository queries usually filter `DeletedAtIsNil()` and deletes set `deleted_at` rather than removing rows.
 
-Authentication uses JWT utilities in `internal/jwtutils`. `TokenVerifyMiddleware` stores `AccountTokenClaims` in both Gin context and the request context. Permission checks use the authenticated `UserID` from claims and compare permissions against Gin route templates from `c.FullPath()` such as `/rooms/:id`; because the router is mounted under `/api`, stored `permissions.api_path` values generally should not include `/api`.
+Authentication uses JWT utilities in `internal/jwtutils`. `TokenVerifyMiddleware` stores `AccountTokenClaims` in both Gin context and the request context. Permission checks use the authenticated `UserID` from claims, an organization ID from route/query/header (`organization_id` or `X-Organization-ID`), and Gin route templates from `c.FullPath()` such as `/rooms/:id`; because the router is mounted under `/api`, stored `permissions.api_path` values generally should not include `/api`.
 
-RBAC currently consists of accounts, roles, permissions, `account_roles`, and `role_permissions`. Admin endpoints are under `/admin`; a bootstrap allowance exists in `PermissionMiddleware` so initial role/permission/account-role setup can happen before any account-role bindings exist.
+RBAC is organization-scoped. Each account can belong to at most one organization via `accounts.organization_id`; accounts bind one or more roles directly; roles belong to exactly one organization and bind global permission groups; permission groups and permissions are global and relate many-to-many. Effective authorization follows `account -> role -> permission_group -> permission`, so repository/service/middleware permission checks must always include `organization_id` and verify the account belongs to that organization to avoid cross-organization authorization leaks.
+
+Building-management resources are organization-owned. `buildings`, `meter_items`, and `room_types` use `organization_id`; rooms inherit their organization boundary through their building. When adding queries or mutations for these resources, scope repository filters by organization rather than account.
+
+Admin RBAC endpoints are under `/admin`; global permission and permission-group management stays there, while organization role assignment must include the target organization ID. A bootstrap allowance exists in `PermissionMiddleware` so initial role/permission/account-role setup can happen before any account-role bindings exist.
 
 Swagger generation is configured by `api/generate.go`. Keep annotations near handlers in `api/routers` and regenerate docs with `go generate ./api` when API contracts change.

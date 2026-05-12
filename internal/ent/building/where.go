@@ -70,9 +70,9 @@ func DeletedAt(v time.Time) predicate.Building {
 	return predicate.Building(sql.FieldEQ(FieldDeletedAt, v))
 }
 
-// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
-func AccountID(v int) predicate.Building {
-	return predicate.Building(sql.FieldEQ(FieldAccountID, v))
+// OrganizationID applies equality check predicate on the "organization_id" field. It's identical to OrganizationIDEQ.
+func OrganizationID(v int) predicate.Building {
+	return predicate.Building(sql.FieldEQ(FieldOrganizationID, v))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
@@ -225,24 +225,24 @@ func DeletedAtNotNil() predicate.Building {
 	return predicate.Building(sql.FieldNotNull(FieldDeletedAt))
 }
 
-// AccountIDEQ applies the EQ predicate on the "account_id" field.
-func AccountIDEQ(v int) predicate.Building {
-	return predicate.Building(sql.FieldEQ(FieldAccountID, v))
+// OrganizationIDEQ applies the EQ predicate on the "organization_id" field.
+func OrganizationIDEQ(v int) predicate.Building {
+	return predicate.Building(sql.FieldEQ(FieldOrganizationID, v))
 }
 
-// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
-func AccountIDNEQ(v int) predicate.Building {
-	return predicate.Building(sql.FieldNEQ(FieldAccountID, v))
+// OrganizationIDNEQ applies the NEQ predicate on the "organization_id" field.
+func OrganizationIDNEQ(v int) predicate.Building {
+	return predicate.Building(sql.FieldNEQ(FieldOrganizationID, v))
 }
 
-// AccountIDIn applies the In predicate on the "account_id" field.
-func AccountIDIn(vs ...int) predicate.Building {
-	return predicate.Building(sql.FieldIn(FieldAccountID, vs...))
+// OrganizationIDIn applies the In predicate on the "organization_id" field.
+func OrganizationIDIn(vs ...int) predicate.Building {
+	return predicate.Building(sql.FieldIn(FieldOrganizationID, vs...))
 }
 
-// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
-func AccountIDNotIn(vs ...int) predicate.Building {
-	return predicate.Building(sql.FieldNotIn(FieldAccountID, vs...))
+// OrganizationIDNotIn applies the NotIn predicate on the "organization_id" field.
+func OrganizationIDNotIn(vs ...int) predicate.Building {
+	return predicate.Building(sql.FieldNotIn(FieldOrganizationID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -505,21 +505,21 @@ func ProvinceContainsFold(v string) predicate.Building {
 	return predicate.Building(sql.FieldContainsFold(FieldProvince, v))
 }
 
-// HasAccount applies the HasEdge predicate on the "account" edge.
-func HasAccount() predicate.Building {
+// HasOrganization applies the HasEdge predicate on the "organization" edge.
+func HasOrganization() predicate.Building {
 	return predicate.Building(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
-func HasAccountWith(preds ...predicate.Account) predicate.Building {
+// HasOrganizationWith applies the HasEdge predicate on the "organization" edge with a given conditions (other predicates).
+func HasOrganizationWith(preds ...predicate.Organization) predicate.Building {
 	return predicate.Building(func(s *sql.Selector) {
-		step := newAccountStep()
+		step := newOrganizationStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -75,7 +75,7 @@ func BuildingListHandler(buildingService *services.BuildingService) gin.HandlerF
 // @Router /buildings/{building_id} [get]
 func BuildingGetHandler(buildingService *services.BuildingService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.BuildingIDQuery) {
-		building, err := buildingService.GetBuilding(c.Request.Context(), req.BuildingID)
+		building, err := buildingService.GetBuilding(c.Request.Context(), req.OrganizationID, req.BuildingID)
 		if response.HandleRouterError(c, err, "get building failed", errcode.ErrSysInternal) {
 			return
 		}
@@ -115,7 +115,7 @@ func BuildingUpdateHandler(buildingService *services.BuildingService) gin.Handle
 // @Router /buildings/{building_id} [delete]
 func BuildingDeleteHandler(buildingService *services.BuildingService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.BuildingIDQuery) {
-		err := buildingService.DeleteBuilding(c.Request.Context(), req.BuildingID)
+		err := buildingService.DeleteBuilding(c.Request.Context(), req.OrganizationID, req.BuildingID)
 		if response.HandleRouterError(c, err, "delete building failed", errcode.ErrSysInternal) {
 			return
 		}

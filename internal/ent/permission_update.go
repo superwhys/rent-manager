@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
+	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/role"
 )
 
 // PermissionUpdate is the builder for updating Permission entities.
@@ -111,19 +111,19 @@ func (_u *PermissionUpdate) SetNillableIsActive(v *bool) *PermissionUpdate {
 	return _u
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (_u *PermissionUpdate) AddRoleIDs(ids ...int) *PermissionUpdate {
-	_u.mutation.AddRoleIDs(ids...)
+// AddPermissionGroupIDs adds the "permission_groups" edge to the PermissionGroup entity by IDs.
+func (_u *PermissionUpdate) AddPermissionGroupIDs(ids ...int) *PermissionUpdate {
+	_u.mutation.AddPermissionGroupIDs(ids...)
 	return _u
 }
 
-// AddRoles adds the "roles" edges to the Role entity.
-func (_u *PermissionUpdate) AddRoles(v ...*Role) *PermissionUpdate {
+// AddPermissionGroups adds the "permission_groups" edges to the PermissionGroup entity.
+func (_u *PermissionUpdate) AddPermissionGroups(v ...*PermissionGroup) *PermissionUpdate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.AddRoleIDs(ids...)
+	return _u.AddPermissionGroupIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
@@ -131,25 +131,25 @@ func (_u *PermissionUpdate) Mutation() *PermissionMutation {
 	return _u.mutation
 }
 
-// ClearRoles clears all "roles" edges to the Role entity.
-func (_u *PermissionUpdate) ClearRoles() *PermissionUpdate {
-	_u.mutation.ClearRoles()
+// ClearPermissionGroups clears all "permission_groups" edges to the PermissionGroup entity.
+func (_u *PermissionUpdate) ClearPermissionGroups() *PermissionUpdate {
+	_u.mutation.ClearPermissionGroups()
 	return _u
 }
 
-// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (_u *PermissionUpdate) RemoveRoleIDs(ids ...int) *PermissionUpdate {
-	_u.mutation.RemoveRoleIDs(ids...)
+// RemovePermissionGroupIDs removes the "permission_groups" edge to PermissionGroup entities by IDs.
+func (_u *PermissionUpdate) RemovePermissionGroupIDs(ids ...int) *PermissionUpdate {
+	_u.mutation.RemovePermissionGroupIDs(ids...)
 	return _u
 }
 
-// RemoveRoles removes "roles" edges to Role entities.
-func (_u *PermissionUpdate) RemoveRoles(v ...*Role) *PermissionUpdate {
+// RemovePermissionGroups removes "permission_groups" edges to PermissionGroup entities.
+func (_u *PermissionUpdate) RemovePermissionGroups(v ...*PermissionGroup) *PermissionUpdate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.RemoveRoleIDs(ids...)
+	return _u.RemovePermissionGroupIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -241,28 +241,28 @@ func (_u *PermissionUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(permission.FieldIsActive, field.TypeBool, value)
 	}
-	if _u.mutation.RolesCleared() {
+	if _u.mutation.PermissionGroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   permission.RolesTable,
-			Columns: permission.RolesPrimaryKey,
+			Table:   permission.PermissionGroupsTable,
+			Columns: permission.PermissionGroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(permissiongroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
+	if nodes := _u.mutation.RemovedPermissionGroupsIDs(); len(nodes) > 0 && !_u.mutation.PermissionGroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   permission.RolesTable,
-			Columns: permission.RolesPrimaryKey,
+			Table:   permission.PermissionGroupsTable,
+			Columns: permission.PermissionGroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(permissiongroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -270,15 +270,15 @@ func (_u *PermissionUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.PermissionGroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   permission.RolesTable,
-			Columns: permission.RolesPrimaryKey,
+			Table:   permission.PermissionGroupsTable,
+			Columns: permission.PermissionGroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(permissiongroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -388,19 +388,19 @@ func (_u *PermissionUpdateOne) SetNillableIsActive(v *bool) *PermissionUpdateOne
 	return _u
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (_u *PermissionUpdateOne) AddRoleIDs(ids ...int) *PermissionUpdateOne {
-	_u.mutation.AddRoleIDs(ids...)
+// AddPermissionGroupIDs adds the "permission_groups" edge to the PermissionGroup entity by IDs.
+func (_u *PermissionUpdateOne) AddPermissionGroupIDs(ids ...int) *PermissionUpdateOne {
+	_u.mutation.AddPermissionGroupIDs(ids...)
 	return _u
 }
 
-// AddRoles adds the "roles" edges to the Role entity.
-func (_u *PermissionUpdateOne) AddRoles(v ...*Role) *PermissionUpdateOne {
+// AddPermissionGroups adds the "permission_groups" edges to the PermissionGroup entity.
+func (_u *PermissionUpdateOne) AddPermissionGroups(v ...*PermissionGroup) *PermissionUpdateOne {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.AddRoleIDs(ids...)
+	return _u.AddPermissionGroupIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
@@ -408,25 +408,25 @@ func (_u *PermissionUpdateOne) Mutation() *PermissionMutation {
 	return _u.mutation
 }
 
-// ClearRoles clears all "roles" edges to the Role entity.
-func (_u *PermissionUpdateOne) ClearRoles() *PermissionUpdateOne {
-	_u.mutation.ClearRoles()
+// ClearPermissionGroups clears all "permission_groups" edges to the PermissionGroup entity.
+func (_u *PermissionUpdateOne) ClearPermissionGroups() *PermissionUpdateOne {
+	_u.mutation.ClearPermissionGroups()
 	return _u
 }
 
-// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (_u *PermissionUpdateOne) RemoveRoleIDs(ids ...int) *PermissionUpdateOne {
-	_u.mutation.RemoveRoleIDs(ids...)
+// RemovePermissionGroupIDs removes the "permission_groups" edge to PermissionGroup entities by IDs.
+func (_u *PermissionUpdateOne) RemovePermissionGroupIDs(ids ...int) *PermissionUpdateOne {
+	_u.mutation.RemovePermissionGroupIDs(ids...)
 	return _u
 }
 
-// RemoveRoles removes "roles" edges to Role entities.
-func (_u *PermissionUpdateOne) RemoveRoles(v ...*Role) *PermissionUpdateOne {
+// RemovePermissionGroups removes "permission_groups" edges to PermissionGroup entities.
+func (_u *PermissionUpdateOne) RemovePermissionGroups(v ...*PermissionGroup) *PermissionUpdateOne {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.RemoveRoleIDs(ids...)
+	return _u.RemovePermissionGroupIDs(ids...)
 }
 
 // Where appends a list predicates to the PermissionUpdate builder.
@@ -548,28 +548,28 @@ func (_u *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission, 
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(permission.FieldIsActive, field.TypeBool, value)
 	}
-	if _u.mutation.RolesCleared() {
+	if _u.mutation.PermissionGroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   permission.RolesTable,
-			Columns: permission.RolesPrimaryKey,
+			Table:   permission.PermissionGroupsTable,
+			Columns: permission.PermissionGroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(permissiongroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
+	if nodes := _u.mutation.RemovedPermissionGroupsIDs(); len(nodes) > 0 && !_u.mutation.PermissionGroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   permission.RolesTable,
-			Columns: permission.RolesPrimaryKey,
+			Table:   permission.PermissionGroupsTable,
+			Columns: permission.PermissionGroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(permissiongroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -577,15 +577,15 @@ func (_u *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.PermissionGroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   permission.RolesTable,
-			Columns: permission.RolesPrimaryKey,
+			Table:   permission.PermissionGroupsTable,
+			Columns: permission.PermissionGroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(permissiongroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -32,6 +32,7 @@ func SetupRouter(
 	authService *services.AuthService,
 	roomService *services.RoomService,
 	buildingService *services.BuildingService,
+	meterItemService *services.MeterItemService,
 	rbacService *services.RBACService,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
@@ -46,6 +47,7 @@ func SetupRouter(
 			),
 			routers.BuildingGroupRouter(buildingService),
 			routers.RoomGroupRouter(roomService),
+			routers.MeterItemGroupRouter(meterItemService),
 			routers.AdminGroupRouter(rbacService),
 		),
 	)

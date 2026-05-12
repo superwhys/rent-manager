@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
-	"github.com/superwhys/rent-manager-server/internal/ent/role"
+	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 )
 
 // PermissionCreate is the builder for creating a Permission entity.
@@ -95,19 +95,19 @@ func (_c *PermissionCreate) SetNillableIsActive(v *bool) *PermissionCreate {
 	return _c
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (_c *PermissionCreate) AddRoleIDs(ids ...int) *PermissionCreate {
-	_c.mutation.AddRoleIDs(ids...)
+// AddPermissionGroupIDs adds the "permission_groups" edge to the PermissionGroup entity by IDs.
+func (_c *PermissionCreate) AddPermissionGroupIDs(ids ...int) *PermissionCreate {
+	_c.mutation.AddPermissionGroupIDs(ids...)
 	return _c
 }
 
-// AddRoles adds the "roles" edges to the Role entity.
-func (_c *PermissionCreate) AddRoles(v ...*Role) *PermissionCreate {
+// AddPermissionGroups adds the "permission_groups" edges to the PermissionGroup entity.
+func (_c *PermissionCreate) AddPermissionGroups(v ...*PermissionGroup) *PermissionCreate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _c.AddRoleIDs(ids...)
+	return _c.AddPermissionGroupIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
@@ -248,15 +248,15 @@ func (_c *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 		_spec.SetField(permission.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if nodes := _c.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.PermissionGroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   permission.RolesTable,
-			Columns: permission.RolesPrimaryKey,
+			Table:   permission.PermissionGroupsTable,
+			Columns: permission.PermissionGroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(permissiongroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

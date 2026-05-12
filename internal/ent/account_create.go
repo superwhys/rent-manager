@@ -11,10 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
-	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
 
 // AccountCreate is the builder for creating a Account entity.
@@ -66,6 +64,20 @@ func (_c *AccountCreate) SetNillableDeletedAt(v *time.Time) *AccountCreate {
 	return _c
 }
 
+// SetOrganizationID sets the "organization_id" field.
+func (_c *AccountCreate) SetOrganizationID(v int) *AccountCreate {
+	_c.mutation.SetOrganizationID(v)
+	return _c
+}
+
+// SetNillableOrganizationID sets the "organization_id" field if the given value is not nil.
+func (_c *AccountCreate) SetNillableOrganizationID(v *int) *AccountCreate {
+	if v != nil {
+		_c.SetOrganizationID(*v)
+	}
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *AccountCreate) SetName(v string) *AccountCreate {
 	_c.mutation.SetName(v)
@@ -104,49 +116,9 @@ func (_c *AccountCreate) SetNillableIsActive(v *bool) *AccountCreate {
 	return _c
 }
 
-// AddBuildingIDs adds the "buildings" edge to the Building entity by IDs.
-func (_c *AccountCreate) AddBuildingIDs(ids ...int) *AccountCreate {
-	_c.mutation.AddBuildingIDs(ids...)
-	return _c
-}
-
-// AddBuildings adds the "buildings" edges to the Building entity.
-func (_c *AccountCreate) AddBuildings(v ...*Building) *AccountCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddBuildingIDs(ids...)
-}
-
-// AddRoomTypeIDs adds the "room_types" edge to the RoomType entity by IDs.
-func (_c *AccountCreate) AddRoomTypeIDs(ids ...int) *AccountCreate {
-	_c.mutation.AddRoomTypeIDs(ids...)
-	return _c
-}
-
-// AddRoomTypes adds the "room_types" edges to the RoomType entity.
-func (_c *AccountCreate) AddRoomTypes(v ...*RoomType) *AccountCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddRoomTypeIDs(ids...)
-}
-
-// AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by IDs.
-func (_c *AccountCreate) AddMeterItemIDs(ids ...int) *AccountCreate {
-	_c.mutation.AddMeterItemIDs(ids...)
-	return _c
-}
-
-// AddMeterItems adds the "meter_items" edges to the MeterItem entity.
-func (_c *AccountCreate) AddMeterItems(v ...*MeterItem) *AccountCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddMeterItemIDs(ids...)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_c *AccountCreate) SetOrganization(v *Organization) *AccountCreate {
+	return _c.SetOrganizationID(v.ID)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -314,52 +286,21 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		_spec.SetField(account.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if nodes := _c.mutation.BuildingsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.BuildingsTable,
-			Columns: []string{account.BuildingsColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   account.OrganizationTable,
+			Columns: []string{account.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.RoomTypesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.RoomTypesTable,
-			Columns: []string{account.RoomTypesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.MeterItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.MeterItemsTable,
-			Columns: []string{account.MeterItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
+		_node.OrganizationID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.RolesIDs(); len(nodes) > 0 {

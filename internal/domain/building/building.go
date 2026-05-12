@@ -7,7 +7,7 @@ import (
 
 type Building struct {
 	ID                  int
-	AccountID           int
+	OrganizationID      int
 	Name                string
 	Address             string
 	City                string
@@ -29,7 +29,7 @@ type MeterItem struct {
 
 func NewBuilding(params CreateParams) (*Building, error) {
 	building := &Building{
-		AccountID:           params.AccountID,
+		OrganizationID:      params.OrganizationID,
 		Name:                strings.TrimSpace(params.Name),
 		Address:             strings.TrimSpace(params.Address),
 		City:                strings.TrimSpace(params.City),
@@ -44,7 +44,7 @@ func NewBuilding(params CreateParams) (*Building, error) {
 
 func (b *Building) Update(params UpdateParams) error {
 	b.ID = params.ID
-	b.AccountID = params.AccountID
+	b.OrganizationID = params.OrganizationID
 	b.Name = strings.TrimSpace(params.Name)
 	b.Address = strings.TrimSpace(params.Address)
 	b.City = strings.TrimSpace(params.City)
@@ -54,8 +54,8 @@ func (b *Building) Update(params UpdateParams) error {
 }
 
 func (b *Building) Validate() error {
-	if b.AccountID <= 0 {
-		return ErrAccountRequired
+	if b.OrganizationID <= 0 {
+		return ErrOrganizationRequired
 	}
 	if b.Name == "" {
 		return ErrNameRequired

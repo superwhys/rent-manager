@@ -18,13 +18,8 @@ func NewBuildingService(repo domainbuilding.Repository, roomService *RoomService
 }
 
 func (s *BuildingService) CreateBuilding(ctx context.Context, cmd *requests.CreateBuildingCommand) (*domainbuilding.Building, error) {
-	accountID, err := AccountIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	building, err := domainbuilding.NewBuilding(domainbuilding.CreateParams{
-		AccountID:           accountID,
+		OrganizationID:      cmd.OrganizationID,
 		Name:                cmd.Name,
 		Address:             cmd.Address,
 		City:                cmd.City,
@@ -44,28 +39,18 @@ func (s *BuildingService) CreateBuilding(ctx context.Context, cmd *requests.Crea
 }
 
 func (s *BuildingService) ListBuildings(ctx context.Context, query *requests.ListBuildingsQuery) ([]*domainbuilding.Building, error) {
-	accountID, err := AccountIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	return s.repo.List(ctx, domainbuilding.ListQuery{
-		AccountID: accountID,
-		Name:      query.Name,
-		City:      query.City,
-		Province:  query.Province,
-		Limit:     query.Limit,
-		Offset:    query.Offset,
+		OrganizationID: query.OrganizationID,
+		Name:           query.Name,
+		City:           query.City,
+		Province:       query.Province,
+		Limit:          query.Limit,
+		Offset:         query.Offset,
 	})
 }
 
-func (s *BuildingService) GetBuilding(ctx context.Context, id int) (*domainbuilding.Building, error) {
-	accountID, err := AccountIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	building, err := s.repo.Get(ctx, accountID, id)
+func (s *BuildingService) GetBuilding(ctx context.Context, organizationID int, id int) (*domainbuilding.Building, error) {
+	building, err := s.repo.Get(ctx, organizationID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -74,13 +59,8 @@ func (s *BuildingService) GetBuilding(ctx context.Context, id int) (*domainbuild
 }
 
 func (s *BuildingService) UpdateBuilding(ctx context.Context, cmd *requests.UpdateBuildingCommand) (*domainbuilding.Building, error) {
-	accountID, err := AccountIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	building, err := domainbuilding.NewBuilding(domainbuilding.CreateParams{
-		AccountID:           accountID,
+		OrganizationID:      cmd.OrganizationID,
 		Name:                cmd.Name,
 		Address:             cmd.Address,
 		City:                cmd.City,
@@ -93,7 +73,7 @@ func (s *BuildingService) UpdateBuilding(ctx context.Context, cmd *requests.Upda
 
 	err = building.Update(domainbuilding.UpdateParams{
 		ID:                  cmd.BuildingID,
-		AccountID:           accountID,
+		OrganizationID:      cmd.OrganizationID,
 		Name:                cmd.Name,
 		Address:             cmd.Address,
 		City:                cmd.City,
@@ -112,32 +92,24 @@ func (s *BuildingService) UpdateBuilding(ctx context.Context, cmd *requests.Upda
 	return building, nil
 }
 
-func (s *BuildingService) DeleteBuilding(ctx context.Context, id int) error {
-	accountID, err := AccountIDFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	return s.repo.Delete(ctx, accountID, id)
+func (s *BuildingService) DeleteBuilding(ctx context.Context, organizationID int, id int) error {
+	return s.repo.Delete(ctx, organizationID, id)
 }
 
 func (s *BuildingService) CreateRoomInBuilding(ctx context.Context, cmd *requests.CreateRoomInBuildingCommand) (*domainroom.Room, error) {
-	accountID, err := AccountIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := s.repo.Get(ctx, accountID, cmd.BuildingID); err != nil {
+	if _, err := s.repo.Get(ctx, cmd.OrganizationID, cmd.BuildingID); err != nil {
 		return nil, err
 	}
 
 	room, err := s.roomService.CreateRoom(ctx, &requests.CreateRoomCommand{
-		RoomNo:     cmd.RoomNo,
-		Floor:      cmd.Floor,
-		Price:      cmd.Price,
-		Size:       cmd.Size,
-		BuildingID: cmd.BuildingID,
-		RoomTypeID: cmd.RoomTypeID,
+		OrganizationID: cmd.OrganizationID,
+		RoomNo:         cmd.RoomNo,
+		Floor:          cmd.Floor,
+		Price:          cmd.Price,
+		Size:           cmd.Size,
+		BuildingID:     cmd.BuildingID,
+		RoomTypeID:     cmd.RoomTypeID,
+		MeterItemIDs:   cmd.MeterItemIDs,
 	})
 	if err != nil {
 		return nil, err

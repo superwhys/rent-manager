@@ -9,7 +9,9 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
+	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
@@ -36,7 +38,7 @@ func init() {
 	// account.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	account.UpdateDefaultUpdatedAt = accountDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// accountDescName is the schema descriptor for name field.
-	accountDescName := accountFields[0].Descriptor()
+	accountDescName := accountFields[1].Descriptor()
 	// account.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	account.NameValidator = func() func(string) error {
 		validators := accountDescName.Validators
@@ -54,7 +56,7 @@ func init() {
 		}
 	}()
 	// accountDescEmail is the schema descriptor for email field.
-	accountDescEmail := accountFields[1].Descriptor()
+	accountDescEmail := accountFields[2].Descriptor()
 	// account.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	account.EmailValidator = func() func(string) error {
 		validators := accountDescEmail.Validators
@@ -72,7 +74,7 @@ func init() {
 		}
 	}()
 	// accountDescPassword is the schema descriptor for password field.
-	accountDescPassword := accountFields[2].Descriptor()
+	accountDescPassword := accountFields[3].Descriptor()
 	// account.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
 	account.PasswordValidator = func() func(string) error {
 		validators := accountDescPassword.Validators
@@ -90,7 +92,7 @@ func init() {
 		}
 	}()
 	// accountDescWechatOpenid is the schema descriptor for wechat_openid field.
-	accountDescWechatOpenid := accountFields[3].Descriptor()
+	accountDescWechatOpenid := accountFields[4].Descriptor()
 	// account.WechatOpenidValidator is a validator for the "wechat_openid" field. It is called by the builders before save.
 	account.WechatOpenidValidator = func() func(string) error {
 		validators := accountDescWechatOpenid.Validators
@@ -108,7 +110,7 @@ func init() {
 		}
 	}()
 	// accountDescIsActive is the schema descriptor for is_active field.
-	accountDescIsActive := accountFields[4].Descriptor()
+	accountDescIsActive := accountFields[5].Descriptor()
 	// account.DefaultIsActive holds the default value on creation for the is_active field.
 	account.DefaultIsActive = accountDescIsActive.Default.(bool)
 	buildingMixin := schema.Building{}.Mixin()
@@ -231,6 +233,43 @@ func init() {
 	meterreadingDescPeriodMonth := meterreadingFields[1].Descriptor()
 	// meterreading.PeriodMonthValidator is a validator for the "period_month" field. It is called by the builders before save.
 	meterreading.PeriodMonthValidator = meterreadingDescPeriodMonth.Validators[0].(func(string) error)
+	organizationMixin := schema.Organization{}.Mixin()
+	organizationMixinFields0 := organizationMixin[0].Fields()
+	_ = organizationMixinFields0
+	organizationFields := schema.Organization{}.Fields()
+	_ = organizationFields
+	// organizationDescCreatedAt is the schema descriptor for created_at field.
+	organizationDescCreatedAt := organizationMixinFields0[0].Descriptor()
+	// organization.DefaultCreatedAt holds the default value on creation for the created_at field.
+	organization.DefaultCreatedAt = organizationDescCreatedAt.Default.(func() time.Time)
+	// organizationDescUpdatedAt is the schema descriptor for updated_at field.
+	organizationDescUpdatedAt := organizationMixinFields0[1].Descriptor()
+	// organization.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	organization.DefaultUpdatedAt = organizationDescUpdatedAt.Default.(func() time.Time)
+	// organization.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	organization.UpdateDefaultUpdatedAt = organizationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// organizationDescName is the schema descriptor for name field.
+	organizationDescName := organizationFields[0].Descriptor()
+	// organization.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	organization.NameValidator = func() func(string) error {
+		validators := organizationDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// organizationDescIsActive is the schema descriptor for is_active field.
+	organizationDescIsActive := organizationFields[1].Descriptor()
+	// organization.DefaultIsActive holds the default value on creation for the is_active field.
+	organization.DefaultIsActive = organizationDescIsActive.Default.(bool)
 	permissionMixin := schema.Permission{}.Mixin()
 	permissionMixinFields0 := permissionMixin[0].Fields()
 	_ = permissionMixinFields0
@@ -304,6 +343,69 @@ func init() {
 	permissionDescIsActive := permissionFields[3].Descriptor()
 	// permission.DefaultIsActive holds the default value on creation for the is_active field.
 	permission.DefaultIsActive = permissionDescIsActive.Default.(bool)
+	permissiongroupMixin := schema.PermissionGroup{}.Mixin()
+	permissiongroupMixinFields0 := permissiongroupMixin[0].Fields()
+	_ = permissiongroupMixinFields0
+	permissiongroupFields := schema.PermissionGroup{}.Fields()
+	_ = permissiongroupFields
+	// permissiongroupDescCreatedAt is the schema descriptor for created_at field.
+	permissiongroupDescCreatedAt := permissiongroupMixinFields0[0].Descriptor()
+	// permissiongroup.DefaultCreatedAt holds the default value on creation for the created_at field.
+	permissiongroup.DefaultCreatedAt = permissiongroupDescCreatedAt.Default.(func() time.Time)
+	// permissiongroupDescUpdatedAt is the schema descriptor for updated_at field.
+	permissiongroupDescUpdatedAt := permissiongroupMixinFields0[1].Descriptor()
+	// permissiongroup.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	permissiongroup.DefaultUpdatedAt = permissiongroupDescUpdatedAt.Default.(func() time.Time)
+	// permissiongroup.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	permissiongroup.UpdateDefaultUpdatedAt = permissiongroupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// permissiongroupDescCode is the schema descriptor for code field.
+	permissiongroupDescCode := permissiongroupFields[0].Descriptor()
+	// permissiongroup.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	permissiongroup.CodeValidator = func() func(string) error {
+		validators := permissiongroupDescCode.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(code string) error {
+			for _, fn := range fns {
+				if err := fn(code); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// permissiongroupDescName is the schema descriptor for name field.
+	permissiongroupDescName := permissiongroupFields[1].Descriptor()
+	// permissiongroup.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	permissiongroup.NameValidator = func() func(string) error {
+		validators := permissiongroupDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// permissiongroupDescDescription is the schema descriptor for description field.
+	permissiongroupDescDescription := permissiongroupFields[2].Descriptor()
+	// permissiongroup.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	permissiongroup.DescriptionValidator = permissiongroupDescDescription.Validators[0].(func(string) error)
+	// permissiongroupDescSortOrder is the schema descriptor for sort_order field.
+	permissiongroupDescSortOrder := permissiongroupFields[3].Descriptor()
+	// permissiongroup.DefaultSortOrder holds the default value on creation for the sort_order field.
+	permissiongroup.DefaultSortOrder = permissiongroupDescSortOrder.Default.(int)
+	// permissiongroupDescIsActive is the schema descriptor for is_active field.
+	permissiongroupDescIsActive := permissiongroupFields[4].Descriptor()
+	// permissiongroup.DefaultIsActive holds the default value on creation for the is_active field.
+	permissiongroup.DefaultIsActive = permissiongroupDescIsActive.Default.(bool)
 	roleMixin := schema.Role{}.Mixin()
 	roleMixinFields0 := roleMixin[0].Fields()
 	_ = roleMixinFields0
@@ -320,7 +422,7 @@ func init() {
 	// role.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	role.UpdateDefaultUpdatedAt = roleDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// roleDescName is the schema descriptor for name field.
-	roleDescName := roleFields[0].Descriptor()
+	roleDescName := roleFields[1].Descriptor()
 	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	role.NameValidator = func() func(string) error {
 		validators := roleDescName.Validators
@@ -337,8 +439,12 @@ func init() {
 			return nil
 		}
 	}()
+	// roleDescIsDefaultOwner is the schema descriptor for is_default_owner field.
+	roleDescIsDefaultOwner := roleFields[2].Descriptor()
+	// role.DefaultIsDefaultOwner holds the default value on creation for the is_default_owner field.
+	role.DefaultIsDefaultOwner = roleDescIsDefaultOwner.Default.(bool)
 	// roleDescIsActive is the schema descriptor for is_active field.
-	roleDescIsActive := roleFields[1].Descriptor()
+	roleDescIsActive := roleFields[3].Descriptor()
 	// role.DefaultIsActive holds the default value on creation for the is_active field.
 	role.DefaultIsActive = roleDescIsActive.Default.(bool)
 	roomMixin := schema.Room{}.Mixin()

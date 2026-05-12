@@ -1,7 +1,7 @@
 package building
 
 type CreateParams struct {
-	AccountID           int
+	OrganizationID      int
 	Name                string
 	Address             string
 	City                string
@@ -11,7 +11,7 @@ type CreateParams struct {
 
 type UpdateParams struct {
 	ID                  int
-	AccountID           int
+	OrganizationID      int
 	Name                string
 	Address             string
 	City                string
@@ -20,10 +20,10 @@ type UpdateParams struct {
 }
 
 type ListQuery struct {
-	AccountID int
-	Name      string
-	City      string
-	Province  string
-	Limit     int
-	Offset    int
+	OrganizationID int
+	Name           string
+	City           string
+	Province       string
+	Limit          int
+	Offset         int
 }

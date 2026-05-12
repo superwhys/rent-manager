@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 )
@@ -22,13 +22,13 @@ import (
 // MeterItemQuery is the builder for querying MeterItem entities.
 type MeterItemQuery struct {
 	config
-	ctx          *QueryContext
-	order        []meteritem.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.MeterItem
-	withAccount  *AccountQuery
-	withRooms    *RoomQuery
-	withBuilding *BuildingQuery
+	ctx              *QueryContext
+	order            []meteritem.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.MeterItem
+	withOrganization *OrganizationQuery
+	withRooms        *RoomQuery
+	withBuilding     *BuildingQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -65,9 +65,9 @@ func (_q *MeterItemQuery) Order(o ...meteritem.OrderOption) *MeterItemQuery {
 	return _q
 }
 
-// QueryAccount chains the current query on the "account" edge.
-func (_q *MeterItemQuery) QueryAccount() *AccountQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+// QueryOrganization chains the current query on the "organization" edge.
+func (_q *MeterItemQuery) QueryOrganization() *OrganizationQuery {
+	query := (&OrganizationClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -78,8 +78,8 @@ func (_q *MeterItemQuery) QueryAccount() *AccountQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(meteritem.Table, meteritem.FieldID, selector),
-			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, meteritem.AccountTable, meteritem.AccountColumn),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, meteritem.OrganizationTable, meteritem.OrganizationColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -318,28 +318,28 @@ func (_q *MeterItemQuery) Clone() *MeterItemQuery {
 		return nil
 	}
 	return &MeterItemQuery{
-		config:       _q.config,
-		ctx:          _q.ctx.Clone(),
-		order:        append([]meteritem.OrderOption{}, _q.order...),
-		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.MeterItem{}, _q.predicates...),
-		withAccount:  _q.withAccount.Clone(),
-		withRooms:    _q.withRooms.Clone(),
-		withBuilding: _q.withBuilding.Clone(),
+		config:           _q.config,
+		ctx:              _q.ctx.Clone(),
+		order:            append([]meteritem.OrderOption{}, _q.order...),
+		inters:           append([]Interceptor{}, _q.inters...),
+		predicates:       append([]predicate.MeterItem{}, _q.predicates...),
+		withOrganization: _q.withOrganization.Clone(),
+		withRooms:        _q.withRooms.Clone(),
+		withBuilding:     _q.withBuilding.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithAccount tells the query-builder to eager-load the nodes that are connected to
-// the "account" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *MeterItemQuery) WithAccount(opts ...func(*AccountQuery)) *MeterItemQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+// WithOrganization tells the query-builder to eager-load the nodes that are connected to
+// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *MeterItemQuery) WithOrganization(opts ...func(*OrganizationQuery)) *MeterItemQuery {
+	query := (&OrganizationClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withAccount = query
+	_q.withOrganization = query
 	return _q
 }
 
@@ -444,7 +444,7 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 		nodes       = []*MeterItem{}
 		_spec       = _q.querySpec()
 		loadedTypes = [3]bool{
-			_q.withAccount != nil,
+			_q.withOrganization != nil,
 			_q.withRooms != nil,
 			_q.withBuilding != nil,
 		}
@@ -467,9 +467,9 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withAccount; query != nil {
-		if err := _q.loadAccount(ctx, query, nodes, nil,
-			func(n *MeterItem, e *Account) { n.Edges.Account = e }); err != nil {
+	if query := _q.withOrganization; query != nil {
+		if err := _q.loadOrganization(ctx, query, nodes, nil,
+			func(n *MeterItem, e *Organization) { n.Edges.Organization = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -490,11 +490,11 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 	return nodes, nil
 }
 
-func (_q *MeterItemQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*MeterItem, init func(*MeterItem), assign func(*MeterItem, *Account)) error {
+func (_q *MeterItemQuery) loadOrganization(ctx context.Context, query *OrganizationQuery, nodes []*MeterItem, init func(*MeterItem), assign func(*MeterItem, *Organization)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*MeterItem)
 	for i := range nodes {
-		fk := nodes[i].AccountID
+		fk := nodes[i].OrganizationID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -503,7 +503,7 @@ func (_q *MeterItemQuery) loadAccount(ctx context.Context, query *AccountQuery, 
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(account.IDIn(ids...))
+	query.Where(organization.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -511,7 +511,7 @@ func (_q *MeterItemQuery) loadAccount(ctx context.Context, query *AccountQuery, 
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "account_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "organization_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -667,8 +667,8 @@ func (_q *MeterItemQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withAccount != nil {
-			_spec.Node.AddColumnOnce(meteritem.FieldAccountID)
+		if _q.withOrganization != nil {
+			_spec.Node.AddColumnOnce(meteritem.FieldOrganizationID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

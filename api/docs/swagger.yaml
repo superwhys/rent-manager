@@ -17,6 +17,16 @@ definitions:
         type: array
       message: {}
     type: object
+  ginutils.Ret-array_response_MeterItemResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.MeterItemResponse'
+        type: array
+      message: {}
+    type: object
   ginutils.Ret-array_response_PermissionResponse:
     properties:
       code:
@@ -55,6 +65,14 @@ definitions:
         $ref: '#/definitions/response.BuildingResponse'
       message: {}
     type: object
+  ginutils.Ret-response_MeterItemResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.MeterItemResponse'
+      message: {}
+    type: object
   ginutils.Ret-response_RoomResponse:
     properties:
       code:
@@ -84,6 +102,9 @@ definitions:
       accountID:
         minimum: 1
         type: integer
+      organization_id:
+        minimum: 1
+        type: integer
       role_ids:
         items:
           type: integer
@@ -91,6 +112,7 @@ definitions:
         type: array
     required:
     - accountID
+    - organization_id
     - role_ids
     type: object
   requests.CreateBuildingCommand:
@@ -108,6 +130,9 @@ definitions:
       name:
         maxLength: 255
         type: string
+      organization_id:
+        minimum: 1
+        type: integer
       province:
         maxLength: 255
         type: string
@@ -115,7 +140,31 @@ definitions:
     - address
     - city
     - name
+    - organization_id
     - province
+    type: object
+  requests.CreateMeterItemCommand:
+    properties:
+      calc_type:
+        enum:
+        - DIFFERENCE
+        - DIRECT
+        type: string
+      code:
+        maxLength: 255
+        type: string
+      organization_id:
+        minimum: 1
+        type: integer
+      remark:
+        type: string
+      unit:
+        maxLength: 255
+        type: string
+    required:
+    - code
+    - organization_id
+    - unit
     type: object
   requests.CreatePermissionItem:
     properties:
@@ -142,6 +191,8 @@ definitions:
     type: object
   requests.CreateRoleItem:
     properties:
+      is_default_owner:
+        type: boolean
       name:
         type: string
     required:
@@ -149,12 +200,16 @@ definitions:
     type: object
   requests.CreateRolesCommand:
     properties:
+      organization_id:
+        minimum: 1
+        type: integer
       roles:
         items:
           $ref: '#/definitions/requests.CreateRoleItem'
         minItems: 1
         type: array
     required:
+    - organization_id
     - roles
     type: object
   requests.CreateRoomCommand:
@@ -163,6 +218,13 @@ definitions:
         minimum: 1
         type: integer
       floor:
+        type: integer
+      meter_item_ids:
+        items:
+          type: integer
+        type: array
+      organization_id:
+        minimum: 1
         type: integer
       price:
         minimum: 1
@@ -176,6 +238,7 @@ definitions:
         type: integer
     required:
     - building_id
+    - organization_id
     - price
     - room_no
     - room_type_id
@@ -186,6 +249,13 @@ definitions:
         minimum: 1
         type: integer
       floor:
+        type: integer
+      meter_item_ids:
+        items:
+          type: integer
+        type: array
+      organization_id:
+        minimum: 1
         type: integer
       price:
         minimum: 1
@@ -200,6 +270,7 @@ definitions:
         type: integer
     required:
     - buildingID
+    - organization_id
     - price
     - room_no
     - room_type_id
@@ -209,20 +280,6 @@ definitions:
     properties:
       refresh_token:
         type: string
-    type: object
-  requests.RolePermissionsCommand:
-    properties:
-      permission_ids:
-        items:
-          type: integer
-        minItems: 1
-        type: array
-      roleID:
-        minimum: 1
-        type: integer
-    required:
-    - permission_ids
-    - roleID
     type: object
   requests.UpdateBuildingCommand:
     properties:
@@ -242,6 +299,9 @@ definitions:
       name:
         maxLength: 255
         type: string
+      organization_id:
+        minimum: 1
+        type: integer
       province:
         maxLength: 255
         type: string
@@ -250,7 +310,35 @@ definitions:
     - buildingID
     - city
     - name
+    - organization_id
     - province
+    type: object
+  requests.UpdateMeterItemCommand:
+    properties:
+      calc_type:
+        enum:
+        - DIFFERENCE
+        - DIRECT
+        type: string
+      code:
+        maxLength: 255
+        type: string
+      meterItemID:
+        minimum: 1
+        type: integer
+      organization_id:
+        minimum: 1
+        type: integer
+      remark:
+        type: string
+      unit:
+        maxLength: 255
+        type: string
+    required:
+    - code
+    - meterItemID
+    - organization_id
+    - unit
     type: object
   requests.UpdateRoomCommand:
     properties:
@@ -260,6 +348,13 @@ definitions:
         type: integer
       is_active:
         type: boolean
+      meter_item_ids:
+        items:
+          type: integer
+        type: array
+      organization_id:
+        minimum: 1
+        type: integer
       price:
         type: integer
       room_no:
@@ -272,6 +367,7 @@ definitions:
       size:
         type: integer
     required:
+    - organization_id
     - roomID
     type: object
   requests.WechatLoginReq:
@@ -296,8 +392,6 @@ definitions:
     type: object
   response.BuildingResponse:
     properties:
-      account_id:
-        type: integer
       address:
         type: string
       city:
@@ -310,7 +404,26 @@ definitions:
         type: integer
       name:
         type: string
+      organization_id:
+        type: integer
       province:
+        type: string
+    type: object
+  response.MeterItemResponse:
+    properties:
+      calc_type:
+        type: string
+      code:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      organization_id:
+        type: integer
+      remark:
+        type: string
+      unit:
         type: string
     type: object
   response.PermissionResponse:
@@ -332,8 +445,12 @@ definitions:
         type: integer
       is_active:
         type: boolean
+      is_default_owner:
+        type: boolean
       name:
         type: string
+      organization_id:
+        type: integer
     type: object
   response.RoomResponse:
     properties:
@@ -345,6 +462,10 @@ definitions:
         type: integer
       is_active:
         type: boolean
+      meter_items:
+        items:
+          $ref: '#/definitions/response.MeterItemResponse'
+        type: array
       price:
         type: integer
       room_no:
@@ -392,7 +513,7 @@ paths:
             $ref: '#/definitions/ginutils.Ret-string'
       security:
       - BearerAuth: []
-      summary: 给账号分配角色
+      summary: 给组织内账号分配角色
       tags:
       - admin
   /admin/permissions/batch:
@@ -416,61 +537,6 @@ paths:
       security:
       - BearerAuth: []
       summary: 批量创建权限
-      tags:
-      - admin
-  /admin/roles/{role_id}/permissions:
-    delete:
-      consumes:
-      - application/json
-      parameters:
-      - description: 角色ID
-        in: path
-        name: role_id
-        required: true
-        type: integer
-      - description: 权限ID列表
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/requests.RolePermissionsCommand'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ginutils.Ret-string'
-      security:
-      - BearerAuth: []
-      summary: 删除角色的部分权限
-      tags:
-      - admin
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: 角色ID
-        in: path
-        name: role_id
-        required: true
-        type: integer
-      - description: 权限ID列表
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/requests.RolePermissionsCommand'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ginutils.Ret-string'
-      security:
-      - BearerAuth: []
-      summary: 给角色添加权限
       tags:
       - admin
   /admin/roles/batch:
@@ -555,6 +621,11 @@ paths:
         type: string
       - in: query
         name: offset
+        type: integer
+      - in: query
+        minimum: 1
+        name: organization_id
+        required: true
         type: integer
       - in: query
         name: province
@@ -692,6 +763,97 @@ paths:
       summary: 在楼栋下创建房间
       tags:
       - Building
+  /meter-items:
+    get:
+      description: 查询当前账号的抄表项列表
+      parameters:
+      - enum:
+        - DIFFERENCE
+        - DIRECT
+        in: query
+        name: calc_type
+        type: string
+      - in: query
+        name: code
+        type: string
+      - in: query
+        name: is_system
+        type: boolean
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: offset
+        type: integer
+      - in: query
+        minimum: 1
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_MeterItemResponse'
+      security:
+      - BearerAuth: []
+      summary: 查询抄表项列表
+      tags:
+      - MeterItem
+    post:
+      consumes:
+      - application/json
+      description: 为当前账号创建抄表项
+      parameters:
+      - description: 创建抄表项请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateMeterItemCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_MeterItemResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建抄表项
+      tags:
+      - MeterItem
+  /meter-items/{meter_item_id}:
+    put:
+      consumes:
+      - application/json
+      description: 更新当前账号的抄表项
+      parameters:
+      - description: 抄表项 ID
+        in: path
+        name: meter_item_id
+        required: true
+        type: integer
+      - description: 更新抄表项请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UpdateMeterItemCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_MeterItemResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新抄表项
+      tags:
+      - MeterItem
   /rooms:
     get:
       description: 查询房间列表
@@ -711,6 +873,11 @@ paths:
         name: offset
         type: integer
       - in: query
+        minimum: 1
+        name: organization_id
+        required: true
+        type: integer
+      - in: query
         name: room_type_id
         type: integer
       produces:
@@ -720,6 +887,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_response_RoomResponse'
+      security:
+      - BearerAuth: []
       summary: 查询房间列表
       tags:
       - Room
@@ -741,12 +910,20 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+      security:
+      - BearerAuth: []
       summary: 创建房间
       tags:
       - Room
   /rooms/{room_id}:
     delete:
       description: 删除房间
+      parameters:
+      - description: 房间 ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -754,11 +931,19 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 删除房间
       tags:
       - Room
     get:
       description: 查询单个房间
+      parameters:
+      - description: 房间 ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -766,6 +951,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+      security:
+      - BearerAuth: []
       summary: 查询房间
       tags:
       - Room
@@ -774,6 +961,11 @@ paths:
       - application/json
       description: 更新房间
       parameters:
+      - description: 房间 ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
       - description: 更新房间请求体
         in: body
         name: request
@@ -787,6 +979,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+      security:
+      - BearerAuth: []
       summary: 更新房间
       tags:
       - Room

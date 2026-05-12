@@ -16,7 +16,9 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
+	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
@@ -80,14 +82,16 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			account.Table:      account.ValidColumn,
-			building.Table:     building.ValidColumn,
-			meteritem.Table:    meteritem.ValidColumn,
-			meterreading.Table: meterreading.ValidColumn,
-			permission.Table:   permission.ValidColumn,
-			role.Table:         role.ValidColumn,
-			room.Table:         room.ValidColumn,
-			roomtype.Table:     roomtype.ValidColumn,
+			account.Table:         account.ValidColumn,
+			building.Table:        building.ValidColumn,
+			meteritem.Table:       meteritem.ValidColumn,
+			meterreading.Table:    meterreading.ValidColumn,
+			organization.Table:    organization.ValidColumn,
+			permission.Table:      permission.ValidColumn,
+			permissiongroup.Table: permissiongroup.ValidColumn,
+			role.Table:            role.ValidColumn,
+			room.Table:            room.ValidColumn,
+			roomtype.Table:        roomtype.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

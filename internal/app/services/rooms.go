@@ -19,25 +19,26 @@ func NewRoomService(repo domainroom.Repository) *RoomService {
 
 func (s *RoomService) CreateRoom(ctx context.Context, cmd *requests.CreateRoomCommand) (*domainroom.Room, error) {
 	room, err := domainroom.NewRoom(domainroom.CreateParams{
-		RoomNo:     cmd.RoomNo,
-		Floor:      cmd.Floor,
-		Price:      cmd.Price,
-		Size:       cmd.Size,
-		BuildingID: cmd.BuildingID,
-		RoomTypeID: cmd.RoomTypeID,
+		RoomNo:       cmd.RoomNo,
+		Floor:        cmd.Floor,
+		Price:        cmd.Price,
+		Size:         cmd.Size,
+		BuildingID:   cmd.BuildingID,
+		RoomTypeID:   cmd.RoomTypeID,
+		MeterItemIDs: cmd.MeterItemIDs,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return s.repo.Create(ctx, room)
+	return s.repo.Create(ctx, cmd.OrganizationID, room)
 }
 
-func (s *RoomService) GetRoom(ctx context.Context, id int) (*domainroom.Room, error) {
-	return s.repo.Get(ctx, id)
+func (s *RoomService) GetRoom(ctx context.Context, organizationID int, id int) (*domainroom.Room, error) {
+	return s.repo.Get(ctx, organizationID, id)
 }
 
 func (s *RoomService) ListRooms(ctx context.Context, query *requests.ListRoomsQuery) ([]*domainroom.Room, error) {
-	return s.repo.List(ctx, domainroom.ListQuery{
+	return s.repo.List(ctx, query.OrganizationID, domainroom.ListQuery{
 		BuildingID: query.BuildingID,
 		RoomTypeID: ptrx.IntValue(query.RoomTypeID),
 		IsActive:   query.IsActive,
@@ -47,25 +48,26 @@ func (s *RoomService) ListRooms(ctx context.Context, query *requests.ListRoomsQu
 }
 
 func (s *RoomService) UpdateRoom(ctx context.Context, cmd *requests.UpdateRoomCommand) (*domainroom.Room, error) {
-	room, err := s.repo.Get(ctx, cmd.RoomID)
+	room, err := s.repo.Get(ctx, cmd.OrganizationID, cmd.RoomID)
 	if err != nil {
 		return nil, err
 	}
 	if err := room.Update(domainroom.UpdateParams{
-		ID:         cmd.RoomID,
-		RoomNo:     cmd.RoomNo,
-		Floor:      cmd.Floor,
-		Price:      cmd.Price,
-		Size:       cmd.Size,
-		BuildingID: cmd.BuildingID,
-		RoomTypeID: cmd.RoomTypeID,
-		IsActive:   cmd.IsActive,
+		ID:           cmd.RoomID,
+		RoomNo:       cmd.RoomNo,
+		Floor:        cmd.Floor,
+		Price:        cmd.Price,
+		Size:         cmd.Size,
+		BuildingID:   cmd.BuildingID,
+		RoomTypeID:   cmd.RoomTypeID,
+		IsActive:     cmd.IsActive,
+		MeterItemIDs: cmd.MeterItemIDs,
 	}); err != nil {
 		return nil, err
 	}
-	return s.repo.Update(ctx, room)
+	return s.repo.Update(ctx, cmd.OrganizationID, room)
 }
 
-func (s *RoomService) DeleteRoom(ctx context.Context, id int) error {
-	return s.repo.Delete(ctx, id)
+func (s *RoomService) DeleteRoom(ctx context.Context, organizationID int, id int) error {
+	return s.repo.Delete(ctx, organizationID, id)
 }

@@ -3,6 +3,7 @@ package middlewares
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
@@ -12,7 +13,7 @@ import (
 )
 
 type PermissionChecker interface {
-	HasPermission(ctx context.Context, accountID int, apiPath string) (bool, error)
+	HasPermission(ctx context.Context, accountID int, organizationID int, apiPath string) (bool, error)
 }
 
 func PermissionMiddleware(checker PermissionChecker) gin.HandlerFunc {
@@ -27,12 +28,18 @@ func PermissionMiddleware(checker PermissionChecker) gin.HandlerFunc {
 			return
 		}
 
+		organizationID, ok := organizationIDFromRequest(c)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusForbidden, response.ErrorResponseWithCode(errcode.ErrForbidden))
+			return
+		}
+
 		apiPath := c.FullPath()
 		if apiPath == "" {
 			apiPath = c.Request.URL.Path
 		}
 
-		hasPermission, err := checker.HasPermission(c.Request.Context(), claims.UserID, apiPath)
+		hasPermission, err := checker.HasPermission(c.Request.Context(), claims.UserID, organizationID, apiPath)
 		if err != nil {
 			logging.Errorf("check permission failed: %v", err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, response.ErrorResponseWithCode(errcode.ErrSysInternal))
@@ -45,4 +52,22 @@ func PermissionMiddleware(checker PermissionChecker) gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func organizationIDFromRequest(c *gin.Context) (int, bool) {
+	values := []string{
+		c.Param("organization_id"),
+		c.Query("organization_id"),
+		c.GetHeader("X-Organization-ID"),
+	}
+	for _, value := range values {
+		if value == "" {
+			continue
+		}
+		id, err := strconv.Atoi(value)
+		if err == nil && id > 0 {
+			return id, true
+		}
+	}
+	return 0, false
 }

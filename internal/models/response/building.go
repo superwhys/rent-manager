@@ -18,7 +18,7 @@ type BuildingMeterItemResponse struct {
 // BuildingResponse 是楼栋响应。
 type BuildingResponse struct {
 	ID                int                         `json:"id"`
-	AccountID         int                         `json:"account_id"`
+	OrganizationID    int                         `json:"organization_id"`
 	Name              string                      `json:"name"`
 	Address           string                      `json:"address"`
 	City              string                      `json:"city"`
@@ -33,7 +33,7 @@ func ToBuildingResponse(building *domainbuilding.Building) BuildingResponse {
 	}
 	return BuildingResponse{
 		ID:                building.ID,
-		AccountID:         building.AccountID,
+		OrganizationID:    building.OrganizationID,
 		Name:              building.Name,
 		Address:           building.Address,
 		City:              building.City,

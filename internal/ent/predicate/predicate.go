@@ -18,8 +18,14 @@ type MeterItem func(*sql.Selector)
 // MeterReading is the predicate function for meterreading builders.
 type MeterReading func(*sql.Selector)
 
+// Organization is the predicate function for organization builders.
+type Organization func(*sql.Selector)
+
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)
+
+// PermissionGroup is the predicate function for permissiongroup builders.
+type PermissionGroup func(*sql.Selector)
 
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)

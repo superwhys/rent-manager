@@ -15,6 +15,10 @@ var (
 	ErrBuildingRequired = errors.New("building is required")
 	// ErrRoomTypeRequired 表示房间必须归属房型。
 	ErrRoomTypeRequired = errors.New("room type is required")
+	// ErrInvalidMeterItemID 表示抄表项 ID 非法。
+	ErrInvalidMeterItemID = errors.New("invalid meter item id")
+	// ErrMeterItemNotFound 表示抄表项不存在或不属于当前账号。
+	ErrMeterItemNotFound = errors.New("meter item not found")
 	// ErrNotFound 表示房间不存在。
 	ErrNotFound = errors.New("room not found")
 )

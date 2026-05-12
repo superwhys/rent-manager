@@ -10,7 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 )
@@ -64,9 +64,9 @@ func (_c *RoomTypeCreate) SetNillableDeletedAt(v *time.Time) *RoomTypeCreate {
 	return _c
 }
 
-// SetAccountID sets the "account_id" field.
-func (_c *RoomTypeCreate) SetAccountID(v int) *RoomTypeCreate {
-	_c.mutation.SetAccountID(v)
+// SetOrganizationID sets the "organization_id" field.
+func (_c *RoomTypeCreate) SetOrganizationID(v int) *RoomTypeCreate {
+	_c.mutation.SetOrganizationID(v)
 	return _c
 }
 
@@ -76,9 +76,9 @@ func (_c *RoomTypeCreate) SetName(v string) *RoomTypeCreate {
 	return _c
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_c *RoomTypeCreate) SetAccount(v *Account) *RoomTypeCreate {
-	return _c.SetAccountID(v.ID)
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_c *RoomTypeCreate) SetOrganization(v *Organization) *RoomTypeCreate {
+	return _c.SetOrganizationID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
@@ -149,8 +149,8 @@ func (_c *RoomTypeCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "RoomType.updated_at"`)}
 	}
-	if _, ok := _c.mutation.AccountID(); !ok {
-		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "RoomType.account_id"`)}
+	if _, ok := _c.mutation.OrganizationID(); !ok {
+		return &ValidationError{Name: "organization_id", err: errors.New(`ent: missing required field "RoomType.organization_id"`)}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "RoomType.name"`)}
@@ -160,8 +160,8 @@ func (_c *RoomTypeCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RoomType.name": %w`, err)}
 		}
 	}
-	if len(_c.mutation.AccountIDs()) == 0 {
-		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "RoomType.account"`)}
+	if len(_c.mutation.OrganizationIDs()) == 0 {
+		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "RoomType.organization"`)}
 	}
 	return nil
 }
@@ -205,21 +205,21 @@ func (_c *RoomTypeCreate) createSpec() (*RoomType, *sqlgraph.CreateSpec) {
 		_spec.SetField(roomtype.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   roomtype.AccountTable,
-			Columns: []string{roomtype.AccountColumn},
+			Table:   roomtype.OrganizationTable,
+			Columns: []string{roomtype.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.AccountID = nodes[0]
+		_node.OrganizationID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.RoomsIDs(); len(nodes) > 0 {

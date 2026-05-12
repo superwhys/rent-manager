@@ -19,17 +19,31 @@ var (
 		{Name: "password", Type: field.TypeString, Size: 255},
 		{Name: "wechat_openid", Type: field.TypeString, Size: 255},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "organization_id", Type: field.TypeInt, Nullable: true},
 	}
 	// AccountsTable holds the schema information for the "accounts" table.
 	AccountsTable = &schema.Table{
 		Name:       "accounts",
 		Columns:    AccountsColumns,
 		PrimaryKey: []*schema.Column{AccountsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "accounts_organizations_accounts",
+				Columns:    []*schema.Column{AccountsColumns[9]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "account_wechat_openid",
 				Unique:  true,
 				Columns: []*schema.Column{AccountsColumns[7]},
+			},
+			{
+				Name:    "account_organization_id",
+				Unique:  false,
+				Columns: []*schema.Column{AccountsColumns[9]},
 			},
 		},
 	}
@@ -43,7 +57,7 @@ var (
 		{Name: "address", Type: field.TypeString, Size: 255},
 		{Name: "city", Type: field.TypeString, Size: 255},
 		{Name: "province", Type: field.TypeString, Size: 255},
-		{Name: "account_id", Type: field.TypeInt},
+		{Name: "organization_id", Type: field.TypeInt},
 	}
 	// BuildingsTable holds the schema information for the "buildings" table.
 	BuildingsTable = &schema.Table{
@@ -52,9 +66,9 @@ var (
 		PrimaryKey: []*schema.Column{BuildingsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "buildings_accounts_buildings",
+				Symbol:     "buildings_organizations_buildings",
 				Columns:    []*schema.Column{BuildingsColumns[8]},
-				RefColumns: []*schema.Column{AccountsColumns[0]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
@@ -70,7 +84,7 @@ var (
 		{Name: "is_system", Type: field.TypeBool, Default: false},
 		{Name: "calc_type", Type: field.TypeEnum, Enums: []string{"DIFFERENCE", "DIRECT"}, Default: "DIFFERENCE"},
 		{Name: "remark", Type: field.TypeString, Nullable: true},
-		{Name: "account_id", Type: field.TypeInt},
+		{Name: "organization_id", Type: field.TypeInt},
 	}
 	// MeterItemsTable holds the schema information for the "meter_items" table.
 	MeterItemsTable = &schema.Table{
@@ -79,15 +93,15 @@ var (
 		PrimaryKey: []*schema.Column{MeterItemsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "meter_items_accounts_meter_items",
+				Symbol:     "meter_items_organizations_meter_items",
 				Columns:    []*schema.Column{MeterItemsColumns[9]},
-				RefColumns: []*schema.Column{AccountsColumns[0]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "meteritem_account_id_code",
+				Name:    "meteritem_organization_id_code",
 				Unique:  true,
 				Columns: []*schema.Column{MeterItemsColumns[9], MeterItemsColumns[4]},
 			},
@@ -132,6 +146,21 @@ var (
 			},
 		},
 	}
+	// OrganizationsColumns holds the columns for the "organizations" table.
+	OrganizationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+	}
+	// OrganizationsTable holds the schema information for the "organizations" table.
+	OrganizationsTable = &schema.Table{
+		Name:       "organizations",
+		Columns:    OrganizationsColumns,
+		PrimaryKey: []*schema.Column{OrganizationsColumns[0]},
+	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -161,6 +190,31 @@ var (
 			},
 		},
 	}
+	// PermissionGroupsColumns holds the columns for the "permission_groups" table.
+	PermissionGroupsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 255},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+	}
+	// PermissionGroupsTable holds the schema information for the "permission_groups" table.
+	PermissionGroupsTable = &schema.Table{
+		Name:       "permission_groups",
+		Columns:    PermissionGroupsColumns,
+		PrimaryKey: []*schema.Column{PermissionGroupsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "permissiongroup_code",
+				Unique:  true,
+				Columns: []*schema.Column{PermissionGroupsColumns[4]},
+			},
+		},
+	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -168,18 +222,28 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "is_default_owner", Type: field.TypeBool, Default: false},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "organization_id", Type: field.TypeInt},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
 		Name:       "roles",
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "roles_organizations_roles",
+				Columns:    []*schema.Column{RolesColumns[7]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "role_name",
+				Name:    "role_organization_id_name",
 				Unique:  true,
-				Columns: []*schema.Column{RolesColumns[4]},
+				Columns: []*schema.Column{RolesColumns[7], RolesColumns[4]},
 			},
 		},
 	}
@@ -224,7 +288,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 12},
-		{Name: "account_id", Type: field.TypeInt},
+		{Name: "organization_id", Type: field.TypeInt},
 	}
 	// RoomTypesTable holds the schema information for the "room_types" table.
 	RoomTypesTable = &schema.Table{
@@ -233,9 +297,9 @@ var (
 		PrimaryKey: []*schema.Column{RoomTypesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "room_types_accounts_room_types",
+				Symbol:     "room_types_organizations_room_types",
 				Columns:    []*schema.Column{RoomTypesColumns[5]},
-				RefColumns: []*schema.Column{AccountsColumns[0]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
@@ -290,27 +354,52 @@ var (
 			},
 		},
 	}
-	// RolePermissionsColumns holds the columns for the "role_permissions" table.
-	RolePermissionsColumns = []*schema.Column{
-		{Name: "role_id", Type: field.TypeInt},
+	// PermissionGroupPermissionsColumns holds the columns for the "permission_group_permissions" table.
+	PermissionGroupPermissionsColumns = []*schema.Column{
+		{Name: "permission_group_id", Type: field.TypeInt},
 		{Name: "permission_id", Type: field.TypeInt},
 	}
-	// RolePermissionsTable holds the schema information for the "role_permissions" table.
-	RolePermissionsTable = &schema.Table{
-		Name:       "role_permissions",
-		Columns:    RolePermissionsColumns,
-		PrimaryKey: []*schema.Column{RolePermissionsColumns[0], RolePermissionsColumns[1]},
+	// PermissionGroupPermissionsTable holds the schema information for the "permission_group_permissions" table.
+	PermissionGroupPermissionsTable = &schema.Table{
+		Name:       "permission_group_permissions",
+		Columns:    PermissionGroupPermissionsColumns,
+		PrimaryKey: []*schema.Column{PermissionGroupPermissionsColumns[0], PermissionGroupPermissionsColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "role_permissions_role_id",
-				Columns:    []*schema.Column{RolePermissionsColumns[0]},
+				Symbol:     "permission_group_permissions_permission_group_id",
+				Columns:    []*schema.Column{PermissionGroupPermissionsColumns[0]},
+				RefColumns: []*schema.Column{PermissionGroupsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "permission_group_permissions_permission_id",
+				Columns:    []*schema.Column{PermissionGroupPermissionsColumns[1]},
+				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// RolePermissionGroupsColumns holds the columns for the "role_permission_groups" table.
+	RolePermissionGroupsColumns = []*schema.Column{
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "permission_group_id", Type: field.TypeInt},
+	}
+	// RolePermissionGroupsTable holds the schema information for the "role_permission_groups" table.
+	RolePermissionGroupsTable = &schema.Table{
+		Name:       "role_permission_groups",
+		Columns:    RolePermissionGroupsColumns,
+		PrimaryKey: []*schema.Column{RolePermissionGroupsColumns[0], RolePermissionGroupsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "role_permission_groups_role_id",
+				Columns:    []*schema.Column{RolePermissionGroupsColumns[0]},
 				RefColumns: []*schema.Column{RolesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "role_permissions_permission_id",
-				Columns:    []*schema.Column{RolePermissionsColumns[1]},
-				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				Symbol:     "role_permission_groups_permission_group_id",
+				Columns:    []*schema.Column{RolePermissionGroupsColumns[1]},
+				RefColumns: []*schema.Column{PermissionGroupsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
@@ -346,30 +435,37 @@ var (
 		BuildingsTable,
 		MeterItemsTable,
 		MeterReadingsTable,
+		OrganizationsTable,
 		PermissionsTable,
+		PermissionGroupsTable,
 		RolesTable,
 		RoomsTable,
 		RoomTypesTable,
 		AccountRolesTable,
 		BuildingMeterItemsTable,
-		RolePermissionsTable,
+		PermissionGroupPermissionsTable,
+		RolePermissionGroupsTable,
 		RoomMeterItemsTable,
 	}
 )
 
 func init() {
-	BuildingsTable.ForeignKeys[0].RefTable = AccountsTable
-	MeterItemsTable.ForeignKeys[0].RefTable = AccountsTable
+	AccountsTable.ForeignKeys[0].RefTable = OrganizationsTable
+	BuildingsTable.ForeignKeys[0].RefTable = OrganizationsTable
+	MeterItemsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	MeterReadingsTable.ForeignKeys[0].RefTable = RoomsTable
+	RolesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	RoomsTable.ForeignKeys[0].RefTable = BuildingsTable
 	RoomsTable.ForeignKeys[1].RefTable = RoomTypesTable
-	RoomTypesTable.ForeignKeys[0].RefTable = AccountsTable
+	RoomTypesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	AccountRolesTable.ForeignKeys[0].RefTable = AccountsTable
 	AccountRolesTable.ForeignKeys[1].RefTable = RolesTable
 	BuildingMeterItemsTable.ForeignKeys[0].RefTable = BuildingsTable
 	BuildingMeterItemsTable.ForeignKeys[1].RefTable = MeterItemsTable
-	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
-	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
+	PermissionGroupPermissionsTable.ForeignKeys[0].RefTable = PermissionGroupsTable
+	PermissionGroupPermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
+	RolePermissionGroupsTable.ForeignKeys[0].RefTable = RolesTable
+	RolePermissionGroupsTable.ForeignKeys[1].RefTable = PermissionGroupsTable
 	RoomMeterItemsTable.ForeignKeys[0].RefTable = RoomsTable
 	RoomMeterItemsTable.ForeignKeys[1].RefTable = MeterItemsTable
 }
