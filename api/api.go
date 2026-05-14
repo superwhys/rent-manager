@@ -33,11 +33,21 @@ func SetupRouter(
 	roomService *services.RoomService,
 	buildingService *services.BuildingService,
 	meterItemService *services.MeterItemService,
+	organizationService *services.OrganizationService,
 	rbacService *services.RBACService,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(middlewares.RateLimitMiddleware(httpLimiter, nil)),
 		ginutils.WithGroupHandlers(
+			ginutils.WithPrefix("/admin"),
+			ginutils.WithMiddleware(
+				middlewares.TokenVerifyMiddleware(jwtConfig),
+				middlewares.SystemAdminMiddleware(rbacService),
+			),
+			routers.AdminGroupRouter(organizationService, rbacService),
+		),
+		ginutils.WithGroupHandlers(
+			ginutils.WithPrefix("/auth"),
 			routers.AuthGroupRouter(authService),
 		),
 		ginutils.WithGroupHandlers(
@@ -48,7 +58,7 @@ func SetupRouter(
 			routers.BuildingGroupRouter(buildingService),
 			routers.RoomGroupRouter(roomService),
 			routers.MeterItemGroupRouter(meterItemService),
-			routers.AdminGroupRouter(rbacService),
+			routers.RoleGroupRouter(rbacService),
 		),
 	)
 

@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/accounts/{account_id}/roles": {
+        "/admin/organizations": {
             "post": {
                 "security": [
                     {
@@ -31,22 +31,184 @@ const docTemplate = `{
                 "tags": [
                     "admin"
                 ],
-                "summary": "给组织内账号分配角色",
+                "summary": "创建组织",
                 "parameters": [
+                    {
+                        "description": "组织信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateOrganizationCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_OrganizationResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/organizations/{organization_id}/accounts/{account_id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "绑定账号到组织",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组织ID",
+                        "name": "organization_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "账号ID",
                         "name": "account_id",
                         "in": "path",
                         "required": true
-                    },
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/permission-groups/batch": {
+            "post": {
+                "security": [
                     {
-                        "description": "角色ID列表",
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "批量创建权限组",
+                "parameters": [
+                    {
+                        "description": "权限组列表",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.AccountRolesCommand"
+                            "$ref": "#/definitions/requests.CreatePermissionGroupsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionGroupResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/permission-groups/{permission_group_id}/permissions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "给权限组添加权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "权限组ID",
+                        "name": "permission_group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.PermissionGroupPermissionsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "从权限组移除权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "权限组ID",
+                        "name": "permission_group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.PermissionGroupPermissionsCommand"
                         }
                     }
                 ],
@@ -93,44 +255,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ginutils.Ret-array_response_PermissionResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/roles/batch": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "批量创建角色",
-                "parameters": [
-                    {
-                        "description": "角色列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.CreateRolesCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_RoleResponse"
                         }
                     }
                 }
@@ -602,6 +726,205 @@ const docTemplate = `{
                 }
             }
         },
+        "/organizations/{organization_id}/accounts/{account_id}/roles": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "给组织内账号分配角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组织ID",
+                        "name": "organization_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "账号ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.AccountRolesCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/organizations/{organization_id}/roles/batch": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "批量创建组织角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组织ID",
+                        "name": "organization_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateRolesCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_RoleResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/organizations/{organization_id}/roles/{role_id}/permission-groups": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "给组织角色绑定权限组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组织ID",
+                        "name": "organization_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限组ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.RolePermissionGroupsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "从组织角色移除权限组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组织ID",
+                        "name": "organization_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限组ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.RolePermissionGroupsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            }
+        },
         "/rooms": {
             "get": {
                 "security": [
@@ -852,6 +1175,21 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-array_response_PermissionGroupResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PermissionGroupResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-array_response_PermissionResponse": {
             "type": "object",
             "properties": {
@@ -921,6 +1259,18 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-response_OrganizationResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.OrganizationResponse"
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-response_RoomResponse": {
             "type": "object",
             "properties": {
@@ -961,7 +1311,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "accountID",
-                "organization_id",
+                "organizationID",
                 "role_ids"
             ],
             "properties": {
@@ -969,7 +1319,7 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 1
                 },
-                "organization_id": {
+                "organizationID": {
                     "type": "integer",
                     "minimum": 1
                 },
@@ -1052,6 +1402,60 @@ const docTemplate = `{
                 }
             }
         },
+        "requests.CreateOrganizationCommand": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "admin_permission_group_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "requests.CreatePermissionGroupItem": {
+            "type": "object",
+            "required": [
+                "code",
+                "name"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                }
+            }
+        },
+        "requests.CreatePermissionGroupsCommand": {
+            "type": "object",
+            "required": [
+                "permission_groups"
+            ],
+            "properties": {
+                "permission_groups": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/requests.CreatePermissionGroupItem"
+                    }
+                }
+            }
+        },
         "requests.CreatePermissionItem": {
             "type": "object",
             "required": [
@@ -1103,11 +1507,11 @@ const docTemplate = `{
         "requests.CreateRolesCommand": {
             "type": "object",
             "required": [
-                "organization_id",
+                "organizationID",
                 "roles"
             ],
             "properties": {
-                "organization_id": {
+                "organizationID": {
                     "type": "integer",
                     "minimum": 1
                 },
@@ -1208,11 +1612,56 @@ const docTemplate = `{
                 }
             }
         },
+        "requests.PermissionGroupPermissionsCommand": {
+            "type": "object",
+            "required": [
+                "permissionGroupID",
+                "permission_ids"
+            ],
+            "properties": {
+                "permissionGroupID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "permission_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "requests.RefreshTokenReq": {
             "type": "object",
             "properties": {
                 "refresh_token": {
                     "type": "string"
+                }
+            }
+        },
+        "requests.RolePermissionGroupsCommand": {
+            "type": "object",
+            "required": [
+                "organizationID",
+                "permission_group_ids",
+                "roleID"
+            ],
+            "properties": {
+                "organizationID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "permission_group_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "roleID": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },
@@ -1423,6 +1872,43 @@ const docTemplate = `{
                 },
                 "unit": {
                     "type": "string"
+                }
+            }
+        },
+        "response.OrganizationResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PermissionGroupResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
                 }
             }
         },

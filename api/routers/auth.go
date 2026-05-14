@@ -13,11 +13,8 @@ import (
 
 func AuthGroupRouter(authService *services.AuthService) ginutils.Option {
 	return ginutils.WithGroupHandlers(
-		ginutils.WithPrefix("/auth"),
-		ginutils.WithGroupHandlers(
-			ginutils.WithHandler(http.MethodPost, "/wx-login", WechatLoginHandler(authService)),
-			ginutils.WithHandler(http.MethodPost, "/refresh", AccountRefreshHandler(authService)),
-		),
+		ginutils.WithHandler(http.MethodPost, "/wx-login", WechatLoginHandler(authService)),
+		ginutils.WithHandler(http.MethodPost, "/refresh", AccountRefreshHandler(authService)),
 	)
 }
 

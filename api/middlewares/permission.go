@@ -16,6 +16,37 @@ type PermissionChecker interface {
 	HasPermission(ctx context.Context, accountID int, organizationID int, apiPath string) (bool, error)
 }
 
+type SystemPermissionChecker interface {
+	HasSystemPermission(ctx context.Context, accountID int) (bool, error)
+}
+
+func SystemAdminMiddleware(checker SystemPermissionChecker) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, err := jwtutils.TokenClaimsFromContext(c.Request.Context())
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrUnauthorized))
+			return
+		}
+		if claims.TokenType != jwtutils.TokenTypeAccess {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrInvalidToken))
+			return
+		}
+
+		hasPermission, err := checker.HasSystemPermission(c.Request.Context(), claims.UserID)
+		if err != nil {
+			logging.Errorf("check system permission failed: %v", err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response.ErrorResponseWithCode(errcode.ErrSysInternal))
+			return
+		}
+		if !hasPermission {
+			c.AbortWithStatusJSON(http.StatusForbidden, response.ErrorResponseWithCode(errcode.ErrForbidden))
+			return
+		}
+
+		c.Next()
+	}
+}
+
 func PermissionMiddleware(checker PermissionChecker) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, err := jwtutils.TokenClaimsFromContext(c.Request.Context())

@@ -15,5 +15,6 @@ type Repository interface {
 	RemovePermissionGroupsFromRole(ctx context.Context, organizationID int, roleID int, permissionGroupIDs []int) error
 	AssignRolesToOrganizationAccount(ctx context.Context, organizationID int, accountID int, roleIDs []int) error
 	AccountIDsByRole(ctx context.Context, organizationID int, roleID int) ([]int, error)
+	HasSystemPermission(ctx context.Context, accountID int) (bool, error)
 	HasPermission(ctx context.Context, accountID int, organizationID int, apiPath string) (bool, error)
 }

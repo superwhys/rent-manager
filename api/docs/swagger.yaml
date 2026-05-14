@@ -27,6 +27,16 @@ definitions:
         type: array
       message: {}
     type: object
+  ginutils.Ret-array_response_PermissionGroupResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.PermissionGroupResponse'
+        type: array
+      message: {}
+    type: object
   ginutils.Ret-array_response_PermissionResponse:
     properties:
       code:
@@ -73,6 +83,14 @@ definitions:
         $ref: '#/definitions/response.MeterItemResponse'
       message: {}
     type: object
+  ginutils.Ret-response_OrganizationResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.OrganizationResponse'
+      message: {}
+    type: object
   ginutils.Ret-response_RoomResponse:
     properties:
       code:
@@ -102,7 +120,7 @@ definitions:
       accountID:
         minimum: 1
         type: integer
-      organization_id:
+      organizationID:
         minimum: 1
         type: integer
       role_ids:
@@ -112,7 +130,7 @@ definitions:
         type: array
     required:
     - accountID
-    - organization_id
+    - organizationID
     - role_ids
     type: object
   requests.CreateBuildingCommand:
@@ -166,6 +184,42 @@ definitions:
     - organization_id
     - unit
     type: object
+  requests.CreateOrganizationCommand:
+    properties:
+      admin_permission_group_ids:
+        items:
+          type: integer
+        type: array
+      name:
+        maxLength: 255
+        type: string
+    required:
+    - name
+    type: object
+  requests.CreatePermissionGroupItem:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      sort_order:
+        type: integer
+    required:
+    - code
+    - name
+    type: object
+  requests.CreatePermissionGroupsCommand:
+    properties:
+      permission_groups:
+        items:
+          $ref: '#/definitions/requests.CreatePermissionGroupItem'
+        minItems: 1
+        type: array
+    required:
+    - permission_groups
+    type: object
   requests.CreatePermissionItem:
     properties:
       api_path:
@@ -200,7 +254,7 @@ definitions:
     type: object
   requests.CreateRolesCommand:
     properties:
-      organization_id:
+      organizationID:
         minimum: 1
         type: integer
       roles:
@@ -209,7 +263,7 @@ definitions:
         minItems: 1
         type: array
     required:
-    - organization_id
+    - organizationID
     - roles
     type: object
   requests.CreateRoomCommand:
@@ -276,10 +330,42 @@ definitions:
     - room_type_id
     - size
     type: object
+  requests.PermissionGroupPermissionsCommand:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      permissionGroupID:
+        minimum: 1
+        type: integer
+    required:
+    - permissionGroupID
+    - permission_ids
+    type: object
   requests.RefreshTokenReq:
     properties:
       refresh_token:
         type: string
+    type: object
+  requests.RolePermissionGroupsCommand:
+    properties:
+      organizationID:
+        minimum: 1
+        type: integer
+      permission_group_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      roleID:
+        minimum: 1
+        type: integer
+    required:
+    - organizationID
+    - permission_group_ids
+    - roleID
     type: object
   requests.UpdateBuildingCommand:
     properties:
@@ -426,6 +512,30 @@ definitions:
       unit:
         type: string
     type: object
+  response.OrganizationResponse:
+    properties:
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  response.PermissionGroupResponse:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+    type: object
   response.PermissionResponse:
     properties:
       api_path:
@@ -488,22 +598,44 @@ info:
   title: Rent Manager Server API
   version: "1.0"
 paths:
-  /admin/accounts/{account_id}/roles:
+  /admin/organizations:
     post:
       consumes:
       - application/json
       parameters:
+      - description: 组织信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateOrganizationCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_OrganizationResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建组织
+      tags:
+      - admin
+  /admin/organizations/{organization_id}/accounts/{account_id}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 组织ID
+        in: path
+        name: organization_id
+        required: true
+        type: integer
       - description: 账号ID
         in: path
         name: account_id
         required: true
         type: integer
-      - description: 角色ID列表
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/requests.AccountRolesCommand'
       produces:
       - application/json
       responses:
@@ -513,7 +645,85 @@ paths:
             $ref: '#/definitions/ginutils.Ret-string'
       security:
       - BearerAuth: []
-      summary: 给组织内账号分配角色
+      summary: 绑定账号到组织
+      tags:
+      - admin
+  /admin/permission-groups/{permission_group_id}/permissions:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限组ID
+        in: path
+        name: permission_group_id
+        required: true
+        type: integer
+      - description: 权限ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.PermissionGroupPermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 从权限组移除权限
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限组ID
+        in: path
+        name: permission_group_id
+        required: true
+        type: integer
+      - description: 权限ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.PermissionGroupPermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 给权限组添加权限
+      tags:
+      - admin
+  /admin/permission-groups/batch:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限组列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreatePermissionGroupsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionGroupResponse'
+      security:
+      - BearerAuth: []
+      summary: 批量创建权限组
       tags:
       - admin
   /admin/permissions/batch:
@@ -537,29 +747,6 @@ paths:
       security:
       - BearerAuth: []
       summary: 批量创建权限
-      tags:
-      - admin
-  /admin/roles/batch:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: 角色列表
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/requests.CreateRolesCommand'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_RoleResponse'
-      security:
-      - BearerAuth: []
-      summary: 批量创建角色
       tags:
       - admin
   /auth/refresh:
@@ -854,6 +1041,132 @@ paths:
       summary: 更新抄表项
       tags:
       - MeterItem
+  /organizations/{organization_id}/accounts/{account_id}/roles:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 组织ID
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      - description: 账号ID
+        in: path
+        name: account_id
+        required: true
+        type: integer
+      - description: 角色ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AccountRolesCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 给组织内账号分配角色
+      tags:
+      - role
+  /organizations/{organization_id}/roles/{role_id}/permission-groups:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 组织ID
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      - description: 角色ID
+        in: path
+        name: role_id
+        required: true
+        type: integer
+      - description: 权限组ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.RolePermissionGroupsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 从组织角色移除权限组
+      tags:
+      - role
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 组织ID
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      - description: 角色ID
+        in: path
+        name: role_id
+        required: true
+        type: integer
+      - description: 权限组ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.RolePermissionGroupsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 给组织角色绑定权限组
+      tags:
+      - role
+  /organizations/{organization_id}/roles/batch:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 组织ID
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      - description: 角色列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateRolesCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_RoleResponse'
+      security:
+      - BearerAuth: []
+      summary: 批量创建组织角色
+      tags:
+      - role
   /rooms:
     get:
       description: 查询房间列表

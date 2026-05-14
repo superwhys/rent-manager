@@ -124,6 +124,10 @@ func (s *RBACService) AssignRolesToAccount(ctx context.Context, cmd *requests.Ac
 	return s.updatePermissionCacheVersion(ctx, cmd.OrganizationID, cmd.AccountID)
 }
 
+func (s *RBACService) HasSystemPermission(ctx context.Context, accountID int) (bool, error) {
+	return s.repo.HasSystemPermission(ctx, accountID)
+}
+
 func (s *RBACService) HasPermission(ctx context.Context, accountID int, organizationID int, apiPath string) (bool, error) {
 	version, cacheOK := s.permissionCacheVersion(ctx, accountID, organizationID)
 	req := requests.PermissionCheckRequest{

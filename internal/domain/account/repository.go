@@ -10,7 +10,7 @@ type Repository interface {
 }
 
 type OrganizationRepository interface {
-	CreateOrganization(ctx context.Context, organization *Organization, ownerAccountID int, ownerRoleName string, ownerPermissionGroupIDs []int) (*Organization, error)
+	CreateOrganization(ctx context.Context, organization *Organization) (*Organization, error)
 	GetOrganization(ctx context.Context, organizationID int) (*Organization, error)
 	ListOrganizationsByAccount(ctx context.Context, accountID int) ([]*Organization, error)
 	ListAccounts(ctx context.Context, organizationID int) ([]*Account, error)

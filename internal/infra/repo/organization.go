@@ -18,46 +18,13 @@ func NewOrganizationRepository(client *entclient.Client) *OrganizationRepository
 	return &OrganizationRepository{client: client}
 }
 
-func (r *OrganizationRepository) CreateOrganization(ctx context.Context, organization *domainaccount.Organization, ownerAccountID int, ownerRoleName string, ownerPermissionGroupIDs []int) (*domainaccount.Organization, error) {
-	tx, err := r.client.Tx(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	organizationRecord, err := tx.Organization.Create().
+func (r *OrganizationRepository) CreateOrganization(ctx context.Context, organization *domainaccount.Organization) (*domainaccount.Organization, error) {
+	organizationRecord, err := r.client.Organization.Create().
 		SetName(organization.Name).
 		SetIsActive(organization.IsActive).
 		Save(ctx)
 	if err != nil {
-		_ = tx.Rollback()
 		return nil, mapOrganizationError(err)
-	}
-
-	roleBuilder := tx.Role.Create().
-		SetOrganizationID(organizationRecord.ID).
-		SetName(ownerRoleName).
-		SetIsDefaultOwner(true).
-		SetIsActive(true)
-	if len(ownerPermissionGroupIDs) > 0 {
-		roleBuilder = roleBuilder.AddPermissionGroupIDs(ownerPermissionGroupIDs...)
-	}
-	roleRecord, err := roleBuilder.Save(ctx)
-	if err != nil {
-		_ = tx.Rollback()
-		return nil, err
-	}
-
-	_, err = tx.Account.UpdateOneID(ownerAccountID).
-		SetOrganizationID(organizationRecord.ID).
-		AddRoleIDs(roleRecord.ID).
-		Save(ctx)
-	if err != nil {
-		_ = tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, err
 	}
 	return toDomainOrganization(organizationRecord), nil
 }
@@ -108,6 +75,7 @@ func (r *OrganizationRepository) ListAccounts(ctx context.Context, organizationI
 func (r *OrganizationRepository) AssignAccountToOrganization(ctx context.Context, organizationID int, accountID int) error {
 	return r.client.Account.UpdateOneID(accountID).
 		SetOrganizationID(organizationID).
+		ClearRoles().
 		Exec(ctx)
 }
 

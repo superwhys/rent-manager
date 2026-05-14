@@ -9,6 +9,7 @@ const (
 	SourceAuto   = "AUTO"   // 自动计算
 
 	SystemRoleSuperAdmin                = "SuperAdmin"
+	OrganizationRoleAdmin               = "OrganizationAdmin"
 	SystemPermissionAllowAllCode        = "SYSTEM_ALLOW_ALL"
 	SystemPermissionAllowAllAPIPath     = "*"
 	SystemPermissionAllowAllDescription = "Allow all APIs"

@@ -68,12 +68,14 @@ func main() {
 	meterItemRepo := repo.NewMeterItemRepository(client)
 	accountRepo := repo.NewAccountRepository(client)
 	rbacRepo := repo.NewRBACRepository(client)
+	organizationRepo := repo.NewOrganizationRepository(client)
 
 	roomService := services.NewRoomService(roomRepo)
 	buildingService := services.NewBuildingService(buildingRepo, roomService)
 	meterItemService := services.NewMeterItemService(meterItemRepo)
 	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
 	rbacService := services.NewRBACService(rbacRepo, redisClient)
+	organizationService := services.NewOrganizationService(organizationRepo, rbacService)
 	logging.PanicError(rbacService.InitSystemRBAC(context.Background()))
 
 	router := api.SetupRouter(
@@ -83,6 +85,7 @@ func main() {
 		roomService,
 		buildingService,
 		meterItemService,
+		organizationService,
 		rbacService,
 	)
 

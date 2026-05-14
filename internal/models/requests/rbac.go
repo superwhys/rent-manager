@@ -6,7 +6,7 @@ type CreateRoleItem struct {
 }
 
 type CreateRolesCommand struct {
-	OrganizationID int              `json:"organization_id" validate:"required,min=1"`
+	OrganizationID int              `uri:"organization_id" validate:"required,min=1"`
 	Roles          []CreateRoleItem `json:"roles" validate:"required,min=1,dive"`
 }
 
@@ -37,13 +37,13 @@ type PermissionGroupPermissionsCommand struct {
 }
 
 type RolePermissionGroupsCommand struct {
-	OrganizationID     int   `json:"organization_id" validate:"required,min=1"`
+	OrganizationID     int   `uri:"organization_id" validate:"required,min=1"`
 	RoleID             int   `uri:"role_id" validate:"required,min=1"`
 	PermissionGroupIDs []int `json:"permission_group_ids" validate:"required,min=1,dive,min=1"`
 }
 
 type AccountRolesCommand struct {
-	OrganizationID int   `json:"organization_id" validate:"required,min=1"`
+	OrganizationID int   `uri:"organization_id" validate:"required,min=1"`
 	AccountID      int   `uri:"account_id" validate:"required,min=1"`
 	RoleIDs        []int `json:"role_ids" validate:"required,min=1,dive,min=1"`
 }

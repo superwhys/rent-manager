@@ -266,6 +266,25 @@ func (r *RBACRepository) AccountIDsByRole(ctx context.Context, organizationID in
 		IDs(ctx)
 }
 
+func (r *RBACRepository) HasSystemPermission(ctx context.Context, accountID int) (bool, error) {
+	return r.client.Account.Query().
+		Where(
+			entaccount.ID(accountID),
+			entaccount.IsActive(true),
+			entaccount.DeletedAtIsNil(),
+			entaccount.HasRolesWith(
+				entrole.IsActive(true),
+				entrole.DeletedAtIsNil(),
+				entrole.HasPermissionGroupsWith(
+					entpermissiongroup.Code(consts.SystemRoleSuperAdmin),
+					entpermissiongroup.IsActive(true),
+					entpermissiongroup.DeletedAtIsNil(),
+				),
+			),
+		).
+		Exist(ctx)
+}
+
 func (r *RBACRepository) HasPermission(ctx context.Context, accountID int, organizationID int, apiPath string) (bool, error) {
 	return r.client.Account.Query().
 		Where(
