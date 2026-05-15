@@ -1,5 +1,7 @@
 package requests
 
+type EmptyRequest struct{}
+
 type CreateRoleItem struct {
 	Name           string `json:"name" validate:"required"`
 	IsDefaultOwner bool   `json:"is_default_owner"`

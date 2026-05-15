@@ -15,6 +15,33 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/permission-groups": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "获取权限组列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionGroupResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/permission-groups/batch": {
             "post": {
                 "security": [
@@ -48,6 +75,116 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ginutils.Ret-array_response_PermissionGroupResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/permission-groups/{permission_group_id}/permissions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "给权限组绑定权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "权限组ID",
+                        "name": "permission_group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.PermissionGroupPermissionsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "获取权限列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/permissions/batch": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "批量创建权限",
+                "parameters": [
+                    {
+                        "description": "权限列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreatePermissionsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionResponse"
                         }
                     }
                 }
@@ -926,6 +1063,21 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-array_response_PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PermissionResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-array_response_RoleResponse": {
             "type": "object",
             "properties": {
@@ -1094,6 +1246,40 @@ const docTemplate = `{
                 }
             }
         },
+        "requests.CreatePermissionItem": {
+            "type": "object",
+            "required": [
+                "api_path",
+                "code",
+                "description"
+            ],
+            "properties": {
+                "api_path": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.CreatePermissionsCommand": {
+            "type": "object",
+            "required": [
+                "permissions"
+            ],
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/requests.CreatePermissionItem"
+                    }
+                }
+            }
+        },
         "requests.CreateRoleItem": {
             "type": "object",
             "required": [
@@ -1231,6 +1417,26 @@ const docTemplate = `{
                 "province": {
                     "type": "string",
                     "maxLength": 255
+                }
+            }
+        },
+        "requests.PermissionGroupPermissionsCommand": {
+            "type": "object",
+            "required": [
+                "permissionGroupID",
+                "permission_ids"
+            ],
+            "properties": {
+                "permissionGroupID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "permission_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -1450,6 +1656,26 @@ const docTemplate = `{
                 },
                 "sort_order": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "api_path": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
                 }
             }
         },

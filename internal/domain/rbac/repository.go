@@ -9,6 +9,7 @@ type Repository interface {
 	CreatePermissions(ctx context.Context, permissions []*Permission) ([]*Permission, error)
 	ListPermissionGroups(ctx context.Context) ([]*PermissionGroup, error)
 	ListPermissionGroupsWithPermissions(ctx context.Context) ([]*PermissionGroup, error)
+	ListPermissions(ctx context.Context) ([]*Permission, error)
 	AddPermissionsToPermissionGroup(ctx context.Context, groupID int, permissionIDs []int) error
 	RemovePermissionsFromPermissionGroup(ctx context.Context, groupID int, permissionIDs []int) error
 	AddPermissionGroupsToRole(ctx context.Context, accountID int, roleID int, permissionGroupIDs []int) error

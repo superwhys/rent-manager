@@ -207,6 +207,17 @@ func (r *RBACRepository) ListPermissionGroupsWithPermissions(ctx context.Context
 	return toDomainPermissionGroups(records), nil
 }
 
+func (r *RBACRepository) ListPermissions(ctx context.Context) ([]*domainrbac.Permission, error) {
+	records, err := r.client.Permission.Query().
+		Where(entpermission.DeletedAtIsNil()).
+		Order(entclient.Desc(entpermission.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainPermissions(records), nil
+}
+
 func (r *RBACRepository) AddPermissionsToPermissionGroup(ctx context.Context, groupID int, permissionIDs []int) error {
 	return r.client.PermissionGroup.UpdateOneID(groupID).
 		AddPermissionIDs(permissionIDs...).

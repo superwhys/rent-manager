@@ -27,6 +27,16 @@ definitions:
         type: array
       message: {}
     type: object
+  ginutils.Ret-array_response_PermissionResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.PermissionResponse'
+        type: array
+      message: {}
+    type: object
   ginutils.Ret-array_response_RoleResponse:
     properties:
       code:
@@ -140,6 +150,29 @@ definitions:
     required:
     - permission_groups
     type: object
+  requests.CreatePermissionItem:
+    properties:
+      api_path:
+        type: string
+      code:
+        type: string
+      description:
+        type: string
+    required:
+    - api_path
+    - code
+    - description
+    type: object
+  requests.CreatePermissionsCommand:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/requests.CreatePermissionItem'
+        minItems: 1
+        type: array
+    required:
+    - permissions
+    type: object
   requests.CreateRoleItem:
     properties:
       is_default_owner:
@@ -238,6 +271,20 @@ definitions:
     - city
     - name
     - province
+    type: object
+  requests.PermissionGroupPermissionsCommand:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      permissionGroupID:
+        minimum: 1
+        type: integer
+    required:
+    - permissionGroupID
+    - permission_ids
     type: object
   requests.RefreshTokenReq:
     properties:
@@ -390,6 +437,19 @@ definitions:
       sort_order:
         type: integer
     type: object
+  response.PermissionResponse:
+    properties:
+      api_path:
+        type: string
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+    type: object
   response.RoleResponse:
     properties:
       account_id:
@@ -473,6 +533,50 @@ info:
   title: Rent Manager Server API
   version: "1.0"
 paths:
+  /admin/permission-groups:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionGroupResponse'
+      security:
+      - BearerAuth: []
+      summary: 获取权限组列表
+      tags:
+      - admin
+  /admin/permission-groups/{permission_group_id}/permissions:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限组ID
+        in: path
+        name: permission_group_id
+        required: true
+        type: integer
+      - description: 权限ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.PermissionGroupPermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-string'
+      security:
+      - BearerAuth: []
+      summary: 给权限组绑定权限
+      tags:
+      - admin
   /admin/permission-groups/batch:
     post:
       consumes:
@@ -494,6 +598,45 @@ paths:
       security:
       - BearerAuth: []
       summary: 批量创建权限组
+      tags:
+      - admin
+  /admin/permissions:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionResponse'
+      security:
+      - BearerAuth: []
+      summary: 获取权限列表
+      tags:
+      - admin
+  /admin/permissions/batch:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreatePermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionResponse'
+      security:
+      - BearerAuth: []
+      summary: 批量创建权限
       tags:
       - admin
   /auth/refresh:

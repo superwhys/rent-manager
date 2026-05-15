@@ -75,6 +75,14 @@ func (s *RBACService) CreatePermissions(ctx context.Context, cmd *requests.Creat
 	return s.repo.CreatePermissions(ctx, permissions)
 }
 
+func (s *RBACService) ListPermissionGroups(ctx context.Context) ([]*domainrbac.PermissionGroup, error) {
+	return s.repo.ListPermissionGroups(ctx)
+}
+
+func (s *RBACService) ListPermissions(ctx context.Context) ([]*domainrbac.Permission, error) {
+	return s.repo.ListPermissions(ctx)
+}
+
 func (s *RBACService) AddPermissionsToPermissionGroup(ctx context.Context, cmd *requests.PermissionGroupPermissionsCommand) error {
 	return s.repo.AddPermissionsToPermissionGroup(ctx, cmd.PermissionGroupID, cmd.PermissionIDs)
 }
