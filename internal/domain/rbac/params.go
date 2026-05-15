@@ -2,7 +2,7 @@ package rbac
 
 // CreateRoleParams 描述创建角色时需要满足的领域输入。
 type CreateRoleParams struct {
-	OrganizationID int
+	AccountID      int
 	Name           string
 	IsDefaultOwner bool
 }
@@ -30,14 +30,15 @@ type PermissionGroupPermissionsParams struct {
 
 // RolePermissionGroupsParams 描述角色绑定权限组时需要满足的领域输入。
 type RolePermissionGroupsParams struct {
-	OrganizationID     int
+	AccountID          int
 	RoleID             int
 	PermissionGroupIDs []int
 }
 
-// OrganizationMemberRolesParams 描述组织成员绑定角色时需要满足的领域输入。
-type OrganizationMemberRolesParams struct {
-	OrganizationID int
-	AccountID      int
-	RoleIDs        []int
+// UnitAccountRolesParams 描述单元授权账号角色时需要满足的领域输入。
+type UnitAccountRolesParams struct {
+	OwnerAccountID  int
+	UnitID          int
+	TargetAccountID int
+	RoleIDs         []int
 }

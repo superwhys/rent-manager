@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 )
 
 // MeterItem is the model entity for the MeterItem schema.
@@ -24,8 +24,8 @@ type MeterItem struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// 所属组织 id
-	OrganizationID int `json:"organization_id,omitempty"`
+	// 所属账号ID
+	AccountID int `json:"account_id,omitempty"`
 	// 抄表项名称，如 水/电/天然气
 	Code string `json:"code,omitempty"`
 	// 单位，如 m³/kWh
@@ -44,26 +44,26 @@ type MeterItem struct {
 
 // MeterItemEdges holds the relations/edges for other nodes in the graph.
 type MeterItemEdges struct {
-	// Organization holds the value of the organization edge.
-	Organization *Organization `json:"organization,omitempty"`
+	// Accounts holds the value of the accounts edge.
+	Accounts *Account `json:"accounts,omitempty"`
 	// Rooms holds the value of the rooms edge.
 	Rooms []*Room `json:"rooms,omitempty"`
-	// Building holds the value of the building edge.
-	Building []*Building `json:"building,omitempty"`
+	// Uint holds the value of the uint edge.
+	Uint []*Unit `json:"uint,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
 }
 
-// OrganizationOrErr returns the Organization value or an error if the edge
+// AccountsOrErr returns the Accounts value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e MeterItemEdges) OrganizationOrErr() (*Organization, error) {
-	if e.Organization != nil {
-		return e.Organization, nil
+func (e MeterItemEdges) AccountsOrErr() (*Account, error) {
+	if e.Accounts != nil {
+		return e.Accounts, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: organization.Label}
+		return nil, &NotFoundError{label: account.Label}
 	}
-	return nil, &NotLoadedError{edge: "organization"}
+	return nil, &NotLoadedError{edge: "accounts"}
 }
 
 // RoomsOrErr returns the Rooms value or an error if the edge
@@ -75,13 +75,13 @@ func (e MeterItemEdges) RoomsOrErr() ([]*Room, error) {
 	return nil, &NotLoadedError{edge: "rooms"}
 }
 
-// BuildingOrErr returns the Building value or an error if the edge
+// UintOrErr returns the Uint value or an error if the edge
 // was not loaded in eager-loading.
-func (e MeterItemEdges) BuildingOrErr() ([]*Building, error) {
+func (e MeterItemEdges) UintOrErr() ([]*Unit, error) {
 	if e.loadedTypes[2] {
-		return e.Building, nil
+		return e.Uint, nil
 	}
-	return nil, &NotLoadedError{edge: "building"}
+	return nil, &NotLoadedError{edge: "uint"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -91,7 +91,7 @@ func (*MeterItem) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case meteritem.FieldIsSystem:
 			values[i] = new(sql.NullBool)
-		case meteritem.FieldID, meteritem.FieldOrganizationID:
+		case meteritem.FieldID, meteritem.FieldAccountID:
 			values[i] = new(sql.NullInt64)
 		case meteritem.FieldCode, meteritem.FieldUnit, meteritem.FieldCalcType, meteritem.FieldRemark:
 			values[i] = new(sql.NullString)
@@ -137,11 +137,11 @@ func (_m *MeterItem) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case meteritem.FieldOrganizationID:
+		case meteritem.FieldAccountID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field organization_id", values[i])
+				return fmt.Errorf("unexpected type %T for field account_id", values[i])
 			} else if value.Valid {
-				_m.OrganizationID = int(value.Int64)
+				_m.AccountID = int(value.Int64)
 			}
 		case meteritem.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -187,9 +187,9 @@ func (_m *MeterItem) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryOrganization queries the "organization" edge of the MeterItem entity.
-func (_m *MeterItem) QueryOrganization() *OrganizationQuery {
-	return NewMeterItemClient(_m.config).QueryOrganization(_m)
+// QueryAccounts queries the "accounts" edge of the MeterItem entity.
+func (_m *MeterItem) QueryAccounts() *AccountQuery {
+	return NewMeterItemClient(_m.config).QueryAccounts(_m)
 }
 
 // QueryRooms queries the "rooms" edge of the MeterItem entity.
@@ -197,9 +197,9 @@ func (_m *MeterItem) QueryRooms() *RoomQuery {
 	return NewMeterItemClient(_m.config).QueryRooms(_m)
 }
 
-// QueryBuilding queries the "building" edge of the MeterItem entity.
-func (_m *MeterItem) QueryBuilding() *BuildingQuery {
-	return NewMeterItemClient(_m.config).QueryBuilding(_m)
+// QueryUint queries the "uint" edge of the MeterItem entity.
+func (_m *MeterItem) QueryUint() *UnitQuery {
+	return NewMeterItemClient(_m.config).QueryUint(_m)
 }
 
 // Update returns a builder for updating this MeterItem.
@@ -236,8 +236,8 @@ func (_m *MeterItem) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("organization_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.OrganizationID))
+	builder.WriteString("account_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
 	builder.WriteString(", ")
 	builder.WriteString("code=")
 	builder.WriteString(_m.Code)

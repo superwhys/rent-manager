@@ -9,9 +9,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
 )
 
 // Room is the model entity for the Room schema.
@@ -33,8 +33,8 @@ type Room struct {
 	Price int `json:"price,omitempty"`
 	// 房间大小(平方米)
 	Size int `json:"size,omitempty"`
-	// 所属楼栋ID
-	BuildingID int `json:"building_id,omitempty"`
+	// 单元ID
+	UnitID int `json:"unit_id,omitempty"`
 	// 所属房间类型ID
 	RoomTypeID int `json:"room_type_id,omitempty"`
 	// 房间是否激活
@@ -47,8 +47,8 @@ type Room struct {
 
 // RoomEdges holds the relations/edges for other nodes in the graph.
 type RoomEdges struct {
-	// Building holds the value of the building edge.
-	Building *Building `json:"building,omitempty"`
+	// Unit holds the value of the unit edge.
+	Unit *Unit `json:"unit,omitempty"`
 	// RoomType holds the value of the room_type edge.
 	RoomType *RoomType `json:"room_type,omitempty"`
 	// MeterItems holds the value of the meter_items edge.
@@ -60,15 +60,15 @@ type RoomEdges struct {
 	loadedTypes [4]bool
 }
 
-// BuildingOrErr returns the Building value or an error if the edge
+// UnitOrErr returns the Unit value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e RoomEdges) BuildingOrErr() (*Building, error) {
-	if e.Building != nil {
-		return e.Building, nil
+func (e RoomEdges) UnitOrErr() (*Unit, error) {
+	if e.Unit != nil {
+		return e.Unit, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: building.Label}
+		return nil, &NotFoundError{label: unit.Label}
 	}
-	return nil, &NotLoadedError{edge: "building"}
+	return nil, &NotLoadedError{edge: "unit"}
 }
 
 // RoomTypeOrErr returns the RoomType value or an error if the edge
@@ -107,7 +107,7 @@ func (*Room) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case room.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case room.FieldID, room.FieldFloor, room.FieldPrice, room.FieldSize, room.FieldBuildingID, room.FieldRoomTypeID:
+		case room.FieldID, room.FieldFloor, room.FieldPrice, room.FieldSize, room.FieldUnitID, room.FieldRoomTypeID:
 			values[i] = new(sql.NullInt64)
 		case room.FieldRoomNo:
 			values[i] = new(sql.NullString)
@@ -177,11 +177,11 @@ func (_m *Room) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Size = int(value.Int64)
 			}
-		case room.FieldBuildingID:
+		case room.FieldUnitID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field building_id", values[i])
+				return fmt.Errorf("unexpected type %T for field unit_id", values[i])
 			} else if value.Valid {
-				_m.BuildingID = int(value.Int64)
+				_m.UnitID = int(value.Int64)
 			}
 		case room.FieldRoomTypeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -208,9 +208,9 @@ func (_m *Room) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryBuilding queries the "building" edge of the Room entity.
-func (_m *Room) QueryBuilding() *BuildingQuery {
-	return NewRoomClient(_m.config).QueryBuilding(_m)
+// QueryUnit queries the "unit" edge of the Room entity.
+func (_m *Room) QueryUnit() *UnitQuery {
+	return NewRoomClient(_m.config).QueryUnit(_m)
 }
 
 // QueryRoomType queries the "room_type" edge of the Room entity.
@@ -274,8 +274,8 @@ func (_m *Room) String() string {
 	builder.WriteString("size=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Size))
 	builder.WriteString(", ")
-	builder.WriteString("building_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.BuildingID))
+	builder.WriteString("unit_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UnitID))
 	builder.WriteString(", ")
 	builder.WriteString("room_type_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RoomTypeID))

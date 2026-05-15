@@ -8,30 +8,30 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
 )
 
-// BuildingDelete is the builder for deleting a Building entity.
-type BuildingDelete struct {
+// UnitDelete is the builder for deleting a Unit entity.
+type UnitDelete struct {
 	config
 	hooks    []Hook
-	mutation *BuildingMutation
+	mutation *UnitMutation
 }
 
-// Where appends a list predicates to the BuildingDelete builder.
-func (_d *BuildingDelete) Where(ps ...predicate.Building) *BuildingDelete {
+// Where appends a list predicates to the UnitDelete builder.
+func (_d *UnitDelete) Where(ps ...predicate.Unit) *UnitDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *BuildingDelete) Exec(ctx context.Context) (int, error) {
+func (_d *UnitDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *BuildingDelete) ExecX(ctx context.Context) int {
+func (_d *UnitDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (_d *BuildingDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *BuildingDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(building.Table, sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt))
+func (_d *UnitDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(unit.Table, sqlgraph.NewFieldSpec(unit.FieldID, field.TypeInt))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (_d *BuildingDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// BuildingDeleteOne is the builder for deleting a single Building entity.
-type BuildingDeleteOne struct {
-	_d *BuildingDelete
+// UnitDeleteOne is the builder for deleting a single Unit entity.
+type UnitDeleteOne struct {
+	_d *UnitDelete
 }
 
-// Where appends a list predicates to the BuildingDelete builder.
-func (_d *BuildingDeleteOne) Where(ps ...predicate.Building) *BuildingDeleteOne {
+// Where appends a list predicates to the UnitDelete builder.
+func (_d *UnitDeleteOne) Where(ps ...predicate.Unit) *UnitDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *BuildingDeleteOne) Exec(ctx context.Context) error {
+func (_d *UnitDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{building.Label}
+		return &NotFoundError{unit.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *BuildingDeleteOne) ExecX(ctx context.Context) {
+func (_d *UnitDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

@@ -18,12 +18,16 @@ func NewMeterItemService(repo domainmeteritem.Repository) *MeterItemService {
 }
 
 func (s *MeterItemService) CreateMeterItem(ctx context.Context, cmd *requests.CreateMeterItemCommand) (*domainmeteritem.MeterItem, error) {
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	item, err := domainmeteritem.NewMeterItem(domainmeteritem.CreateParams{
-		OrganizationID: cmd.OrganizationID,
-		Code:           cmd.Code,
-		Unit:           cmd.Unit,
-		CalcType:       cmd.CalcType,
-		Remark:         cmd.Remark,
+		AccountID: accountID,
+		Code:      cmd.Code,
+		Unit:      cmd.Unit,
+		CalcType:  cmd.CalcType,
+		Remark:    cmd.Remark,
 	})
 	if err != nil {
 		return nil, mapMeterItemServiceError(err)
@@ -37,13 +41,17 @@ func (s *MeterItemService) CreateMeterItem(ctx context.Context, cmd *requests.Cr
 }
 
 func (s *MeterItemService) ListMeterItems(ctx context.Context, query *requests.ListMeterItemsQuery) ([]*domainmeteritem.MeterItem, error) {
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	items, err := s.repo.List(ctx, domainmeteritem.ListQuery{
-		OrganizationID: query.OrganizationID,
-		Code:           query.Code,
-		IsSystem:       query.IsSystem,
-		CalcType:       query.CalcType,
-		Limit:          query.Limit,
-		Offset:         query.Offset,
+		AccountID: accountID,
+		Code:      query.Code,
+		IsSystem:  query.IsSystem,
+		CalcType:  query.CalcType,
+		Limit:     query.Limit,
+		Offset:    query.Offset,
 	})
 	if err != nil {
 		return nil, mapMeterItemServiceError(err)
@@ -52,17 +60,21 @@ func (s *MeterItemService) ListMeterItems(ctx context.Context, query *requests.L
 }
 
 func (s *MeterItemService) UpdateMeterItem(ctx context.Context, cmd *requests.UpdateMeterItemCommand) (*domainmeteritem.MeterItem, error) {
-	item, err := s.repo.Get(ctx, cmd.OrganizationID, cmd.MeterItemID)
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	item, err := s.repo.Get(ctx, accountID, cmd.MeterItemID)
 	if err != nil {
 		return nil, mapMeterItemServiceError(err)
 	}
 	if err := item.Update(domainmeteritem.UpdateParams{
-		ID:             cmd.MeterItemID,
-		OrganizationID: cmd.OrganizationID,
-		Code:           cmd.Code,
-		Unit:           cmd.Unit,
-		CalcType:       cmd.CalcType,
-		Remark:         cmd.Remark,
+		ID:        cmd.MeterItemID,
+		AccountID: accountID,
+		Code:      cmd.Code,
+		Unit:      cmd.Unit,
+		CalcType:  cmd.CalcType,
+		Remark:    cmd.Remark,
 	}); err != nil {
 		return nil, mapMeterItemServiceError(err)
 	}
@@ -80,7 +92,7 @@ func mapMeterItemServiceError(err error) error {
 		return nil
 	case errors.Is(err, domainmeteritem.ErrNotFound):
 		return errcode.ErrNotFound.WithMessage(err.Error())
-	case errors.Is(err, domainmeteritem.ErrOrganizationRequired),
+	case errors.Is(err, domainmeteritem.ErrAccountRequired),
 		errors.Is(err, domainmeteritem.ErrCodeRequired),
 		errors.Is(err, domainmeteritem.ErrUnitRequired),
 		errors.Is(err, domainmeteritem.ErrInvalidCalcType),

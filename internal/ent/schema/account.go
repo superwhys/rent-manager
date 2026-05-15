@@ -25,11 +25,6 @@ func (Account) Mixin() []ent.Mixin {
 // Fields of the Account.
 func (Account) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("organization_id").
-			Optional().
-			Nillable().
-			Comment("所属组织ID"),
-
 		field.String("name").
 			NotEmpty().
 			MaxLen(255).
@@ -59,17 +54,20 @@ func (Account) Fields() []ent.Field {
 // Edges of the Account.
 func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("organization", Organization.Type).
-			Field("organization_id").
-			Ref("accounts").
-			Unique(),
 		edge.To("roles", Role.Type),
+		edge.To("units", Unit.Type),
+		edge.To("room_types", RoomType.Type),
+		edge.To("meter_items", MeterItem.Type),
+
+		// 这个账号被授予了哪些 unit-role
+		edge.To("unit_account_roles", UnitAccountRole.Type),
+		// 这个账号发起授予了哪些 unit-role
+		edge.To("granted_unit_account_roles", UnitAccountRole.Type),
 	}
 }
 
 func (Account) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("wechat_openid").Unique(),
-		index.Fields("organization_id"),
 	}
 }

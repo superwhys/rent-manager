@@ -7,10 +7,10 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/domain/room"
 
 	entclient "github.com/superwhys/rent-manager-server/internal/ent"
-	entbuilding "github.com/superwhys/rent-manager-server/internal/ent/building"
 	entmeteritem "github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	entroom "github.com/superwhys/rent-manager-server/internal/ent/room"
+	entunit "github.com/superwhys/rent-manager-server/internal/ent/unit"
 )
 
 type RoomRepository struct {
@@ -21,11 +21,11 @@ func NewRoomRepository(client *entclient.Client) *RoomRepository {
 	return &RoomRepository{client: client}
 }
 
-func (r *RoomRepository) Create(ctx context.Context, organizationID int, createRoom *room.Room) (*room.Room, error) {
-	if err := r.ensureBuildingOwned(ctx, organizationID, createRoom.BuildingID); err != nil {
+func (r *RoomRepository) Create(ctx context.Context, accountID int, createRoom *room.Room) (*room.Room, error) {
+	if err := r.ensureUnitOwned(ctx, accountID, createRoom.UnitID); err != nil {
 		return nil, err
 	}
-	if err := r.ensureRoomMeterItemsOwned(ctx, organizationID, createRoom.MeterItemIDs); err != nil {
+	if err := r.ensureRoomMeterItemsOwned(ctx, accountID, createRoom.MeterItemIDs); err != nil {
 		return nil, err
 	}
 
@@ -34,7 +34,7 @@ func (r *RoomRepository) Create(ctx context.Context, organizationID int, createR
 		SetFloor(createRoom.Floor).
 		SetPrice(createRoom.Price).
 		SetSize(createRoom.Size).
-		SetBuildingID(createRoom.BuildingID).
+		SetUnitID(createRoom.UnitID).
 		SetRoomTypeID(createRoom.RoomTypeID).
 		SetIsActive(createRoom.IsActive)
 	if len(createRoom.MeterItemIDs) > 0 {
@@ -44,14 +44,14 @@ func (r *RoomRepository) Create(ctx context.Context, organizationID int, createR
 	if err != nil {
 		return nil, err
 	}
-	return r.Get(ctx, organizationID, record.ID)
+	return r.Get(ctx, accountID, record.ID)
 }
 
-func (r *RoomRepository) Get(ctx context.Context, organizationID int, id int) (*room.Room, error) {
+func (r *RoomRepository) Get(ctx context.Context, accountID int, id int) (*room.Room, error) {
 	record, err := r.client.Room.Query().
 		Where(entroom.ID(id)).
 		Where(entroom.DeletedAtIsNil()).
-		Where(roomOrganizationPredicate(organizationID)).
+		Where(roomAccountPredicate(accountID)).
 		WithMeterItems(func(query *entclient.MeterItemQuery) {
 			query.Where(entmeteritem.DeletedAtIsNil())
 		}).
@@ -62,16 +62,16 @@ func (r *RoomRepository) Get(ctx context.Context, organizationID int, id int) (*
 	return toDomainRoom(record), nil
 }
 
-func (r *RoomRepository) List(ctx context.Context, organizationID int, query room.ListQuery) ([]*room.Room, error) {
+func (r *RoomRepository) List(ctx context.Context, accountID int, query room.ListQuery) ([]*room.Room, error) {
 	builder := r.client.Room.Query().
 		Where(entroom.DeletedAtIsNil()).
-		Where(roomOrganizationPredicate(organizationID)).
+		Where(roomAccountPredicate(accountID)).
 		WithMeterItems(func(query *entclient.MeterItemQuery) {
 			query.Where(entmeteritem.DeletedAtIsNil())
 		}).
 		Order(entclient.Desc(entroom.FieldID))
-	if query.BuildingID > 0 {
-		builder = builder.Where(entroom.BuildingID(query.BuildingID))
+	if query.UnitID > 0 {
+		builder = builder.Where(entroom.UnitID(query.UnitID))
 	}
 	if query.RoomTypeID > 0 {
 		builder = builder.Where(entroom.RoomTypeID(query.RoomTypeID))
@@ -96,26 +96,26 @@ func (r *RoomRepository) List(ctx context.Context, organizationID int, query roo
 	return rooms, nil
 }
 
-func (r *RoomRepository) Update(ctx context.Context, organizationID int, updateRoom *room.Room) (*room.Room, error) {
-	if _, err := r.Get(ctx, organizationID, updateRoom.ID); err != nil {
+func (r *RoomRepository) Update(ctx context.Context, accountID int, updateRoom *room.Room) (*room.Room, error) {
+	if _, err := r.Get(ctx, accountID, updateRoom.ID); err != nil {
 		return nil, err
 	}
-	if err := r.ensureBuildingOwned(ctx, organizationID, updateRoom.BuildingID); err != nil {
+	if err := r.ensureUnitOwned(ctx, accountID, updateRoom.UnitID); err != nil {
 		return nil, err
 	}
-	if err := r.ensureRoomMeterItemsOwned(ctx, organizationID, updateRoom.MeterItemIDs); err != nil {
+	if err := r.ensureRoomMeterItemsOwned(ctx, accountID, updateRoom.MeterItemIDs); err != nil {
 		return nil, err
 	}
 
 	builder := r.client.Room.Update().
 		Where(entroom.ID(updateRoom.ID)).
 		Where(entroom.DeletedAtIsNil()).
-		Where(roomOrganizationPredicate(organizationID)).
+		Where(roomAccountPredicate(accountID)).
 		SetRoomNo(updateRoom.RoomNo).
 		SetFloor(updateRoom.Floor).
 		SetPrice(updateRoom.Price).
 		SetSize(updateRoom.Size).
-		SetBuildingID(updateRoom.BuildingID).
+		SetUnitID(updateRoom.UnitID).
 		SetRoomTypeID(updateRoom.RoomTypeID).
 		SetIsActive(updateRoom.IsActive).
 		ClearMeterItems()
@@ -129,14 +129,14 @@ func (r *RoomRepository) Update(ctx context.Context, organizationID int, updateR
 	if affected == 0 {
 		return nil, room.ErrNotFound
 	}
-	return r.Get(ctx, organizationID, updateRoom.ID)
+	return r.Get(ctx, accountID, updateRoom.ID)
 }
 
-func (r *RoomRepository) Delete(ctx context.Context, organizationID int, id int) error {
+func (r *RoomRepository) Delete(ctx context.Context, accountID int, id int) error {
 	affected, err := r.client.Room.Update().
 		Where(entroom.ID(id)).
 		Where(entroom.DeletedAtIsNil()).
-		Where(roomOrganizationPredicate(organizationID)).
+		Where(roomAccountPredicate(accountID)).
 		SetDeletedAt(entroom.DefaultUpdatedAt()).
 		Save(ctx)
 	if err != nil {
@@ -148,11 +148,11 @@ func (r *RoomRepository) Delete(ctx context.Context, organizationID int, id int)
 	return nil
 }
 
-func (r *RoomRepository) ensureBuildingOwned(ctx context.Context, organizationID int, id int) error {
-	exists, err := r.client.Building.Query().
-		Where(entbuilding.ID(id)).
-		Where(entbuilding.OrganizationID(organizationID)).
-		Where(entbuilding.DeletedAtIsNil()).
+func (r *RoomRepository) ensureUnitOwned(ctx context.Context, accountID int, id int) error {
+	exists, err := r.client.Unit.Query().
+		Where(entunit.ID(id)).
+		Where(entunit.AccountID(accountID)).
+		Where(entunit.DeletedAtIsNil()).
 		Exist(ctx)
 	if err != nil {
 		return err
@@ -163,8 +163,8 @@ func (r *RoomRepository) ensureBuildingOwned(ctx context.Context, organizationID
 	return nil
 }
 
-func (r *RoomRepository) ensureRoomMeterItemsOwned(ctx context.Context, organizationID int, ids []int) error {
-	if err := ensureMeterItemsOwned(ctx, r.client, organizationID, ids); err != nil {
+func (r *RoomRepository) ensureRoomMeterItemsOwned(ctx context.Context, accountID int, ids []int) error {
+	if err := ensureMeterItemsOwned(ctx, r.client, accountID, ids); err != nil {
 		if err == domainmeteritem.ErrNotFound {
 			return room.ErrMeterItemNotFound
 		}
@@ -173,10 +173,10 @@ func (r *RoomRepository) ensureRoomMeterItemsOwned(ctx context.Context, organiza
 	return nil
 }
 
-func roomOrganizationPredicate(organizationID int) predicate.Room {
-	return entroom.HasBuildingWith(
-		entbuilding.OrganizationID(organizationID),
-		entbuilding.DeletedAtIsNil(),
+func roomAccountPredicate(accountID int) predicate.Room {
+	return entroom.HasUnitWith(
+		entunit.AccountID(accountID),
+		entunit.DeletedAtIsNil(),
 	)
 }
 
@@ -190,7 +190,7 @@ func toDomainRoom(record *entclient.Room) *room.Room {
 		Floor:      record.Floor,
 		Price:      record.Price,
 		Size:       record.Size,
-		BuildingID: record.BuildingID,
+		UnitID:     record.UnitID,
 		RoomTypeID: record.RoomTypeID,
 		IsActive:   record.IsActive,
 		CreatedAt:  record.CreatedAt,
@@ -202,15 +202,15 @@ func toDomainRoom(record *entclient.Room) *room.Room {
 		for _, item := range record.Edges.MeterItems {
 			domainRoom.MeterItemIDs = append(domainRoom.MeterItemIDs, item.ID)
 			domainRoom.MeterItems = append(domainRoom.MeterItems, &domainmeteritem.MeterItem{
-				ID:             item.ID,
-				OrganizationID: item.OrganizationID,
-				Code:           item.Code,
-				Unit:           item.Unit,
-				IsSystem:       item.IsSystem,
-				CalcType:       item.CalcType.String(),
-				Remark:         item.Remark,
-				CreatedAt:      item.CreatedAt,
-				UpdatedAt:      item.UpdatedAt,
+				ID:        item.ID,
+				AccountID: item.AccountID,
+				Code:      item.Code,
+				Unit:      item.Unit,
+				IsSystem:  item.IsSystem,
+				CalcType:  item.CalcType.String(),
+				Remark:    item.Remark,
+				CreatedAt: item.CreatedAt,
+				UpdatedAt: item.UpdatedAt,
 			})
 		}
 	}

@@ -3,8 +3,8 @@ package rbac
 import "errors"
 
 var (
-	// ErrRoleOrganizationRequired 表示角色所属组织不能为空。
-	ErrRoleOrganizationRequired = errors.New("role organization is required")
+	// ErrRoleAccountRequired 表示角色所属账号不能为空。
+	ErrRoleAccountRequired = errors.New("role account is required")
 	// ErrRoleNameRequired 表示角色名称不能为空。
 	ErrRoleNameRequired = errors.New("role name is required")
 	// ErrPermissionGroupCodeRequired 表示权限组代码不能为空。
@@ -17,10 +17,10 @@ var (
 	ErrPermissionAPIPathRequired = errors.New("permission api path is required")
 	// ErrPermissionDescriptionRequired 表示权限描述不能为空。
 	ErrPermissionDescriptionRequired = errors.New("permission description is required")
-	// ErrRoleNotInOrganization 表示角色不属于指定组织。
-	ErrRoleNotInOrganization = errors.New("role is not in organization")
-	// ErrAccountNotInOrganization 表示账号不属于指定组织。
-	ErrAccountNotInOrganization = errors.New("account is not in organization")
-	// ErrCrossOrganizationRoleAssignment 表示跨组织绑定角色。
-	ErrCrossOrganizationRoleAssignment = errors.New("cannot assign roles across organizations")
+	// ErrRoleNotInAccount 表示角色不属于当前账号。
+	ErrRoleNotInAccount = errors.New("role is not in account")
+	// ErrUnitNotInAccount 表示单元不属于当前账号。
+	ErrUnitNotInAccount = errors.New("unit is not in account")
+	// ErrAccountNotFound 表示账号不存在。
+	ErrAccountNotFound = errors.New("account not found")
 )

@@ -14,14 +14,10 @@ type Tx struct {
 	config
 	// Account is the client for interacting with the Account builders.
 	Account *AccountClient
-	// Building is the client for interacting with the Building builders.
-	Building *BuildingClient
 	// MeterItem is the client for interacting with the MeterItem builders.
 	MeterItem *MeterItemClient
 	// MeterReading is the client for interacting with the MeterReading builders.
 	MeterReading *MeterReadingClient
-	// Organization is the client for interacting with the Organization builders.
-	Organization *OrganizationClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// PermissionGroup is the client for interacting with the PermissionGroup builders.
@@ -32,6 +28,10 @@ type Tx struct {
 	Room *RoomClient
 	// RoomType is the client for interacting with the RoomType builders.
 	RoomType *RoomTypeClient
+	// Unit is the client for interacting with the Unit builders.
+	Unit *UnitClient
+	// UnitAccountRole is the client for interacting with the UnitAccountRole builders.
+	UnitAccountRole *UnitAccountRoleClient
 
 	// lazily loaded.
 	client     *Client
@@ -164,15 +164,15 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Account = NewAccountClient(tx.config)
-	tx.Building = NewBuildingClient(tx.config)
 	tx.MeterItem = NewMeterItemClient(tx.config)
 	tx.MeterReading = NewMeterReadingClient(tx.config)
-	tx.Organization = NewOrganizationClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.PermissionGroup = NewPermissionGroupClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.Room = NewRoomClient(tx.config)
 	tx.RoomType = NewRoomTypeClient(tx.config)
+	tx.Unit = NewUnitClient(tx.config)
+	tx.UnitAccountRole = NewUnitAccountRoleClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

@@ -20,39 +20,41 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
-	// FieldOrganizationID holds the string denoting the organization_id field in the database.
-	FieldOrganizationID = "organization_id"
+	// FieldAccountID holds the string denoting the account_id field in the database.
+	FieldAccountID = "account_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldIsDefaultOwner holds the string denoting the is_default_owner field in the database.
 	FieldIsDefaultOwner = "is_default_owner"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
-	// EdgeOrganization holds the string denoting the organization edge name in mutations.
-	EdgeOrganization = "organization"
 	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
 	EdgeAccounts = "accounts"
 	// EdgePermissionGroups holds the string denoting the permission_groups edge name in mutations.
 	EdgePermissionGroups = "permission_groups"
+	// EdgeUnitAccountRoles holds the string denoting the unit_account_roles edge name in mutations.
+	EdgeUnitAccountRoles = "unit_account_roles"
 	// Table holds the table name of the role in the database.
 	Table = "roles"
-	// OrganizationTable is the table that holds the organization relation/edge.
-	OrganizationTable = "roles"
-	// OrganizationInverseTable is the table name for the Organization entity.
-	// It exists in this package in order to avoid circular dependency with the "organization" package.
-	OrganizationInverseTable = "organizations"
-	// OrganizationColumn is the table column denoting the organization relation/edge.
-	OrganizationColumn = "organization_id"
-	// AccountsTable is the table that holds the accounts relation/edge. The primary key declared below.
-	AccountsTable = "account_roles"
+	// AccountsTable is the table that holds the accounts relation/edge.
+	AccountsTable = "roles"
 	// AccountsInverseTable is the table name for the Account entity.
 	// It exists in this package in order to avoid circular dependency with the "account" package.
 	AccountsInverseTable = "accounts"
+	// AccountsColumn is the table column denoting the accounts relation/edge.
+	AccountsColumn = "account_id"
 	// PermissionGroupsTable is the table that holds the permission_groups relation/edge. The primary key declared below.
 	PermissionGroupsTable = "role_permission_groups"
 	// PermissionGroupsInverseTable is the table name for the PermissionGroup entity.
 	// It exists in this package in order to avoid circular dependency with the "permissiongroup" package.
 	PermissionGroupsInverseTable = "permission_groups"
+	// UnitAccountRolesTable is the table that holds the unit_account_roles relation/edge.
+	UnitAccountRolesTable = "unit_account_roles"
+	// UnitAccountRolesInverseTable is the table name for the UnitAccountRole entity.
+	// It exists in this package in order to avoid circular dependency with the "unitaccountrole" package.
+	UnitAccountRolesInverseTable = "unit_account_roles"
+	// UnitAccountRolesColumn is the table column denoting the unit_account_roles relation/edge.
+	UnitAccountRolesColumn = "role_id"
 )
 
 // Columns holds all SQL columns for role fields.
@@ -61,16 +63,13 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
-	FieldOrganizationID,
+	FieldAccountID,
 	FieldName,
 	FieldIsDefaultOwner,
 	FieldIsActive,
 }
 
 var (
-	// AccountsPrimaryKey and AccountsColumn2 are the table columns denoting the
-	// primary key for the accounts relation (M2M).
-	AccountsPrimaryKey = []string{"account_id", "role_id"}
 	// PermissionGroupsPrimaryKey and PermissionGroupsColumn2 are the table columns denoting the
 	// primary key for the permission_groups relation (M2M).
 	PermissionGroupsPrimaryKey = []string{"role_id", "permission_group_id"}
@@ -124,9 +123,9 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
-// ByOrganizationID orders the results by the organization_id field.
-func ByOrganizationID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOrganizationID, opts...).ToFunc()
+// ByAccountID orders the results by the account_id field.
+func ByAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAccountID, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -144,24 +143,10 @@ func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
 }
 
-// ByOrganizationField orders the results by organization field.
-func ByOrganizationField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByAccountsField orders the results by accounts field.
+func ByAccountsField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newOrganizationStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByAccountsCount orders the results by accounts count.
-func ByAccountsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAccountsStep(), opts...)
-	}
-}
-
-// ByAccounts orders the results by accounts terms.
-func ByAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -178,18 +163,25 @@ func ByPermissionGroups(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption 
 		sqlgraph.OrderByNeighborTerms(s, newPermissionGroupsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newOrganizationStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(OrganizationInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
-	)
+
+// ByUnitAccountRolesCount orders the results by unit_account_roles count.
+func ByUnitAccountRolesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUnitAccountRolesStep(), opts...)
+	}
+}
+
+// ByUnitAccountRoles orders the results by unit_account_roles terms.
+func ByUnitAccountRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUnitAccountRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
 func newAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccountsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, AccountsTable, AccountsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, true, AccountsTable, AccountsColumn),
 	)
 }
 func newPermissionGroupsStep() *sqlgraph.Step {
@@ -197,5 +189,12 @@ func newPermissionGroupsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PermissionGroupsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, PermissionGroupsTable, PermissionGroupsPrimaryKey...),
+	)
+}
+func newUnitAccountRolesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UnitAccountRolesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UnitAccountRolesTable, UnitAccountRolesColumn),
 	)
 }

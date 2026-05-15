@@ -11,8 +11,8 @@ var (
 	ErrInvalidPrice = errors.New("price must be greater than or equal to 0")
 	// ErrInvalidSize 表示房间面积必须大于 0。
 	ErrInvalidSize = errors.New("size must be greater than 0")
-	// ErrBuildingRequired 表示房间必须归属楼栋。
-	ErrBuildingRequired = errors.New("building is required")
+	// ErrUnitRequired 表示房间必须归属单元。
+	ErrUnitRequired = errors.New("unit is required")
 	// ErrRoomTypeRequired 表示房间必须归属房型。
 	ErrRoomTypeRequired = errors.New("room type is required")
 	// ErrInvalidMeterItemID 表示抄表项 ID 非法。

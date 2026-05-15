@@ -70,9 +70,9 @@ func DeletedAt(v time.Time) predicate.RoomType {
 	return predicate.RoomType(sql.FieldEQ(FieldDeletedAt, v))
 }
 
-// OrganizationID applies equality check predicate on the "organization_id" field. It's identical to OrganizationIDEQ.
-func OrganizationID(v int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldEQ(FieldOrganizationID, v))
+// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
+func AccountID(v int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldEQ(FieldAccountID, v))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
@@ -210,24 +210,24 @@ func DeletedAtNotNil() predicate.RoomType {
 	return predicate.RoomType(sql.FieldNotNull(FieldDeletedAt))
 }
 
-// OrganizationIDEQ applies the EQ predicate on the "organization_id" field.
-func OrganizationIDEQ(v int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldEQ(FieldOrganizationID, v))
+// AccountIDEQ applies the EQ predicate on the "account_id" field.
+func AccountIDEQ(v int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldEQ(FieldAccountID, v))
 }
 
-// OrganizationIDNEQ applies the NEQ predicate on the "organization_id" field.
-func OrganizationIDNEQ(v int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldNEQ(FieldOrganizationID, v))
+// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
+func AccountIDNEQ(v int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldNEQ(FieldAccountID, v))
 }
 
-// OrganizationIDIn applies the In predicate on the "organization_id" field.
-func OrganizationIDIn(vs ...int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldIn(FieldOrganizationID, vs...))
+// AccountIDIn applies the In predicate on the "account_id" field.
+func AccountIDIn(vs ...int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldIn(FieldAccountID, vs...))
 }
 
-// OrganizationIDNotIn applies the NotIn predicate on the "organization_id" field.
-func OrganizationIDNotIn(vs ...int) predicate.RoomType {
-	return predicate.RoomType(sql.FieldNotIn(FieldOrganizationID, vs...))
+// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
+func AccountIDNotIn(vs ...int) predicate.RoomType {
+	return predicate.RoomType(sql.FieldNotIn(FieldAccountID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -295,21 +295,21 @@ func NameContainsFold(v string) predicate.RoomType {
 	return predicate.RoomType(sql.FieldContainsFold(FieldName, v))
 }
 
-// HasOrganization applies the HasEdge predicate on the "organization" edge.
-func HasOrganization() predicate.RoomType {
+// HasAccount applies the HasEdge predicate on the "account" edge.
+func HasAccount() predicate.RoomType {
 	return predicate.RoomType(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasOrganizationWith applies the HasEdge predicate on the "organization" edge with a given conditions (other predicates).
-func HasOrganizationWith(preds ...predicate.Organization) predicate.RoomType {
+// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
+func HasAccountWith(preds ...predicate.Account) predicate.RoomType {
 	return predicate.RoomType(func(s *sql.Selector) {
-		step := newOrganizationStep()
+		step := newAccountStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

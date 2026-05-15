@@ -9,12 +9,12 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
 )
 
-// Building is the model entity for the Building schema.
-type Building struct {
+// Unit is the model entity for the Unit schema.
+type Unit struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
@@ -24,49 +24,51 @@ type Building struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// 所属组织 id
-	OrganizationID int `json:"organization_id,omitempty"`
-	// 楼栋名字
+	// 所属账号ID
+	AccountID int `json:"account_id,omitempty"`
+	// 单元名字
 	Name string `json:"name,omitempty"`
-	// 楼栋地址
+	// 单元地址
 	Address string `json:"address,omitempty"`
-	// 楼栋城市
+	// 单元城市
 	City string `json:"city,omitempty"`
-	// 楼栋省份
+	// 单元省份
 	Province string `json:"province,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the BuildingQuery when eager-loading is set.
-	Edges        BuildingEdges `json:"edges"`
+	// The values are being populated by the UnitQuery when eager-loading is set.
+	Edges        UnitEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// BuildingEdges holds the relations/edges for other nodes in the graph.
-type BuildingEdges struct {
-	// Organization holds the value of the organization edge.
-	Organization *Organization `json:"organization,omitempty"`
+// UnitEdges holds the relations/edges for other nodes in the graph.
+type UnitEdges struct {
+	// Account holds the value of the account edge.
+	Account *Account `json:"account,omitempty"`
 	// Rooms holds the value of the rooms edge.
 	Rooms []*Room `json:"rooms,omitempty"`
 	// MeterItems holds the value of the meter_items edge.
 	MeterItems []*MeterItem `json:"meter_items,omitempty"`
+	// UnitAccountRoles holds the value of the unit_account_roles edge.
+	UnitAccountRoles []*UnitAccountRole `json:"unit_account_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
-// OrganizationOrErr returns the Organization value or an error if the edge
+// AccountOrErr returns the Account value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e BuildingEdges) OrganizationOrErr() (*Organization, error) {
-	if e.Organization != nil {
-		return e.Organization, nil
+func (e UnitEdges) AccountOrErr() (*Account, error) {
+	if e.Account != nil {
+		return e.Account, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: organization.Label}
+		return nil, &NotFoundError{label: account.Label}
 	}
-	return nil, &NotLoadedError{edge: "organization"}
+	return nil, &NotLoadedError{edge: "account"}
 }
 
 // RoomsOrErr returns the Rooms value or an error if the edge
 // was not loaded in eager-loading.
-func (e BuildingEdges) RoomsOrErr() ([]*Room, error) {
+func (e UnitEdges) RoomsOrErr() ([]*Room, error) {
 	if e.loadedTypes[1] {
 		return e.Rooms, nil
 	}
@@ -75,23 +77,32 @@ func (e BuildingEdges) RoomsOrErr() ([]*Room, error) {
 
 // MeterItemsOrErr returns the MeterItems value or an error if the edge
 // was not loaded in eager-loading.
-func (e BuildingEdges) MeterItemsOrErr() ([]*MeterItem, error) {
+func (e UnitEdges) MeterItemsOrErr() ([]*MeterItem, error) {
 	if e.loadedTypes[2] {
 		return e.MeterItems, nil
 	}
 	return nil, &NotLoadedError{edge: "meter_items"}
 }
 
+// UnitAccountRolesOrErr returns the UnitAccountRoles value or an error if the edge
+// was not loaded in eager-loading.
+func (e UnitEdges) UnitAccountRolesOrErr() ([]*UnitAccountRole, error) {
+	if e.loadedTypes[3] {
+		return e.UnitAccountRoles, nil
+	}
+	return nil, &NotLoadedError{edge: "unit_account_roles"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Building) scanValues(columns []string) ([]any, error) {
+func (*Unit) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case building.FieldID, building.FieldOrganizationID:
+		case unit.FieldID, unit.FieldAccountID:
 			values[i] = new(sql.NullInt64)
-		case building.FieldName, building.FieldAddress, building.FieldCity, building.FieldProvince:
+		case unit.FieldName, unit.FieldAddress, unit.FieldCity, unit.FieldProvince:
 			values[i] = new(sql.NullString)
-		case building.FieldCreatedAt, building.FieldUpdatedAt, building.FieldDeletedAt:
+		case unit.FieldCreatedAt, unit.FieldUpdatedAt, unit.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -101,63 +112,63 @@ func (*Building) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Building fields.
-func (_m *Building) assignValues(columns []string, values []any) error {
+// to the Unit fields.
+func (_m *Unit) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case building.FieldID:
+		case unit.FieldID:
 			value, ok := values[i].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
-		case building.FieldCreatedAt:
+		case unit.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				_m.CreatedAt = value.Time
 			}
-		case building.FieldUpdatedAt:
+		case unit.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case building.FieldDeletedAt:
+		case unit.FieldDeletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
 			} else if value.Valid {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case building.FieldOrganizationID:
+		case unit.FieldAccountID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field organization_id", values[i])
+				return fmt.Errorf("unexpected type %T for field account_id", values[i])
 			} else if value.Valid {
-				_m.OrganizationID = int(value.Int64)
+				_m.AccountID = int(value.Int64)
 			}
-		case building.FieldName:
+		case unit.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
 			}
-		case building.FieldAddress:
+		case unit.FieldAddress:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field address", values[i])
 			} else if value.Valid {
 				_m.Address = value.String
 			}
-		case building.FieldCity:
+		case unit.FieldCity:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field city", values[i])
 			} else if value.Valid {
 				_m.City = value.String
 			}
-		case building.FieldProvince:
+		case unit.FieldProvince:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field province", values[i])
 			} else if value.Valid {
@@ -170,49 +181,54 @@ func (_m *Building) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the Building.
+// Value returns the ent.Value that was dynamically selected and assigned to the Unit.
 // This includes values selected through modifiers, order, etc.
-func (_m *Building) Value(name string) (ent.Value, error) {
+func (_m *Unit) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryOrganization queries the "organization" edge of the Building entity.
-func (_m *Building) QueryOrganization() *OrganizationQuery {
-	return NewBuildingClient(_m.config).QueryOrganization(_m)
+// QueryAccount queries the "account" edge of the Unit entity.
+func (_m *Unit) QueryAccount() *AccountQuery {
+	return NewUnitClient(_m.config).QueryAccount(_m)
 }
 
-// QueryRooms queries the "rooms" edge of the Building entity.
-func (_m *Building) QueryRooms() *RoomQuery {
-	return NewBuildingClient(_m.config).QueryRooms(_m)
+// QueryRooms queries the "rooms" edge of the Unit entity.
+func (_m *Unit) QueryRooms() *RoomQuery {
+	return NewUnitClient(_m.config).QueryRooms(_m)
 }
 
-// QueryMeterItems queries the "meter_items" edge of the Building entity.
-func (_m *Building) QueryMeterItems() *MeterItemQuery {
-	return NewBuildingClient(_m.config).QueryMeterItems(_m)
+// QueryMeterItems queries the "meter_items" edge of the Unit entity.
+func (_m *Unit) QueryMeterItems() *MeterItemQuery {
+	return NewUnitClient(_m.config).QueryMeterItems(_m)
 }
 
-// Update returns a builder for updating this Building.
-// Note that you need to call Building.Unwrap() before calling this method if this Building
+// QueryUnitAccountRoles queries the "unit_account_roles" edge of the Unit entity.
+func (_m *Unit) QueryUnitAccountRoles() *UnitAccountRoleQuery {
+	return NewUnitClient(_m.config).QueryUnitAccountRoles(_m)
+}
+
+// Update returns a builder for updating this Unit.
+// Note that you need to call Unit.Unwrap() before calling this method if this Unit
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (_m *Building) Update() *BuildingUpdateOne {
-	return NewBuildingClient(_m.config).UpdateOne(_m)
+func (_m *Unit) Update() *UnitUpdateOne {
+	return NewUnitClient(_m.config).UpdateOne(_m)
 }
 
-// Unwrap unwraps the Building entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the Unit entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (_m *Building) Unwrap() *Building {
+func (_m *Unit) Unwrap() *Unit {
 	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Building is not a transactional entity")
+		panic("ent: Unit is not a transactional entity")
 	}
 	_m.config.driver = _tx.drv
 	return _m
 }
 
 // String implements the fmt.Stringer.
-func (_m *Building) String() string {
+func (_m *Unit) String() string {
 	var builder strings.Builder
-	builder.WriteString("Building(")
+	builder.WriteString("Unit(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
@@ -225,8 +241,8 @@ func (_m *Building) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("organization_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.OrganizationID))
+	builder.WriteString("account_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
@@ -243,5 +259,5 @@ func (_m *Building) String() string {
 	return builder.String()
 }
 
-// Buildings is a parsable slice of Building.
-type Buildings []*Building
+// Units is a parsable slice of Unit.
+type Units []*Unit

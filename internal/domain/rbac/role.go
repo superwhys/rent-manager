@@ -7,7 +7,7 @@ import (
 
 type Role struct {
 	ID             int
-	OrganizationID int
+	AccountID      int
 	Name           string
 	IsDefaultOwner bool
 	IsActive       bool
@@ -18,7 +18,7 @@ type Role struct {
 
 func NewRole(params CreateRoleParams) (*Role, error) {
 	role := &Role{
-		OrganizationID: params.OrganizationID,
+		AccountID:      params.AccountID,
 		Name:           strings.TrimSpace(params.Name),
 		IsDefaultOwner: params.IsDefaultOwner,
 		IsActive:       true,
@@ -30,8 +30,8 @@ func NewRole(params CreateRoleParams) (*Role, error) {
 }
 
 func (r *Role) Validate() error {
-	if r.OrganizationID <= 0 {
-		return ErrRoleOrganizationRequired
+	if r.AccountID <= 0 {
+		return ErrRoleAccountRequired
 	}
 	if r.Name == "" {
 		return ErrRoleNameRequired

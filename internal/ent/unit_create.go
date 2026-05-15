@@ -10,27 +10,28 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
-// BuildingCreate is the builder for creating a Building entity.
-type BuildingCreate struct {
+// UnitCreate is the builder for creating a Unit entity.
+type UnitCreate struct {
 	config
-	mutation *BuildingMutation
+	mutation *UnitMutation
 	hooks    []Hook
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (_c *BuildingCreate) SetCreatedAt(v time.Time) *BuildingCreate {
+func (_c *UnitCreate) SetCreatedAt(v time.Time) *UnitCreate {
 	_c.mutation.SetCreatedAt(v)
 	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_c *BuildingCreate) SetNillableCreatedAt(v *time.Time) *BuildingCreate {
+func (_c *UnitCreate) SetNillableCreatedAt(v *time.Time) *UnitCreate {
 	if v != nil {
 		_c.SetCreatedAt(*v)
 	}
@@ -38,13 +39,13 @@ func (_c *BuildingCreate) SetNillableCreatedAt(v *time.Time) *BuildingCreate {
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (_c *BuildingCreate) SetUpdatedAt(v time.Time) *BuildingCreate {
+func (_c *UnitCreate) SetUpdatedAt(v time.Time) *UnitCreate {
 	_c.mutation.SetUpdatedAt(v)
 	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (_c *BuildingCreate) SetNillableUpdatedAt(v *time.Time) *BuildingCreate {
+func (_c *UnitCreate) SetNillableUpdatedAt(v *time.Time) *UnitCreate {
 	if v != nil {
 		_c.SetUpdatedAt(*v)
 	}
@@ -52,62 +53,62 @@ func (_c *BuildingCreate) SetNillableUpdatedAt(v *time.Time) *BuildingCreate {
 }
 
 // SetDeletedAt sets the "deleted_at" field.
-func (_c *BuildingCreate) SetDeletedAt(v time.Time) *BuildingCreate {
+func (_c *UnitCreate) SetDeletedAt(v time.Time) *UnitCreate {
 	_c.mutation.SetDeletedAt(v)
 	return _c
 }
 
 // SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (_c *BuildingCreate) SetNillableDeletedAt(v *time.Time) *BuildingCreate {
+func (_c *UnitCreate) SetNillableDeletedAt(v *time.Time) *UnitCreate {
 	if v != nil {
 		_c.SetDeletedAt(*v)
 	}
 	return _c
 }
 
-// SetOrganizationID sets the "organization_id" field.
-func (_c *BuildingCreate) SetOrganizationID(v int) *BuildingCreate {
-	_c.mutation.SetOrganizationID(v)
+// SetAccountID sets the "account_id" field.
+func (_c *UnitCreate) SetAccountID(v int) *UnitCreate {
+	_c.mutation.SetAccountID(v)
 	return _c
 }
 
 // SetName sets the "name" field.
-func (_c *BuildingCreate) SetName(v string) *BuildingCreate {
+func (_c *UnitCreate) SetName(v string) *UnitCreate {
 	_c.mutation.SetName(v)
 	return _c
 }
 
 // SetAddress sets the "address" field.
-func (_c *BuildingCreate) SetAddress(v string) *BuildingCreate {
+func (_c *UnitCreate) SetAddress(v string) *UnitCreate {
 	_c.mutation.SetAddress(v)
 	return _c
 }
 
 // SetCity sets the "city" field.
-func (_c *BuildingCreate) SetCity(v string) *BuildingCreate {
+func (_c *UnitCreate) SetCity(v string) *UnitCreate {
 	_c.mutation.SetCity(v)
 	return _c
 }
 
 // SetProvince sets the "province" field.
-func (_c *BuildingCreate) SetProvince(v string) *BuildingCreate {
+func (_c *UnitCreate) SetProvince(v string) *UnitCreate {
 	_c.mutation.SetProvince(v)
 	return _c
 }
 
-// SetOrganization sets the "organization" edge to the Organization entity.
-func (_c *BuildingCreate) SetOrganization(v *Organization) *BuildingCreate {
-	return _c.SetOrganizationID(v.ID)
+// SetAccount sets the "account" edge to the Account entity.
+func (_c *UnitCreate) SetAccount(v *Account) *UnitCreate {
+	return _c.SetAccountID(v.ID)
 }
 
 // AddRoomIDs adds the "rooms" edge to the Room entity by IDs.
-func (_c *BuildingCreate) AddRoomIDs(ids ...int) *BuildingCreate {
+func (_c *UnitCreate) AddRoomIDs(ids ...int) *UnitCreate {
 	_c.mutation.AddRoomIDs(ids...)
 	return _c
 }
 
 // AddRooms adds the "rooms" edges to the Room entity.
-func (_c *BuildingCreate) AddRooms(v ...*Room) *BuildingCreate {
+func (_c *UnitCreate) AddRooms(v ...*Room) *UnitCreate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
@@ -116,13 +117,13 @@ func (_c *BuildingCreate) AddRooms(v ...*Room) *BuildingCreate {
 }
 
 // AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by IDs.
-func (_c *BuildingCreate) AddMeterItemIDs(ids ...int) *BuildingCreate {
+func (_c *UnitCreate) AddMeterItemIDs(ids ...int) *UnitCreate {
 	_c.mutation.AddMeterItemIDs(ids...)
 	return _c
 }
 
 // AddMeterItems adds the "meter_items" edges to the MeterItem entity.
-func (_c *BuildingCreate) AddMeterItems(v ...*MeterItem) *BuildingCreate {
+func (_c *UnitCreate) AddMeterItems(v ...*MeterItem) *UnitCreate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
@@ -130,19 +131,34 @@ func (_c *BuildingCreate) AddMeterItems(v ...*MeterItem) *BuildingCreate {
 	return _c.AddMeterItemIDs(ids...)
 }
 
-// Mutation returns the BuildingMutation object of the builder.
-func (_c *BuildingCreate) Mutation() *BuildingMutation {
+// AddUnitAccountRoleIDs adds the "unit_account_roles" edge to the UnitAccountRole entity by IDs.
+func (_c *UnitCreate) AddUnitAccountRoleIDs(ids ...int) *UnitCreate {
+	_c.mutation.AddUnitAccountRoleIDs(ids...)
+	return _c
+}
+
+// AddUnitAccountRoles adds the "unit_account_roles" edges to the UnitAccountRole entity.
+func (_c *UnitCreate) AddUnitAccountRoles(v ...*UnitAccountRole) *UnitCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUnitAccountRoleIDs(ids...)
+}
+
+// Mutation returns the UnitMutation object of the builder.
+func (_c *UnitCreate) Mutation() *UnitMutation {
 	return _c.mutation
 }
 
-// Save creates the Building in the database.
-func (_c *BuildingCreate) Save(ctx context.Context) (*Building, error) {
+// Save creates the Unit in the database.
+func (_c *UnitCreate) Save(ctx context.Context) (*Unit, error) {
 	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (_c *BuildingCreate) SaveX(ctx context.Context) *Building {
+func (_c *UnitCreate) SaveX(ctx context.Context) *Unit {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -151,80 +167,80 @@ func (_c *BuildingCreate) SaveX(ctx context.Context) *Building {
 }
 
 // Exec executes the query.
-func (_c *BuildingCreate) Exec(ctx context.Context) error {
+func (_c *UnitCreate) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *BuildingCreate) ExecX(ctx context.Context) {
+func (_c *UnitCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *BuildingCreate) defaults() {
+func (_c *UnitCreate) defaults() {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := building.DefaultCreatedAt()
+		v := unit.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		v := building.DefaultUpdatedAt()
+		v := unit.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_c *BuildingCreate) check() error {
+func (_c *UnitCreate) check() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Building.created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Unit.created_at"`)}
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Building.updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Unit.updated_at"`)}
 	}
-	if _, ok := _c.mutation.OrganizationID(); !ok {
-		return &ValidationError{Name: "organization_id", err: errors.New(`ent: missing required field "Building.organization_id"`)}
+	if _, ok := _c.mutation.AccountID(); !ok {
+		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "Unit.account_id"`)}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Building.name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Unit.name"`)}
 	}
 	if v, ok := _c.mutation.Name(); ok {
-		if err := building.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Building.name": %w`, err)}
+		if err := unit.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Unit.name": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Address(); !ok {
-		return &ValidationError{Name: "address", err: errors.New(`ent: missing required field "Building.address"`)}
+		return &ValidationError{Name: "address", err: errors.New(`ent: missing required field "Unit.address"`)}
 	}
 	if v, ok := _c.mutation.Address(); ok {
-		if err := building.AddressValidator(v); err != nil {
-			return &ValidationError{Name: "address", err: fmt.Errorf(`ent: validator failed for field "Building.address": %w`, err)}
+		if err := unit.AddressValidator(v); err != nil {
+			return &ValidationError{Name: "address", err: fmt.Errorf(`ent: validator failed for field "Unit.address": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.City(); !ok {
-		return &ValidationError{Name: "city", err: errors.New(`ent: missing required field "Building.city"`)}
+		return &ValidationError{Name: "city", err: errors.New(`ent: missing required field "Unit.city"`)}
 	}
 	if v, ok := _c.mutation.City(); ok {
-		if err := building.CityValidator(v); err != nil {
-			return &ValidationError{Name: "city", err: fmt.Errorf(`ent: validator failed for field "Building.city": %w`, err)}
+		if err := unit.CityValidator(v); err != nil {
+			return &ValidationError{Name: "city", err: fmt.Errorf(`ent: validator failed for field "Unit.city": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Province(); !ok {
-		return &ValidationError{Name: "province", err: errors.New(`ent: missing required field "Building.province"`)}
+		return &ValidationError{Name: "province", err: errors.New(`ent: missing required field "Unit.province"`)}
 	}
 	if v, ok := _c.mutation.Province(); ok {
-		if err := building.ProvinceValidator(v); err != nil {
-			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Building.province": %w`, err)}
+		if err := unit.ProvinceValidator(v); err != nil {
+			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Unit.province": %w`, err)}
 		}
 	}
-	if len(_c.mutation.OrganizationIDs()) == 0 {
-		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "Building.organization"`)}
+	if len(_c.mutation.AccountIDs()) == 0 {
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "Unit.account"`)}
 	}
 	return nil
 }
 
-func (_c *BuildingCreate) sqlSave(ctx context.Context) (*Building, error) {
+func (_c *UnitCreate) sqlSave(ctx context.Context) (*Unit, error) {
 	if err := _c.check(); err != nil {
 		return nil, err
 	}
@@ -242,62 +258,62 @@ func (_c *BuildingCreate) sqlSave(ctx context.Context) (*Building, error) {
 	return _node, nil
 }
 
-func (_c *BuildingCreate) createSpec() (*Building, *sqlgraph.CreateSpec) {
+func (_c *UnitCreate) createSpec() (*Unit, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Building{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(building.Table, sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt))
+		_node = &Unit{config: _c.config}
+		_spec = sqlgraph.NewCreateSpec(unit.Table, sqlgraph.NewFieldSpec(unit.FieldID, field.TypeInt))
 	)
 	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(building.FieldCreatedAt, field.TypeTime, value)
+		_spec.SetField(unit.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if value, ok := _c.mutation.UpdatedAt(); ok {
-		_spec.SetField(building.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(unit.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := _c.mutation.DeletedAt(); ok {
-		_spec.SetField(building.FieldDeletedAt, field.TypeTime, value)
+		_spec.SetField(unit.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
 	if value, ok := _c.mutation.Name(); ok {
-		_spec.SetField(building.FieldName, field.TypeString, value)
+		_spec.SetField(unit.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if value, ok := _c.mutation.Address(); ok {
-		_spec.SetField(building.FieldAddress, field.TypeString, value)
+		_spec.SetField(unit.FieldAddress, field.TypeString, value)
 		_node.Address = value
 	}
 	if value, ok := _c.mutation.City(); ok {
-		_spec.SetField(building.FieldCity, field.TypeString, value)
+		_spec.SetField(unit.FieldCity, field.TypeString, value)
 		_node.City = value
 	}
 	if value, ok := _c.mutation.Province(); ok {
-		_spec.SetField(building.FieldProvince, field.TypeString, value)
+		_spec.SetField(unit.FieldProvince, field.TypeString, value)
 		_node.Province = value
 	}
-	if nodes := _c.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   building.OrganizationTable,
-			Columns: []string{building.OrganizationColumn},
+			Table:   unit.AccountTable,
+			Columns: []string{unit.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.OrganizationID = nodes[0]
+		_node.AccountID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.RoomsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   building.RoomsTable,
-			Columns: []string{building.RoomsColumn},
+			Table:   unit.RoomsTable,
+			Columns: []string{unit.RoomsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
@@ -312,8 +328,8 @@ func (_c *BuildingCreate) createSpec() (*Building, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   building.MeterItemsTable,
-			Columns: building.MeterItemsPrimaryKey,
+			Table:   unit.MeterItemsTable,
+			Columns: unit.MeterItemsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
@@ -324,30 +340,46 @@ func (_c *BuildingCreate) createSpec() (*Building, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := _c.mutation.UnitAccountRolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   unit.UnitAccountRolesTable,
+			Columns: []string{unit.UnitAccountRolesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(unitaccountrole.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
-// BuildingCreateBulk is the builder for creating many Building entities in bulk.
-type BuildingCreateBulk struct {
+// UnitCreateBulk is the builder for creating many Unit entities in bulk.
+type UnitCreateBulk struct {
 	config
 	err      error
-	builders []*BuildingCreate
+	builders []*UnitCreate
 }
 
-// Save creates the Building entities in the database.
-func (_c *BuildingCreateBulk) Save(ctx context.Context) ([]*Building, error) {
+// Save creates the Unit entities in the database.
+func (_c *UnitCreateBulk) Save(ctx context.Context) ([]*Unit, error) {
 	if _c.err != nil {
 		return nil, _c.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
-	nodes := make([]*Building, len(_c.builders))
+	nodes := make([]*Unit, len(_c.builders))
 	mutators := make([]Mutator, len(_c.builders))
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*BuildingMutation)
+				mutation, ok := m.(*UnitMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -394,7 +426,7 @@ func (_c *BuildingCreateBulk) Save(ctx context.Context) ([]*Building, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_c *BuildingCreateBulk) SaveX(ctx context.Context) []*Building {
+func (_c *UnitCreateBulk) SaveX(ctx context.Context) []*Unit {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -403,13 +435,13 @@ func (_c *BuildingCreateBulk) SaveX(ctx context.Context) []*Building {
 }
 
 // Exec executes the query.
-func (_c *BuildingCreateBulk) Exec(ctx context.Context) error {
+func (_c *UnitCreateBulk) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *BuildingCreateBulk) ExecX(ctx context.Context) {
+func (_c *UnitCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}

@@ -75,7 +75,7 @@ func RoomListHandler(roomService *services.RoomService) gin.HandlerFunc {
 // @Router /rooms/{room_id} [get]
 func RoomGetHandler(roomService *services.RoomService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RoomIdQuery) {
-		room, err := roomService.GetRoom(c.Request.Context(), req.OrganizationID, req.RoomID)
+		room, err := roomService.GetRoom(c.Request.Context(), req.RoomID)
 		if response.HandleRouterError(c, err, "get room failed", errcode.ErrSysInternal) {
 			return
 		}
@@ -115,7 +115,7 @@ func RoomUpdateHandler(roomService *services.RoomService) gin.HandlerFunc {
 // @Router /rooms/{room_id} [delete]
 func RoomDeleteHandler(roomService *services.RoomService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RoomIdQuery) {
-		err := roomService.DeleteRoom(c.Request.Context(), req.OrganizationID, req.RoomID)
+		err := roomService.DeleteRoom(c.Request.Context(), req.RoomID)
 		if response.HandleRouterError(c, err, "delete room failed", errcode.ErrSysInternal) {
 			return
 		}

@@ -21,8 +21,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
-	// FieldOrganizationID holds the string denoting the organization_id field in the database.
-	FieldOrganizationID = "organization_id"
+	// FieldAccountID holds the string denoting the account_id field in the database.
+	FieldAccountID = "account_id"
 	// FieldCode holds the string denoting the code field in the database.
 	FieldCode = "code"
 	// FieldUnit holds the string denoting the unit field in the database.
@@ -33,31 +33,31 @@ const (
 	FieldCalcType = "calc_type"
 	// FieldRemark holds the string denoting the remark field in the database.
 	FieldRemark = "remark"
-	// EdgeOrganization holds the string denoting the organization edge name in mutations.
-	EdgeOrganization = "organization"
+	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
+	EdgeAccounts = "accounts"
 	// EdgeRooms holds the string denoting the rooms edge name in mutations.
 	EdgeRooms = "rooms"
-	// EdgeBuilding holds the string denoting the building edge name in mutations.
-	EdgeBuilding = "building"
+	// EdgeUint holds the string denoting the uint edge name in mutations.
+	EdgeUint = "uint"
 	// Table holds the table name of the meteritem in the database.
 	Table = "meter_items"
-	// OrganizationTable is the table that holds the organization relation/edge.
-	OrganizationTable = "meter_items"
-	// OrganizationInverseTable is the table name for the Organization entity.
-	// It exists in this package in order to avoid circular dependency with the "organization" package.
-	OrganizationInverseTable = "organizations"
-	// OrganizationColumn is the table column denoting the organization relation/edge.
-	OrganizationColumn = "organization_id"
+	// AccountsTable is the table that holds the accounts relation/edge.
+	AccountsTable = "meter_items"
+	// AccountsInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountsInverseTable = "accounts"
+	// AccountsColumn is the table column denoting the accounts relation/edge.
+	AccountsColumn = "account_id"
 	// RoomsTable is the table that holds the rooms relation/edge. The primary key declared below.
 	RoomsTable = "room_meter_items"
 	// RoomsInverseTable is the table name for the Room entity.
 	// It exists in this package in order to avoid circular dependency with the "room" package.
 	RoomsInverseTable = "rooms"
-	// BuildingTable is the table that holds the building relation/edge. The primary key declared below.
-	BuildingTable = "building_meter_items"
-	// BuildingInverseTable is the table name for the Building entity.
-	// It exists in this package in order to avoid circular dependency with the "building" package.
-	BuildingInverseTable = "buildings"
+	// UintTable is the table that holds the uint relation/edge. The primary key declared below.
+	UintTable = "unit_meter_items"
+	// UintInverseTable is the table name for the Unit entity.
+	// It exists in this package in order to avoid circular dependency with the "unit" package.
+	UintInverseTable = "units"
 )
 
 // Columns holds all SQL columns for meteritem fields.
@@ -66,7 +66,7 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
-	FieldOrganizationID,
+	FieldAccountID,
 	FieldCode,
 	FieldUnit,
 	FieldIsSystem,
@@ -78,9 +78,9 @@ var (
 	// RoomsPrimaryKey and RoomsColumn2 are the table columns denoting the
 	// primary key for the rooms relation (M2M).
 	RoomsPrimaryKey = []string{"room_id", "meter_item_id"}
-	// BuildingPrimaryKey and BuildingColumn2 are the table columns denoting the
-	// primary key for the building relation (M2M).
-	BuildingPrimaryKey = []string{"building_id", "meter_item_id"}
+	// UintPrimaryKey and UintColumn2 are the table columns denoting the
+	// primary key for the uint relation (M2M).
+	UintPrimaryKey = []string{"unit_id", "meter_item_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -157,9 +157,9 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
-// ByOrganizationID orders the results by the organization_id field.
-func ByOrganizationID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOrganizationID, opts...).ToFunc()
+// ByAccountID orders the results by the account_id field.
+func ByAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAccountID, opts...).ToFunc()
 }
 
 // ByCode orders the results by the code field.
@@ -187,10 +187,10 @@ func ByRemark(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRemark, opts...).ToFunc()
 }
 
-// ByOrganizationField orders the results by organization field.
-func ByOrganizationField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByAccountsField orders the results by accounts field.
+func ByAccountsField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newOrganizationStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -208,24 +208,24 @@ func ByRooms(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByBuildingCount orders the results by building count.
-func ByBuildingCount(opts ...sql.OrderTermOption) OrderOption {
+// ByUintCount orders the results by uint count.
+func ByUintCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newBuildingStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newUintStep(), opts...)
 	}
 }
 
-// ByBuilding orders the results by building terms.
-func ByBuilding(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByUint orders the results by uint terms.
+func ByUint(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newBuildingStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newUintStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newOrganizationStep() *sqlgraph.Step {
+func newAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(OrganizationInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
+		sqlgraph.To(AccountsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, AccountsTable, AccountsColumn),
 	)
 }
 func newRoomsStep() *sqlgraph.Step {
@@ -235,10 +235,10 @@ func newRoomsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, true, RoomsTable, RoomsPrimaryKey...),
 	)
 }
-func newBuildingStep() *sqlgraph.Step {
+func newUintStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(BuildingInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, BuildingTable, BuildingPrimaryKey...),
+		sqlgraph.To(UintInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, UintTable, UintPrimaryKey...),
 	)
 }

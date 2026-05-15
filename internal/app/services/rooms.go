@@ -18,28 +18,40 @@ func NewRoomService(repo domainroom.Repository) *RoomService {
 }
 
 func (s *RoomService) CreateRoom(ctx context.Context, cmd *requests.CreateRoomCommand) (*domainroom.Room, error) {
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	room, err := domainroom.NewRoom(domainroom.CreateParams{
 		RoomNo:       cmd.RoomNo,
 		Floor:        cmd.Floor,
 		Price:        cmd.Price,
 		Size:         cmd.Size,
-		BuildingID:   cmd.BuildingID,
+		UnitID:       cmd.UnitID,
 		RoomTypeID:   cmd.RoomTypeID,
 		MeterItemIDs: cmd.MeterItemIDs,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return s.repo.Create(ctx, cmd.OrganizationID, room)
+	return s.repo.Create(ctx, accountID, room)
 }
 
-func (s *RoomService) GetRoom(ctx context.Context, organizationID int, id int) (*domainroom.Room, error) {
-	return s.repo.Get(ctx, organizationID, id)
+func (s *RoomService) GetRoom(ctx context.Context, id int) (*domainroom.Room, error) {
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.Get(ctx, accountID, id)
 }
 
 func (s *RoomService) ListRooms(ctx context.Context, query *requests.ListRoomsQuery) ([]*domainroom.Room, error) {
-	return s.repo.List(ctx, query.OrganizationID, domainroom.ListQuery{
-		BuildingID: query.BuildingID,
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.List(ctx, accountID, domainroom.ListQuery{
+		UnitID:     query.UnitID,
 		RoomTypeID: ptrx.IntValue(query.RoomTypeID),
 		IsActive:   query.IsActive,
 		Limit:      query.Limit,
@@ -48,7 +60,11 @@ func (s *RoomService) ListRooms(ctx context.Context, query *requests.ListRoomsQu
 }
 
 func (s *RoomService) UpdateRoom(ctx context.Context, cmd *requests.UpdateRoomCommand) (*domainroom.Room, error) {
-	room, err := s.repo.Get(ctx, cmd.OrganizationID, cmd.RoomID)
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	room, err := s.repo.Get(ctx, accountID, cmd.RoomID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,16 +74,20 @@ func (s *RoomService) UpdateRoom(ctx context.Context, cmd *requests.UpdateRoomCo
 		Floor:        cmd.Floor,
 		Price:        cmd.Price,
 		Size:         cmd.Size,
-		BuildingID:   cmd.BuildingID,
+		UnitID:       cmd.UnitID,
 		RoomTypeID:   cmd.RoomTypeID,
 		IsActive:     cmd.IsActive,
 		MeterItemIDs: cmd.MeterItemIDs,
 	}); err != nil {
 		return nil, err
 	}
-	return s.repo.Update(ctx, cmd.OrganizationID, room)
+	return s.repo.Update(ctx, accountID, room)
 }
 
-func (s *RoomService) DeleteRoom(ctx context.Context, organizationID int, id int) error {
-	return s.repo.Delete(ctx, organizationID, id)
+func (s *RoomService) DeleteRoom(ctx context.Context, id int) error {
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	return s.repo.Delete(ctx, accountID, id)
 }

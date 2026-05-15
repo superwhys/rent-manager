@@ -11,7 +11,7 @@ type RoomResponse struct {
 	Floor      int                 `json:"floor"`
 	Price      int                 `json:"price"`
 	Size       int                 `json:"size"`
-	BuildingID int                 `json:"building_id"`
+	UnitID     int                 `json:"unit_id"`
 	RoomTypeID int                 `json:"room_type_id"`
 	IsActive   bool                `json:"is_active"`
 	MeterItems []MeterItemResponse `json:"meter_items"`
@@ -24,7 +24,7 @@ func ToRoomResponse(room *domainroom.Room) RoomResponse {
 		Floor:      room.Floor,
 		Price:      room.Price,
 		Size:       room.Size,
-		BuildingID: room.BuildingID,
+		UnitID:     room.UnitID,
 		RoomTypeID: room.RoomTypeID,
 		IsActive:   room.IsActive,
 		MeterItems: ToMeterItemListResponse(room.MeterItems),

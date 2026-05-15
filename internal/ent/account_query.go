@@ -13,20 +13,27 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // AccountQuery is the builder for querying Account entities.
 type AccountQuery struct {
 	config
-	ctx              *QueryContext
-	order            []account.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.Account
-	withOrganization *OrganizationQuery
-	withRoles        *RoleQuery
+	ctx                         *QueryContext
+	order                       []account.OrderOption
+	inters                      []Interceptor
+	predicates                  []predicate.Account
+	withRoles                   *RoleQuery
+	withUnits                   *UnitQuery
+	withRoomTypes               *RoomTypeQuery
+	withMeterItems              *MeterItemQuery
+	withUnitAccountRoles        *UnitAccountRoleQuery
+	withGrantedUnitAccountRoles *UnitAccountRoleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -63,28 +70,6 @@ func (_q *AccountQuery) Order(o ...account.OrderOption) *AccountQuery {
 	return _q
 }
 
-// QueryOrganization chains the current query on the "organization" edge.
-func (_q *AccountQuery) QueryOrganization() *OrganizationQuery {
-	query := (&OrganizationClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(account.Table, account.FieldID, selector),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, account.OrganizationTable, account.OrganizationColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QueryRoles chains the current query on the "roles" edge.
 func (_q *AccountQuery) QueryRoles() *RoleQuery {
 	query := (&RoleClient{config: _q.config}).Query()
@@ -99,7 +84,117 @@ func (_q *AccountQuery) QueryRoles() *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(account.Table, account.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, account.RolesTable, account.RolesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.RolesTable, account.RolesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUnits chains the current query on the "units" edge.
+func (_q *AccountQuery) QueryUnits() *UnitQuery {
+	query := (&UnitClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, selector),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.UnitsTable, account.UnitsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRoomTypes chains the current query on the "room_types" edge.
+func (_q *AccountQuery) QueryRoomTypes() *RoomTypeQuery {
+	query := (&RoomTypeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, selector),
+			sqlgraph.To(roomtype.Table, roomtype.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.RoomTypesTable, account.RoomTypesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMeterItems chains the current query on the "meter_items" edge.
+func (_q *AccountQuery) QueryMeterItems() *MeterItemQuery {
+	query := (&MeterItemClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, selector),
+			sqlgraph.To(meteritem.Table, meteritem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.MeterItemsTable, account.MeterItemsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUnitAccountRoles chains the current query on the "unit_account_roles" edge.
+func (_q *AccountQuery) QueryUnitAccountRoles() *UnitAccountRoleQuery {
+	query := (&UnitAccountRoleClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, selector),
+			sqlgraph.To(unitaccountrole.Table, unitaccountrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.UnitAccountRolesTable, account.UnitAccountRolesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryGrantedUnitAccountRoles chains the current query on the "granted_unit_account_roles" edge.
+func (_q *AccountQuery) QueryGrantedUnitAccountRoles() *UnitAccountRoleQuery {
+	query := (&UnitAccountRoleClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, selector),
+			sqlgraph.To(unitaccountrole.Table, unitaccountrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.GrantedUnitAccountRolesTable, account.GrantedUnitAccountRolesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -294,28 +389,21 @@ func (_q *AccountQuery) Clone() *AccountQuery {
 		return nil
 	}
 	return &AccountQuery{
-		config:           _q.config,
-		ctx:              _q.ctx.Clone(),
-		order:            append([]account.OrderOption{}, _q.order...),
-		inters:           append([]Interceptor{}, _q.inters...),
-		predicates:       append([]predicate.Account{}, _q.predicates...),
-		withOrganization: _q.withOrganization.Clone(),
-		withRoles:        _q.withRoles.Clone(),
+		config:                      _q.config,
+		ctx:                         _q.ctx.Clone(),
+		order:                       append([]account.OrderOption{}, _q.order...),
+		inters:                      append([]Interceptor{}, _q.inters...),
+		predicates:                  append([]predicate.Account{}, _q.predicates...),
+		withRoles:                   _q.withRoles.Clone(),
+		withUnits:                   _q.withUnits.Clone(),
+		withRoomTypes:               _q.withRoomTypes.Clone(),
+		withMeterItems:              _q.withMeterItems.Clone(),
+		withUnitAccountRoles:        _q.withUnitAccountRoles.Clone(),
+		withGrantedUnitAccountRoles: _q.withGrantedUnitAccountRoles.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
-}
-
-// WithOrganization tells the query-builder to eager-load the nodes that are connected to
-// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *AccountQuery) WithOrganization(opts ...func(*OrganizationQuery)) *AccountQuery {
-	query := (&OrganizationClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withOrganization = query
-	return _q
 }
 
 // WithRoles tells the query-builder to eager-load the nodes that are connected to
@@ -326,6 +414,61 @@ func (_q *AccountQuery) WithRoles(opts ...func(*RoleQuery)) *AccountQuery {
 		opt(query)
 	}
 	_q.withRoles = query
+	return _q
+}
+
+// WithUnits tells the query-builder to eager-load the nodes that are connected to
+// the "units" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithUnits(opts ...func(*UnitQuery)) *AccountQuery {
+	query := (&UnitClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUnits = query
+	return _q
+}
+
+// WithRoomTypes tells the query-builder to eager-load the nodes that are connected to
+// the "room_types" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithRoomTypes(opts ...func(*RoomTypeQuery)) *AccountQuery {
+	query := (&RoomTypeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRoomTypes = query
+	return _q
+}
+
+// WithMeterItems tells the query-builder to eager-load the nodes that are connected to
+// the "meter_items" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithMeterItems(opts ...func(*MeterItemQuery)) *AccountQuery {
+	query := (&MeterItemClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMeterItems = query
+	return _q
+}
+
+// WithUnitAccountRoles tells the query-builder to eager-load the nodes that are connected to
+// the "unit_account_roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithUnitAccountRoles(opts ...func(*UnitAccountRoleQuery)) *AccountQuery {
+	query := (&UnitAccountRoleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUnitAccountRoles = query
+	return _q
+}
+
+// WithGrantedUnitAccountRoles tells the query-builder to eager-load the nodes that are connected to
+// the "granted_unit_account_roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithGrantedUnitAccountRoles(opts ...func(*UnitAccountRoleQuery)) *AccountQuery {
+	query := (&UnitAccountRoleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withGrantedUnitAccountRoles = query
 	return _q
 }
 
@@ -407,9 +550,13 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 	var (
 		nodes       = []*Account{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
-			_q.withOrganization != nil,
+		loadedTypes = [6]bool{
 			_q.withRoles != nil,
+			_q.withUnits != nil,
+			_q.withRoomTypes != nil,
+			_q.withMeterItems != nil,
+			_q.withUnitAccountRoles != nil,
+			_q.withGrantedUnitAccountRoles != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -430,12 +577,6 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withOrganization; query != nil {
-		if err := _q.loadOrganization(ctx, query, nodes, nil,
-			func(n *Account, e *Organization) { n.Edges.Organization = e }); err != nil {
-			return nil, err
-		}
-	}
 	if query := _q.withRoles; query != nil {
 		if err := _q.loadRoles(ctx, query, nodes,
 			func(n *Account) { n.Edges.Roles = []*Role{} },
@@ -443,99 +584,223 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 			return nil, err
 		}
 	}
+	if query := _q.withUnits; query != nil {
+		if err := _q.loadUnits(ctx, query, nodes,
+			func(n *Account) { n.Edges.Units = []*Unit{} },
+			func(n *Account, e *Unit) { n.Edges.Units = append(n.Edges.Units, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRoomTypes; query != nil {
+		if err := _q.loadRoomTypes(ctx, query, nodes,
+			func(n *Account) { n.Edges.RoomTypes = []*RoomType{} },
+			func(n *Account, e *RoomType) { n.Edges.RoomTypes = append(n.Edges.RoomTypes, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMeterItems; query != nil {
+		if err := _q.loadMeterItems(ctx, query, nodes,
+			func(n *Account) { n.Edges.MeterItems = []*MeterItem{} },
+			func(n *Account, e *MeterItem) { n.Edges.MeterItems = append(n.Edges.MeterItems, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUnitAccountRoles; query != nil {
+		if err := _q.loadUnitAccountRoles(ctx, query, nodes,
+			func(n *Account) { n.Edges.UnitAccountRoles = []*UnitAccountRole{} },
+			func(n *Account, e *UnitAccountRole) { n.Edges.UnitAccountRoles = append(n.Edges.UnitAccountRoles, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withGrantedUnitAccountRoles; query != nil {
+		if err := _q.loadGrantedUnitAccountRoles(ctx, query, nodes,
+			func(n *Account) { n.Edges.GrantedUnitAccountRoles = []*UnitAccountRole{} },
+			func(n *Account, e *UnitAccountRole) {
+				n.Edges.GrantedUnitAccountRoles = append(n.Edges.GrantedUnitAccountRoles, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (_q *AccountQuery) loadOrganization(ctx context.Context, query *OrganizationQuery, nodes []*Account, init func(*Account), assign func(*Account, *Organization)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Account)
+func (_q *AccountQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*Account, init func(*Account), assign func(*Account, *Role)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Account)
 	for i := range nodes {
-		if nodes[i].OrganizationID == nil {
-			continue
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
 		}
-		fk := *nodes[i].OrganizationID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(role.FieldAccountID)
 	}
-	query.Where(organization.IDIn(ids...))
+	query.Where(predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.RolesColumn), fks...))
+	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		fk := n.AccountID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "organization_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "account_id" returned %v for node %v`, fk, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
-func (_q *AccountQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*Account, init func(*Account), assign func(*Account, *Role)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Account)
-	nids := make(map[int]map[*Account]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+func (_q *AccountQuery) loadUnits(ctx context.Context, query *UnitQuery, nodes []*Account, init func(*Account), assign func(*Account, *Unit)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Account)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(account.RolesTable)
-		s.Join(joinT).On(s.C(role.FieldID), joinT.C(account.RolesPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(account.RolesPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(account.RolesPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(unit.FieldAccountID)
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Account]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Role](ctx, query, qr, query.inters)
+	query.Where(predicate.Unit(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.UnitsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.AccountID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "roles" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "account_id" returned %v for node %v`, fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *AccountQuery) loadRoomTypes(ctx context.Context, query *RoomTypeQuery, nodes []*Account, init func(*Account), assign func(*Account, *RoomType)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Account)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
 		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(roomtype.FieldAccountID)
+	}
+	query.Where(predicate.RoomType(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.RoomTypesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AccountID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "account_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *AccountQuery) loadMeterItems(ctx context.Context, query *MeterItemQuery, nodes []*Account, init func(*Account), assign func(*Account, *MeterItem)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Account)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(meteritem.FieldAccountID)
+	}
+	query.Where(predicate.MeterItem(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.MeterItemsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AccountID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "account_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *AccountQuery) loadUnitAccountRoles(ctx context.Context, query *UnitAccountRoleQuery, nodes []*Account, init func(*Account), assign func(*Account, *UnitAccountRole)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Account)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(unitaccountrole.FieldAccountID)
+	}
+	query.Where(predicate.UnitAccountRole(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.UnitAccountRolesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AccountID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "account_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *AccountQuery) loadGrantedUnitAccountRoles(ctx context.Context, query *UnitAccountRoleQuery, nodes []*Account, init func(*Account), assign func(*Account, *UnitAccountRole)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Account)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(unitaccountrole.FieldGrantedByAccountID)
+	}
+	query.Where(predicate.UnitAccountRole(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.GrantedUnitAccountRolesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.GrantedByAccountID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "granted_by_account_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -564,9 +829,6 @@ func (_q *AccountQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != account.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if _q.withOrganization != nil {
-			_spec.Node.AddColumnOnce(account.FieldOrganizationID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

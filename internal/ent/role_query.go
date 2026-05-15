@@ -13,10 +13,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // RoleQuery is the builder for querying Role entities.
@@ -26,9 +26,9 @@ type RoleQuery struct {
 	order                []role.OrderOption
 	inters               []Interceptor
 	predicates           []predicate.Role
-	withOrganization     *OrganizationQuery
 	withAccounts         *AccountQuery
 	withPermissionGroups *PermissionGroupQuery
+	withUnitAccountRoles *UnitAccountRoleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -65,28 +65,6 @@ func (_q *RoleQuery) Order(o ...role.OrderOption) *RoleQuery {
 	return _q
 }
 
-// QueryOrganization chains the current query on the "organization" edge.
-func (_q *RoleQuery) QueryOrganization() *OrganizationQuery {
-	query := (&OrganizationClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(role.Table, role.FieldID, selector),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, role.OrganizationTable, role.OrganizationColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QueryAccounts chains the current query on the "accounts" edge.
 func (_q *RoleQuery) QueryAccounts() *AccountQuery {
 	query := (&AccountClient{config: _q.config}).Query()
@@ -101,7 +79,7 @@ func (_q *RoleQuery) QueryAccounts() *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, role.AccountsTable, role.AccountsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountsTable, role.AccountsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -124,6 +102,28 @@ func (_q *RoleQuery) QueryPermissionGroups() *PermissionGroupQuery {
 			sqlgraph.From(role.Table, role.FieldID, selector),
 			sqlgraph.To(permissiongroup.Table, permissiongroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.PermissionGroupsTable, role.PermissionGroupsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUnitAccountRoles chains the current query on the "unit_account_roles" edge.
+func (_q *RoleQuery) QueryUnitAccountRoles() *UnitAccountRoleQuery {
+	query := (&UnitAccountRoleClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, selector),
+			sqlgraph.To(unitaccountrole.Table, unitaccountrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, role.UnitAccountRolesTable, role.UnitAccountRolesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -323,24 +323,13 @@ func (_q *RoleQuery) Clone() *RoleQuery {
 		order:                append([]role.OrderOption{}, _q.order...),
 		inters:               append([]Interceptor{}, _q.inters...),
 		predicates:           append([]predicate.Role{}, _q.predicates...),
-		withOrganization:     _q.withOrganization.Clone(),
 		withAccounts:         _q.withAccounts.Clone(),
 		withPermissionGroups: _q.withPermissionGroups.Clone(),
+		withUnitAccountRoles: _q.withUnitAccountRoles.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
-}
-
-// WithOrganization tells the query-builder to eager-load the nodes that are connected to
-// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *RoleQuery) WithOrganization(opts ...func(*OrganizationQuery)) *RoleQuery {
-	query := (&OrganizationClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withOrganization = query
-	return _q
 }
 
 // WithAccounts tells the query-builder to eager-load the nodes that are connected to
@@ -362,6 +351,17 @@ func (_q *RoleQuery) WithPermissionGroups(opts ...func(*PermissionGroupQuery)) *
 		opt(query)
 	}
 	_q.withPermissionGroups = query
+	return _q
+}
+
+// WithUnitAccountRoles tells the query-builder to eager-load the nodes that are connected to
+// the "unit_account_roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RoleQuery) WithUnitAccountRoles(opts ...func(*UnitAccountRoleQuery)) *RoleQuery {
+	query := (&UnitAccountRoleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUnitAccountRoles = query
 	return _q
 }
 
@@ -444,9 +444,9 @@ func (_q *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 		nodes       = []*Role{}
 		_spec       = _q.querySpec()
 		loadedTypes = [3]bool{
-			_q.withOrganization != nil,
 			_q.withAccounts != nil,
 			_q.withPermissionGroups != nil,
+			_q.withUnitAccountRoles != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -467,16 +467,9 @@ func (_q *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withOrganization; query != nil {
-		if err := _q.loadOrganization(ctx, query, nodes, nil,
-			func(n *Role, e *Organization) { n.Edges.Organization = e }); err != nil {
-			return nil, err
-		}
-	}
 	if query := _q.withAccounts; query != nil {
-		if err := _q.loadAccounts(ctx, query, nodes,
-			func(n *Role) { n.Edges.Accounts = []*Account{} },
-			func(n *Role, e *Account) { n.Edges.Accounts = append(n.Edges.Accounts, e) }); err != nil {
+		if err := _q.loadAccounts(ctx, query, nodes, nil,
+			func(n *Role, e *Account) { n.Edges.Accounts = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -487,14 +480,21 @@ func (_q *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 			return nil, err
 		}
 	}
+	if query := _q.withUnitAccountRoles; query != nil {
+		if err := _q.loadUnitAccountRoles(ctx, query, nodes,
+			func(n *Role) { n.Edges.UnitAccountRoles = []*UnitAccountRole{} },
+			func(n *Role, e *UnitAccountRole) { n.Edges.UnitAccountRoles = append(n.Edges.UnitAccountRoles, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (_q *RoleQuery) loadOrganization(ctx context.Context, query *OrganizationQuery, nodes []*Role, init func(*Role), assign func(*Role, *Organization)) error {
+func (_q *RoleQuery) loadAccounts(ctx context.Context, query *AccountQuery, nodes []*Role, init func(*Role), assign func(*Role, *Account)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Role)
 	for i := range nodes {
-		fk := nodes[i].OrganizationID
+		fk := nodes[i].AccountID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -503,7 +503,7 @@ func (_q *RoleQuery) loadOrganization(ctx context.Context, query *OrganizationQu
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(organization.IDIn(ids...))
+	query.Where(account.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -511,71 +511,10 @@ func (_q *RoleQuery) loadOrganization(ctx context.Context, query *OrganizationQu
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "organization_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "account_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *RoleQuery) loadAccounts(ctx context.Context, query *AccountQuery, nodes []*Role, init func(*Role), assign func(*Role, *Account)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Role)
-	nids := make(map[int]map[*Role]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(role.AccountsTable)
-		s.Join(joinT).On(s.C(account.FieldID), joinT.C(role.AccountsPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(role.AccountsPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(role.AccountsPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Role]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Account](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "accounts" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
 		}
 	}
 	return nil
@@ -641,6 +580,36 @@ func (_q *RoleQuery) loadPermissionGroups(ctx context.Context, query *Permission
 	}
 	return nil
 }
+func (_q *RoleQuery) loadUnitAccountRoles(ctx context.Context, query *UnitAccountRoleQuery, nodes []*Role, init func(*Role), assign func(*Role, *UnitAccountRole)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Role)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(unitaccountrole.FieldRoleID)
+	}
+	query.Where(predicate.UnitAccountRole(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(role.UnitAccountRolesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RoleID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "role_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *RoleQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -667,8 +636,8 @@ func (_q *RoleQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withOrganization != nil {
-			_spec.Node.AddColumnOnce(role.FieldOrganizationID)
+		if _q.withAccounts != nil {
+			_spec.Node.AddColumnOnce(role.FieldAccountID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

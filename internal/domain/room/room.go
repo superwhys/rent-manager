@@ -13,7 +13,7 @@ type Room struct {
 	Floor        int
 	Price        int
 	Size         int
-	BuildingID   int
+	UnitID       int
 	RoomTypeID   int
 	IsActive     bool
 	MeterItemIDs []int
@@ -28,7 +28,7 @@ func NewRoom(params CreateParams) (*Room, error) {
 		Floor:        params.Floor,
 		Price:        params.Price,
 		Size:         params.Size,
-		BuildingID:   params.BuildingID,
+		UnitID:       params.UnitID,
 		RoomTypeID:   params.RoomTypeID,
 		IsActive:     true,
 		MeterItemIDs: normalizeMeterItemIDs(params.MeterItemIDs),
@@ -44,7 +44,7 @@ func (r *Room) Update(params UpdateParams) error {
 	r.Floor = params.Floor
 	r.Price = params.Price
 	r.Size = params.Size
-	r.BuildingID = params.BuildingID
+	r.UnitID = params.UnitID
 	r.RoomTypeID = params.RoomTypeID
 	r.IsActive = params.IsActive
 	r.MeterItemIDs = normalizeMeterItemIDs(params.MeterItemIDs)
@@ -64,8 +64,8 @@ func (r *Room) Validate() error {
 	if r.Size <= 0 {
 		return ErrInvalidSize
 	}
-	if r.BuildingID <= 0 {
-		return ErrBuildingRequired
+	if r.UnitID <= 0 {
+		return ErrUnitRequired
 	}
 	if r.RoomTypeID <= 0 {
 		return ErrRoomTypeRequired

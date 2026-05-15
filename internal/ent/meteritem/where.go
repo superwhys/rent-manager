@@ -70,9 +70,9 @@ func DeletedAt(v time.Time) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldEQ(FieldDeletedAt, v))
 }
 
-// OrganizationID applies equality check predicate on the "organization_id" field. It's identical to OrganizationIDEQ.
-func OrganizationID(v int) predicate.MeterItem {
-	return predicate.MeterItem(sql.FieldEQ(FieldOrganizationID, v))
+// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
+func AccountID(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldEQ(FieldAccountID, v))
 }
 
 // Code applies equality check predicate on the "code" field. It's identical to CodeEQ.
@@ -225,24 +225,24 @@ func DeletedAtNotNil() predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldNotNull(FieldDeletedAt))
 }
 
-// OrganizationIDEQ applies the EQ predicate on the "organization_id" field.
-func OrganizationIDEQ(v int) predicate.MeterItem {
-	return predicate.MeterItem(sql.FieldEQ(FieldOrganizationID, v))
+// AccountIDEQ applies the EQ predicate on the "account_id" field.
+func AccountIDEQ(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldEQ(FieldAccountID, v))
 }
 
-// OrganizationIDNEQ applies the NEQ predicate on the "organization_id" field.
-func OrganizationIDNEQ(v int) predicate.MeterItem {
-	return predicate.MeterItem(sql.FieldNEQ(FieldOrganizationID, v))
+// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
+func AccountIDNEQ(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldNEQ(FieldAccountID, v))
 }
 
-// OrganizationIDIn applies the In predicate on the "organization_id" field.
-func OrganizationIDIn(vs ...int) predicate.MeterItem {
-	return predicate.MeterItem(sql.FieldIn(FieldOrganizationID, vs...))
+// AccountIDIn applies the In predicate on the "account_id" field.
+func AccountIDIn(vs ...int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldIn(FieldAccountID, vs...))
 }
 
-// OrganizationIDNotIn applies the NotIn predicate on the "organization_id" field.
-func OrganizationIDNotIn(vs ...int) predicate.MeterItem {
-	return predicate.MeterItem(sql.FieldNotIn(FieldOrganizationID, vs...))
+// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
+func AccountIDNotIn(vs ...int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldNotIn(FieldAccountID, vs...))
 }
 
 // CodeEQ applies the EQ predicate on the "code" field.
@@ -480,21 +480,21 @@ func RemarkContainsFold(v string) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldContainsFold(FieldRemark, v))
 }
 
-// HasOrganization applies the HasEdge predicate on the "organization" edge.
-func HasOrganization() predicate.MeterItem {
+// HasAccounts applies the HasEdge predicate on the "accounts" edge.
+func HasAccounts() predicate.MeterItem {
 	return predicate.MeterItem(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccountsTable, AccountsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasOrganizationWith applies the HasEdge predicate on the "organization" edge with a given conditions (other predicates).
-func HasOrganizationWith(preds ...predicate.Organization) predicate.MeterItem {
+// HasAccountsWith applies the HasEdge predicate on the "accounts" edge with a given conditions (other predicates).
+func HasAccountsWith(preds ...predicate.Account) predicate.MeterItem {
 	return predicate.MeterItem(func(s *sql.Selector) {
-		step := newOrganizationStep()
+		step := newAccountsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -526,21 +526,21 @@ func HasRoomsWith(preds ...predicate.Room) predicate.MeterItem {
 	})
 }
 
-// HasBuilding applies the HasEdge predicate on the "building" edge.
-func HasBuilding() predicate.MeterItem {
+// HasUint applies the HasEdge predicate on the "uint" edge.
+func HasUint() predicate.MeterItem {
 	return predicate.MeterItem(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, BuildingTable, BuildingPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, UintTable, UintPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasBuildingWith applies the HasEdge predicate on the "building" edge with a given conditions (other predicates).
-func HasBuildingWith(preds ...predicate.Building) predicate.MeterItem {
+// HasUintWith applies the HasEdge predicate on the "uint" edge with a given conditions (other predicates).
+func HasUintWith(preds ...predicate.Unit) predicate.MeterItem {
 	return predicate.MeterItem(func(s *sql.Selector) {
-		step := newBuildingStep()
+		step := newUintStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/superwhys/rent-manager-server/internal/ent/schema/mixin"
 )
 
@@ -24,7 +25,7 @@ func (RoomType) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.TimeMixin{},
 		mixin.SoftDeleteMixin{},
-		mixin.OrganizationMixin{},
+		mixin.AccountMixin{},
 	}
 }
 
@@ -37,13 +38,20 @@ func (RoomType) Fields() []ent.Field {
 	}
 }
 
+func (RoomType) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("account_id", "name").Unique(),
+	}
+}
+
 func (RoomType) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("organization", Organization.Type).
-			Field("organization_id").
+		edge.From("account", Account.Type).
 			Ref("room_types").
+			Field("account_id").
 			Unique().
 			Required(),
+
 		edge.To("rooms", Room.Type),
 	}
 }

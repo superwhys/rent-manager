@@ -6,7 +6,7 @@ type CreateParams struct {
 	Floor        int
 	Price        int
 	Size         int
-	BuildingID   int
+	UnitID       int
 	RoomTypeID   int
 	MeterItemIDs []int
 }
@@ -18,7 +18,7 @@ type UpdateParams struct {
 	Floor        int
 	Price        int
 	Size         int
-	BuildingID   int
+	UnitID       int
 	RoomTypeID   int
 	IsActive     bool
 	MeterItemIDs []int
@@ -26,7 +26,7 @@ type UpdateParams struct {
 
 // ListQuery 描述房间列表查询条件。
 type ListQuery struct {
-	BuildingID int
+	UnitID     int
 	RoomTypeID int
 	IsActive   *bool
 	Limit      int

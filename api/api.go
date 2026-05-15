@@ -31,31 +31,24 @@ func SetupRouter(
 	httpLimiter *limiter.Limiter,
 	authService *services.AuthService,
 	roomService *services.RoomService,
-	buildingService *services.BuildingService,
+	unitService *services.UnitService,
 	meterItemService *services.MeterItemService,
-	organizationService *services.OrganizationService,
 	rbacService *services.RBACService,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(middlewares.RateLimitMiddleware(httpLimiter, nil)),
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/admin"),
-			ginutils.WithMiddleware(
-				middlewares.TokenVerifyMiddleware(jwtConfig),
-				middlewares.SystemAdminMiddleware(rbacService),
-			),
-			routers.AdminGroupRouter(organizationService, rbacService),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			routers.AdminGroupRouter(rbacService),
 		),
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/auth"),
 			routers.AuthGroupRouter(authService),
 		),
 		ginutils.WithGroupHandlers(
-			ginutils.WithMiddleware(
-				middlewares.TokenVerifyMiddleware(jwtConfig),
-				middlewares.PermissionMiddleware(rbacService),
-			),
-			routers.BuildingGroupRouter(buildingService),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			routers.UnitGroupRouter(unitService),
 			routers.RoomGroupRouter(roomService),
 			routers.MeterItemGroupRouter(meterItemService),
 			routers.RoleGroupRouter(rbacService),

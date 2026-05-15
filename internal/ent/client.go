@@ -16,15 +16,15 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // Client is the client that holds all ent builders.
@@ -34,14 +34,10 @@ type Client struct {
 	Schema *migrate.Schema
 	// Account is the client for interacting with the Account builders.
 	Account *AccountClient
-	// Building is the client for interacting with the Building builders.
-	Building *BuildingClient
 	// MeterItem is the client for interacting with the MeterItem builders.
 	MeterItem *MeterItemClient
 	// MeterReading is the client for interacting with the MeterReading builders.
 	MeterReading *MeterReadingClient
-	// Organization is the client for interacting with the Organization builders.
-	Organization *OrganizationClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// PermissionGroup is the client for interacting with the PermissionGroup builders.
@@ -52,6 +48,10 @@ type Client struct {
 	Room *RoomClient
 	// RoomType is the client for interacting with the RoomType builders.
 	RoomType *RoomTypeClient
+	// Unit is the client for interacting with the Unit builders.
+	Unit *UnitClient
+	// UnitAccountRole is the client for interacting with the UnitAccountRole builders.
+	UnitAccountRole *UnitAccountRoleClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -64,15 +64,15 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Account = NewAccountClient(c.config)
-	c.Building = NewBuildingClient(c.config)
 	c.MeterItem = NewMeterItemClient(c.config)
 	c.MeterReading = NewMeterReadingClient(c.config)
-	c.Organization = NewOrganizationClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
 	c.PermissionGroup = NewPermissionGroupClient(c.config)
 	c.Role = NewRoleClient(c.config)
 	c.Room = NewRoomClient(c.config)
 	c.RoomType = NewRoomTypeClient(c.config)
+	c.Unit = NewUnitClient(c.config)
+	c.UnitAccountRole = NewUnitAccountRoleClient(c.config)
 }
 
 type (
@@ -166,15 +166,15 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:             ctx,
 		config:          cfg,
 		Account:         NewAccountClient(cfg),
-		Building:        NewBuildingClient(cfg),
 		MeterItem:       NewMeterItemClient(cfg),
 		MeterReading:    NewMeterReadingClient(cfg),
-		Organization:    NewOrganizationClient(cfg),
 		Permission:      NewPermissionClient(cfg),
 		PermissionGroup: NewPermissionGroupClient(cfg),
 		Role:            NewRoleClient(cfg),
 		Room:            NewRoomClient(cfg),
 		RoomType:        NewRoomTypeClient(cfg),
+		Unit:            NewUnitClient(cfg),
+		UnitAccountRole: NewUnitAccountRoleClient(cfg),
 	}, nil
 }
 
@@ -195,15 +195,15 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:             ctx,
 		config:          cfg,
 		Account:         NewAccountClient(cfg),
-		Building:        NewBuildingClient(cfg),
 		MeterItem:       NewMeterItemClient(cfg),
 		MeterReading:    NewMeterReadingClient(cfg),
-		Organization:    NewOrganizationClient(cfg),
 		Permission:      NewPermissionClient(cfg),
 		PermissionGroup: NewPermissionGroupClient(cfg),
 		Role:            NewRoleClient(cfg),
 		Room:            NewRoomClient(cfg),
 		RoomType:        NewRoomTypeClient(cfg),
+		Unit:            NewUnitClient(cfg),
+		UnitAccountRole: NewUnitAccountRoleClient(cfg),
 	}, nil
 }
 
@@ -233,8 +233,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Account, c.Building, c.MeterItem, c.MeterReading, c.Organization,
-		c.Permission, c.PermissionGroup, c.Role, c.Room, c.RoomType,
+		c.Account, c.MeterItem, c.MeterReading, c.Permission, c.PermissionGroup, c.Role,
+		c.Room, c.RoomType, c.Unit, c.UnitAccountRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -244,8 +244,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Account, c.Building, c.MeterItem, c.MeterReading, c.Organization,
-		c.Permission, c.PermissionGroup, c.Role, c.Room, c.RoomType,
+		c.Account, c.MeterItem, c.MeterReading, c.Permission, c.PermissionGroup, c.Role,
+		c.Room, c.RoomType, c.Unit, c.UnitAccountRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -256,14 +256,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *AccountMutation:
 		return c.Account.mutate(ctx, m)
-	case *BuildingMutation:
-		return c.Building.mutate(ctx, m)
 	case *MeterItemMutation:
 		return c.MeterItem.mutate(ctx, m)
 	case *MeterReadingMutation:
 		return c.MeterReading.mutate(ctx, m)
-	case *OrganizationMutation:
-		return c.Organization.mutate(ctx, m)
 	case *PermissionMutation:
 		return c.Permission.mutate(ctx, m)
 	case *PermissionGroupMutation:
@@ -274,6 +270,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Room.mutate(ctx, m)
 	case *RoomTypeMutation:
 		return c.RoomType.mutate(ctx, m)
+	case *UnitMutation:
+		return c.Unit.mutate(ctx, m)
+	case *UnitAccountRoleMutation:
+		return c.UnitAccountRole.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -387,22 +387,6 @@ func (c *AccountClient) GetX(ctx context.Context, id int) *Account {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a Account.
-func (c *AccountClient) QueryOrganization(_m *Account) *OrganizationQuery {
-	query := (&OrganizationClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(account.Table, account.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, account.OrganizationTable, account.OrganizationColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryRoles queries the roles edge of a Account.
 func (c *AccountClient) QueryRoles(_m *Account) *RoleQuery {
 	query := (&RoleClient{config: c.config}).Query()
@@ -411,7 +395,87 @@ func (c *AccountClient) QueryRoles(_m *Account) *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(account.Table, account.FieldID, id),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, account.RolesTable, account.RolesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.RolesTable, account.RolesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUnits queries the units edge of a Account.
+func (c *AccountClient) QueryUnits(_m *Account) *UnitQuery {
+	query := (&UnitClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.UnitsTable, account.UnitsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRoomTypes queries the room_types edge of a Account.
+func (c *AccountClient) QueryRoomTypes(_m *Account) *RoomTypeQuery {
+	query := (&RoomTypeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(roomtype.Table, roomtype.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.RoomTypesTable, account.RoomTypesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMeterItems queries the meter_items edge of a Account.
+func (c *AccountClient) QueryMeterItems(_m *Account) *MeterItemQuery {
+	query := (&MeterItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(meteritem.Table, meteritem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.MeterItemsTable, account.MeterItemsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUnitAccountRoles queries the unit_account_roles edge of a Account.
+func (c *AccountClient) QueryUnitAccountRoles(_m *Account) *UnitAccountRoleQuery {
+	query := (&UnitAccountRoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(unitaccountrole.Table, unitaccountrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.UnitAccountRolesTable, account.UnitAccountRolesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGrantedUnitAccountRoles queries the granted_unit_account_roles edge of a Account.
+func (c *AccountClient) QueryGrantedUnitAccountRoles(_m *Account) *UnitAccountRoleQuery {
+	query := (&UnitAccountRoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(unitaccountrole.Table, unitaccountrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.GrantedUnitAccountRolesTable, account.GrantedUnitAccountRolesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -441,187 +505,6 @@ func (c *AccountClient) mutate(ctx context.Context, m *AccountMutation) (Value, 
 		return (&AccountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Account mutation op: %q", m.Op())
-	}
-}
-
-// BuildingClient is a client for the Building schema.
-type BuildingClient struct {
-	config
-}
-
-// NewBuildingClient returns a client for the Building from the given config.
-func NewBuildingClient(c config) *BuildingClient {
-	return &BuildingClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `building.Hooks(f(g(h())))`.
-func (c *BuildingClient) Use(hooks ...Hook) {
-	c.hooks.Building = append(c.hooks.Building, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `building.Intercept(f(g(h())))`.
-func (c *BuildingClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Building = append(c.inters.Building, interceptors...)
-}
-
-// Create returns a builder for creating a Building entity.
-func (c *BuildingClient) Create() *BuildingCreate {
-	mutation := newBuildingMutation(c.config, OpCreate)
-	return &BuildingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Building entities.
-func (c *BuildingClient) CreateBulk(builders ...*BuildingCreate) *BuildingCreateBulk {
-	return &BuildingCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *BuildingClient) MapCreateBulk(slice any, setFunc func(*BuildingCreate, int)) *BuildingCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &BuildingCreateBulk{err: fmt.Errorf("calling to BuildingClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*BuildingCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &BuildingCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Building.
-func (c *BuildingClient) Update() *BuildingUpdate {
-	mutation := newBuildingMutation(c.config, OpUpdate)
-	return &BuildingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *BuildingClient) UpdateOne(_m *Building) *BuildingUpdateOne {
-	mutation := newBuildingMutation(c.config, OpUpdateOne, withBuilding(_m))
-	return &BuildingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *BuildingClient) UpdateOneID(id int) *BuildingUpdateOne {
-	mutation := newBuildingMutation(c.config, OpUpdateOne, withBuildingID(id))
-	return &BuildingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Building.
-func (c *BuildingClient) Delete() *BuildingDelete {
-	mutation := newBuildingMutation(c.config, OpDelete)
-	return &BuildingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *BuildingClient) DeleteOne(_m *Building) *BuildingDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *BuildingClient) DeleteOneID(id int) *BuildingDeleteOne {
-	builder := c.Delete().Where(building.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &BuildingDeleteOne{builder}
-}
-
-// Query returns a query builder for Building.
-func (c *BuildingClient) Query() *BuildingQuery {
-	return &BuildingQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeBuilding},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Building entity by its id.
-func (c *BuildingClient) Get(ctx context.Context, id int) (*Building, error) {
-	return c.Query().Where(building.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *BuildingClient) GetX(ctx context.Context, id int) *Building {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryOrganization queries the organization edge of a Building.
-func (c *BuildingClient) QueryOrganization(_m *Building) *OrganizationQuery {
-	query := (&OrganizationClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(building.Table, building.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, building.OrganizationTable, building.OrganizationColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRooms queries the rooms edge of a Building.
-func (c *BuildingClient) QueryRooms(_m *Building) *RoomQuery {
-	query := (&RoomClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(building.Table, building.FieldID, id),
-			sqlgraph.To(room.Table, room.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, building.RoomsTable, building.RoomsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryMeterItems queries the meter_items edge of a Building.
-func (c *BuildingClient) QueryMeterItems(_m *Building) *MeterItemQuery {
-	query := (&MeterItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(building.Table, building.FieldID, id),
-			sqlgraph.To(meteritem.Table, meteritem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, building.MeterItemsTable, building.MeterItemsPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *BuildingClient) Hooks() []Hook {
-	return c.hooks.Building
-}
-
-// Interceptors returns the client interceptors.
-func (c *BuildingClient) Interceptors() []Interceptor {
-	return c.inters.Building
-}
-
-func (c *BuildingClient) mutate(ctx context.Context, m *BuildingMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&BuildingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&BuildingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&BuildingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&BuildingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Building mutation op: %q", m.Op())
 	}
 }
 
@@ -733,15 +616,15 @@ func (c *MeterItemClient) GetX(ctx context.Context, id int) *MeterItem {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a MeterItem.
-func (c *MeterItemClient) QueryOrganization(_m *MeterItem) *OrganizationQuery {
-	query := (&OrganizationClient{config: c.config}).Query()
+// QueryAccounts queries the accounts edge of a MeterItem.
+func (c *MeterItemClient) QueryAccounts(_m *MeterItem) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(meteritem.Table, meteritem.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, meteritem.OrganizationTable, meteritem.OrganizationColumn),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, meteritem.AccountsTable, meteritem.AccountsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -765,15 +648,15 @@ func (c *MeterItemClient) QueryRooms(_m *MeterItem) *RoomQuery {
 	return query
 }
 
-// QueryBuilding queries the building edge of a MeterItem.
-func (c *MeterItemClient) QueryBuilding(_m *MeterItem) *BuildingQuery {
-	query := (&BuildingClient{config: c.config}).Query()
+// QueryUint queries the uint edge of a MeterItem.
+func (c *MeterItemClient) QueryUint(_m *MeterItem) *UnitQuery {
+	query := (&UnitClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(meteritem.Table, meteritem.FieldID, id),
-			sqlgraph.To(building.Table, building.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.BuildingTable, meteritem.BuildingPrimaryKey...),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.UintTable, meteritem.UintPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -952,219 +835,6 @@ func (c *MeterReadingClient) mutate(ctx context.Context, m *MeterReadingMutation
 		return (&MeterReadingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown MeterReading mutation op: %q", m.Op())
-	}
-}
-
-// OrganizationClient is a client for the Organization schema.
-type OrganizationClient struct {
-	config
-}
-
-// NewOrganizationClient returns a client for the Organization from the given config.
-func NewOrganizationClient(c config) *OrganizationClient {
-	return &OrganizationClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `organization.Hooks(f(g(h())))`.
-func (c *OrganizationClient) Use(hooks ...Hook) {
-	c.hooks.Organization = append(c.hooks.Organization, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `organization.Intercept(f(g(h())))`.
-func (c *OrganizationClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Organization = append(c.inters.Organization, interceptors...)
-}
-
-// Create returns a builder for creating a Organization entity.
-func (c *OrganizationClient) Create() *OrganizationCreate {
-	mutation := newOrganizationMutation(c.config, OpCreate)
-	return &OrganizationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Organization entities.
-func (c *OrganizationClient) CreateBulk(builders ...*OrganizationCreate) *OrganizationCreateBulk {
-	return &OrganizationCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *OrganizationClient) MapCreateBulk(slice any, setFunc func(*OrganizationCreate, int)) *OrganizationCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &OrganizationCreateBulk{err: fmt.Errorf("calling to OrganizationClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*OrganizationCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &OrganizationCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Organization.
-func (c *OrganizationClient) Update() *OrganizationUpdate {
-	mutation := newOrganizationMutation(c.config, OpUpdate)
-	return &OrganizationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *OrganizationClient) UpdateOne(_m *Organization) *OrganizationUpdateOne {
-	mutation := newOrganizationMutation(c.config, OpUpdateOne, withOrganization(_m))
-	return &OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *OrganizationClient) UpdateOneID(id int) *OrganizationUpdateOne {
-	mutation := newOrganizationMutation(c.config, OpUpdateOne, withOrganizationID(id))
-	return &OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Organization.
-func (c *OrganizationClient) Delete() *OrganizationDelete {
-	mutation := newOrganizationMutation(c.config, OpDelete)
-	return &OrganizationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *OrganizationClient) DeleteOne(_m *Organization) *OrganizationDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *OrganizationClient) DeleteOneID(id int) *OrganizationDeleteOne {
-	builder := c.Delete().Where(organization.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &OrganizationDeleteOne{builder}
-}
-
-// Query returns a query builder for Organization.
-func (c *OrganizationClient) Query() *OrganizationQuery {
-	return &OrganizationQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeOrganization},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Organization entity by its id.
-func (c *OrganizationClient) Get(ctx context.Context, id int) (*Organization, error) {
-	return c.Query().Where(organization.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *OrganizationClient) GetX(ctx context.Context, id int) *Organization {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryAccounts queries the accounts edge of a Organization.
-func (c *OrganizationClient) QueryAccounts(_m *Organization) *AccountQuery {
-	query := (&AccountClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, organization.AccountsTable, organization.AccountsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryBuildings queries the buildings edge of a Organization.
-func (c *OrganizationClient) QueryBuildings(_m *Organization) *BuildingQuery {
-	query := (&BuildingClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(building.Table, building.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, organization.BuildingsTable, organization.BuildingsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRoles queries the roles edge of a Organization.
-func (c *OrganizationClient) QueryRoles(_m *Organization) *RoleQuery {
-	query := (&RoleClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, organization.RolesTable, organization.RolesColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRoomTypes queries the room_types edge of a Organization.
-func (c *OrganizationClient) QueryRoomTypes(_m *Organization) *RoomTypeQuery {
-	query := (&RoomTypeClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(roomtype.Table, roomtype.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, organization.RoomTypesTable, organization.RoomTypesColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryMeterItems queries the meter_items edge of a Organization.
-func (c *OrganizationClient) QueryMeterItems(_m *Organization) *MeterItemQuery {
-	query := (&MeterItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(meteritem.Table, meteritem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, organization.MeterItemsTable, organization.MeterItemsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *OrganizationClient) Hooks() []Hook {
-	return c.hooks.Organization
-}
-
-// Interceptors returns the client interceptors.
-func (c *OrganizationClient) Interceptors() []Interceptor {
-	return c.inters.Organization
-}
-
-func (c *OrganizationClient) mutate(ctx context.Context, m *OrganizationMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&OrganizationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&OrganizationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&OrganizationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Organization mutation op: %q", m.Op())
 	}
 }
 
@@ -1590,22 +1260,6 @@ func (c *RoleClient) GetX(ctx context.Context, id int) *Role {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a Role.
-func (c *RoleClient) QueryOrganization(_m *Role) *OrganizationQuery {
-	query := (&OrganizationClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(role.Table, role.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, role.OrganizationTable, role.OrganizationColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryAccounts queries the accounts edge of a Role.
 func (c *RoleClient) QueryAccounts(_m *Role) *AccountQuery {
 	query := (&AccountClient{config: c.config}).Query()
@@ -1614,7 +1268,7 @@ func (c *RoleClient) QueryAccounts(_m *Role) *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, id),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, role.AccountsTable, role.AccountsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountsTable, role.AccountsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -1631,6 +1285,22 @@ func (c *RoleClient) QueryPermissionGroups(_m *Role) *PermissionGroupQuery {
 			sqlgraph.From(role.Table, role.FieldID, id),
 			sqlgraph.To(permissiongroup.Table, permissiongroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.PermissionGroupsTable, role.PermissionGroupsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUnitAccountRoles queries the unit_account_roles edge of a Role.
+func (c *RoleClient) QueryUnitAccountRoles(_m *Role) *UnitAccountRoleQuery {
+	query := (&UnitAccountRoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(unitaccountrole.Table, unitaccountrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, role.UnitAccountRolesTable, role.UnitAccountRolesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -1771,15 +1441,15 @@ func (c *RoomClient) GetX(ctx context.Context, id int) *Room {
 	return obj
 }
 
-// QueryBuilding queries the building edge of a Room.
-func (c *RoomClient) QueryBuilding(_m *Room) *BuildingQuery {
-	query := (&BuildingClient{config: c.config}).Query()
+// QueryUnit queries the unit edge of a Room.
+func (c *RoomClient) QueryUnit(_m *Room) *UnitQuery {
+	query := (&UnitClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(room.Table, room.FieldID, id),
-			sqlgraph.To(building.Table, building.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, room.BuildingTable, room.BuildingColumn),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, room.UnitTable, room.UnitColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -1968,15 +1638,15 @@ func (c *RoomTypeClient) GetX(ctx context.Context, id int) *RoomType {
 	return obj
 }
 
-// QueryOrganization queries the organization edge of a RoomType.
-func (c *RoomTypeClient) QueryOrganization(_m *RoomType) *OrganizationQuery {
-	query := (&OrganizationClient{config: c.config}).Query()
+// QueryAccount queries the account edge of a RoomType.
+func (c *RoomTypeClient) QueryAccount(_m *RoomType) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(roomtype.Table, roomtype.FieldID, id),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, roomtype.OrganizationTable, roomtype.OrganizationColumn),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, roomtype.AccountTable, roomtype.AccountColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2025,14 +1695,408 @@ func (c *RoomTypeClient) mutate(ctx context.Context, m *RoomTypeMutation) (Value
 	}
 }
 
+// UnitClient is a client for the Unit schema.
+type UnitClient struct {
+	config
+}
+
+// NewUnitClient returns a client for the Unit from the given config.
+func NewUnitClient(c config) *UnitClient {
+	return &UnitClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `unit.Hooks(f(g(h())))`.
+func (c *UnitClient) Use(hooks ...Hook) {
+	c.hooks.Unit = append(c.hooks.Unit, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `unit.Intercept(f(g(h())))`.
+func (c *UnitClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Unit = append(c.inters.Unit, interceptors...)
+}
+
+// Create returns a builder for creating a Unit entity.
+func (c *UnitClient) Create() *UnitCreate {
+	mutation := newUnitMutation(c.config, OpCreate)
+	return &UnitCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Unit entities.
+func (c *UnitClient) CreateBulk(builders ...*UnitCreate) *UnitCreateBulk {
+	return &UnitCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UnitClient) MapCreateBulk(slice any, setFunc func(*UnitCreate, int)) *UnitCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UnitCreateBulk{err: fmt.Errorf("calling to UnitClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UnitCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UnitCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Unit.
+func (c *UnitClient) Update() *UnitUpdate {
+	mutation := newUnitMutation(c.config, OpUpdate)
+	return &UnitUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UnitClient) UpdateOne(_m *Unit) *UnitUpdateOne {
+	mutation := newUnitMutation(c.config, OpUpdateOne, withUnit(_m))
+	return &UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UnitClient) UpdateOneID(id int) *UnitUpdateOne {
+	mutation := newUnitMutation(c.config, OpUpdateOne, withUnitID(id))
+	return &UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Unit.
+func (c *UnitClient) Delete() *UnitDelete {
+	mutation := newUnitMutation(c.config, OpDelete)
+	return &UnitDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UnitClient) DeleteOne(_m *Unit) *UnitDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UnitClient) DeleteOneID(id int) *UnitDeleteOne {
+	builder := c.Delete().Where(unit.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UnitDeleteOne{builder}
+}
+
+// Query returns a query builder for Unit.
+func (c *UnitClient) Query() *UnitQuery {
+	return &UnitQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUnit},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Unit entity by its id.
+func (c *UnitClient) Get(ctx context.Context, id int) (*Unit, error) {
+	return c.Query().Where(unit.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UnitClient) GetX(ctx context.Context, id int) *Unit {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAccount queries the account edge of a Unit.
+func (c *UnitClient) QueryAccount(_m *Unit) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, unit.AccountTable, unit.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRooms queries the rooms edge of a Unit.
+func (c *UnitClient) QueryRooms(_m *Unit) *RoomQuery {
+	query := (&RoomClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.To(room.Table, room.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, unit.RoomsTable, unit.RoomsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMeterItems queries the meter_items edge of a Unit.
+func (c *UnitClient) QueryMeterItems(_m *Unit) *MeterItemQuery {
+	query := (&MeterItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.To(meteritem.Table, meteritem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, unit.MeterItemsTable, unit.MeterItemsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUnitAccountRoles queries the unit_account_roles edge of a Unit.
+func (c *UnitClient) QueryUnitAccountRoles(_m *Unit) *UnitAccountRoleQuery {
+	query := (&UnitAccountRoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.To(unitaccountrole.Table, unitaccountrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, unit.UnitAccountRolesTable, unit.UnitAccountRolesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UnitClient) Hooks() []Hook {
+	return c.hooks.Unit
+}
+
+// Interceptors returns the client interceptors.
+func (c *UnitClient) Interceptors() []Interceptor {
+	return c.inters.Unit
+}
+
+func (c *UnitClient) mutate(ctx context.Context, m *UnitMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UnitCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UnitUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UnitDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Unit mutation op: %q", m.Op())
+	}
+}
+
+// UnitAccountRoleClient is a client for the UnitAccountRole schema.
+type UnitAccountRoleClient struct {
+	config
+}
+
+// NewUnitAccountRoleClient returns a client for the UnitAccountRole from the given config.
+func NewUnitAccountRoleClient(c config) *UnitAccountRoleClient {
+	return &UnitAccountRoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `unitaccountrole.Hooks(f(g(h())))`.
+func (c *UnitAccountRoleClient) Use(hooks ...Hook) {
+	c.hooks.UnitAccountRole = append(c.hooks.UnitAccountRole, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `unitaccountrole.Intercept(f(g(h())))`.
+func (c *UnitAccountRoleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UnitAccountRole = append(c.inters.UnitAccountRole, interceptors...)
+}
+
+// Create returns a builder for creating a UnitAccountRole entity.
+func (c *UnitAccountRoleClient) Create() *UnitAccountRoleCreate {
+	mutation := newUnitAccountRoleMutation(c.config, OpCreate)
+	return &UnitAccountRoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UnitAccountRole entities.
+func (c *UnitAccountRoleClient) CreateBulk(builders ...*UnitAccountRoleCreate) *UnitAccountRoleCreateBulk {
+	return &UnitAccountRoleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UnitAccountRoleClient) MapCreateBulk(slice any, setFunc func(*UnitAccountRoleCreate, int)) *UnitAccountRoleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UnitAccountRoleCreateBulk{err: fmt.Errorf("calling to UnitAccountRoleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UnitAccountRoleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UnitAccountRoleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UnitAccountRole.
+func (c *UnitAccountRoleClient) Update() *UnitAccountRoleUpdate {
+	mutation := newUnitAccountRoleMutation(c.config, OpUpdate)
+	return &UnitAccountRoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UnitAccountRoleClient) UpdateOne(_m *UnitAccountRole) *UnitAccountRoleUpdateOne {
+	mutation := newUnitAccountRoleMutation(c.config, OpUpdateOne, withUnitAccountRole(_m))
+	return &UnitAccountRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UnitAccountRoleClient) UpdateOneID(id int) *UnitAccountRoleUpdateOne {
+	mutation := newUnitAccountRoleMutation(c.config, OpUpdateOne, withUnitAccountRoleID(id))
+	return &UnitAccountRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UnitAccountRole.
+func (c *UnitAccountRoleClient) Delete() *UnitAccountRoleDelete {
+	mutation := newUnitAccountRoleMutation(c.config, OpDelete)
+	return &UnitAccountRoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UnitAccountRoleClient) DeleteOne(_m *UnitAccountRole) *UnitAccountRoleDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UnitAccountRoleClient) DeleteOneID(id int) *UnitAccountRoleDeleteOne {
+	builder := c.Delete().Where(unitaccountrole.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UnitAccountRoleDeleteOne{builder}
+}
+
+// Query returns a query builder for UnitAccountRole.
+func (c *UnitAccountRoleClient) Query() *UnitAccountRoleQuery {
+	return &UnitAccountRoleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUnitAccountRole},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UnitAccountRole entity by its id.
+func (c *UnitAccountRoleClient) Get(ctx context.Context, id int) (*UnitAccountRole, error) {
+	return c.Query().Where(unitaccountrole.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UnitAccountRoleClient) GetX(ctx context.Context, id int) *UnitAccountRole {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUnit queries the unit edge of a UnitAccountRole.
+func (c *UnitAccountRoleClient) QueryUnit(_m *UnitAccountRole) *UnitQuery {
+	query := (&UnitClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unitaccountrole.Table, unitaccountrole.FieldID, id),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, unitaccountrole.UnitTable, unitaccountrole.UnitColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccount queries the account edge of a UnitAccountRole.
+func (c *UnitAccountRoleClient) QueryAccount(_m *UnitAccountRole) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unitaccountrole.Table, unitaccountrole.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, unitaccountrole.AccountTable, unitaccountrole.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRole queries the role edge of a UnitAccountRole.
+func (c *UnitAccountRoleClient) QueryRole(_m *UnitAccountRole) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unitaccountrole.Table, unitaccountrole.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, unitaccountrole.RoleTable, unitaccountrole.RoleColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGrantedBy queries the granted_by edge of a UnitAccountRole.
+func (c *UnitAccountRoleClient) QueryGrantedBy(_m *UnitAccountRole) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unitaccountrole.Table, unitaccountrole.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, unitaccountrole.GrantedByTable, unitaccountrole.GrantedByColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UnitAccountRoleClient) Hooks() []Hook {
+	return c.hooks.UnitAccountRole
+}
+
+// Interceptors returns the client interceptors.
+func (c *UnitAccountRoleClient) Interceptors() []Interceptor {
+	return c.inters.UnitAccountRole
+}
+
+func (c *UnitAccountRoleClient) mutate(ctx context.Context, m *UnitAccountRoleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UnitAccountRoleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UnitAccountRoleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UnitAccountRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UnitAccountRoleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UnitAccountRole mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Account, Building, MeterItem, MeterReading, Organization, Permission,
-		PermissionGroup, Role, Room, RoomType []ent.Hook
+		Account, MeterItem, MeterReading, Permission, PermissionGroup, Role, Room,
+		RoomType, Unit, UnitAccountRole []ent.Hook
 	}
 	inters struct {
-		Account, Building, MeterItem, MeterReading, Organization, Permission,
-		PermissionGroup, Role, Room, RoomType []ent.Interceptor
+		Account, MeterItem, MeterReading, Permission, PermissionGroup, Role, Room,
+		RoomType, Unit, UnitAccountRole []ent.Interceptor
 	}
 )

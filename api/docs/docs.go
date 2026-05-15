@@ -15,87 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/organizations": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "创建组织",
-                "parameters": [
-                    {
-                        "description": "组织信息",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.CreateOrganizationCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_OrganizationResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/organizations/{organization_id}/accounts/{account_id}": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "绑定账号到组织",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "组织ID",
-                        "name": "organization_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "账号ID",
-                        "name": "account_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-string"
-                        }
-                    }
-                }
-            }
-        },
         "/admin/permission-groups/batch": {
             "post": {
                 "security": [
@@ -129,132 +48,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ginutils.Ret-array_response_PermissionGroupResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/permission-groups/{permission_group_id}/permissions": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "给权限组添加权限",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "权限组ID",
-                        "name": "permission_group_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "权限ID列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.PermissionGroupPermissionsCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "从权限组移除权限",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "权限组ID",
-                        "name": "permission_group_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "权限ID列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.PermissionGroupPermissionsCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-string"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/permissions/batch": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "批量创建权限",
-                "parameters": [
-                    {
-                        "description": "权限列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.CreatePermissionsCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionResponse"
                         }
                     }
                 }
@@ -328,258 +121,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/buildings": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "查询楼栋列表",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Building"
-                ],
-                "summary": "查询楼栋列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "city",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "name",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 1,
-                        "type": "integer",
-                        "name": "organization_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "province",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_BuildingResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "创建楼栋并设置默认抄表项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Building"
-                ],
-                "summary": "创建楼栋",
-                "parameters": [
-                    {
-                        "description": "创建楼栋请求体",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.CreateBuildingCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_BuildingResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/buildings/{building_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "查询楼栋详情",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Building"
-                ],
-                "summary": "查询楼栋详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "楼栋 ID",
-                        "name": "building_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_BuildingResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "更新楼栋并整体替换默认抄表项",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Building"
-                ],
-                "summary": "更新楼栋",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "楼栋 ID",
-                        "name": "building_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "更新楼栋请求体",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.UpdateBuildingCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_BuildingResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "删除没有房间的楼栋",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Building"
-                ],
-                "summary": "删除楼栋",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "楼栋 ID",
-                        "name": "building_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/buildings/{building_id}/rooms": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "在指定楼栋下创建房间",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Building"
-                ],
-                "summary": "在楼栋下创建房间",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "楼栋 ID",
-                        "name": "building_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "创建房间请求体",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.CreateRoomInBuildingCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/meter-items": {
             "get": {
                 "security": [
@@ -624,13 +165,6 @@ const docTemplate = `{
                         "type": "integer",
                         "name": "offset",
                         "in": "query"
-                    },
-                    {
-                        "minimum": 1,
-                        "type": "integer",
-                        "name": "organization_id",
-                        "in": "query",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -726,7 +260,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/organizations/{organization_id}/accounts/{account_id}/roles": {
+        "/roles/batch": {
             "post": {
                 "security": [
                     {
@@ -742,67 +276,8 @@ const docTemplate = `{
                 "tags": [
                     "role"
                 ],
-                "summary": "给组织内账号分配角色",
+                "summary": "批量创建账号角色",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "组织ID",
-                        "name": "organization_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "账号ID",
-                        "name": "account_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "角色ID列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/requests.AccountRolesCommand"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-string"
-                        }
-                    }
-                }
-            }
-        },
-        "/organizations/{organization_id}/roles/batch": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "role"
-                ],
-                "summary": "批量创建组织角色",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "组织ID",
-                        "name": "organization_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "角色列表",
                         "name": "request",
@@ -823,7 +298,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/organizations/{organization_id}/roles/{role_id}/permission-groups": {
+        "/roles/{role_id}/permission-groups": {
             "post": {
                 "security": [
                     {
@@ -839,15 +314,8 @@ const docTemplate = `{
                 "tags": [
                     "role"
                 ],
-                "summary": "给组织角色绑定权限组",
+                "summary": "给账号角色绑定权限组",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "组织ID",
-                        "name": "organization_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "角色ID",
@@ -889,15 +357,8 @@ const docTemplate = `{
                 "tags": [
                     "role"
                 ],
-                "summary": "从组织角色移除权限组",
+                "summary": "从账号角色移除权限组",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "组织ID",
-                        "name": "organization_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "角色ID",
@@ -942,13 +403,6 @@ const docTemplate = `{
                 "summary": "查询房间列表",
                 "parameters": [
                     {
-                        "minimum": 1,
-                        "type": "integer",
-                        "name": "building_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
                         "type": "boolean",
                         "name": "is_active",
                         "in": "query"
@@ -964,16 +418,16 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "minimum": 1,
-                        "type": "integer",
-                        "name": "organization_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "name": "room_type_id",
                         "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "unit_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1132,6 +586,303 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/units": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "查询当前账号的单元列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "查询单元列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "city",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "province",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_UnitResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建单元并设置默认抄表项",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "创建单元",
+                "parameters": [
+                    {
+                        "description": "创建单元请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateUnitCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "查询当前账号的单元详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "查询单元详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元 ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新单元并整体替换默认抄表项",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "更新单元",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元 ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新单元请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateUnitCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除没有房间的单元",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "删除单元",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元 ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}/accounts/{account_id}/roles": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "给账号授予单元管理角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "账号ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UnitAccountRolesCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}/rooms": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "在指定单元下创建房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "在单元下创建房间",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元 ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "创建房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateRoomInUnitCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1142,21 +893,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "data": {},
-                "message": {}
-            }
-        },
-        "ginutils.Ret-array_response_BuildingResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.BuildingResponse"
-                    }
-                },
                 "message": {}
             }
         },
@@ -1185,21 +921,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/response.PermissionGroupResponse"
-                    }
-                },
-                "message": {}
-            }
-        },
-        "ginutils.Ret-array_response_PermissionResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.PermissionResponse"
                     }
                 },
                 "message": {}
@@ -1235,14 +956,17 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "ginutils.Ret-response_BuildingResponse": {
+        "ginutils.Ret-array_response_UnitResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/response.BuildingResponse"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.UnitResponse"
+                    }
                 },
                 "message": {}
             }
@@ -1255,18 +979,6 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/response.MeterItemResponse"
-                },
-                "message": {}
-            }
-        },
-        "ginutils.Ret-response_OrganizationResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "$ref": "#/definitions/response.OrganizationResponse"
                 },
                 "message": {}
             }
@@ -1295,6 +1007,18 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-response_UnitResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.UnitResponse"
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-string": {
             "type": "object",
             "properties": {
@@ -1307,74 +1031,10 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "requests.AccountRolesCommand": {
-            "type": "object",
-            "required": [
-                "accountID",
-                "organizationID",
-                "role_ids"
-            ],
-            "properties": {
-                "accountID": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "organizationID": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "role_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "requests.CreateBuildingCommand": {
-            "type": "object",
-            "required": [
-                "address",
-                "city",
-                "name",
-                "organization_id",
-                "province"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "city": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "default_meter_item_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "organization_id": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "province": {
-                    "type": "string",
-                    "maxLength": 255
-                }
-            }
-        },
         "requests.CreateMeterItemCommand": {
             "type": "object",
             "required": [
                 "code",
-                "organization_id",
                 "unit"
             ],
             "properties": {
@@ -1389,32 +1049,10 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255
                 },
-                "organization_id": {
-                    "type": "integer",
-                    "minimum": 1
-                },
                 "remark": {
                     "type": "string"
                 },
                 "unit": {
-                    "type": "string",
-                    "maxLength": 255
-                }
-            }
-        },
-        "requests.CreateOrganizationCommand": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "admin_permission_group_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "name": {
                     "type": "string",
                     "maxLength": 255
                 }
@@ -1456,40 +1094,6 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.CreatePermissionItem": {
-            "type": "object",
-            "required": [
-                "api_path",
-                "code",
-                "description"
-            ],
-            "properties": {
-                "api_path": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                }
-            }
-        },
-        "requests.CreatePermissionsCommand": {
-            "type": "object",
-            "required": [
-                "permissions"
-            ],
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/requests.CreatePermissionItem"
-                    }
-                }
-            }
-        },
         "requests.CreateRoleItem": {
             "type": "object",
             "required": [
@@ -1507,14 +1111,9 @@ const docTemplate = `{
         "requests.CreateRolesCommand": {
             "type": "object",
             "required": [
-                "organizationID",
                 "roles"
             ],
             "properties": {
-                "organizationID": {
-                    "type": "integer",
-                    "minimum": 1
-                },
                 "roles": {
                     "type": "array",
                     "minItems": 1,
@@ -1527,61 +1126,12 @@ const docTemplate = `{
         "requests.CreateRoomCommand": {
             "type": "object",
             "required": [
-                "building_id",
-                "organization_id",
-                "price",
-                "room_no",
-                "room_type_id"
-            ],
-            "properties": {
-                "building_id": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "floor": {
-                    "type": "integer"
-                },
-                "meter_item_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "organization_id": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "price": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "room_no": {
-                    "type": "string"
-                },
-                "room_type_id": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "size": {
-                    "type": "integer"
-                }
-            }
-        },
-        "requests.CreateRoomInBuildingCommand": {
-            "type": "object",
-            "required": [
-                "buildingID",
-                "organization_id",
                 "price",
                 "room_no",
                 "room_type_id",
-                "size"
+                "unit_id"
             ],
             "properties": {
-                "buildingID": {
-                    "type": "integer",
-                    "minimum": 1
-                },
                 "floor": {
                     "type": "integer"
                 },
@@ -1591,9 +1141,44 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
-                "organization_id": {
+                "price": {
                     "type": "integer",
                     "minimum": 1
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "room_type_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "unit_id": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.CreateRoomInUnitCommand": {
+            "type": "object",
+            "required": [
+                "price",
+                "room_no",
+                "room_type_id",
+                "size",
+                "unitID"
+            ],
+            "properties": {
+                "floor": {
+                    "type": "integer"
+                },
+                "meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "price": {
                     "type": "integer",
@@ -1609,80 +1194,25 @@ const docTemplate = `{
                 "size": {
                     "type": "integer",
                     "minimum": 1
-                }
-            }
-        },
-        "requests.PermissionGroupPermissionsCommand": {
-            "type": "object",
-            "required": [
-                "permissionGroupID",
-                "permission_ids"
-            ],
-            "properties": {
-                "permissionGroupID": {
-                    "type": "integer",
-                    "minimum": 1
                 },
-                "permission_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "requests.RefreshTokenReq": {
-            "type": "object",
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "requests.RolePermissionGroupsCommand": {
-            "type": "object",
-            "required": [
-                "organizationID",
-                "permission_group_ids",
-                "roleID"
-            ],
-            "properties": {
-                "organizationID": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "permission_group_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "roleID": {
+                "unitID": {
                     "type": "integer",
                     "minimum": 1
                 }
             }
         },
-        "requests.UpdateBuildingCommand": {
+        "requests.CreateUnitCommand": {
             "type": "object",
             "required": [
                 "address",
-                "buildingID",
                 "city",
                 "name",
-                "organization_id",
                 "province"
             ],
             "properties": {
                 "address": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "buildingID": {
-                    "type": "integer",
-                    "minimum": 1
                 },
                 "city": {
                     "type": "string",
@@ -1698,13 +1228,62 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255
                 },
-                "organization_id": {
-                    "type": "integer",
-                    "minimum": 1
-                },
                 "province": {
                     "type": "string",
                     "maxLength": 255
+                }
+            }
+        },
+        "requests.RefreshTokenReq": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.RolePermissionGroupsCommand": {
+            "type": "object",
+            "required": [
+                "permission_group_ids",
+                "roleID"
+            ],
+            "properties": {
+                "permission_group_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "roleID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.UnitAccountRolesCommand": {
+            "type": "object",
+            "required": [
+                "accountID",
+                "role_ids",
+                "unitID"
+            ],
+            "properties": {
+                "accountID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "role_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "unitID": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },
@@ -1713,7 +1292,6 @@ const docTemplate = `{
             "required": [
                 "code",
                 "meterItemID",
-                "organization_id",
                 "unit"
             ],
             "properties": {
@@ -1732,10 +1310,6 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 1
                 },
-                "organization_id": {
-                    "type": "integer",
-                    "minimum": 1
-                },
                 "remark": {
                     "type": "string"
                 },
@@ -1748,13 +1322,9 @@ const docTemplate = `{
         "requests.UpdateRoomCommand": {
             "type": "object",
             "required": [
-                "organization_id",
                 "roomID"
             ],
             "properties": {
-                "building_id": {
-                    "type": "integer"
-                },
                 "floor": {
                     "type": "integer"
                 },
@@ -1766,10 +1336,6 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
-                },
-                "organization_id": {
-                    "type": "integer",
-                    "minimum": 1
                 },
                 "price": {
                     "type": "integer"
@@ -1786,6 +1352,47 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                },
+                "unit_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "requests.UpdateUnitCommand": {
+            "type": "object",
+            "required": [
+                "address",
+                "city",
+                "name",
+                "province",
+                "unitID"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "default_meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "province": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "unitID": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },
@@ -1797,61 +1404,12 @@ const docTemplate = `{
                 }
             }
         },
-        "response.BuildingMeterItemResponse": {
-            "type": "object",
-            "properties": {
-                "calc_type": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_system": {
-                    "type": "boolean"
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "unit": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.BuildingResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "default_meter_items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.BuildingMeterItemResponse"
-                    }
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "organization_id": {
-                    "type": "integer"
-                },
-                "province": {
-                    "type": "string"
-                }
-            }
-        },
         "response.MeterItemResponse": {
             "type": "object",
             "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
                 "calc_type": {
                     "type": "string"
                 },
@@ -1864,27 +1422,10 @@ const docTemplate = `{
                 "is_system": {
                     "type": "boolean"
                 },
-                "organization_id": {
-                    "type": "integer"
-                },
                 "remark": {
                     "type": "string"
                 },
                 "unit": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.OrganizationResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
                     "type": "string"
                 }
             }
@@ -1912,29 +1453,12 @@ const docTemplate = `{
                 }
             }
         },
-        "response.PermissionResponse": {
-            "type": "object",
-            "properties": {
-                "api_path": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                }
-            }
-        },
         "response.RoleResponse": {
             "type": "object",
             "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -1946,18 +1470,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "organization_id": {
-                    "type": "integer"
                 }
             }
         },
         "response.RoomResponse": {
             "type": "object",
             "properties": {
-                "building_id": {
-                    "type": "integer"
-                },
                 "floor": {
                     "type": "integer"
                 },
@@ -1984,6 +1502,9 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                },
+                "unit_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -1994,6 +1515,58 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.UnitMeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "calc_type": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.UnitResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "default_meter_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.UnitMeterItemResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "province": {
                     "type": "string"
                 }
             }

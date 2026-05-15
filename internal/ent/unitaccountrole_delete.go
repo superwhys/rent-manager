@@ -8,30 +8,30 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
-// OrganizationDelete is the builder for deleting a Organization entity.
-type OrganizationDelete struct {
+// UnitAccountRoleDelete is the builder for deleting a UnitAccountRole entity.
+type UnitAccountRoleDelete struct {
 	config
 	hooks    []Hook
-	mutation *OrganizationMutation
+	mutation *UnitAccountRoleMutation
 }
 
-// Where appends a list predicates to the OrganizationDelete builder.
-func (_d *OrganizationDelete) Where(ps ...predicate.Organization) *OrganizationDelete {
+// Where appends a list predicates to the UnitAccountRoleDelete builder.
+func (_d *UnitAccountRoleDelete) Where(ps ...predicate.UnitAccountRole) *UnitAccountRoleDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *OrganizationDelete) Exec(ctx context.Context) (int, error) {
+func (_d *UnitAccountRoleDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *OrganizationDelete) ExecX(ctx context.Context) int {
+func (_d *UnitAccountRoleDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (_d *OrganizationDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *OrganizationDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(organization.Table, sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt))
+func (_d *UnitAccountRoleDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(unitaccountrole.Table, sqlgraph.NewFieldSpec(unitaccountrole.FieldID, field.TypeInt))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (_d *OrganizationDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// OrganizationDeleteOne is the builder for deleting a single Organization entity.
-type OrganizationDeleteOne struct {
-	_d *OrganizationDelete
+// UnitAccountRoleDeleteOne is the builder for deleting a single UnitAccountRole entity.
+type UnitAccountRoleDeleteOne struct {
+	_d *UnitAccountRoleDelete
 }
 
-// Where appends a list predicates to the OrganizationDelete builder.
-func (_d *OrganizationDeleteOne) Where(ps ...predicate.Organization) *OrganizationDeleteOne {
+// Where appends a list predicates to the UnitAccountRoleDelete builder.
+func (_d *UnitAccountRoleDeleteOne) Where(ps ...predicate.UnitAccountRole) *UnitAccountRoleDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *OrganizationDeleteOne) Exec(ctx context.Context) error {
+func (_d *UnitAccountRoleDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{organization.Label}
+		return &NotFoundError{unitaccountrole.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *OrganizationDeleteOne) ExecX(ctx context.Context) {
+func (_d *UnitAccountRoleDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

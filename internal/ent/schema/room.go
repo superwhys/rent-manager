@@ -36,8 +36,8 @@ func (Room) Fields() []ent.Field {
 		field.Int("size").
 			Comment("房间大小(平方米)"),
 
-		field.Int("building_id").
-			Comment("所属楼栋ID"),
+		field.Int("unit_id").
+			Comment("单元ID"),
 
 		field.Int("room_type_id").
 			Comment("所属房间类型ID"),
@@ -52,8 +52,8 @@ func (Room) Fields() []ent.Field {
 func (Room) Edges() []ent.Edge {
 	return []ent.Edge{
 		// 房间-楼栋 多对一关系
-		edge.From("building", Building.Type).
-			Field("building_id").
+		edge.From("unit", Unit.Type).
+			Field("unit_id").
 			Ref("rooms").
 			Unique().
 			Required(),

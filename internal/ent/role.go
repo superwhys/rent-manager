@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 )
 
@@ -24,8 +24,8 @@ type Role struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// 所属组织ID
-	OrganizationID int `json:"organization_id,omitempty"`
+	// 所属账号ID
+	AccountID int `json:"account_id,omitempty"`
 	// 角色名字
 	Name string `json:"name,omitempty"`
 	// 是否默认楼栋长角色
@@ -40,33 +40,24 @@ type Role struct {
 
 // RoleEdges holds the relations/edges for other nodes in the graph.
 type RoleEdges struct {
-	// Organization holds the value of the organization edge.
-	Organization *Organization `json:"organization,omitempty"`
 	// Accounts holds the value of the accounts edge.
-	Accounts []*Account `json:"accounts,omitempty"`
+	Accounts *Account `json:"accounts,omitempty"`
 	// PermissionGroups holds the value of the permission_groups edge.
 	PermissionGroups []*PermissionGroup `json:"permission_groups,omitempty"`
+	// UnitAccountRoles holds the value of the unit_account_roles edge.
+	UnitAccountRoles []*UnitAccountRole `json:"unit_account_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
 }
 
-// OrganizationOrErr returns the Organization value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e RoleEdges) OrganizationOrErr() (*Organization, error) {
-	if e.Organization != nil {
-		return e.Organization, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: organization.Label}
-	}
-	return nil, &NotLoadedError{edge: "organization"}
-}
-
 // AccountsOrErr returns the Accounts value or an error if the edge
-// was not loaded in eager-loading.
-func (e RoleEdges) AccountsOrErr() ([]*Account, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RoleEdges) AccountsOrErr() (*Account, error) {
+	if e.Accounts != nil {
 		return e.Accounts, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: account.Label}
 	}
 	return nil, &NotLoadedError{edge: "accounts"}
 }
@@ -74,10 +65,19 @@ func (e RoleEdges) AccountsOrErr() ([]*Account, error) {
 // PermissionGroupsOrErr returns the PermissionGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e RoleEdges) PermissionGroupsOrErr() ([]*PermissionGroup, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.PermissionGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "permission_groups"}
+}
+
+// UnitAccountRolesOrErr returns the UnitAccountRoles value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoleEdges) UnitAccountRolesOrErr() ([]*UnitAccountRole, error) {
+	if e.loadedTypes[2] {
+		return e.UnitAccountRoles, nil
+	}
+	return nil, &NotLoadedError{edge: "unit_account_roles"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -87,7 +87,7 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case role.FieldIsDefaultOwner, role.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case role.FieldID, role.FieldOrganizationID:
+		case role.FieldID, role.FieldAccountID:
 			values[i] = new(sql.NullInt64)
 		case role.FieldName:
 			values[i] = new(sql.NullString)
@@ -133,11 +133,11 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case role.FieldOrganizationID:
+		case role.FieldAccountID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field organization_id", values[i])
+				return fmt.Errorf("unexpected type %T for field account_id", values[i])
 			} else if value.Valid {
-				_m.OrganizationID = int(value.Int64)
+				_m.AccountID = int(value.Int64)
 			}
 		case role.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -170,11 +170,6 @@ func (_m *Role) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryOrganization queries the "organization" edge of the Role entity.
-func (_m *Role) QueryOrganization() *OrganizationQuery {
-	return NewRoleClient(_m.config).QueryOrganization(_m)
-}
-
 // QueryAccounts queries the "accounts" edge of the Role entity.
 func (_m *Role) QueryAccounts() *AccountQuery {
 	return NewRoleClient(_m.config).QueryAccounts(_m)
@@ -183,6 +178,11 @@ func (_m *Role) QueryAccounts() *AccountQuery {
 // QueryPermissionGroups queries the "permission_groups" edge of the Role entity.
 func (_m *Role) QueryPermissionGroups() *PermissionGroupQuery {
 	return NewRoleClient(_m.config).QueryPermissionGroups(_m)
+}
+
+// QueryUnitAccountRoles queries the "unit_account_roles" edge of the Role entity.
+func (_m *Role) QueryUnitAccountRoles() *UnitAccountRoleQuery {
+	return NewRoleClient(_m.config).QueryUnitAccountRoles(_m)
 }
 
 // Update returns a builder for updating this Role.
@@ -219,8 +219,8 @@ func (_m *Role) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("organization_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.OrganizationID))
+	builder.WriteString("account_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AccountID))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)

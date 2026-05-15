@@ -90,9 +90,9 @@ func Size(v int) predicate.Room {
 	return predicate.Room(sql.FieldEQ(FieldSize, v))
 }
 
-// BuildingID applies equality check predicate on the "building_id" field. It's identical to BuildingIDEQ.
-func BuildingID(v int) predicate.Room {
-	return predicate.Room(sql.FieldEQ(FieldBuildingID, v))
+// UnitID applies equality check predicate on the "unit_id" field. It's identical to UnitIDEQ.
+func UnitID(v int) predicate.Room {
+	return predicate.Room(sql.FieldEQ(FieldUnitID, v))
 }
 
 // RoomTypeID applies equality check predicate on the "room_type_id" field. It's identical to RoomTypeIDEQ.
@@ -420,24 +420,24 @@ func SizeLTE(v int) predicate.Room {
 	return predicate.Room(sql.FieldLTE(FieldSize, v))
 }
 
-// BuildingIDEQ applies the EQ predicate on the "building_id" field.
-func BuildingIDEQ(v int) predicate.Room {
-	return predicate.Room(sql.FieldEQ(FieldBuildingID, v))
+// UnitIDEQ applies the EQ predicate on the "unit_id" field.
+func UnitIDEQ(v int) predicate.Room {
+	return predicate.Room(sql.FieldEQ(FieldUnitID, v))
 }
 
-// BuildingIDNEQ applies the NEQ predicate on the "building_id" field.
-func BuildingIDNEQ(v int) predicate.Room {
-	return predicate.Room(sql.FieldNEQ(FieldBuildingID, v))
+// UnitIDNEQ applies the NEQ predicate on the "unit_id" field.
+func UnitIDNEQ(v int) predicate.Room {
+	return predicate.Room(sql.FieldNEQ(FieldUnitID, v))
 }
 
-// BuildingIDIn applies the In predicate on the "building_id" field.
-func BuildingIDIn(vs ...int) predicate.Room {
-	return predicate.Room(sql.FieldIn(FieldBuildingID, vs...))
+// UnitIDIn applies the In predicate on the "unit_id" field.
+func UnitIDIn(vs ...int) predicate.Room {
+	return predicate.Room(sql.FieldIn(FieldUnitID, vs...))
 }
 
-// BuildingIDNotIn applies the NotIn predicate on the "building_id" field.
-func BuildingIDNotIn(vs ...int) predicate.Room {
-	return predicate.Room(sql.FieldNotIn(FieldBuildingID, vs...))
+// UnitIDNotIn applies the NotIn predicate on the "unit_id" field.
+func UnitIDNotIn(vs ...int) predicate.Room {
+	return predicate.Room(sql.FieldNotIn(FieldUnitID, vs...))
 }
 
 // RoomTypeIDEQ applies the EQ predicate on the "room_type_id" field.
@@ -470,21 +470,21 @@ func IsActiveNEQ(v bool) predicate.Room {
 	return predicate.Room(sql.FieldNEQ(FieldIsActive, v))
 }
 
-// HasBuilding applies the HasEdge predicate on the "building" edge.
-func HasBuilding() predicate.Room {
+// HasUnit applies the HasEdge predicate on the "unit" edge.
+func HasUnit() predicate.Room {
 	return predicate.Room(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, BuildingTable, BuildingColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, UnitTable, UnitColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasBuildingWith applies the HasEdge predicate on the "building" edge with a given conditions (other predicates).
-func HasBuildingWith(preds ...predicate.Building) predicate.Room {
+// HasUnitWith applies the HasEdge predicate on the "unit" edge with a given conditions (other predicates).
+func HasUnitWith(preds ...predicate.Unit) predicate.Room {
 	return predicate.Room(func(s *sql.Selector) {
-		step := newBuildingStep()
+		step := newUnitStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

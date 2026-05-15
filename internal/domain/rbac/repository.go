@@ -11,10 +11,8 @@ type Repository interface {
 	ListPermissionGroupsWithPermissions(ctx context.Context) ([]*PermissionGroup, error)
 	AddPermissionsToPermissionGroup(ctx context.Context, groupID int, permissionIDs []int) error
 	RemovePermissionsFromPermissionGroup(ctx context.Context, groupID int, permissionIDs []int) error
-	AddPermissionGroupsToRole(ctx context.Context, organizationID int, roleID int, permissionGroupIDs []int) error
-	RemovePermissionGroupsFromRole(ctx context.Context, organizationID int, roleID int, permissionGroupIDs []int) error
-	AssignRolesToOrganizationAccount(ctx context.Context, organizationID int, accountID int, roleIDs []int) error
-	AccountIDsByRole(ctx context.Context, organizationID int, roleID int) ([]int, error)
+	AddPermissionGroupsToRole(ctx context.Context, accountID int, roleID int, permissionGroupIDs []int) error
+	RemovePermissionGroupsFromRole(ctx context.Context, accountID int, roleID int, permissionGroupIDs []int) error
+	AssignRolesToUnitAccount(ctx context.Context, ownerAccountID int, unitID int, accountID int, roleIDs []int) error
 	HasSystemPermission(ctx context.Context, accountID int) (bool, error)
-	HasPermission(ctx context.Context, accountID int, organizationID int, apiPath string) (bool, error)
 }

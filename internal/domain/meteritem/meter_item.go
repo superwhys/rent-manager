@@ -8,24 +8,24 @@ import (
 )
 
 type MeterItem struct {
-	ID             int
-	OrganizationID int
-	Code           string
-	Unit           string
-	IsSystem       bool
-	CalcType       string
-	Remark         *string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID        int
+	AccountID int
+	Code      string
+	Unit      string
+	IsSystem  bool
+	CalcType  string
+	Remark    *string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewMeterItem(params CreateParams) (*MeterItem, error) {
 	item := &MeterItem{
-		OrganizationID: params.OrganizationID,
-		Code:           strings.TrimSpace(params.Code),
-		Unit:           strings.TrimSpace(params.Unit),
-		CalcType:       normalizeCalcType(params.CalcType),
-		Remark:         normalizeRemark(params.Remark),
+		AccountID: params.AccountID,
+		Code:      strings.TrimSpace(params.Code),
+		Unit:      strings.TrimSpace(params.Unit),
+		CalcType:  normalizeCalcType(params.CalcType),
+		Remark:    normalizeRemark(params.Remark),
 	}
 	if err := item.Validate(); err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func NewMeterItem(params CreateParams) (*MeterItem, error) {
 
 func (i *MeterItem) Update(params UpdateParams) error {
 	i.ID = params.ID
-	i.OrganizationID = params.OrganizationID
+	i.AccountID = params.AccountID
 	i.Code = strings.TrimSpace(params.Code)
 	i.Unit = strings.TrimSpace(params.Unit)
 	i.CalcType = normalizeCalcType(params.CalcType)
@@ -44,8 +44,8 @@ func (i *MeterItem) Update(params UpdateParams) error {
 }
 
 func (i *MeterItem) Validate() error {
-	if i.OrganizationID <= 0 {
-		return ErrOrganizationRequired
+	if i.AccountID <= 0 {
+		return ErrAccountRequired
 	}
 	if i.Code == "" {
 		return ErrCodeRequired

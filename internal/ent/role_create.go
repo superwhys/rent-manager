@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // RoleCreate is the builder for creating a Role entity.
@@ -65,9 +65,9 @@ func (_c *RoleCreate) SetNillableDeletedAt(v *time.Time) *RoleCreate {
 	return _c
 }
 
-// SetOrganizationID sets the "organization_id" field.
-func (_c *RoleCreate) SetOrganizationID(v int) *RoleCreate {
-	_c.mutation.SetOrganizationID(v)
+// SetAccountID sets the "account_id" field.
+func (_c *RoleCreate) SetAccountID(v int) *RoleCreate {
+	_c.mutation.SetAccountID(v)
 	return _c
 }
 
@@ -105,24 +105,15 @@ func (_c *RoleCreate) SetNillableIsActive(v *bool) *RoleCreate {
 	return _c
 }
 
-// SetOrganization sets the "organization" edge to the Organization entity.
-func (_c *RoleCreate) SetOrganization(v *Organization) *RoleCreate {
-	return _c.SetOrganizationID(v.ID)
-}
-
-// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
-func (_c *RoleCreate) AddAccountIDs(ids ...int) *RoleCreate {
-	_c.mutation.AddAccountIDs(ids...)
+// SetAccountsID sets the "accounts" edge to the Account entity by ID.
+func (_c *RoleCreate) SetAccountsID(id int) *RoleCreate {
+	_c.mutation.SetAccountsID(id)
 	return _c
 }
 
-// AddAccounts adds the "accounts" edges to the Account entity.
-func (_c *RoleCreate) AddAccounts(v ...*Account) *RoleCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddAccountIDs(ids...)
+// SetAccounts sets the "accounts" edge to the Account entity.
+func (_c *RoleCreate) SetAccounts(v *Account) *RoleCreate {
+	return _c.SetAccountsID(v.ID)
 }
 
 // AddPermissionGroupIDs adds the "permission_groups" edge to the PermissionGroup entity by IDs.
@@ -138,6 +129,21 @@ func (_c *RoleCreate) AddPermissionGroups(v ...*PermissionGroup) *RoleCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddPermissionGroupIDs(ids...)
+}
+
+// AddUnitAccountRoleIDs adds the "unit_account_roles" edge to the UnitAccountRole entity by IDs.
+func (_c *RoleCreate) AddUnitAccountRoleIDs(ids ...int) *RoleCreate {
+	_c.mutation.AddUnitAccountRoleIDs(ids...)
+	return _c
+}
+
+// AddUnitAccountRoles adds the "unit_account_roles" edges to the UnitAccountRole entity.
+func (_c *RoleCreate) AddUnitAccountRoles(v ...*UnitAccountRole) *RoleCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUnitAccountRoleIDs(ids...)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -201,8 +207,8 @@ func (_c *RoleCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Role.updated_at"`)}
 	}
-	if _, ok := _c.mutation.OrganizationID(); !ok {
-		return &ValidationError{Name: "organization_id", err: errors.New(`ent: missing required field "Role.organization_id"`)}
+	if _, ok := _c.mutation.AccountID(); !ok {
+		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "Role.account_id"`)}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Role.name"`)}
@@ -218,8 +224,8 @@ func (_c *RoleCreate) check() error {
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Role.is_active"`)}
 	}
-	if len(_c.mutation.OrganizationIDs()) == 0 {
-		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "Role.organization"`)}
+	if len(_c.mutation.AccountsIDs()) == 0 {
+		return &ValidationError{Name: "accounts", err: errors.New(`ent: missing required edge "Role.accounts"`)}
 	}
 	return nil
 }
@@ -271,29 +277,12 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		_spec.SetField(role.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if nodes := _c.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.AccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   role.OrganizationTable,
-			Columns: []string{role.OrganizationColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.OrganizationID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.AccountsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
 			Table:   role.AccountsTable,
-			Columns: role.AccountsPrimaryKey,
+			Columns: []string{role.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeInt),
@@ -302,6 +291,7 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.AccountID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.PermissionGroupsIDs(); len(nodes) > 0 {
@@ -313,6 +303,22 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(permissiongroup.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UnitAccountRolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.UnitAccountRolesTable,
+			Columns: []string{role.UnitAccountRolesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(unitaccountrole.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

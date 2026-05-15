@@ -7,13 +7,13 @@ import (
 
 // MeterItemResponse 是抄表项响应。
 type MeterItemResponse struct {
-	ID             int     `json:"id"`
-	OrganizationID int     `json:"organization_id"`
-	Code           string  `json:"code"`
-	Unit           string  `json:"unit"`
-	IsSystem       bool    `json:"is_system"`
-	CalcType       string  `json:"calc_type"`
-	Remark         *string `json:"remark,omitempty"`
+	ID        int     `json:"id"`
+	AccountID int     `json:"account_id"`
+	Code      string  `json:"code"`
+	Unit      string  `json:"unit"`
+	IsSystem  bool    `json:"is_system"`
+	CalcType  string  `json:"calc_type"`
+	Remark    *string `json:"remark,omitempty"`
 }
 
 // ToMeterItemResponse 将抄表项领域对象转换为响应对象。
@@ -22,13 +22,13 @@ func ToMeterItemResponse(item *domainmeteritem.MeterItem) MeterItemResponse {
 		return MeterItemResponse{}
 	}
 	return MeterItemResponse{
-		ID:             item.ID,
-		OrganizationID: item.OrganizationID,
-		Code:           item.Code,
-		Unit:           item.Unit,
-		IsSystem:       item.IsSystem,
-		CalcType:       item.CalcType,
-		Remark:         item.Remark,
+		ID:        item.ID,
+		AccountID: item.AccountID,
+		Code:      item.Code,
+		Unit:      item.Unit,
+		IsSystem:  item.IsSystem,
+		CalcType:  item.CalcType,
+		Remark:    item.Remark,
 	}
 }
 

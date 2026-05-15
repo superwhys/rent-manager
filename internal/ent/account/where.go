@@ -70,11 +70,6 @@ func DeletedAt(v time.Time) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldDeletedAt, v))
 }
 
-// OrganizationID applies equality check predicate on the "organization_id" field. It's identical to OrganizationIDEQ.
-func OrganizationID(v int) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldOrganizationID, v))
-}
-
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldName, v))
@@ -228,36 +223,6 @@ func DeletedAtIsNil() predicate.Account {
 // DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
 func DeletedAtNotNil() predicate.Account {
 	return predicate.Account(sql.FieldNotNull(FieldDeletedAt))
-}
-
-// OrganizationIDEQ applies the EQ predicate on the "organization_id" field.
-func OrganizationIDEQ(v int) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldOrganizationID, v))
-}
-
-// OrganizationIDNEQ applies the NEQ predicate on the "organization_id" field.
-func OrganizationIDNEQ(v int) predicate.Account {
-	return predicate.Account(sql.FieldNEQ(FieldOrganizationID, v))
-}
-
-// OrganizationIDIn applies the In predicate on the "organization_id" field.
-func OrganizationIDIn(vs ...int) predicate.Account {
-	return predicate.Account(sql.FieldIn(FieldOrganizationID, vs...))
-}
-
-// OrganizationIDNotIn applies the NotIn predicate on the "organization_id" field.
-func OrganizationIDNotIn(vs ...int) predicate.Account {
-	return predicate.Account(sql.FieldNotIn(FieldOrganizationID, vs...))
-}
-
-// OrganizationIDIsNil applies the IsNil predicate on the "organization_id" field.
-func OrganizationIDIsNil() predicate.Account {
-	return predicate.Account(sql.FieldIsNull(FieldOrganizationID))
-}
-
-// OrganizationIDNotNil applies the NotNil predicate on the "organization_id" field.
-func OrganizationIDNotNil() predicate.Account {
-	return predicate.Account(sql.FieldNotNull(FieldOrganizationID))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -530,35 +495,12 @@ func IsActiveNEQ(v bool) predicate.Account {
 	return predicate.Account(sql.FieldNEQ(FieldIsActive, v))
 }
 
-// HasOrganization applies the HasEdge predicate on the "organization" edge.
-func HasOrganization() predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasOrganizationWith applies the HasEdge predicate on the "organization" edge with a given conditions (other predicates).
-func HasOrganizationWith(preds ...predicate.Organization) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		step := newOrganizationStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasRoles applies the HasEdge predicate on the "roles" edge.
 func HasRoles() predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -568,6 +510,121 @@ func HasRoles() predicate.Account {
 func HasRolesWith(preds ...predicate.Role) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
 		step := newRolesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUnits applies the HasEdge predicate on the "units" edge.
+func HasUnits() predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UnitsTable, UnitsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUnitsWith applies the HasEdge predicate on the "units" edge with a given conditions (other predicates).
+func HasUnitsWith(preds ...predicate.Unit) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := newUnitsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRoomTypes applies the HasEdge predicate on the "room_types" edge.
+func HasRoomTypes() predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RoomTypesTable, RoomTypesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRoomTypesWith applies the HasEdge predicate on the "room_types" edge with a given conditions (other predicates).
+func HasRoomTypesWith(preds ...predicate.RoomType) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := newRoomTypesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMeterItems applies the HasEdge predicate on the "meter_items" edge.
+func HasMeterItems() predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MeterItemsTable, MeterItemsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMeterItemsWith applies the HasEdge predicate on the "meter_items" edge with a given conditions (other predicates).
+func HasMeterItemsWith(preds ...predicate.MeterItem) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := newMeterItemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUnitAccountRoles applies the HasEdge predicate on the "unit_account_roles" edge.
+func HasUnitAccountRoles() predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UnitAccountRolesTable, UnitAccountRolesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUnitAccountRolesWith applies the HasEdge predicate on the "unit_account_roles" edge with a given conditions (other predicates).
+func HasUnitAccountRolesWith(preds ...predicate.UnitAccountRole) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := newUnitAccountRolesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasGrantedUnitAccountRoles applies the HasEdge predicate on the "granted_unit_account_roles" edge.
+func HasGrantedUnitAccountRoles() predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, GrantedUnitAccountRolesTable, GrantedUnitAccountRolesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasGrantedUnitAccountRolesWith applies the HasEdge predicate on the "granted_unit_account_roles" edge with a given conditions (other predicates).
+func HasGrantedUnitAccountRolesWith(preds ...predicate.UnitAccountRole) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := newGrantedUnitAccountRolesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

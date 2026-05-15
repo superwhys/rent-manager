@@ -27,7 +27,7 @@ func (MeterItem) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.TimeMixin{},
 		mixin.SoftDeleteMixin{},
-		mixin.OrganizationMixin{},
+		mixin.AccountMixin{},
 	}
 }
 
@@ -59,15 +59,15 @@ func (MeterItem) Fields() []ent.Field {
 
 func (MeterItem) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("organization_id", "code").Unique(),
+		index.Fields("account_id", "code").Unique(),
 	}
 }
 
 func (MeterItem) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("organization", Organization.Type).
-			Field("organization_id").
+		edge.From("accounts", Account.Type).
 			Ref("meter_items").
+			Field("account_id").
 			Unique().
 			Required(),
 
@@ -78,7 +78,7 @@ func (MeterItem) Edges() []ent.Edge {
 		// 抄表项-楼栋 多对多关系
 		// 用于给楼栋设置默认的抄表项
 		// 楼栋内的房间可以选择继承默认的或者单独设置
-		edge.From("building", Building.Type).
+		edge.From("uint", Unit.Type).
 			Ref("meter_items"),
 	}
 }

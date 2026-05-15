@@ -8,7 +8,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/schema/mixin"
 )
 
-// PermissionGroup groups global permissions for organization roles.
+// PermissionGroup groups global permissions for account roles.
 type PermissionGroup struct {
 	ent.Schema
 }
@@ -26,18 +26,22 @@ func (PermissionGroup) Fields() []ent.Field {
 			NotEmpty().
 			MaxLen(255).
 			Comment("权限组代码"),
+
 		field.String("name").
 			NotEmpty().
 			MaxLen(255).
 			Comment("权限组名称"),
+
 		field.String("description").
 			Optional().
 			Nillable().
 			MaxLen(255).
 			Comment("权限组描述"),
+
 		field.Int("sort_order").
 			Default(0).
 			Comment("排序"),
+
 		field.Bool("is_active").
 			Default(true).
 			Comment("权限组是否激活"),

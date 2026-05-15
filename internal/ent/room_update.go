@@ -11,12 +11,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
 )
 
 // RoomUpdate is the builder for updating Room entities.
@@ -135,16 +135,16 @@ func (_u *RoomUpdate) AddSize(v int) *RoomUpdate {
 	return _u
 }
 
-// SetBuildingID sets the "building_id" field.
-func (_u *RoomUpdate) SetBuildingID(v int) *RoomUpdate {
-	_u.mutation.SetBuildingID(v)
+// SetUnitID sets the "unit_id" field.
+func (_u *RoomUpdate) SetUnitID(v int) *RoomUpdate {
+	_u.mutation.SetUnitID(v)
 	return _u
 }
 
-// SetNillableBuildingID sets the "building_id" field if the given value is not nil.
-func (_u *RoomUpdate) SetNillableBuildingID(v *int) *RoomUpdate {
+// SetNillableUnitID sets the "unit_id" field if the given value is not nil.
+func (_u *RoomUpdate) SetNillableUnitID(v *int) *RoomUpdate {
 	if v != nil {
-		_u.SetBuildingID(*v)
+		_u.SetUnitID(*v)
 	}
 	return _u
 }
@@ -177,9 +177,9 @@ func (_u *RoomUpdate) SetNillableIsActive(v *bool) *RoomUpdate {
 	return _u
 }
 
-// SetBuilding sets the "building" edge to the Building entity.
-func (_u *RoomUpdate) SetBuilding(v *Building) *RoomUpdate {
-	return _u.SetBuildingID(v.ID)
+// SetUnit sets the "unit" edge to the Unit entity.
+func (_u *RoomUpdate) SetUnit(v *Unit) *RoomUpdate {
+	return _u.SetUnitID(v.ID)
 }
 
 // SetRoomType sets the "room_type" edge to the RoomType entity.
@@ -222,9 +222,9 @@ func (_u *RoomUpdate) Mutation() *RoomMutation {
 	return _u.mutation
 }
 
-// ClearBuilding clears the "building" edge to the Building entity.
-func (_u *RoomUpdate) ClearBuilding() *RoomUpdate {
-	_u.mutation.ClearBuilding()
+// ClearUnit clears the "unit" edge to the Unit entity.
+func (_u *RoomUpdate) ClearUnit() *RoomUpdate {
+	_u.mutation.ClearUnit()
 	return _u
 }
 
@@ -319,8 +319,8 @@ func (_u *RoomUpdate) check() error {
 			return &ValidationError{Name: "room_no", err: fmt.Errorf(`ent: validator failed for field "Room.room_no": %w`, err)}
 		}
 	}
-	if _u.mutation.BuildingCleared() && len(_u.mutation.BuildingIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Room.building"`)
+	if _u.mutation.UnitCleared() && len(_u.mutation.UnitIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Room.unit"`)
 	}
 	if _u.mutation.RoomTypeCleared() && len(_u.mutation.RoomTypeIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Room.room_type"`)
@@ -373,28 +373,28 @@ func (_u *RoomUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(room.FieldIsActive, field.TypeBool, value)
 	}
-	if _u.mutation.BuildingCleared() {
+	if _u.mutation.UnitCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   room.BuildingTable,
-			Columns: []string{room.BuildingColumn},
+			Table:   room.UnitTable,
+			Columns: []string{room.UnitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(unit.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.BuildingIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UnitIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   room.BuildingTable,
-			Columns: []string{room.BuildingColumn},
+			Table:   room.UnitTable,
+			Columns: []string{room.UnitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(unit.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -644,16 +644,16 @@ func (_u *RoomUpdateOne) AddSize(v int) *RoomUpdateOne {
 	return _u
 }
 
-// SetBuildingID sets the "building_id" field.
-func (_u *RoomUpdateOne) SetBuildingID(v int) *RoomUpdateOne {
-	_u.mutation.SetBuildingID(v)
+// SetUnitID sets the "unit_id" field.
+func (_u *RoomUpdateOne) SetUnitID(v int) *RoomUpdateOne {
+	_u.mutation.SetUnitID(v)
 	return _u
 }
 
-// SetNillableBuildingID sets the "building_id" field if the given value is not nil.
-func (_u *RoomUpdateOne) SetNillableBuildingID(v *int) *RoomUpdateOne {
+// SetNillableUnitID sets the "unit_id" field if the given value is not nil.
+func (_u *RoomUpdateOne) SetNillableUnitID(v *int) *RoomUpdateOne {
 	if v != nil {
-		_u.SetBuildingID(*v)
+		_u.SetUnitID(*v)
 	}
 	return _u
 }
@@ -686,9 +686,9 @@ func (_u *RoomUpdateOne) SetNillableIsActive(v *bool) *RoomUpdateOne {
 	return _u
 }
 
-// SetBuilding sets the "building" edge to the Building entity.
-func (_u *RoomUpdateOne) SetBuilding(v *Building) *RoomUpdateOne {
-	return _u.SetBuildingID(v.ID)
+// SetUnit sets the "unit" edge to the Unit entity.
+func (_u *RoomUpdateOne) SetUnit(v *Unit) *RoomUpdateOne {
+	return _u.SetUnitID(v.ID)
 }
 
 // SetRoomType sets the "room_type" edge to the RoomType entity.
@@ -731,9 +731,9 @@ func (_u *RoomUpdateOne) Mutation() *RoomMutation {
 	return _u.mutation
 }
 
-// ClearBuilding clears the "building" edge to the Building entity.
-func (_u *RoomUpdateOne) ClearBuilding() *RoomUpdateOne {
-	_u.mutation.ClearBuilding()
+// ClearUnit clears the "unit" edge to the Unit entity.
+func (_u *RoomUpdateOne) ClearUnit() *RoomUpdateOne {
+	_u.mutation.ClearUnit()
 	return _u
 }
 
@@ -841,8 +841,8 @@ func (_u *RoomUpdateOne) check() error {
 			return &ValidationError{Name: "room_no", err: fmt.Errorf(`ent: validator failed for field "Room.room_no": %w`, err)}
 		}
 	}
-	if _u.mutation.BuildingCleared() && len(_u.mutation.BuildingIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Room.building"`)
+	if _u.mutation.UnitCleared() && len(_u.mutation.UnitIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Room.unit"`)
 	}
 	if _u.mutation.RoomTypeCleared() && len(_u.mutation.RoomTypeIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Room.room_type"`)
@@ -912,28 +912,28 @@ func (_u *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) {
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(room.FieldIsActive, field.TypeBool, value)
 	}
-	if _u.mutation.BuildingCleared() {
+	if _u.mutation.UnitCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   room.BuildingTable,
-			Columns: []string{room.BuildingColumn},
+			Table:   room.UnitTable,
+			Columns: []string{room.UnitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(unit.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.BuildingIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UnitIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   room.BuildingTable,
-			Columns: []string{room.BuildingColumn},
+			Table:   room.UnitTable,
+			Columns: []string{room.UnitColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(unit.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

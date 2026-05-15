@@ -10,6 +10,8 @@ import (
 	entpermission "github.com/superwhys/rent-manager-server/internal/ent/permission"
 	entpermissiongroup "github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	entrole "github.com/superwhys/rent-manager-server/internal/ent/role"
+	entunit "github.com/superwhys/rent-manager-server/internal/ent/unit"
+	entunitaccountrole "github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 	"github.com/superwhys/rent-manager-server/internal/models/consts"
 )
 
@@ -130,7 +132,7 @@ func (r *RBACRepository) CreateRoles(ctx context.Context, roles []*domainrbac.Ro
 	builders := make([]*entclient.RoleCreate, 0, len(roles))
 	for _, role := range roles {
 		builders = append(builders, r.client.Role.Create().
-			SetOrganizationID(role.OrganizationID).
+			SetAccountID(role.AccountID).
 			SetName(role.Name).
 			SetIsDefaultOwner(role.IsDefaultOwner).
 			SetIsActive(role.IsActive),
@@ -217,53 +219,116 @@ func (r *RBACRepository) RemovePermissionsFromPermissionGroup(ctx context.Contex
 		Exec(ctx)
 }
 
-func (r *RBACRepository) AddPermissionGroupsToRole(ctx context.Context, organizationID int, roleID int, permissionGroupIDs []int) error {
-	return r.client.Role.Update().
-		Where(entrole.ID(roleID), entrole.OrganizationID(organizationID), entrole.DeletedAtIsNil()).
+func (r *RBACRepository) AddPermissionGroupsToRole(ctx context.Context, accountID int, roleID int, permissionGroupIDs []int) error {
+	affected, err := r.client.Role.Update().
+		Where(entrole.ID(roleID), entrole.AccountID(accountID), entrole.DeletedAtIsNil()).
 		AddPermissionGroupIDs(permissionGroupIDs...).
-		Exec(ctx)
-}
-
-func (r *RBACRepository) RemovePermissionGroupsFromRole(ctx context.Context, organizationID int, roleID int, permissionGroupIDs []int) error {
-	return r.client.Role.Update().
-		Where(entrole.ID(roleID), entrole.OrganizationID(organizationID), entrole.DeletedAtIsNil()).
-		RemovePermissionGroupIDs(permissionGroupIDs...).
-		Exec(ctx)
-}
-
-func (r *RBACRepository) AssignRolesToOrganizationAccount(ctx context.Context, organizationID int, accountID int, roleIDs []int) error {
-	count, err := r.client.Role.Query().
-		Where(entrole.IDIn(roleIDs...), entrole.OrganizationID(organizationID), entrole.DeletedAtIsNil()).
-		Count(ctx)
-	if err != nil {
-		return err
-	}
-	if count != len(roleIDs) {
-		return domainrbac.ErrCrossOrganizationRoleAssignment
-	}
-
-	affected, err := r.client.Account.Update().
-		Where(entaccount.ID(accountID), entaccount.OrganizationID(organizationID), entaccount.DeletedAtIsNil()).
-		ClearRoles().
-		AddRoleIDs(roleIDs...).
 		Save(ctx)
 	if err != nil {
 		return err
 	}
 	if affected == 0 {
-		return domainrbac.ErrAccountNotInOrganization
+		return domainrbac.ErrRoleNotInAccount
 	}
 	return nil
 }
 
-func (r *RBACRepository) AccountIDsByRole(ctx context.Context, organizationID int, roleID int) ([]int, error) {
-	return r.client.Account.Query().
+func (r *RBACRepository) RemovePermissionGroupsFromRole(ctx context.Context, accountID int, roleID int, permissionGroupIDs []int) error {
+	affected, err := r.client.Role.Update().
+		Where(entrole.ID(roleID), entrole.AccountID(accountID), entrole.DeletedAtIsNil()).
+		RemovePermissionGroupIDs(permissionGroupIDs...).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return domainrbac.ErrRoleNotInAccount
+	}
+	return nil
+}
+
+func (r *RBACRepository) AssignRolesToUnitAccount(ctx context.Context, ownerAccountID int, unitID int, accountID int, roleIDs []int) error {
+	exists, err := r.client.Unit.Query().
+		Where(entunit.ID(unitID), entunit.AccountID(ownerAccountID), entunit.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return domainrbac.ErrUnitNotInAccount
+	}
+
+	exists, err = r.client.Account.Query().
+		Where(entaccount.ID(accountID), entaccount.IsActive(true), entaccount.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return domainrbac.ErrAccountNotFound
+	}
+
+	count, err := r.client.Role.Query().
+		Where(entrole.IDIn(roleIDs...), entrole.AccountID(ownerAccountID), entrole.DeletedAtIsNil()).
+		Count(ctx)
+	if err != nil {
+		return err
+	}
+	if count != len(roleIDs) {
+		return domainrbac.ErrRoleNotInAccount
+	}
+
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	if _, err := tx.UnitAccountRole.Update().
 		Where(
-			entaccount.OrganizationID(organizationID),
-			entaccount.DeletedAtIsNil(),
-			entaccount.HasRolesWith(entrole.ID(roleID)),
+			entunitaccountrole.UnitID(unitID),
+			entunitaccountrole.AccountID(accountID),
+			entunitaccountrole.DeletedAtIsNil(),
 		).
-		IDs(ctx)
+		SetStatus(entunitaccountrole.StatusDisabled).
+		Save(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	for _, roleID := range roleIDs {
+		existing, err := tx.UnitAccountRole.Query().
+			Where(
+				entunitaccountrole.UnitID(unitID),
+				entunitaccountrole.AccountID(accountID),
+				entunitaccountrole.RoleID(roleID),
+			).
+			Only(ctx)
+		if err != nil {
+			if !entclient.IsNotFound(err) {
+				_ = tx.Rollback()
+				return err
+			}
+			if _, err := tx.UnitAccountRole.Create().
+				SetUnitID(unitID).
+				SetAccountID(accountID).
+				SetRoleID(roleID).
+				SetGrantedByAccountID(ownerAccountID).
+				SetStatus(entunitaccountrole.StatusActive).
+				Save(ctx); err != nil {
+				_ = tx.Rollback()
+				return err
+			}
+			continue
+		}
+		if _, err := tx.UnitAccountRole.UpdateOneID(existing.ID).
+			SetGrantedByAccountID(ownerAccountID).
+			SetStatus(entunitaccountrole.StatusActive).
+			ClearDeletedAt().
+			Save(ctx); err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 func (r *RBACRepository) HasSystemPermission(ctx context.Context, accountID int) (bool, error) {
@@ -285,41 +350,13 @@ func (r *RBACRepository) HasSystemPermission(ctx context.Context, accountID int)
 		Exist(ctx)
 }
 
-func (r *RBACRepository) HasPermission(ctx context.Context, accountID int, organizationID int, apiPath string) (bool, error) {
-	return r.client.Account.Query().
-		Where(
-			entaccount.ID(accountID),
-			entaccount.OrganizationID(organizationID),
-			entaccount.IsActive(true),
-			entaccount.DeletedAtIsNil(),
-			entaccount.HasRolesWith(
-				entrole.OrganizationID(organizationID),
-				entrole.IsActive(true),
-				entrole.DeletedAtIsNil(),
-				entrole.HasPermissionGroupsWith(
-					entpermissiongroup.IsActive(true),
-					entpermissiongroup.DeletedAtIsNil(),
-					entpermissiongroup.HasPermissionsWith(
-						entpermission.Or(
-							entpermission.APIPath(apiPath),
-							entpermission.APIPath(consts.SystemPermissionAllowAllAPIPath),
-						),
-						entpermission.IsActive(true),
-						entpermission.DeletedAtIsNil(),
-					),
-				),
-			),
-		).
-		Exist(ctx)
-}
-
 func toDomainRole(record *entclient.Role) *domainrbac.Role {
 	if record == nil {
 		return nil
 	}
 	return &domainrbac.Role{
 		ID:             record.ID,
-		OrganizationID: record.OrganizationID,
+		AccountID:      record.AccountID,
 		Name:           record.Name,
 		IsDefaultOwner: record.IsDefaultOwner,
 		IsActive:       record.IsActive,

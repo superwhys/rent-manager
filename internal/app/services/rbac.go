@@ -2,33 +2,20 @@ package services
 
 import (
 	"context"
-	"errors"
-	"strconv"
-	"time"
 
 	"github.com/miebyte/goutils/redisutils"
-	"github.com/redis/go-redis/v9"
-	"github.com/superwhys/rent-manager-server/internal/infra/cache"
 	"github.com/superwhys/rent-manager-server/internal/models/requests"
 
 	domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac"
 )
 
 type RBACService struct {
-	repo                       domainrbac.Repository
-	redisClient                *redisutils.RedisClient
-	hasPermissionCheckCachedFn redisutils.AnyFn[requests.PermissionCheckRequest, bool]
+	repo        domainrbac.Repository
+	redisClient *redisutils.RedisClient
 }
 
 func NewRBACService(repo domainrbac.Repository, redisClient *redisutils.RedisClient) *RBACService {
-	s := &RBACService{repo: repo, redisClient: redisClient}
-	s.hasPermissionCheckCachedFn = redisutils.CacheCall(s.hasPermissionCheck).
-		WithClient(redisClient).
-		SetPrefix("rent-manager:rbac:permission").
-		SetTTL(time.Minute * 5).
-		SetTTLJitter(time.Minute).
-		OnceFunc()
-	return s
+	return &RBACService{repo: repo, redisClient: redisClient}
 }
 
 func (s *RBACService) InitSystemRBAC(ctx context.Context) error {
@@ -36,10 +23,14 @@ func (s *RBACService) InitSystemRBAC(ctx context.Context) error {
 }
 
 func (s *RBACService) CreateRoles(ctx context.Context, cmd *requests.CreateRolesCommand) ([]*domainrbac.Role, error) {
+	accountID, err := AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	roles := make([]*domainrbac.Role, 0, len(cmd.Roles))
 	for _, item := range cmd.Roles {
 		role, err := domainrbac.NewRole(domainrbac.CreateRoleParams{
-			OrganizationID: cmd.OrganizationID,
+			AccountID:      accountID,
 			Name:           item.Name,
 			IsDefaultOwner: item.IsDefaultOwner,
 		})
@@ -93,97 +84,29 @@ func (s *RBACService) RemovePermissionsFromPermissionGroup(ctx context.Context, 
 }
 
 func (s *RBACService) AddPermissionGroupsToRole(ctx context.Context, cmd *requests.RolePermissionGroupsCommand) error {
-	if err := s.repo.AddPermissionGroupsToRole(ctx, cmd.OrganizationID, cmd.RoleID, cmd.PermissionGroupIDs); err != nil {
-		return err
-	}
-
-	accountIDs, err := s.repo.AccountIDsByRole(ctx, cmd.OrganizationID, cmd.RoleID)
+	accountID, err := AccountIDFromContext(ctx)
 	if err != nil {
 		return err
 	}
-	return s.updatePermissionCacheVersion(ctx, cmd.OrganizationID, accountIDs...)
+	return s.repo.AddPermissionGroupsToRole(ctx, accountID, cmd.RoleID, cmd.PermissionGroupIDs)
 }
 
 func (s *RBACService) RemovePermissionGroupsFromRole(ctx context.Context, cmd *requests.RolePermissionGroupsCommand) error {
-	if err := s.repo.RemovePermissionGroupsFromRole(ctx, cmd.OrganizationID, cmd.RoleID, cmd.PermissionGroupIDs); err != nil {
-		return err
-	}
-
-	accountIDs, err := s.repo.AccountIDsByRole(ctx, cmd.OrganizationID, cmd.RoleID)
+	accountID, err := AccountIDFromContext(ctx)
 	if err != nil {
 		return err
 	}
-	return s.updatePermissionCacheVersion(ctx, cmd.OrganizationID, accountIDs...)
+	return s.repo.RemovePermissionGroupsFromRole(ctx, accountID, cmd.RoleID, cmd.PermissionGroupIDs)
 }
 
-func (s *RBACService) AssignRolesToAccount(ctx context.Context, cmd *requests.AccountRolesCommand) error {
-	if err := s.repo.AssignRolesToOrganizationAccount(ctx, cmd.OrganizationID, cmd.AccountID, cmd.RoleIDs); err != nil {
+func (s *RBACService) AssignRolesToUnitAccount(ctx context.Context, cmd *requests.UnitAccountRolesCommand) error {
+	ownerAccountID, err := AccountIDFromContext(ctx)
+	if err != nil {
 		return err
 	}
-
-	return s.updatePermissionCacheVersion(ctx, cmd.OrganizationID, cmd.AccountID)
+	return s.repo.AssignRolesToUnitAccount(ctx, ownerAccountID, cmd.UnitID, cmd.AccountID, cmd.RoleIDs)
 }
 
 func (s *RBACService) HasSystemPermission(ctx context.Context, accountID int) (bool, error) {
 	return s.repo.HasSystemPermission(ctx, accountID)
-}
-
-func (s *RBACService) HasPermission(ctx context.Context, accountID int, organizationID int, apiPath string) (bool, error) {
-	version, cacheOK := s.permissionCacheVersion(ctx, accountID, organizationID)
-	req := requests.PermissionCheckRequest{
-		AccountID:      accountID,
-		OrganizationID: organizationID,
-		APIPath:        apiPath,
-		Version:        version,
-	}
-	if !cacheOK {
-		return s.hasPermissionCheck(ctx, req)
-	}
-
-	return s.hasPermissionCheckCachedFn(ctx, req)
-}
-
-func (s *RBACService) hasPermissionCheck(ctx context.Context, req requests.PermissionCheckRequest) (bool, error) {
-	return s.repo.HasPermission(ctx, req.AccountID, req.OrganizationID, req.APIPath)
-}
-
-func (s *RBACService) updatePermissionCacheVersion(ctx context.Context, organizationID int, accountIDs ...int) error {
-	if s.redisClient == nil || len(accountIDs) == 0 {
-		return nil
-	}
-	seen := make(map[int]struct{}, len(accountIDs))
-	pipe := s.redisClient.Pipeline()
-	for _, accountID := range accountIDs {
-		if _, ok := seen[accountID]; ok {
-			continue
-		}
-		seen[accountID] = struct{}{}
-		pipe.Incr(ctx, cache.PermissionVersionCache(permissionCacheVersionKey(accountID, organizationID)).Key())
-	}
-	_, err := pipe.Exec(ctx)
-	return err
-}
-
-func (s *RBACService) permissionCacheVersion(ctx context.Context, accountID int, organizationID int) (int64, bool) {
-	if s.redisClient == nil {
-		return 0, false
-	}
-
-	version, err := cache.PermissionVersionCache(permissionCacheVersionKey(accountID, organizationID)).Get(ctx, s.redisClient)
-	if err == nil {
-		versionID, parseErr := strconv.ParseInt(version, 10, 64)
-		if parseErr != nil {
-			return 0, false
-		}
-		return versionID, true
-	}
-
-	if errors.Is(err, redis.Nil) {
-		return 0, true
-	}
-	return 0, false
-}
-
-func permissionCacheVersionKey(accountID int, organizationID int) string {
-	return strconv.Itoa(accountID) + ":" + strconv.Itoa(organizationID)
 }

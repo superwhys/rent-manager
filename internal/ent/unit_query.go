@@ -12,62 +12,64 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
-// BuildingQuery is the builder for querying Building entities.
-type BuildingQuery struct {
+// UnitQuery is the builder for querying Unit entities.
+type UnitQuery struct {
 	config
-	ctx              *QueryContext
-	order            []building.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.Building
-	withOrganization *OrganizationQuery
-	withRooms        *RoomQuery
-	withMeterItems   *MeterItemQuery
+	ctx                  *QueryContext
+	order                []unit.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.Unit
+	withAccount          *AccountQuery
+	withRooms            *RoomQuery
+	withMeterItems       *MeterItemQuery
+	withUnitAccountRoles *UnitAccountRoleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the BuildingQuery builder.
-func (_q *BuildingQuery) Where(ps ...predicate.Building) *BuildingQuery {
+// Where adds a new predicate for the UnitQuery builder.
+func (_q *UnitQuery) Where(ps ...predicate.Unit) *UnitQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *BuildingQuery) Limit(limit int) *BuildingQuery {
+func (_q *UnitQuery) Limit(limit int) *UnitQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *BuildingQuery) Offset(offset int) *BuildingQuery {
+func (_q *UnitQuery) Offset(offset int) *UnitQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *BuildingQuery) Unique(unique bool) *BuildingQuery {
+func (_q *UnitQuery) Unique(unique bool) *UnitQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *BuildingQuery) Order(o ...building.OrderOption) *BuildingQuery {
+func (_q *UnitQuery) Order(o ...unit.OrderOption) *UnitQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryOrganization chains the current query on the "organization" edge.
-func (_q *BuildingQuery) QueryOrganization() *OrganizationQuery {
-	query := (&OrganizationClient{config: _q.config}).Query()
+// QueryAccount chains the current query on the "account" edge.
+func (_q *UnitQuery) QueryAccount() *AccountQuery {
+	query := (&AccountClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -77,9 +79,9 @@ func (_q *BuildingQuery) QueryOrganization() *OrganizationQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(building.Table, building.FieldID, selector),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, building.OrganizationTable, building.OrganizationColumn),
+			sqlgraph.From(unit.Table, unit.FieldID, selector),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, unit.AccountTable, unit.AccountColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -88,7 +90,7 @@ func (_q *BuildingQuery) QueryOrganization() *OrganizationQuery {
 }
 
 // QueryRooms chains the current query on the "rooms" edge.
-func (_q *BuildingQuery) QueryRooms() *RoomQuery {
+func (_q *UnitQuery) QueryRooms() *RoomQuery {
 	query := (&RoomClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -99,9 +101,9 @@ func (_q *BuildingQuery) QueryRooms() *RoomQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(building.Table, building.FieldID, selector),
+			sqlgraph.From(unit.Table, unit.FieldID, selector),
 			sqlgraph.To(room.Table, room.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, building.RoomsTable, building.RoomsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, unit.RoomsTable, unit.RoomsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -110,7 +112,7 @@ func (_q *BuildingQuery) QueryRooms() *RoomQuery {
 }
 
 // QueryMeterItems chains the current query on the "meter_items" edge.
-func (_q *BuildingQuery) QueryMeterItems() *MeterItemQuery {
+func (_q *UnitQuery) QueryMeterItems() *MeterItemQuery {
 	query := (&MeterItemClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -121,9 +123,9 @@ func (_q *BuildingQuery) QueryMeterItems() *MeterItemQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(building.Table, building.FieldID, selector),
+			sqlgraph.From(unit.Table, unit.FieldID, selector),
 			sqlgraph.To(meteritem.Table, meteritem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, building.MeterItemsTable, building.MeterItemsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, unit.MeterItemsTable, unit.MeterItemsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -131,21 +133,43 @@ func (_q *BuildingQuery) QueryMeterItems() *MeterItemQuery {
 	return query
 }
 
-// First returns the first Building entity from the query.
-// Returns a *NotFoundError when no Building was found.
-func (_q *BuildingQuery) First(ctx context.Context) (*Building, error) {
+// QueryUnitAccountRoles chains the current query on the "unit_account_roles" edge.
+func (_q *UnitQuery) QueryUnitAccountRoles() *UnitAccountRoleQuery {
+	query := (&UnitAccountRoleClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, selector),
+			sqlgraph.To(unitaccountrole.Table, unitaccountrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, unit.UnitAccountRolesTable, unit.UnitAccountRolesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// First returns the first Unit entity from the query.
+// Returns a *NotFoundError when no Unit was found.
+func (_q *UnitQuery) First(ctx context.Context) (*Unit, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{building.Label}
+		return nil, &NotFoundError{unit.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *BuildingQuery) FirstX(ctx context.Context) *Building {
+func (_q *UnitQuery) FirstX(ctx context.Context) *Unit {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -153,22 +177,22 @@ func (_q *BuildingQuery) FirstX(ctx context.Context) *Building {
 	return node
 }
 
-// FirstID returns the first Building ID from the query.
-// Returns a *NotFoundError when no Building ID was found.
-func (_q *BuildingQuery) FirstID(ctx context.Context) (id int, err error) {
+// FirstID returns the first Unit ID from the query.
+// Returns a *NotFoundError when no Unit ID was found.
+func (_q *UnitQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{building.Label}
+		err = &NotFoundError{unit.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *BuildingQuery) FirstIDX(ctx context.Context) int {
+func (_q *UnitQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -176,10 +200,10 @@ func (_q *BuildingQuery) FirstIDX(ctx context.Context) int {
 	return id
 }
 
-// Only returns a single Building entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Building entity is found.
-// Returns a *NotFoundError when no Building entities are found.
-func (_q *BuildingQuery) Only(ctx context.Context) (*Building, error) {
+// Only returns a single Unit entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Unit entity is found.
+// Returns a *NotFoundError when no Unit entities are found.
+func (_q *UnitQuery) Only(ctx context.Context) (*Unit, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -188,14 +212,14 @@ func (_q *BuildingQuery) Only(ctx context.Context) (*Building, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{building.Label}
+		return nil, &NotFoundError{unit.Label}
 	default:
-		return nil, &NotSingularError{building.Label}
+		return nil, &NotSingularError{unit.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *BuildingQuery) OnlyX(ctx context.Context) *Building {
+func (_q *UnitQuery) OnlyX(ctx context.Context) *Unit {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -203,10 +227,10 @@ func (_q *BuildingQuery) OnlyX(ctx context.Context) *Building {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Building ID in the query.
-// Returns a *NotSingularError when more than one Building ID is found.
+// OnlyID is like Only, but returns the only Unit ID in the query.
+// Returns a *NotSingularError when more than one Unit ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *BuildingQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *UnitQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -215,15 +239,15 @@ func (_q *BuildingQuery) OnlyID(ctx context.Context) (id int, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{building.Label}
+		err = &NotFoundError{unit.Label}
 	default:
-		err = &NotSingularError{building.Label}
+		err = &NotSingularError{unit.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *BuildingQuery) OnlyIDX(ctx context.Context) int {
+func (_q *UnitQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -231,18 +255,18 @@ func (_q *BuildingQuery) OnlyIDX(ctx context.Context) int {
 	return id
 }
 
-// All executes the query and returns a list of Buildings.
-func (_q *BuildingQuery) All(ctx context.Context) ([]*Building, error) {
+// All executes the query and returns a list of Units.
+func (_q *UnitQuery) All(ctx context.Context) ([]*Unit, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Building, *BuildingQuery]()
-	return withInterceptors[[]*Building](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Unit, *UnitQuery]()
+	return withInterceptors[[]*Unit](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *BuildingQuery) AllX(ctx context.Context) []*Building {
+func (_q *UnitQuery) AllX(ctx context.Context) []*Unit {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -250,20 +274,20 @@ func (_q *BuildingQuery) AllX(ctx context.Context) []*Building {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Building IDs.
-func (_q *BuildingQuery) IDs(ctx context.Context) (ids []int, err error) {
+// IDs executes the query and returns a list of Unit IDs.
+func (_q *UnitQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(building.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(unit.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *BuildingQuery) IDsX(ctx context.Context) []int {
+func (_q *UnitQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -272,16 +296,16 @@ func (_q *BuildingQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (_q *BuildingQuery) Count(ctx context.Context) (int, error) {
+func (_q *UnitQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*BuildingQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*UnitQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *BuildingQuery) CountX(ctx context.Context) int {
+func (_q *UnitQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -290,7 +314,7 @@ func (_q *BuildingQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *BuildingQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *UnitQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -303,7 +327,7 @@ func (_q *BuildingQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *BuildingQuery) ExistX(ctx context.Context) bool {
+func (_q *UnitQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -311,41 +335,42 @@ func (_q *BuildingQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the BuildingQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the UnitQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *BuildingQuery) Clone() *BuildingQuery {
+func (_q *UnitQuery) Clone() *UnitQuery {
 	if _q == nil {
 		return nil
 	}
-	return &BuildingQuery{
-		config:           _q.config,
-		ctx:              _q.ctx.Clone(),
-		order:            append([]building.OrderOption{}, _q.order...),
-		inters:           append([]Interceptor{}, _q.inters...),
-		predicates:       append([]predicate.Building{}, _q.predicates...),
-		withOrganization: _q.withOrganization.Clone(),
-		withRooms:        _q.withRooms.Clone(),
-		withMeterItems:   _q.withMeterItems.Clone(),
+	return &UnitQuery{
+		config:               _q.config,
+		ctx:                  _q.ctx.Clone(),
+		order:                append([]unit.OrderOption{}, _q.order...),
+		inters:               append([]Interceptor{}, _q.inters...),
+		predicates:           append([]predicate.Unit{}, _q.predicates...),
+		withAccount:          _q.withAccount.Clone(),
+		withRooms:            _q.withRooms.Clone(),
+		withMeterItems:       _q.withMeterItems.Clone(),
+		withUnitAccountRoles: _q.withUnitAccountRoles.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithOrganization tells the query-builder to eager-load the nodes that are connected to
-// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *BuildingQuery) WithOrganization(opts ...func(*OrganizationQuery)) *BuildingQuery {
-	query := (&OrganizationClient{config: _q.config}).Query()
+// WithAccount tells the query-builder to eager-load the nodes that are connected to
+// the "account" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UnitQuery) WithAccount(opts ...func(*AccountQuery)) *UnitQuery {
+	query := (&AccountClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withOrganization = query
+	_q.withAccount = query
 	return _q
 }
 
 // WithRooms tells the query-builder to eager-load the nodes that are connected to
 // the "rooms" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *BuildingQuery) WithRooms(opts ...func(*RoomQuery)) *BuildingQuery {
+func (_q *UnitQuery) WithRooms(opts ...func(*RoomQuery)) *UnitQuery {
 	query := (&RoomClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
@@ -356,12 +381,23 @@ func (_q *BuildingQuery) WithRooms(opts ...func(*RoomQuery)) *BuildingQuery {
 
 // WithMeterItems tells the query-builder to eager-load the nodes that are connected to
 // the "meter_items" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *BuildingQuery) WithMeterItems(opts ...func(*MeterItemQuery)) *BuildingQuery {
+func (_q *UnitQuery) WithMeterItems(opts ...func(*MeterItemQuery)) *UnitQuery {
 	query := (&MeterItemClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
 	_q.withMeterItems = query
+	return _q
+}
+
+// WithUnitAccountRoles tells the query-builder to eager-load the nodes that are connected to
+// the "unit_account_roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UnitQuery) WithUnitAccountRoles(opts ...func(*UnitAccountRoleQuery)) *UnitQuery {
+	query := (&UnitAccountRoleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUnitAccountRoles = query
 	return _q
 }
 
@@ -375,15 +411,15 @@ func (_q *BuildingQuery) WithMeterItems(opts ...func(*MeterItemQuery)) *Building
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Building.Query().
-//		GroupBy(building.FieldCreatedAt).
+//	client.Unit.Query().
+//		GroupBy(unit.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *BuildingQuery) GroupBy(field string, fields ...string) *BuildingGroupBy {
+func (_q *UnitQuery) GroupBy(field string, fields ...string) *UnitGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &BuildingGroupBy{build: _q}
+	grbuild := &UnitGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = building.Label
+	grbuild.label = unit.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -397,23 +433,23 @@ func (_q *BuildingQuery) GroupBy(field string, fields ...string) *BuildingGroupB
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.Building.Query().
-//		Select(building.FieldCreatedAt).
+//	client.Unit.Query().
+//		Select(unit.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *BuildingQuery) Select(fields ...string) *BuildingSelect {
+func (_q *UnitQuery) Select(fields ...string) *UnitSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &BuildingSelect{BuildingQuery: _q}
-	sbuild.label = building.Label
+	sbuild := &UnitSelect{UnitQuery: _q}
+	sbuild.label = unit.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a BuildingSelect configured with the given aggregations.
-func (_q *BuildingQuery) Aggregate(fns ...AggregateFunc) *BuildingSelect {
+// Aggregate returns a UnitSelect configured with the given aggregations.
+func (_q *UnitQuery) Aggregate(fns ...AggregateFunc) *UnitSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *BuildingQuery) prepareQuery(ctx context.Context) error {
+func (_q *UnitQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -425,7 +461,7 @@ func (_q *BuildingQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !building.ValidColumn(f) {
+		if !unit.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -439,21 +475,22 @@ func (_q *BuildingQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *BuildingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Building, error) {
+func (_q *UnitQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Unit, error) {
 	var (
-		nodes       = []*Building{}
+		nodes       = []*Unit{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
-			_q.withOrganization != nil,
+		loadedTypes = [4]bool{
+			_q.withAccount != nil,
 			_q.withRooms != nil,
 			_q.withMeterItems != nil,
+			_q.withUnitAccountRoles != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Building).scanValues(nil, columns)
+		return (*Unit).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Building{config: _q.config}
+		node := &Unit{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -467,34 +504,41 @@ func (_q *BuildingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Bui
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withOrganization; query != nil {
-		if err := _q.loadOrganization(ctx, query, nodes, nil,
-			func(n *Building, e *Organization) { n.Edges.Organization = e }); err != nil {
+	if query := _q.withAccount; query != nil {
+		if err := _q.loadAccount(ctx, query, nodes, nil,
+			func(n *Unit, e *Account) { n.Edges.Account = e }); err != nil {
 			return nil, err
 		}
 	}
 	if query := _q.withRooms; query != nil {
 		if err := _q.loadRooms(ctx, query, nodes,
-			func(n *Building) { n.Edges.Rooms = []*Room{} },
-			func(n *Building, e *Room) { n.Edges.Rooms = append(n.Edges.Rooms, e) }); err != nil {
+			func(n *Unit) { n.Edges.Rooms = []*Room{} },
+			func(n *Unit, e *Room) { n.Edges.Rooms = append(n.Edges.Rooms, e) }); err != nil {
 			return nil, err
 		}
 	}
 	if query := _q.withMeterItems; query != nil {
 		if err := _q.loadMeterItems(ctx, query, nodes,
-			func(n *Building) { n.Edges.MeterItems = []*MeterItem{} },
-			func(n *Building, e *MeterItem) { n.Edges.MeterItems = append(n.Edges.MeterItems, e) }); err != nil {
+			func(n *Unit) { n.Edges.MeterItems = []*MeterItem{} },
+			func(n *Unit, e *MeterItem) { n.Edges.MeterItems = append(n.Edges.MeterItems, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUnitAccountRoles; query != nil {
+		if err := _q.loadUnitAccountRoles(ctx, query, nodes,
+			func(n *Unit) { n.Edges.UnitAccountRoles = []*UnitAccountRole{} },
+			func(n *Unit, e *UnitAccountRole) { n.Edges.UnitAccountRoles = append(n.Edges.UnitAccountRoles, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *BuildingQuery) loadOrganization(ctx context.Context, query *OrganizationQuery, nodes []*Building, init func(*Building), assign func(*Building, *Organization)) error {
+func (_q *UnitQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*Unit, init func(*Unit), assign func(*Unit, *Account)) error {
 	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Building)
+	nodeids := make(map[int][]*Unit)
 	for i := range nodes {
-		fk := nodes[i].OrganizationID
+		fk := nodes[i].AccountID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -503,7 +547,7 @@ func (_q *BuildingQuery) loadOrganization(ctx context.Context, query *Organizati
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(organization.IDIn(ids...))
+	query.Where(account.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -511,7 +555,7 @@ func (_q *BuildingQuery) loadOrganization(ctx context.Context, query *Organizati
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "organization_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "account_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -519,9 +563,9 @@ func (_q *BuildingQuery) loadOrganization(ctx context.Context, query *Organizati
 	}
 	return nil
 }
-func (_q *BuildingQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes []*Building, init func(*Building), assign func(*Building, *Room)) error {
+func (_q *UnitQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes []*Unit, init func(*Unit), assign func(*Unit, *Room)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Building)
+	nodeids := make(map[int]*Unit)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -530,29 +574,29 @@ func (_q *BuildingQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes 
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(room.FieldBuildingID)
+		query.ctx.AppendFieldOnce(room.FieldUnitID)
 	}
 	query.Where(predicate.Room(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(building.RoomsColumn), fks...))
+		s.Where(sql.InValues(s.C(unit.RoomsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.BuildingID
+		fk := n.UnitID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "building_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "unit_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
 	return nil
 }
-func (_q *BuildingQuery) loadMeterItems(ctx context.Context, query *MeterItemQuery, nodes []*Building, init func(*Building), assign func(*Building, *MeterItem)) error {
+func (_q *UnitQuery) loadMeterItems(ctx context.Context, query *MeterItemQuery, nodes []*Unit, init func(*Unit), assign func(*Unit, *MeterItem)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Building)
-	nids := make(map[int]map[*Building]struct{})
+	byID := make(map[int]*Unit)
+	nids := make(map[int]map[*Unit]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -561,11 +605,11 @@ func (_q *BuildingQuery) loadMeterItems(ctx context.Context, query *MeterItemQue
 		}
 	}
 	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(building.MeterItemsTable)
-		s.Join(joinT).On(s.C(meteritem.FieldID), joinT.C(building.MeterItemsPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(building.MeterItemsPrimaryKey[0]), edgeIDs...))
+		joinT := sql.Table(unit.MeterItemsTable)
+		s.Join(joinT).On(s.C(meteritem.FieldID), joinT.C(unit.MeterItemsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(unit.MeterItemsPrimaryKey[0]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(building.MeterItemsPrimaryKey[0]))
+		s.Select(joinT.C(unit.MeterItemsPrimaryKey[0]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})
@@ -587,7 +631,7 @@ func (_q *BuildingQuery) loadMeterItems(ctx context.Context, query *MeterItemQue
 				outValue := int(values[0].(*sql.NullInt64).Int64)
 				inValue := int(values[1].(*sql.NullInt64).Int64)
 				if nids[inValue] == nil {
-					nids[inValue] = map[*Building]struct{}{byID[outValue]: {}}
+					nids[inValue] = map[*Unit]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])
 				}
 				nids[inValue][byID[outValue]] = struct{}{}
@@ -610,8 +654,38 @@ func (_q *BuildingQuery) loadMeterItems(ctx context.Context, query *MeterItemQue
 	}
 	return nil
 }
+func (_q *UnitQuery) loadUnitAccountRoles(ctx context.Context, query *UnitAccountRoleQuery, nodes []*Unit, init func(*Unit), assign func(*Unit, *UnitAccountRole)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Unit)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(unitaccountrole.FieldUnitID)
+	}
+	query.Where(predicate.UnitAccountRole(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(unit.UnitAccountRolesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UnitID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "unit_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
-func (_q *BuildingQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *UnitQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -620,8 +694,8 @@ func (_q *BuildingQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *BuildingQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(building.Table, building.Columns, sqlgraph.NewFieldSpec(building.FieldID, field.TypeInt))
+func (_q *UnitQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(unit.Table, unit.Columns, sqlgraph.NewFieldSpec(unit.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -630,14 +704,14 @@ func (_q *BuildingQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, building.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, unit.FieldID)
 		for i := range fields {
-			if fields[i] != building.FieldID {
+			if fields[i] != unit.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withOrganization != nil {
-			_spec.Node.AddColumnOnce(building.FieldOrganizationID)
+		if _q.withAccount != nil {
+			_spec.Node.AddColumnOnce(unit.FieldAccountID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -663,12 +737,12 @@ func (_q *BuildingQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *BuildingQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *UnitQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(building.Table)
+	t1 := builder.Table(unit.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = building.Columns
+		columns = unit.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -695,28 +769,28 @@ func (_q *BuildingQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// BuildingGroupBy is the group-by builder for Building entities.
-type BuildingGroupBy struct {
+// UnitGroupBy is the group-by builder for Unit entities.
+type UnitGroupBy struct {
 	selector
-	build *BuildingQuery
+	build *UnitQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *BuildingGroupBy) Aggregate(fns ...AggregateFunc) *BuildingGroupBy {
+func (_g *UnitGroupBy) Aggregate(fns ...AggregateFunc) *UnitGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *BuildingGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *UnitGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*BuildingQuery, *BuildingGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*UnitQuery, *UnitGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *BuildingGroupBy) sqlScan(ctx context.Context, root *BuildingQuery, v any) error {
+func (_g *UnitGroupBy) sqlScan(ctx context.Context, root *UnitQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -743,28 +817,28 @@ func (_g *BuildingGroupBy) sqlScan(ctx context.Context, root *BuildingQuery, v a
 	return sql.ScanSlice(rows, v)
 }
 
-// BuildingSelect is the builder for selecting fields of Building entities.
-type BuildingSelect struct {
-	*BuildingQuery
+// UnitSelect is the builder for selecting fields of Unit entities.
+type UnitSelect struct {
+	*UnitQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *BuildingSelect) Aggregate(fns ...AggregateFunc) *BuildingSelect {
+func (_s *UnitSelect) Aggregate(fns ...AggregateFunc) *UnitSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *BuildingSelect) Scan(ctx context.Context, v any) error {
+func (_s *UnitSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*BuildingQuery, *BuildingSelect](ctx, _s.BuildingQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*UnitQuery, *UnitSelect](ctx, _s.UnitQuery, _s, _s.inters, v)
 }
 
-func (_s *BuildingSelect) sqlScan(ctx context.Context, root *BuildingQuery, v any) error {
+func (_s *UnitSelect) sqlScan(ctx context.Context, root *UnitQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

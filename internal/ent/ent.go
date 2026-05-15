@@ -13,15 +13,15 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -83,15 +83,15 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			account.Table:         account.ValidColumn,
-			building.Table:        building.ValidColumn,
 			meteritem.Table:       meteritem.ValidColumn,
 			meterreading.Table:    meterreading.ValidColumn,
-			organization.Table:    organization.ValidColumn,
 			permission.Table:      permission.ValidColumn,
 			permissiongroup.Table: permissiongroup.ValidColumn,
 			role.Table:            role.ValidColumn,
 			room.Table:            room.ValidColumn,
 			roomtype.Table:        roomtype.ValidColumn,
+			unit.Table:            unit.ValidColumn,
+			unitaccountrole.Table: unitaccountrole.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

@@ -11,8 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
+	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // AccountCreate is the builder for creating a Account entity.
@@ -64,20 +67,6 @@ func (_c *AccountCreate) SetNillableDeletedAt(v *time.Time) *AccountCreate {
 	return _c
 }
 
-// SetOrganizationID sets the "organization_id" field.
-func (_c *AccountCreate) SetOrganizationID(v int) *AccountCreate {
-	_c.mutation.SetOrganizationID(v)
-	return _c
-}
-
-// SetNillableOrganizationID sets the "organization_id" field if the given value is not nil.
-func (_c *AccountCreate) SetNillableOrganizationID(v *int) *AccountCreate {
-	if v != nil {
-		_c.SetOrganizationID(*v)
-	}
-	return _c
-}
-
 // SetName sets the "name" field.
 func (_c *AccountCreate) SetName(v string) *AccountCreate {
 	_c.mutation.SetName(v)
@@ -116,11 +105,6 @@ func (_c *AccountCreate) SetNillableIsActive(v *bool) *AccountCreate {
 	return _c
 }
 
-// SetOrganization sets the "organization" edge to the Organization entity.
-func (_c *AccountCreate) SetOrganization(v *Organization) *AccountCreate {
-	return _c.SetOrganizationID(v.ID)
-}
-
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (_c *AccountCreate) AddRoleIDs(ids ...int) *AccountCreate {
 	_c.mutation.AddRoleIDs(ids...)
@@ -134,6 +118,81 @@ func (_c *AccountCreate) AddRoles(v ...*Role) *AccountCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddRoleIDs(ids...)
+}
+
+// AddUnitIDs adds the "units" edge to the Unit entity by IDs.
+func (_c *AccountCreate) AddUnitIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddUnitIDs(ids...)
+	return _c
+}
+
+// AddUnits adds the "units" edges to the Unit entity.
+func (_c *AccountCreate) AddUnits(v ...*Unit) *AccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUnitIDs(ids...)
+}
+
+// AddRoomTypeIDs adds the "room_types" edge to the RoomType entity by IDs.
+func (_c *AccountCreate) AddRoomTypeIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddRoomTypeIDs(ids...)
+	return _c
+}
+
+// AddRoomTypes adds the "room_types" edges to the RoomType entity.
+func (_c *AccountCreate) AddRoomTypes(v ...*RoomType) *AccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRoomTypeIDs(ids...)
+}
+
+// AddMeterItemIDs adds the "meter_items" edge to the MeterItem entity by IDs.
+func (_c *AccountCreate) AddMeterItemIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddMeterItemIDs(ids...)
+	return _c
+}
+
+// AddMeterItems adds the "meter_items" edges to the MeterItem entity.
+func (_c *AccountCreate) AddMeterItems(v ...*MeterItem) *AccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMeterItemIDs(ids...)
+}
+
+// AddUnitAccountRoleIDs adds the "unit_account_roles" edge to the UnitAccountRole entity by IDs.
+func (_c *AccountCreate) AddUnitAccountRoleIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddUnitAccountRoleIDs(ids...)
+	return _c
+}
+
+// AddUnitAccountRoles adds the "unit_account_roles" edges to the UnitAccountRole entity.
+func (_c *AccountCreate) AddUnitAccountRoles(v ...*UnitAccountRole) *AccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUnitAccountRoleIDs(ids...)
+}
+
+// AddGrantedUnitAccountRoleIDs adds the "granted_unit_account_roles" edge to the UnitAccountRole entity by IDs.
+func (_c *AccountCreate) AddGrantedUnitAccountRoleIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddGrantedUnitAccountRoleIDs(ids...)
+	return _c
+}
+
+// AddGrantedUnitAccountRoles adds the "granted_unit_account_roles" edges to the UnitAccountRole entity.
+func (_c *AccountCreate) AddGrantedUnitAccountRoles(v ...*UnitAccountRole) *AccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddGrantedUnitAccountRoleIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -286,32 +345,95 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		_spec.SetField(account.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if nodes := _c.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   account.OrganizationTable,
-			Columns: []string{account.OrganizationColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.RolesTable,
+			Columns: []string{account.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.OrganizationID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := _c.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.UnitsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: account.RolesPrimaryKey,
+			Table:   account.UnitsTable,
+			Columns: []string{account.UnitsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(unit.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RoomTypesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.RoomTypesTable,
+			Columns: []string{account.RoomTypesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(roomtype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MeterItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.MeterItemsTable,
+			Columns: []string{account.MeterItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UnitAccountRolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.UnitAccountRolesTable,
+			Columns: []string{account.UnitAccountRolesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(unitaccountrole.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.GrantedUnitAccountRolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.GrantedUnitAccountRolesTable,
+			Columns: []string{account.GrantedUnitAccountRolesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(unitaccountrole.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

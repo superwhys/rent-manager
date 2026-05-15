@@ -4,7 +4,7 @@ import domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac
 
 type RoleResponse struct {
 	ID             int    `json:"id"`
-	OrganizationID int    `json:"organization_id"`
+	AccountID      int    `json:"account_id"`
 	Name           string `json:"name"`
 	IsDefaultOwner bool   `json:"is_default_owner"`
 	IsActive       bool   `json:"is_active"`
@@ -33,7 +33,7 @@ func ToRoleResponse(role *domainrbac.Role) *RoleResponse {
 	}
 	return &RoleResponse{
 		ID:             role.ID,
-		OrganizationID: role.OrganizationID,
+		AccountID:      role.AccountID,
 		Name:           role.Name,
 		IsDefaultOwner: role.IsDefaultOwner,
 		IsActive:       role.IsActive,

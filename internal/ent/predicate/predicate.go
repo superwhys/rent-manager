@@ -9,17 +9,11 @@ import (
 // Account is the predicate function for account builders.
 type Account func(*sql.Selector)
 
-// Building is the predicate function for building builders.
-type Building func(*sql.Selector)
-
 // MeterItem is the predicate function for meteritem builders.
 type MeterItem func(*sql.Selector)
 
 // MeterReading is the predicate function for meterreading builders.
 type MeterReading func(*sql.Selector)
-
-// Organization is the predicate function for organization builders.
-type Organization func(*sql.Selector)
 
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)
@@ -35,3 +29,9 @@ type Room func(*sql.Selector)
 
 // RoomType is the predicate function for roomtype builders.
 type RoomType func(*sql.Selector)
+
+// Unit is the predicate function for unit builders.
+type Unit func(*sql.Selector)
+
+// UnitAccountRole is the predicate function for unitaccountrole builders.
+type UnitAccountRole func(*sql.Selector)

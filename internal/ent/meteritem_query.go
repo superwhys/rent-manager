@@ -12,23 +12,23 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
+	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/ent/organization"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
 )
 
 // MeterItemQuery is the builder for querying MeterItem entities.
 type MeterItemQuery struct {
 	config
-	ctx              *QueryContext
-	order            []meteritem.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.MeterItem
-	withOrganization *OrganizationQuery
-	withRooms        *RoomQuery
-	withBuilding     *BuildingQuery
+	ctx          *QueryContext
+	order        []meteritem.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.MeterItem
+	withAccounts *AccountQuery
+	withRooms    *RoomQuery
+	withUint     *UnitQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -65,9 +65,9 @@ func (_q *MeterItemQuery) Order(o ...meteritem.OrderOption) *MeterItemQuery {
 	return _q
 }
 
-// QueryOrganization chains the current query on the "organization" edge.
-func (_q *MeterItemQuery) QueryOrganization() *OrganizationQuery {
-	query := (&OrganizationClient{config: _q.config}).Query()
+// QueryAccounts chains the current query on the "accounts" edge.
+func (_q *MeterItemQuery) QueryAccounts() *AccountQuery {
+	query := (&AccountClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -78,8 +78,8 @@ func (_q *MeterItemQuery) QueryOrganization() *OrganizationQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(meteritem.Table, meteritem.FieldID, selector),
-			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, meteritem.OrganizationTable, meteritem.OrganizationColumn),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, meteritem.AccountsTable, meteritem.AccountsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -109,9 +109,9 @@ func (_q *MeterItemQuery) QueryRooms() *RoomQuery {
 	return query
 }
 
-// QueryBuilding chains the current query on the "building" edge.
-func (_q *MeterItemQuery) QueryBuilding() *BuildingQuery {
-	query := (&BuildingClient{config: _q.config}).Query()
+// QueryUint chains the current query on the "uint" edge.
+func (_q *MeterItemQuery) QueryUint() *UnitQuery {
+	query := (&UnitClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -122,8 +122,8 @@ func (_q *MeterItemQuery) QueryBuilding() *BuildingQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(meteritem.Table, meteritem.FieldID, selector),
-			sqlgraph.To(building.Table, building.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.BuildingTable, meteritem.BuildingPrimaryKey...),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.UintTable, meteritem.UintPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -318,28 +318,28 @@ func (_q *MeterItemQuery) Clone() *MeterItemQuery {
 		return nil
 	}
 	return &MeterItemQuery{
-		config:           _q.config,
-		ctx:              _q.ctx.Clone(),
-		order:            append([]meteritem.OrderOption{}, _q.order...),
-		inters:           append([]Interceptor{}, _q.inters...),
-		predicates:       append([]predicate.MeterItem{}, _q.predicates...),
-		withOrganization: _q.withOrganization.Clone(),
-		withRooms:        _q.withRooms.Clone(),
-		withBuilding:     _q.withBuilding.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]meteritem.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.MeterItem{}, _q.predicates...),
+		withAccounts: _q.withAccounts.Clone(),
+		withRooms:    _q.withRooms.Clone(),
+		withUint:     _q.withUint.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithOrganization tells the query-builder to eager-load the nodes that are connected to
-// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *MeterItemQuery) WithOrganization(opts ...func(*OrganizationQuery)) *MeterItemQuery {
-	query := (&OrganizationClient{config: _q.config}).Query()
+// WithAccounts tells the query-builder to eager-load the nodes that are connected to
+// the "accounts" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *MeterItemQuery) WithAccounts(opts ...func(*AccountQuery)) *MeterItemQuery {
+	query := (&AccountClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withOrganization = query
+	_q.withAccounts = query
 	return _q
 }
 
@@ -354,14 +354,14 @@ func (_q *MeterItemQuery) WithRooms(opts ...func(*RoomQuery)) *MeterItemQuery {
 	return _q
 }
 
-// WithBuilding tells the query-builder to eager-load the nodes that are connected to
-// the "building" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *MeterItemQuery) WithBuilding(opts ...func(*BuildingQuery)) *MeterItemQuery {
-	query := (&BuildingClient{config: _q.config}).Query()
+// WithUint tells the query-builder to eager-load the nodes that are connected to
+// the "uint" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *MeterItemQuery) WithUint(opts ...func(*UnitQuery)) *MeterItemQuery {
+	query := (&UnitClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withBuilding = query
+	_q.withUint = query
 	return _q
 }
 
@@ -444,9 +444,9 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 		nodes       = []*MeterItem{}
 		_spec       = _q.querySpec()
 		loadedTypes = [3]bool{
-			_q.withOrganization != nil,
+			_q.withAccounts != nil,
 			_q.withRooms != nil,
-			_q.withBuilding != nil,
+			_q.withUint != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -467,9 +467,9 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withOrganization; query != nil {
-		if err := _q.loadOrganization(ctx, query, nodes, nil,
-			func(n *MeterItem, e *Organization) { n.Edges.Organization = e }); err != nil {
+	if query := _q.withAccounts; query != nil {
+		if err := _q.loadAccounts(ctx, query, nodes, nil,
+			func(n *MeterItem, e *Account) { n.Edges.Accounts = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -480,21 +480,21 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 			return nil, err
 		}
 	}
-	if query := _q.withBuilding; query != nil {
-		if err := _q.loadBuilding(ctx, query, nodes,
-			func(n *MeterItem) { n.Edges.Building = []*Building{} },
-			func(n *MeterItem, e *Building) { n.Edges.Building = append(n.Edges.Building, e) }); err != nil {
+	if query := _q.withUint; query != nil {
+		if err := _q.loadUint(ctx, query, nodes,
+			func(n *MeterItem) { n.Edges.Uint = []*Unit{} },
+			func(n *MeterItem, e *Unit) { n.Edges.Uint = append(n.Edges.Uint, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *MeterItemQuery) loadOrganization(ctx context.Context, query *OrganizationQuery, nodes []*MeterItem, init func(*MeterItem), assign func(*MeterItem, *Organization)) error {
+func (_q *MeterItemQuery) loadAccounts(ctx context.Context, query *AccountQuery, nodes []*MeterItem, init func(*MeterItem), assign func(*MeterItem, *Account)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*MeterItem)
 	for i := range nodes {
-		fk := nodes[i].OrganizationID
+		fk := nodes[i].AccountID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -503,7 +503,7 @@ func (_q *MeterItemQuery) loadOrganization(ctx context.Context, query *Organizat
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(organization.IDIn(ids...))
+	query.Where(account.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -511,7 +511,7 @@ func (_q *MeterItemQuery) loadOrganization(ctx context.Context, query *Organizat
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "organization_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "account_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -580,7 +580,7 @@ func (_q *MeterItemQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes
 	}
 	return nil
 }
-func (_q *MeterItemQuery) loadBuilding(ctx context.Context, query *BuildingQuery, nodes []*MeterItem, init func(*MeterItem), assign func(*MeterItem, *Building)) error {
+func (_q *MeterItemQuery) loadUint(ctx context.Context, query *UnitQuery, nodes []*MeterItem, init func(*MeterItem), assign func(*MeterItem, *Unit)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[int]*MeterItem)
 	nids := make(map[int]map[*MeterItem]struct{})
@@ -592,11 +592,11 @@ func (_q *MeterItemQuery) loadBuilding(ctx context.Context, query *BuildingQuery
 		}
 	}
 	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(meteritem.BuildingTable)
-		s.Join(joinT).On(s.C(building.FieldID), joinT.C(meteritem.BuildingPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(meteritem.BuildingPrimaryKey[1]), edgeIDs...))
+		joinT := sql.Table(meteritem.UintTable)
+		s.Join(joinT).On(s.C(unit.FieldID), joinT.C(meteritem.UintPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(meteritem.UintPrimaryKey[1]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(meteritem.BuildingPrimaryKey[1]))
+		s.Select(joinT.C(meteritem.UintPrimaryKey[1]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})
@@ -626,14 +626,14 @@ func (_q *MeterItemQuery) loadBuilding(ctx context.Context, query *BuildingQuery
 			}
 		})
 	})
-	neighbors, err := withInterceptors[[]*Building](ctx, query, qr, query.inters)
+	neighbors, err := withInterceptors[[]*Unit](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
 		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "building" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected "uint" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)
@@ -667,8 +667,8 @@ func (_q *MeterItemQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withOrganization != nil {
-			_spec.Node.AddColumnOnce(meteritem.FieldOrganizationID)
+		if _q.withAccounts != nil {
+			_spec.Node.AddColumnOnce(meteritem.FieldAccountID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

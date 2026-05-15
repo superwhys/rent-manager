@@ -20,8 +20,6 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
-	// FieldOrganizationID holds the string denoting the organization_id field in the database.
-	FieldOrganizationID = "organization_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldEmail holds the string denoting the email field in the database.
@@ -32,24 +30,62 @@ const (
 	FieldWechatOpenid = "wechat_openid"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
-	// EdgeOrganization holds the string denoting the organization edge name in mutations.
-	EdgeOrganization = "organization"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
 	EdgeRoles = "roles"
+	// EdgeUnits holds the string denoting the units edge name in mutations.
+	EdgeUnits = "units"
+	// EdgeRoomTypes holds the string denoting the room_types edge name in mutations.
+	EdgeRoomTypes = "room_types"
+	// EdgeMeterItems holds the string denoting the meter_items edge name in mutations.
+	EdgeMeterItems = "meter_items"
+	// EdgeUnitAccountRoles holds the string denoting the unit_account_roles edge name in mutations.
+	EdgeUnitAccountRoles = "unit_account_roles"
+	// EdgeGrantedUnitAccountRoles holds the string denoting the granted_unit_account_roles edge name in mutations.
+	EdgeGrantedUnitAccountRoles = "granted_unit_account_roles"
 	// Table holds the table name of the account in the database.
 	Table = "accounts"
-	// OrganizationTable is the table that holds the organization relation/edge.
-	OrganizationTable = "accounts"
-	// OrganizationInverseTable is the table name for the Organization entity.
-	// It exists in this package in order to avoid circular dependency with the "organization" package.
-	OrganizationInverseTable = "organizations"
-	// OrganizationColumn is the table column denoting the organization relation/edge.
-	OrganizationColumn = "organization_id"
-	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
-	RolesTable = "account_roles"
+	// RolesTable is the table that holds the roles relation/edge.
+	RolesTable = "roles"
 	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RolesInverseTable = "roles"
+	// RolesColumn is the table column denoting the roles relation/edge.
+	RolesColumn = "account_id"
+	// UnitsTable is the table that holds the units relation/edge.
+	UnitsTable = "units"
+	// UnitsInverseTable is the table name for the Unit entity.
+	// It exists in this package in order to avoid circular dependency with the "unit" package.
+	UnitsInverseTable = "units"
+	// UnitsColumn is the table column denoting the units relation/edge.
+	UnitsColumn = "account_id"
+	// RoomTypesTable is the table that holds the room_types relation/edge.
+	RoomTypesTable = "room_types"
+	// RoomTypesInverseTable is the table name for the RoomType entity.
+	// It exists in this package in order to avoid circular dependency with the "roomtype" package.
+	RoomTypesInverseTable = "room_types"
+	// RoomTypesColumn is the table column denoting the room_types relation/edge.
+	RoomTypesColumn = "account_id"
+	// MeterItemsTable is the table that holds the meter_items relation/edge.
+	MeterItemsTable = "meter_items"
+	// MeterItemsInverseTable is the table name for the MeterItem entity.
+	// It exists in this package in order to avoid circular dependency with the "meteritem" package.
+	MeterItemsInverseTable = "meter_items"
+	// MeterItemsColumn is the table column denoting the meter_items relation/edge.
+	MeterItemsColumn = "account_id"
+	// UnitAccountRolesTable is the table that holds the unit_account_roles relation/edge.
+	UnitAccountRolesTable = "unit_account_roles"
+	// UnitAccountRolesInverseTable is the table name for the UnitAccountRole entity.
+	// It exists in this package in order to avoid circular dependency with the "unitaccountrole" package.
+	UnitAccountRolesInverseTable = "unit_account_roles"
+	// UnitAccountRolesColumn is the table column denoting the unit_account_roles relation/edge.
+	UnitAccountRolesColumn = "account_id"
+	// GrantedUnitAccountRolesTable is the table that holds the granted_unit_account_roles relation/edge.
+	GrantedUnitAccountRolesTable = "unit_account_roles"
+	// GrantedUnitAccountRolesInverseTable is the table name for the UnitAccountRole entity.
+	// It exists in this package in order to avoid circular dependency with the "unitaccountrole" package.
+	GrantedUnitAccountRolesInverseTable = "unit_account_roles"
+	// GrantedUnitAccountRolesColumn is the table column denoting the granted_unit_account_roles relation/edge.
+	GrantedUnitAccountRolesColumn = "granted_by_account_id"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -58,19 +94,12 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
-	FieldOrganizationID,
 	FieldName,
 	FieldEmail,
 	FieldPassword,
 	FieldWechatOpenid,
 	FieldIsActive,
 }
-
-var (
-	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
-	// primary key for the roles relation (M2M).
-	RolesPrimaryKey = []string{"account_id", "role_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -124,11 +153,6 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
-// ByOrganizationID orders the results by the organization_id field.
-func ByOrganizationID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOrganizationID, opts...).ToFunc()
-}
-
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
@@ -154,13 +178,6 @@ func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
 }
 
-// ByOrganizationField orders the results by organization field.
-func ByOrganizationField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newOrganizationStep(), sql.OrderByField(field, opts...))
-	}
-}
-
 // ByRolesCount orders the results by roles count.
 func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -174,17 +191,115 @@ func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newOrganizationStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(OrganizationInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
-	)
+
+// ByUnitsCount orders the results by units count.
+func ByUnitsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUnitsStep(), opts...)
+	}
+}
+
+// ByUnits orders the results by units terms.
+func ByUnits(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUnitsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRoomTypesCount orders the results by room_types count.
+func ByRoomTypesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRoomTypesStep(), opts...)
+	}
+}
+
+// ByRoomTypes orders the results by room_types terms.
+func ByRoomTypes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRoomTypesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByMeterItemsCount orders the results by meter_items count.
+func ByMeterItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMeterItemsStep(), opts...)
+	}
+}
+
+// ByMeterItems orders the results by meter_items terms.
+func ByMeterItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMeterItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUnitAccountRolesCount orders the results by unit_account_roles count.
+func ByUnitAccountRolesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUnitAccountRolesStep(), opts...)
+	}
+}
+
+// ByUnitAccountRoles orders the results by unit_account_roles terms.
+func ByUnitAccountRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUnitAccountRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByGrantedUnitAccountRolesCount orders the results by granted_unit_account_roles count.
+func ByGrantedUnitAccountRolesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newGrantedUnitAccountRolesStep(), opts...)
+	}
+}
+
+// ByGrantedUnitAccountRoles orders the results by granted_unit_account_roles terms.
+func ByGrantedUnitAccountRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newGrantedUnitAccountRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
 func newRolesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RolesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
+	)
+}
+func newUnitsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UnitsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UnitsTable, UnitsColumn),
+	)
+}
+func newRoomTypesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RoomTypesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RoomTypesTable, RoomTypesColumn),
+	)
+}
+func newMeterItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MeterItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MeterItemsTable, MeterItemsColumn),
+	)
+}
+func newUnitAccountRolesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UnitAccountRolesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UnitAccountRolesTable, UnitAccountRolesColumn),
+	)
+}
+func newGrantedUnitAccountRolesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(GrantedUnitAccountRolesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, GrantedUnitAccountRolesTable, GrantedUnitAccountRolesColumn),
 	)
 }

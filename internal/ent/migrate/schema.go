@@ -19,57 +19,17 @@ var (
 		{Name: "password", Type: field.TypeString, Size: 255},
 		{Name: "wechat_openid", Type: field.TypeString, Size: 255},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
-		{Name: "organization_id", Type: field.TypeInt, Nullable: true},
 	}
 	// AccountsTable holds the schema information for the "accounts" table.
 	AccountsTable = &schema.Table{
 		Name:       "accounts",
 		Columns:    AccountsColumns,
 		PrimaryKey: []*schema.Column{AccountsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "accounts_organizations_accounts",
-				Columns:    []*schema.Column{AccountsColumns[9]},
-				RefColumns: []*schema.Column{OrganizationsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "account_wechat_openid",
 				Unique:  true,
 				Columns: []*schema.Column{AccountsColumns[7]},
-			},
-			{
-				Name:    "account_organization_id",
-				Unique:  false,
-				Columns: []*schema.Column{AccountsColumns[9]},
-			},
-		},
-	}
-	// BuildingsColumns holds the columns for the "buildings" table.
-	BuildingsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "name", Type: field.TypeString, Size: 255},
-		{Name: "address", Type: field.TypeString, Size: 255},
-		{Name: "city", Type: field.TypeString, Size: 255},
-		{Name: "province", Type: field.TypeString, Size: 255},
-		{Name: "organization_id", Type: field.TypeInt},
-	}
-	// BuildingsTable holds the schema information for the "buildings" table.
-	BuildingsTable = &schema.Table{
-		Name:       "buildings",
-		Columns:    BuildingsColumns,
-		PrimaryKey: []*schema.Column{BuildingsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "buildings_organizations_buildings",
-				Columns:    []*schema.Column{BuildingsColumns[8]},
-				RefColumns: []*schema.Column{OrganizationsColumns[0]},
-				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -84,7 +44,7 @@ var (
 		{Name: "is_system", Type: field.TypeBool, Default: false},
 		{Name: "calc_type", Type: field.TypeEnum, Enums: []string{"DIFFERENCE", "DIRECT"}, Default: "DIFFERENCE"},
 		{Name: "remark", Type: field.TypeString, Nullable: true},
-		{Name: "organization_id", Type: field.TypeInt},
+		{Name: "account_id", Type: field.TypeInt},
 	}
 	// MeterItemsTable holds the schema information for the "meter_items" table.
 	MeterItemsTable = &schema.Table{
@@ -93,15 +53,15 @@ var (
 		PrimaryKey: []*schema.Column{MeterItemsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "meter_items_organizations_meter_items",
+				Symbol:     "meter_items_accounts_meter_items",
 				Columns:    []*schema.Column{MeterItemsColumns[9]},
-				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "meteritem_organization_id_code",
+				Name:    "meteritem_account_id_code",
 				Unique:  true,
 				Columns: []*schema.Column{MeterItemsColumns[9], MeterItemsColumns[4]},
 			},
@@ -145,21 +105,6 @@ var (
 				Columns: []*schema.Column{MeterReadingsColumns[1]},
 			},
 		},
-	}
-	// OrganizationsColumns holds the columns for the "organizations" table.
-	OrganizationsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "name", Type: field.TypeString, Size: 255},
-		{Name: "is_active", Type: field.TypeBool, Default: true},
-	}
-	// OrganizationsTable holds the schema information for the "organizations" table.
-	OrganizationsTable = &schema.Table{
-		Name:       "organizations",
-		Columns:    OrganizationsColumns,
-		PrimaryKey: []*schema.Column{OrganizationsColumns[0]},
 	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
@@ -224,7 +169,7 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 255},
 		{Name: "is_default_owner", Type: field.TypeBool, Default: false},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
-		{Name: "organization_id", Type: field.TypeInt},
+		{Name: "account_id", Type: field.TypeInt},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
@@ -233,15 +178,15 @@ var (
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "roles_organizations_roles",
+				Symbol:     "roles_accounts_roles",
 				Columns:    []*schema.Column{RolesColumns[7]},
-				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "role_organization_id_name",
+				Name:    "role_account_id_name",
 				Unique:  true,
 				Columns: []*schema.Column{RolesColumns[7], RolesColumns[4]},
 			},
@@ -258,8 +203,8 @@ var (
 		{Name: "price", Type: field.TypeInt},
 		{Name: "size", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
-		{Name: "building_id", Type: field.TypeInt},
 		{Name: "room_type_id", Type: field.TypeInt},
+		{Name: "unit_id", Type: field.TypeInt},
 	}
 	// RoomsTable holds the schema information for the "rooms" table.
 	RoomsTable = &schema.Table{
@@ -268,15 +213,15 @@ var (
 		PrimaryKey: []*schema.Column{RoomsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "rooms_buildings_rooms",
+				Symbol:     "rooms_room_types_rooms",
 				Columns:    []*schema.Column{RoomsColumns[9]},
-				RefColumns: []*schema.Column{BuildingsColumns[0]},
+				RefColumns: []*schema.Column{RoomTypesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "rooms_room_types_rooms",
+				Symbol:     "rooms_units_rooms",
 				Columns:    []*schema.Column{RoomsColumns[10]},
-				RefColumns: []*schema.Column{RoomTypesColumns[0]},
+				RefColumns: []*schema.Column{UnitsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
@@ -288,7 +233,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 12},
-		{Name: "organization_id", Type: field.TypeInt},
+		{Name: "account_id", Type: field.TypeInt},
 	}
 	// RoomTypesTable holds the schema information for the "room_types" table.
 	RoomTypesTable = &schema.Table{
@@ -297,60 +242,116 @@ var (
 		PrimaryKey: []*schema.Column{RoomTypesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "room_types_organizations_room_types",
+				Symbol:     "room_types_accounts_room_types",
 				Columns:    []*schema.Column{RoomTypesColumns[5]},
-				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
-	}
-	// AccountRolesColumns holds the columns for the "account_roles" table.
-	AccountRolesColumns = []*schema.Column{
-		{Name: "account_id", Type: field.TypeInt},
-		{Name: "role_id", Type: field.TypeInt},
-	}
-	// AccountRolesTable holds the schema information for the "account_roles" table.
-	AccountRolesTable = &schema.Table{
-		Name:       "account_roles",
-		Columns:    AccountRolesColumns,
-		PrimaryKey: []*schema.Column{AccountRolesColumns[0], AccountRolesColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
+		Indexes: []*schema.Index{
 			{
-				Symbol:     "account_roles_account_id",
-				Columns:    []*schema.Column{AccountRolesColumns[0]},
-				RefColumns: []*schema.Column{AccountsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "account_roles_role_id",
-				Columns:    []*schema.Column{AccountRolesColumns[1]},
-				RefColumns: []*schema.Column{RolesColumns[0]},
-				OnDelete:   schema.Cascade,
+				Name:    "roomtype_account_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{RoomTypesColumns[5], RoomTypesColumns[4]},
 			},
 		},
 	}
-	// BuildingMeterItemsColumns holds the columns for the "building_meter_items" table.
-	BuildingMeterItemsColumns = []*schema.Column{
-		{Name: "building_id", Type: field.TypeInt},
-		{Name: "meter_item_id", Type: field.TypeInt},
+	// UnitsColumns holds the columns for the "units" table.
+	UnitsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "address", Type: field.TypeString, Size: 255},
+		{Name: "city", Type: field.TypeString, Size: 255},
+		{Name: "province", Type: field.TypeString, Size: 255},
+		{Name: "account_id", Type: field.TypeInt},
 	}
-	// BuildingMeterItemsTable holds the schema information for the "building_meter_items" table.
-	BuildingMeterItemsTable = &schema.Table{
-		Name:       "building_meter_items",
-		Columns:    BuildingMeterItemsColumns,
-		PrimaryKey: []*schema.Column{BuildingMeterItemsColumns[0], BuildingMeterItemsColumns[1]},
+	// UnitsTable holds the schema information for the "units" table.
+	UnitsTable = &schema.Table{
+		Name:       "units",
+		Columns:    UnitsColumns,
+		PrimaryKey: []*schema.Column{UnitsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "building_meter_items_building_id",
-				Columns:    []*schema.Column{BuildingMeterItemsColumns[0]},
-				RefColumns: []*schema.Column{BuildingsColumns[0]},
-				OnDelete:   schema.Cascade,
+				Symbol:     "units_accounts_units",
+				Columns:    []*schema.Column{UnitsColumns[8]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "unit_account_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{UnitsColumns[8], UnitsColumns[4]},
+			},
+		},
+	}
+	// UnitAccountRolesColumns holds the columns for the "unit_account_roles" table.
+	UnitAccountRolesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
+		{Name: "account_id", Type: field.TypeInt},
+		{Name: "granted_by_account_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "unit_id", Type: field.TypeInt},
+	}
+	// UnitAccountRolesTable holds the schema information for the "unit_account_roles" table.
+	UnitAccountRolesTable = &schema.Table{
+		Name:       "unit_account_roles",
+		Columns:    UnitAccountRolesColumns,
+		PrimaryKey: []*schema.Column{UnitAccountRolesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "unit_account_roles_accounts_unit_account_roles",
+				Columns:    []*schema.Column{UnitAccountRolesColumns[5]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "building_meter_items_meter_item_id",
-				Columns:    []*schema.Column{BuildingMeterItemsColumns[1]},
-				RefColumns: []*schema.Column{MeterItemsColumns[0]},
-				OnDelete:   schema.Cascade,
+				Symbol:     "unit_account_roles_accounts_granted_unit_account_roles",
+				Columns:    []*schema.Column{UnitAccountRolesColumns[6]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "unit_account_roles_roles_unit_account_roles",
+				Columns:    []*schema.Column{UnitAccountRolesColumns[7]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "unit_account_roles_units_unit_account_roles",
+				Columns:    []*schema.Column{UnitAccountRolesColumns[8]},
+				RefColumns: []*schema.Column{UnitsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "unitaccountrole_unit_id_account_id_role_id",
+				Unique:  true,
+				Columns: []*schema.Column{UnitAccountRolesColumns[8], UnitAccountRolesColumns[5], UnitAccountRolesColumns[7]},
+			},
+			{
+				Name:    "unitaccountrole_account_id",
+				Unique:  false,
+				Columns: []*schema.Column{UnitAccountRolesColumns[5]},
+			},
+			{
+				Name:    "unitaccountrole_unit_id",
+				Unique:  false,
+				Columns: []*schema.Column{UnitAccountRolesColumns[8]},
+			},
+			{
+				Name:    "unitaccountrole_role_id",
+				Unique:  false,
+				Columns: []*schema.Column{UnitAccountRolesColumns[7]},
 			},
 		},
 	}
@@ -429,43 +430,68 @@ var (
 			},
 		},
 	}
+	// UnitMeterItemsColumns holds the columns for the "unit_meter_items" table.
+	UnitMeterItemsColumns = []*schema.Column{
+		{Name: "unit_id", Type: field.TypeInt},
+		{Name: "meter_item_id", Type: field.TypeInt},
+	}
+	// UnitMeterItemsTable holds the schema information for the "unit_meter_items" table.
+	UnitMeterItemsTable = &schema.Table{
+		Name:       "unit_meter_items",
+		Columns:    UnitMeterItemsColumns,
+		PrimaryKey: []*schema.Column{UnitMeterItemsColumns[0], UnitMeterItemsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "unit_meter_items_unit_id",
+				Columns:    []*schema.Column{UnitMeterItemsColumns[0]},
+				RefColumns: []*schema.Column{UnitsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "unit_meter_items_meter_item_id",
+				Columns:    []*schema.Column{UnitMeterItemsColumns[1]},
+				RefColumns: []*schema.Column{MeterItemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccountsTable,
-		BuildingsTable,
 		MeterItemsTable,
 		MeterReadingsTable,
-		OrganizationsTable,
 		PermissionsTable,
 		PermissionGroupsTable,
 		RolesTable,
 		RoomsTable,
 		RoomTypesTable,
-		AccountRolesTable,
-		BuildingMeterItemsTable,
+		UnitsTable,
+		UnitAccountRolesTable,
 		PermissionGroupPermissionsTable,
 		RolePermissionGroupsTable,
 		RoomMeterItemsTable,
+		UnitMeterItemsTable,
 	}
 )
 
 func init() {
-	AccountsTable.ForeignKeys[0].RefTable = OrganizationsTable
-	BuildingsTable.ForeignKeys[0].RefTable = OrganizationsTable
-	MeterItemsTable.ForeignKeys[0].RefTable = OrganizationsTable
+	MeterItemsTable.ForeignKeys[0].RefTable = AccountsTable
 	MeterReadingsTable.ForeignKeys[0].RefTable = RoomsTable
-	RolesTable.ForeignKeys[0].RefTable = OrganizationsTable
-	RoomsTable.ForeignKeys[0].RefTable = BuildingsTable
-	RoomsTable.ForeignKeys[1].RefTable = RoomTypesTable
-	RoomTypesTable.ForeignKeys[0].RefTable = OrganizationsTable
-	AccountRolesTable.ForeignKeys[0].RefTable = AccountsTable
-	AccountRolesTable.ForeignKeys[1].RefTable = RolesTable
-	BuildingMeterItemsTable.ForeignKeys[0].RefTable = BuildingsTable
-	BuildingMeterItemsTable.ForeignKeys[1].RefTable = MeterItemsTable
+	RolesTable.ForeignKeys[0].RefTable = AccountsTable
+	RoomsTable.ForeignKeys[0].RefTable = RoomTypesTable
+	RoomsTable.ForeignKeys[1].RefTable = UnitsTable
+	RoomTypesTable.ForeignKeys[0].RefTable = AccountsTable
+	UnitsTable.ForeignKeys[0].RefTable = AccountsTable
+	UnitAccountRolesTable.ForeignKeys[0].RefTable = AccountsTable
+	UnitAccountRolesTable.ForeignKeys[1].RefTable = AccountsTable
+	UnitAccountRolesTable.ForeignKeys[2].RefTable = RolesTable
+	UnitAccountRolesTable.ForeignKeys[3].RefTable = UnitsTable
 	PermissionGroupPermissionsTable.ForeignKeys[0].RefTable = PermissionGroupsTable
 	PermissionGroupPermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 	RolePermissionGroupsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionGroupsTable.ForeignKeys[1].RefTable = PermissionGroupsTable
 	RoomMeterItemsTable.ForeignKeys[0].RefTable = RoomsTable
 	RoomMeterItemsTable.ForeignKeys[1].RefTable = MeterItemsTable
+	UnitMeterItemsTable.ForeignKeys[0].RefTable = UnitsTable
+	UnitMeterItemsTable.ForeignKeys[1].RefTable = MeterItemsTable
 }

@@ -1,13 +1,13 @@
-package building
+package unit
 
 import (
 	"strings"
 	"time"
 )
 
-type Building struct {
+type Unit struct {
 	ID                  int
-	OrganizationID      int
+	AccountID           int
 	Name                string
 	Address             string
 	City                string
@@ -27,49 +27,49 @@ type MeterItem struct {
 	Remark   *string
 }
 
-func NewBuilding(params CreateParams) (*Building, error) {
-	building := &Building{
-		OrganizationID:      params.OrganizationID,
+func NewUnit(params CreateParams) (*Unit, error) {
+	unit := &Unit{
+		AccountID:           params.AccountID,
 		Name:                strings.TrimSpace(params.Name),
 		Address:             strings.TrimSpace(params.Address),
 		City:                strings.TrimSpace(params.City),
 		Province:            strings.TrimSpace(params.Province),
 		DefaultMeterItemIDs: normalizeMeterItemIDs(params.DefaultMeterItemIDs),
 	}
-	if err := building.Validate(); err != nil {
+	if err := unit.Validate(); err != nil {
 		return nil, err
 	}
-	return building, nil
+	return unit, nil
 }
 
-func (b *Building) Update(params UpdateParams) error {
-	b.ID = params.ID
-	b.OrganizationID = params.OrganizationID
-	b.Name = strings.TrimSpace(params.Name)
-	b.Address = strings.TrimSpace(params.Address)
-	b.City = strings.TrimSpace(params.City)
-	b.Province = strings.TrimSpace(params.Province)
-	b.DefaultMeterItemIDs = normalizeMeterItemIDs(params.DefaultMeterItemIDs)
-	return b.Validate()
+func (u *Unit) Update(params UpdateParams) error {
+	u.ID = params.ID
+	u.AccountID = params.AccountID
+	u.Name = strings.TrimSpace(params.Name)
+	u.Address = strings.TrimSpace(params.Address)
+	u.City = strings.TrimSpace(params.City)
+	u.Province = strings.TrimSpace(params.Province)
+	u.DefaultMeterItemIDs = normalizeMeterItemIDs(params.DefaultMeterItemIDs)
+	return u.Validate()
 }
 
-func (b *Building) Validate() error {
-	if b.OrganizationID <= 0 {
-		return ErrOrganizationRequired
+func (u *Unit) Validate() error {
+	if u.AccountID <= 0 {
+		return ErrAccountRequired
 	}
-	if b.Name == "" {
+	if u.Name == "" {
 		return ErrNameRequired
 	}
-	if b.Address == "" {
+	if u.Address == "" {
 		return ErrAddressRequired
 	}
-	if b.City == "" {
+	if u.City == "" {
 		return ErrCityRequired
 	}
-	if b.Province == "" {
+	if u.Province == "" {
 		return ErrProvinceRequired
 	}
-	for _, id := range b.DefaultMeterItemIDs {
+	for _, id := range u.DefaultMeterItemIDs {
 		if id <= 0 {
 			return ErrInvalidMeterItemID
 		}

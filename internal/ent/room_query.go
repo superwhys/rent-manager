@@ -12,12 +12,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/building"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"github.com/superwhys/rent-manager-server/internal/ent/unit"
 )
 
 // RoomQuery is the builder for querying Room entities.
@@ -27,7 +27,7 @@ type RoomQuery struct {
 	order             []room.OrderOption
 	inters            []Interceptor
 	predicates        []predicate.Room
-	withBuilding      *BuildingQuery
+	withUnit          *UnitQuery
 	withRoomType      *RoomTypeQuery
 	withMeterItems    *MeterItemQuery
 	withMeterReadings *MeterReadingQuery
@@ -67,9 +67,9 @@ func (_q *RoomQuery) Order(o ...room.OrderOption) *RoomQuery {
 	return _q
 }
 
-// QueryBuilding chains the current query on the "building" edge.
-func (_q *RoomQuery) QueryBuilding() *BuildingQuery {
-	query := (&BuildingClient{config: _q.config}).Query()
+// QueryUnit chains the current query on the "unit" edge.
+func (_q *RoomQuery) QueryUnit() *UnitQuery {
+	query := (&UnitClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -80,8 +80,8 @@ func (_q *RoomQuery) QueryBuilding() *BuildingQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(room.Table, room.FieldID, selector),
-			sqlgraph.To(building.Table, building.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, room.BuildingTable, room.BuildingColumn),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, room.UnitTable, room.UnitColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -347,7 +347,7 @@ func (_q *RoomQuery) Clone() *RoomQuery {
 		order:             append([]room.OrderOption{}, _q.order...),
 		inters:            append([]Interceptor{}, _q.inters...),
 		predicates:        append([]predicate.Room{}, _q.predicates...),
-		withBuilding:      _q.withBuilding.Clone(),
+		withUnit:          _q.withUnit.Clone(),
 		withRoomType:      _q.withRoomType.Clone(),
 		withMeterItems:    _q.withMeterItems.Clone(),
 		withMeterReadings: _q.withMeterReadings.Clone(),
@@ -357,14 +357,14 @@ func (_q *RoomQuery) Clone() *RoomQuery {
 	}
 }
 
-// WithBuilding tells the query-builder to eager-load the nodes that are connected to
-// the "building" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *RoomQuery) WithBuilding(opts ...func(*BuildingQuery)) *RoomQuery {
-	query := (&BuildingClient{config: _q.config}).Query()
+// WithUnit tells the query-builder to eager-load the nodes that are connected to
+// the "unit" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RoomQuery) WithUnit(opts ...func(*UnitQuery)) *RoomQuery {
+	query := (&UnitClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withBuilding = query
+	_q.withUnit = query
 	return _q
 }
 
@@ -480,7 +480,7 @@ func (_q *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 		nodes       = []*Room{}
 		_spec       = _q.querySpec()
 		loadedTypes = [4]bool{
-			_q.withBuilding != nil,
+			_q.withUnit != nil,
 			_q.withRoomType != nil,
 			_q.withMeterItems != nil,
 			_q.withMeterReadings != nil,
@@ -504,9 +504,9 @@ func (_q *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withBuilding; query != nil {
-		if err := _q.loadBuilding(ctx, query, nodes, nil,
-			func(n *Room, e *Building) { n.Edges.Building = e }); err != nil {
+	if query := _q.withUnit; query != nil {
+		if err := _q.loadUnit(ctx, query, nodes, nil,
+			func(n *Room, e *Unit) { n.Edges.Unit = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -533,11 +533,11 @@ func (_q *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 	return nodes, nil
 }
 
-func (_q *RoomQuery) loadBuilding(ctx context.Context, query *BuildingQuery, nodes []*Room, init func(*Room), assign func(*Room, *Building)) error {
+func (_q *RoomQuery) loadUnit(ctx context.Context, query *UnitQuery, nodes []*Room, init func(*Room), assign func(*Room, *Unit)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Room)
 	for i := range nodes {
-		fk := nodes[i].BuildingID
+		fk := nodes[i].UnitID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -546,7 +546,7 @@ func (_q *RoomQuery) loadBuilding(ctx context.Context, query *BuildingQuery, nod
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(building.IDIn(ids...))
+	query.Where(unit.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -554,7 +554,7 @@ func (_q *RoomQuery) loadBuilding(ctx context.Context, query *BuildingQuery, nod
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "building_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "unit_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -708,8 +708,8 @@ func (_q *RoomQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withBuilding != nil {
-			_spec.Node.AddColumnOnce(room.FieldBuildingID)
+		if _q.withUnit != nil {
+			_spec.Node.AddColumnOnce(room.FieldUnitID)
 		}
 		if _q.withRoomType != nil {
 			_spec.Node.AddColumnOnce(room.FieldRoomTypeID)

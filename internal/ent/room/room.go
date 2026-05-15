@@ -28,14 +28,14 @@ const (
 	FieldPrice = "price"
 	// FieldSize holds the string denoting the size field in the database.
 	FieldSize = "size"
-	// FieldBuildingID holds the string denoting the building_id field in the database.
-	FieldBuildingID = "building_id"
+	// FieldUnitID holds the string denoting the unit_id field in the database.
+	FieldUnitID = "unit_id"
 	// FieldRoomTypeID holds the string denoting the room_type_id field in the database.
 	FieldRoomTypeID = "room_type_id"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
-	// EdgeBuilding holds the string denoting the building edge name in mutations.
-	EdgeBuilding = "building"
+	// EdgeUnit holds the string denoting the unit edge name in mutations.
+	EdgeUnit = "unit"
 	// EdgeRoomType holds the string denoting the room_type edge name in mutations.
 	EdgeRoomType = "room_type"
 	// EdgeMeterItems holds the string denoting the meter_items edge name in mutations.
@@ -44,13 +44,13 @@ const (
 	EdgeMeterReadings = "meter_readings"
 	// Table holds the table name of the room in the database.
 	Table = "rooms"
-	// BuildingTable is the table that holds the building relation/edge.
-	BuildingTable = "rooms"
-	// BuildingInverseTable is the table name for the Building entity.
-	// It exists in this package in order to avoid circular dependency with the "building" package.
-	BuildingInverseTable = "buildings"
-	// BuildingColumn is the table column denoting the building relation/edge.
-	BuildingColumn = "building_id"
+	// UnitTable is the table that holds the unit relation/edge.
+	UnitTable = "rooms"
+	// UnitInverseTable is the table name for the Unit entity.
+	// It exists in this package in order to avoid circular dependency with the "unit" package.
+	UnitInverseTable = "units"
+	// UnitColumn is the table column denoting the unit relation/edge.
+	UnitColumn = "unit_id"
 	// RoomTypeTable is the table that holds the room_type relation/edge.
 	RoomTypeTable = "rooms"
 	// RoomTypeInverseTable is the table name for the RoomType entity.
@@ -82,7 +82,7 @@ var Columns = []string{
 	FieldFloor,
 	FieldPrice,
 	FieldSize,
-	FieldBuildingID,
+	FieldUnitID,
 	FieldRoomTypeID,
 	FieldIsActive,
 }
@@ -159,9 +159,9 @@ func BySize(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSize, opts...).ToFunc()
 }
 
-// ByBuildingID orders the results by the building_id field.
-func ByBuildingID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBuildingID, opts...).ToFunc()
+// ByUnitID orders the results by the unit_id field.
+func ByUnitID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUnitID, opts...).ToFunc()
 }
 
 // ByRoomTypeID orders the results by the room_type_id field.
@@ -174,10 +174,10 @@ func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
 }
 
-// ByBuildingField orders the results by building field.
-func ByBuildingField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByUnitField orders the results by unit field.
+func ByUnitField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newBuildingStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newUnitStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -215,11 +215,11 @@ func ByMeterReadings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMeterReadingsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newBuildingStep() *sqlgraph.Step {
+func newUnitStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(BuildingInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, BuildingTable, BuildingColumn),
+		sqlgraph.To(UnitInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UnitTable, UnitColumn),
 	)
 }
 func newRoomTypeStep() *sqlgraph.Step {
