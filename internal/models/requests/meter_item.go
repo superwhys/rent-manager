@@ -27,3 +27,8 @@ type ListMeterItemsQuery struct {
 	IsSystem *bool  `form:"is_system"`
 	CalcType string `form:"calc_type" validate:"omitempty,oneof=DIFFERENCE DIRECT"`
 }
+
+// MeterItemIDQuery 是抄表项 ID 路径参数。
+type MeterItemIDQuery struct {
+	MeterItemID int `uri:"meter_item_id" validate:"required,min=1"`
+}

@@ -7,6 +7,23 @@ type CreateRoleParams struct {
 	IsDefaultOwner bool
 }
 
+// UpdateRoleParams 描述更新角色时允许变更的领域输入。
+type UpdateRoleParams struct {
+	ID             int
+	AccountID      int
+	Name           string
+	IsDefaultOwner bool
+	IsActive       bool
+}
+
+// ListRolesQuery 描述角色列表查询条件。
+type ListRolesQuery struct {
+	AccountID int
+	IsActive  *bool
+	Limit     int
+	Offset    int
+}
+
 // CreatePermissionGroupParams 描述创建权限组时需要满足的领域输入。
 type CreatePermissionGroupParams struct {
 	Code        string
@@ -18,7 +35,6 @@ type CreatePermissionGroupParams struct {
 // CreatePermissionParams 描述创建权限时需要满足的领域输入。
 type CreatePermissionParams struct {
 	Code        string
-	APIPath     string
 	Description string
 }
 
@@ -41,4 +57,14 @@ type UnitAccountRolesParams struct {
 	UnitID          int
 	TargetAccountID int
 	RoleIDs         []int
+}
+
+// ListUnitGrantsQuery 描述单元授权列表查询条件。
+type ListUnitGrantsQuery struct {
+	OwnerAccountID  int
+	UnitID          int
+	TargetAccountID int
+	Status          string
+	Limit           int
+	Offset          int
 }

@@ -13,10 +13,10 @@ type JwtConfig struct {
 
 func (c *JwtConfig) Validate() error {
 	if c.JwtSecret == "" {
-		return errors.New("jwt secret is required")
+		return errors.New("JWT 密钥不能为空")
 	}
 	if c.JwtTimeout <= 0 {
-		return errors.New("jwt timeout is required")
+		return errors.New("JWT 过期时间不能为空")
 	}
 	if c.JwtRefreshTimeout <= 0 {
 		c.JwtRefreshTimeout = c.JwtTimeout * 24
@@ -32,13 +32,29 @@ type WechatConfig struct {
 
 func (c *WechatConfig) Validate() error {
 	if c.AppID == "" {
-		return errors.New("appid is required")
+		return errors.New("微信 appid 不能为空")
 	}
 	if c.SecretID == "" {
-		return errors.New("secretid is required")
+		return errors.New("微信 secretid 不能为空")
 	}
 	if c.Jscode2SessionApi == "" {
-		return errors.New("jscode2sessionapi is required")
+		return errors.New("微信 jscode2sessionapi 不能为空")
 	}
 	return nil
+}
+
+type AdminConfig struct {
+	SuperAdminAccountIDs []int
+}
+
+func (c *AdminConfig) IsSuperAdmin(accountID int) bool {
+	if accountID <= 0 {
+		return false
+	}
+	for _, id := range c.SuperAdminAccountIDs {
+		if id == accountID {
+			return true
+		}
+	}
+	return false
 }

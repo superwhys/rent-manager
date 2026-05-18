@@ -126,7 +126,6 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "code", Type: field.TypeString, Size: 255},
-		{Name: "api_path", Type: field.TypeString, Size: 255},
 		{Name: "description", Type: field.TypeString, Size: 255},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 	}
@@ -140,11 +139,6 @@ var (
 				Name:    "permission_code",
 				Unique:  true,
 				Columns: []*schema.Column{PermissionsColumns[4]},
-			},
-			{
-				Name:    "permission_api_path",
-				Unique:  true,
-				Columns: []*schema.Column{PermissionsColumns[5]},
 			},
 		},
 	}

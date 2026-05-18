@@ -38,3 +38,12 @@ func (r *Role) Validate() error {
 	}
 	return nil
 }
+
+func (r *Role) Update(params UpdateRoleParams) error {
+	r.ID = params.ID
+	r.AccountID = params.AccountID
+	r.Name = strings.TrimSpace(params.Name)
+	r.IsDefaultOwner = params.IsDefaultOwner
+	r.IsActive = params.IsActive
+	return r.Validate()
+}

@@ -17,18 +17,33 @@ import (
 	"github.com/miebyte/goutils/mysqlutils"
 	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/rent-manager-server/api"
+	"github.com/superwhys/rent-manager-server/config"
 	"github.com/superwhys/rent-manager-server/internal/app/services"
 	"github.com/superwhys/rent-manager-server/internal/infra/ratelimit"
 	"github.com/superwhys/rent-manager-server/internal/infra/repo"
 )
 
 var (
-	mysqlConfFlag = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
-	redisConfFlag = flags.Struct("redis", (*redisutils.RedisConfig)(nil), "redis config")
+	wechatConfigFlag = flags.Struct("wechat", (*config.WechatConfig)(nil), "wechat config")
+	jwtConfigFlag    = flags.Struct("jwt", (*config.JwtConfig)(nil), "jwt config")
+	adminConfigFlag  = flags.Struct("admin", (*config.AdminConfig)(nil), "admin config")
+	mysqlConfFlag    = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
+	redisConfFlag    = flags.Struct("redis", (*redisutils.RedisConfig)(nil), "redis config")
 )
 
 func main() {
 	flags.Parse()
+
+	wechatConfig := new(config.WechatConfig)
+	logging.PanicError(wechatConfigFlag(wechatConfig))
+	logging.PanicError(wechatConfig.Validate())
+
+	jwtConfig := new(config.JwtConfig)
+	logging.PanicError(jwtConfigFlag(jwtConfig))
+	logging.PanicError(jwtConfig.Validate())
+
+	adminConfig := new(config.AdminConfig)
+	logging.PanicError(adminConfigFlag(adminConfig))
 
 	mysqlConf := new(mysqlutils.MysqlConfig)
 	logging.PanicError(mysqlConfFlag(mysqlConf))
@@ -48,9 +63,23 @@ func main() {
 	httpLimiter, err := ratelimit.NewRedisLimiter(10, time.Second*10, redisClient, "rent_manager")
 	logging.PanicError(err)
 
+	accountRepo := repo.NewAccountRepository(client)
 	rbacRepo := repo.NewRBACRepository(client)
-	rbacService := services.NewRBACService(rbacRepo)
-	router := api.SetupRouter(httpLimiter, rbacService)
+	unitRepo := repo.NewUnitRepository(client)
+	roomRepo := repo.NewRoomRepository(client)
+	roomTypeRepo := repo.NewRoomTypeRepository(client)
+	meterItemRepo := repo.NewMeterItemRepository(client)
+
+	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
+	rbacService := services.NewRBACService(rbacRepo, adminConfig)
+	adminServices := &services.AdminServices{
+		RBAC:      rbacService,
+		Unit:      services.NewUnitService(unitRepo, rbacService),
+		Room:      services.NewRoomService(roomRepo, unitRepo, rbacService),
+		RoomType:  services.NewRoomTypeService(roomTypeRepo),
+		MeterItem: services.NewMeterItemService(meterItemRepo),
+	}
+	router := api.SetupRouter(httpLimiter, jwtConfig, authService, adminServices)
 
 	srv := cores.NewCores(
 		cores.WithHttpHandler("/api", router),

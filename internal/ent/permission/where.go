@@ -75,11 +75,6 @@ func Code(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldEQ(FieldCode, v))
 }
 
-// APIPath applies equality check predicate on the "api_path" field. It's identical to APIPathEQ.
-func APIPath(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldAPIPath, v))
-}
-
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldEQ(FieldDescription, v))
@@ -283,71 +278,6 @@ func CodeEqualFold(v string) predicate.Permission {
 // CodeContainsFold applies the ContainsFold predicate on the "code" field.
 func CodeContainsFold(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldContainsFold(FieldCode, v))
-}
-
-// APIPathEQ applies the EQ predicate on the "api_path" field.
-func APIPathEQ(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldAPIPath, v))
-}
-
-// APIPathNEQ applies the NEQ predicate on the "api_path" field.
-func APIPathNEQ(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldNEQ(FieldAPIPath, v))
-}
-
-// APIPathIn applies the In predicate on the "api_path" field.
-func APIPathIn(vs ...string) predicate.Permission {
-	return predicate.Permission(sql.FieldIn(FieldAPIPath, vs...))
-}
-
-// APIPathNotIn applies the NotIn predicate on the "api_path" field.
-func APIPathNotIn(vs ...string) predicate.Permission {
-	return predicate.Permission(sql.FieldNotIn(FieldAPIPath, vs...))
-}
-
-// APIPathGT applies the GT predicate on the "api_path" field.
-func APIPathGT(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldGT(FieldAPIPath, v))
-}
-
-// APIPathGTE applies the GTE predicate on the "api_path" field.
-func APIPathGTE(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldGTE(FieldAPIPath, v))
-}
-
-// APIPathLT applies the LT predicate on the "api_path" field.
-func APIPathLT(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldLT(FieldAPIPath, v))
-}
-
-// APIPathLTE applies the LTE predicate on the "api_path" field.
-func APIPathLTE(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldLTE(FieldAPIPath, v))
-}
-
-// APIPathContains applies the Contains predicate on the "api_path" field.
-func APIPathContains(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldContains(FieldAPIPath, v))
-}
-
-// APIPathHasPrefix applies the HasPrefix predicate on the "api_path" field.
-func APIPathHasPrefix(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldHasPrefix(FieldAPIPath, v))
-}
-
-// APIPathHasSuffix applies the HasSuffix predicate on the "api_path" field.
-func APIPathHasSuffix(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldHasSuffix(FieldAPIPath, v))
-}
-
-// APIPathEqualFold applies the EqualFold predicate on the "api_path" field.
-func APIPathEqualFold(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEqualFold(FieldAPIPath, v))
-}
-
-// APIPathContainsFold applies the ContainsFold predicate on the "api_path" field.
-func APIPathContainsFold(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldContainsFold(FieldAPIPath, v))
 }
 
 // DescriptionEQ applies the EQ predicate on the "description" field.

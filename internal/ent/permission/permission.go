@@ -22,8 +22,6 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// FieldCode holds the string denoting the code field in the database.
 	FieldCode = "code"
-	// FieldAPIPath holds the string denoting the api_path field in the database.
-	FieldAPIPath = "api_path"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// FieldIsActive holds the string denoting the is_active field in the database.
@@ -46,7 +44,6 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldDeletedAt,
 	FieldCode,
-	FieldAPIPath,
 	FieldDescription,
 	FieldIsActive,
 }
@@ -76,8 +73,6 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// CodeValidator is a validator for the "code" field. It is called by the builders before save.
 	CodeValidator func(string) error
-	// APIPathValidator is a validator for the "api_path" field. It is called by the builders before save.
-	APIPathValidator func(string) error
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func(string) error
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
@@ -110,11 +105,6 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByCode orders the results by the code field.
 func ByCode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCode, opts...).ToFunc()
-}
-
-// ByAPIPath orders the results by the api_path field.
-func ByAPIPath(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAPIPath, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.

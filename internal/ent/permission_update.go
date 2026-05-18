@@ -69,20 +69,6 @@ func (_u *PermissionUpdate) SetNillableCode(v *string) *PermissionUpdate {
 	return _u
 }
 
-// SetAPIPath sets the "api_path" field.
-func (_u *PermissionUpdate) SetAPIPath(v string) *PermissionUpdate {
-	_u.mutation.SetAPIPath(v)
-	return _u
-}
-
-// SetNillableAPIPath sets the "api_path" field if the given value is not nil.
-func (_u *PermissionUpdate) SetNillableAPIPath(v *string) *PermissionUpdate {
-	if v != nil {
-		_u.SetAPIPath(*v)
-	}
-	return _u
-}
-
 // SetDescription sets the "description" field.
 func (_u *PermissionUpdate) SetDescription(v string) *PermissionUpdate {
 	_u.mutation.SetDescription(v)
@@ -195,11 +181,6 @@ func (_u *PermissionUpdate) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Permission.code": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.APIPath(); ok {
-		if err := permission.APIPathValidator(v); err != nil {
-			return &ValidationError{Name: "api_path", err: fmt.Errorf(`ent: validator failed for field "Permission.api_path": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.Description(); ok {
 		if err := permission.DescriptionValidator(v); err != nil {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Permission.description": %w`, err)}
@@ -231,9 +212,6 @@ func (_u *PermissionUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(permission.FieldCode, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.APIPath(); ok {
-		_spec.SetField(permission.FieldAPIPath, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(permission.FieldDescription, field.TypeString, value)
@@ -342,20 +320,6 @@ func (_u *PermissionUpdateOne) SetCode(v string) *PermissionUpdateOne {
 func (_u *PermissionUpdateOne) SetNillableCode(v *string) *PermissionUpdateOne {
 	if v != nil {
 		_u.SetCode(*v)
-	}
-	return _u
-}
-
-// SetAPIPath sets the "api_path" field.
-func (_u *PermissionUpdateOne) SetAPIPath(v string) *PermissionUpdateOne {
-	_u.mutation.SetAPIPath(v)
-	return _u
-}
-
-// SetNillableAPIPath sets the "api_path" field if the given value is not nil.
-func (_u *PermissionUpdateOne) SetNillableAPIPath(v *string) *PermissionUpdateOne {
-	if v != nil {
-		_u.SetAPIPath(*v)
 	}
 	return _u
 }
@@ -485,11 +449,6 @@ func (_u *PermissionUpdateOne) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Permission.code": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.APIPath(); ok {
-		if err := permission.APIPathValidator(v); err != nil {
-			return &ValidationError{Name: "api_path", err: fmt.Errorf(`ent: validator failed for field "Permission.api_path": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.Description(); ok {
 		if err := permission.DescriptionValidator(v); err != nil {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Permission.description": %w`, err)}
@@ -538,9 +497,6 @@ func (_u *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission, 
 	}
 	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(permission.FieldCode, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.APIPath(); ok {
-		_spec.SetField(permission.FieldAPIPath, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(permission.FieldDescription, field.TypeString, value)

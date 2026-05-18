@@ -14,6 +14,5 @@ const (
 
 	SystemRoleSuperAdmin                = "SuperAdmin"
 	SystemPermissionAllowAllCode        = "SYSTEM_ALLOW_ALL"
-	SystemPermissionAllowAllAPIPath     = "*"
 	SystemPermissionAllowAllDescription = "Allow all APIs"
 )

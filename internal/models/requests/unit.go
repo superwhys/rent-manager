@@ -26,6 +26,7 @@ type ListUnitsQuery struct {
 	Name     string `form:"name"`
 	City     string `form:"city"`
 	Province string `form:"province"`
+	Scope    string `form:"scope" validate:"omitempty,oneof=owned granted all"`
 }
 
 // UnitIDQuery 是单元 ID 路径参数。

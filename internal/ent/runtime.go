@@ -184,26 +184,8 @@ func init() {
 			return nil
 		}
 	}()
-	// permissionDescAPIPath is the schema descriptor for api_path field.
-	permissionDescAPIPath := permissionFields[1].Descriptor()
-	// permission.APIPathValidator is a validator for the "api_path" field. It is called by the builders before save.
-	permission.APIPathValidator = func() func(string) error {
-		validators := permissionDescAPIPath.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(api_path string) error {
-			for _, fn := range fns {
-				if err := fn(api_path); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
 	// permissionDescDescription is the schema descriptor for description field.
-	permissionDescDescription := permissionFields[2].Descriptor()
+	permissionDescDescription := permissionFields[1].Descriptor()
 	// permission.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	permission.DescriptionValidator = func() func(string) error {
 		validators := permissionDescDescription.Validators
@@ -221,7 +203,7 @@ func init() {
 		}
 	}()
 	// permissionDescIsActive is the schema descriptor for is_active field.
-	permissionDescIsActive := permissionFields[3].Descriptor()
+	permissionDescIsActive := permissionFields[2].Descriptor()
 	// permission.DefaultIsActive holds the default value on creation for the is_active field.
 	permission.DefaultIsActive = permissionDescIsActive.Default.(bool)
 	permissiongroupMixin := schema.PermissionGroup{}.Mixin()

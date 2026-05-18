@@ -69,12 +69,6 @@ func (_c *PermissionCreate) SetCode(v string) *PermissionCreate {
 	return _c
 }
 
-// SetAPIPath sets the "api_path" field.
-func (_c *PermissionCreate) SetAPIPath(v string) *PermissionCreate {
-	_c.mutation.SetAPIPath(v)
-	return _c
-}
-
 // SetDescription sets the "description" field.
 func (_c *PermissionCreate) SetDescription(v string) *PermissionCreate {
 	_c.mutation.SetDescription(v)
@@ -175,14 +169,6 @@ func (_c *PermissionCreate) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Permission.code": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.APIPath(); !ok {
-		return &ValidationError{Name: "api_path", err: errors.New(`ent: missing required field "Permission.api_path"`)}
-	}
-	if v, ok := _c.mutation.APIPath(); ok {
-		if err := permission.APIPathValidator(v); err != nil {
-			return &ValidationError{Name: "api_path", err: fmt.Errorf(`ent: validator failed for field "Permission.api_path": %w`, err)}
-		}
-	}
 	if _, ok := _c.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Permission.description"`)}
 	}
@@ -235,10 +221,6 @@ func (_c *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Code(); ok {
 		_spec.SetField(permission.FieldCode, field.TypeString, value)
 		_node.Code = value
-	}
-	if value, ok := _c.mutation.APIPath(); ok {
-		_spec.SetField(permission.FieldAPIPath, field.TypeString, value)
-		_node.APIPath = value
 	}
 	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(permission.FieldDescription, field.TypeString, value)

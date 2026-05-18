@@ -1,5 +1,14 @@
 package unit
 
+const (
+	ListScopeOwned   = "owned"
+	ListScopeGranted = "granted"
+	ListScopeAll     = "all"
+
+	AccessTypeOwned   = "owned"
+	AccessTypeGranted = "granted"
+)
+
 type CreateParams struct {
 	AccountID           int
 	Name                string
@@ -21,6 +30,7 @@ type UpdateParams struct {
 
 type ListQuery struct {
 	AccountID int
+	Scope     string
 	Name      string
 	City      string
 	Province  string

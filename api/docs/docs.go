@@ -197,20 +197,1093 @@ const docTemplate = `{
                 }
             }
         },
-        "/health": {
+        "/auth/refresh-token": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "刷新访问令牌",
+                "parameters": [
+                    {
+                        "description": "刷新令牌参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.RefreshTokenReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/wechat-login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "微信登录",
+                "parameters": [
+                    {
+                        "description": "微信登录参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.WechatLoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/meter-items": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "app"
+                    "meter_item"
                 ],
-                "summary": "服务健康检查",
+                "summary": "获取抄表项列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "分页数量",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "抄表项编码",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否系统内置",
+                        "name": "is_system",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "计费类型",
+                        "name": "calc_type",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-string"
+                            "$ref": "#/definitions/ginutils.Ret-array_response_MeterItemResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meter_item"
+                ],
+                "summary": "创建抄表项",
+                "parameters": [
+                    {
+                        "description": "抄表项信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateMeterItemCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_MeterItemResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/meter-items/{meter_item_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meter_item"
+                ],
+                "summary": "获取抄表项详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "抄表项ID",
+                        "name": "meter_item_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_MeterItemResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meter_item"
+                ],
+                "summary": "更新抄表项",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "抄表项ID",
+                        "name": "meter_item_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "抄表项信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateMeterItemCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_MeterItemResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "获取当前账号角色列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_RoleResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/batch": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "批量创建角色",
+                "parameters": [
+                    {
+                        "description": "角色列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateRolesCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_RoleResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{role_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "获取角色详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoleResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "更新角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateRoleCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoleResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "删除角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{role_id}/permission-groups": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "给角色绑定权限组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限组ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.RolePermissionGroupsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "role"
+                ],
+                "summary": "从角色移除权限组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限组ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.RolePermissionGroupsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/room-types": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room_type"
+                ],
+                "summary": "获取房型列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "分页数量",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "房型名称",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_RoomTypeResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room_type"
+                ],
+                "summary": "创建房型",
+                "parameters": [
+                    {
+                        "description": "房型信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateRoomTypeCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomTypeResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/room-types/{room_type_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room_type"
+                ],
+                "summary": "获取房型详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房型ID",
+                        "name": "room_type_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomTypeResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room_type"
+                ],
+                "summary": "更新房型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房型ID",
+                        "name": "room_type_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "房型信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateRoomTypeCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomTypeResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room_type"
+                ],
+                "summary": "删除房型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房型ID",
+                        "name": "room_type_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{room_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room"
+                ],
+                "summary": "获取房间详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room"
+                ],
+                "summary": "更新房间",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "房间信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateRoomCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room"
+                ],
+                "summary": "删除房间",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/units": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit"
+                ],
+                "summary": "获取单元列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "分页数量",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "单元名称",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "城市",
+                        "name": "city",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "省份",
+                        "name": "province",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "列表范围: all/owned/granted，默认 all",
+                        "name": "scope",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_UnitResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit"
+                ],
+                "summary": "创建单元",
+                "parameters": [
+                    {
+                        "description": "单元信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateUnitCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit"
+                ],
+                "summary": "获取单元详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit"
+                ],
+                "summary": "更新单元",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "单元信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateUnitCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit"
+                ],
+                "summary": "删除单元",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}/accounts/{account_id}/roles": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit"
+                ],
+                "summary": "授权账号管理单元角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "被授权账号ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UnitAccountRolesCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_UnitGrantResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit"
+                ],
+                "summary": "撤销账号单元角色授权",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "被授权账号ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色ID列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UnitAccountRolesCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}/grants": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unit"
+                ],
+                "summary": "获取单元授权列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "被授权账号ID",
+                        "name": "account_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "授权状态",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_UnitGrantResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}/rooms": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room"
+                ],
+                "summary": "获取单元房间列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页数量",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "房型ID",
+                        "name": "room_type_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否启用",
+                        "name": "is_active",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_RoomResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "room"
+                ],
+                "summary": "在单元下创建房间",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "房间信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateRoomInUnitCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
                         }
                     }
                 }
@@ -225,6 +1298,21 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "data": {},
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_MeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.MeterItemResponse"
+                    }
+                },
                 "message": {}
             }
         },
@@ -258,16 +1346,182 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "ginutils.Ret-string": {
+        "ginutils.Ret-array_response_RoleResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RoleResponse"
+                    }
                 },
                 "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_RoomResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RoomResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_RoomTypeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RoomTypeResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_UnitGrantResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.UnitGrantResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_UnitResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.UnitResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_MeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.MeterItemResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_RoleResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.RoleResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_RoomResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.RoomResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_RoomTypeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.RoomTypeResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_TokenResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.TokenResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_UnitResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.UnitResponse"
+                },
+                "message": {}
+            }
+        },
+        "requests.CreateMeterItemCommand": {
+            "type": "object",
+            "required": [
+                "code",
+                "unit"
+            ],
+            "properties": {
+                "calc_type": {
+                    "type": "string",
+                    "enum": [
+                        "DIFFERENCE",
+                        "DIRECT"
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "unit_price": {
+                    "type": "integer",
+                    "minimum": 0
+                }
             }
         },
         "requests.CreatePermissionGroupItem": {
@@ -309,14 +1563,10 @@ const docTemplate = `{
         "requests.CreatePermissionItem": {
             "type": "object",
             "required": [
-                "api_path",
                 "code",
                 "description"
             ],
             "properties": {
-                "api_path": {
-                    "type": "string"
-                },
                 "code": {
                     "type": "string"
                 },
@@ -340,6 +1590,120 @@ const docTemplate = `{
                 }
             }
         },
+        "requests.CreateRoleItem": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "is_default_owner": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.CreateRolesCommand": {
+            "type": "object",
+            "required": [
+                "roles"
+            ],
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/requests.CreateRoleItem"
+                    }
+                }
+            }
+        },
+        "requests.CreateRoomInUnitCommand": {
+            "type": "object",
+            "required": [
+                "price",
+                "room_no",
+                "room_type_id",
+                "size",
+                "unitID"
+            ],
+            "properties": {
+                "floor": {
+                    "type": "integer"
+                },
+                "meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "price": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "room_type_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "size": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "unitID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.CreateRoomTypeCommand": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 12
+                }
+            }
+        },
+        "requests.CreateUnitCommand": {
+            "type": "object",
+            "required": [
+                "address",
+                "city",
+                "name",
+                "province"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "default_meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "province": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
         "requests.PermissionGroupPermissionsCommand": {
             "type": "object",
             "required": [
@@ -357,6 +1721,259 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "requests.RefreshTokenReq": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "requests.RolePermissionGroupsCommand": {
+            "type": "object",
+            "required": [
+                "permission_group_ids",
+                "roleID"
+            ],
+            "properties": {
+                "permission_group_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "roleID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.UnitAccountRolesCommand": {
+            "type": "object",
+            "required": [
+                "accountID",
+                "role_ids",
+                "unitID"
+            ],
+            "properties": {
+                "accountID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "role_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "unitID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.UpdateMeterItemCommand": {
+            "type": "object",
+            "required": [
+                "code",
+                "meterItemID",
+                "unit"
+            ],
+            "properties": {
+                "calc_type": {
+                    "type": "string",
+                    "enum": [
+                        "DIFFERENCE",
+                        "DIRECT"
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "meterItemID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "unit_price": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "requests.UpdateRoleCommand": {
+            "type": "object",
+            "required": [
+                "name",
+                "roleID"
+            ],
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_default_owner": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "roleID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.UpdateRoomCommand": {
+            "type": "object",
+            "required": [
+                "roomID"
+            ],
+            "properties": {
+                "floor": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "price": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "roomID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "room_type_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "size": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "unit_id": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.UpdateRoomTypeCommand": {
+            "type": "object",
+            "required": [
+                "name",
+                "roomTypeID"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 12
+                },
+                "roomTypeID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.UpdateUnitCommand": {
+            "type": "object",
+            "required": [
+                "address",
+                "city",
+                "name",
+                "province",
+                "unitID"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "default_meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "province": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "unitID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "requests.WechatLoginReq": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.MeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "calc_type": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "unit_price": {
+                    "type": "integer"
                 }
             }
         },
@@ -386,9 +2003,6 @@ const docTemplate = `{
         "response.PermissionResponse": {
             "type": "object",
             "properties": {
-                "api_path": {
-                    "type": "string"
-                },
                 "code": {
                     "type": "string"
                 },
@@ -400,6 +2014,173 @@ const docTemplate = `{
                 },
                 "is_active": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.RoleResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_default_owner": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.RoomResponse": {
+            "type": "object",
+            "properties": {
+                "floor": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "meter_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.MeterItemResponse"
+                    }
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "room_type_id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "unit_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.RoomTypeResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.UnitGrantResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "granted_by_account_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "$ref": "#/definitions/response.RoleResponse"
+                },
+                "role_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "unit_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.UnitMeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "calc_type": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "unit_price": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.UnitResponse": {
+            "type": "object",
+            "properties": {
+                "access_type": {
+                    "type": "string"
+                },
+                "account_id": {
+                    "type": "integer"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "default_meter_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.UnitMeterItemResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_owner": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
                 }
             }
         }

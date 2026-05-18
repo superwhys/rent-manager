@@ -24,7 +24,6 @@ type CreatePermissionGroupsCommand struct {
 
 type CreatePermissionItem struct {
 	Code        string `json:"code" validate:"required"`
-	APIPath     string `json:"api_path" validate:"required"`
 	Description string `json:"description" validate:"required"`
 }
 
@@ -42,8 +41,27 @@ type RolePermissionGroupsCommand struct {
 	PermissionGroupIDs []int `json:"permission_group_ids" validate:"required,min=1,dive,min=1"`
 }
 
+type RoleIDCommand struct {
+	RoleID int `uri:"role_id" validate:"required,min=1"`
+}
+
+type UpdateRoleCommand struct {
+	RoleID         int    `uri:"role_id" validate:"required,min=1"`
+	Name           string `json:"name" validate:"required"`
+	IsDefaultOwner bool   `json:"is_default_owner"`
+	IsActive       *bool  `json:"is_active"`
+}
+
 type UnitAccountRolesCommand struct {
 	UnitID    int   `uri:"unit_id" validate:"required,min=1"`
 	AccountID int   `uri:"account_id" validate:"required,min=1"`
 	RoleIDs   []int `json:"role_ids" validate:"required,min=1,dive,min=1"`
+}
+
+type UnitGrantsQuery struct {
+	UnitID    int    `uri:"unit_id" validate:"required,min=1"`
+	AccountID int    `form:"account_id"`
+	Status    string `form:"status"`
+	Limit     int    `form:"limit"`
+	Offset    int    `form:"offset"`
 }

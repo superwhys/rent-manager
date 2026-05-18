@@ -22,9 +22,18 @@ type PermissionGroupResponse struct {
 type PermissionResponse struct {
 	ID          int    `json:"id"`
 	Code        string `json:"code"`
-	APIPath     string `json:"api_path"`
 	Description string `json:"description"`
 	IsActive    bool   `json:"is_active"`
+}
+
+type UnitGrantResponse struct {
+	ID                 int           `json:"id"`
+	UnitID             int           `json:"unit_id"`
+	AccountID          int           `json:"account_id"`
+	RoleID             int           `json:"role_id"`
+	GrantedByAccountID int           `json:"granted_by_account_id"`
+	Status             string        `json:"status"`
+	Role               *RoleResponse `json:"role,omitempty"`
 }
 
 func ToRoleResponse(role *domainrbac.Role) *RoleResponse {
@@ -77,7 +86,6 @@ func ToPermissionResponse(permission *domainrbac.Permission) *PermissionResponse
 	return &PermissionResponse{
 		ID:          permission.ID,
 		Code:        permission.Code,
-		APIPath:     permission.APIPath,
 		Description: permission.Description,
 		IsActive:    permission.IsActive,
 	}
@@ -87,6 +95,29 @@ func ToPermissionListResponse(permissions []*domainrbac.Permission) []*Permissio
 	resp := make([]*PermissionResponse, 0, len(permissions))
 	for _, permission := range permissions {
 		resp = append(resp, ToPermissionResponse(permission))
+	}
+	return resp
+}
+
+func ToUnitGrantResponse(grant *domainrbac.UnitAccountRole) *UnitGrantResponse {
+	if grant == nil {
+		return nil
+	}
+	return &UnitGrantResponse{
+		ID:                 grant.ID,
+		UnitID:             grant.UnitID,
+		AccountID:          grant.AccountID,
+		RoleID:             grant.RoleID,
+		GrantedByAccountID: grant.GrantedByAccountID,
+		Status:             grant.Status,
+		Role:               ToRoleResponse(grant.Role),
+	}
+}
+
+func ToUnitGrantListResponse(grants []*domainrbac.UnitAccountRole) []*UnitGrantResponse {
+	resp := make([]*UnitGrantResponse, 0, len(grants))
+	for _, grant := range grants {
+		resp = append(resp, ToUnitGrantResponse(grant))
 	}
 	return resp
 }

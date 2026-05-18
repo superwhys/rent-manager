@@ -24,6 +24,8 @@ type UnitResponse struct {
 	Address           string                  `json:"address"`
 	City              string                  `json:"city"`
 	Province          string                  `json:"province"`
+	AccessType        string                  `json:"access_type"`
+	IsOwner           bool                    `json:"is_owner"`
 	DefaultMeterItems []UnitMeterItemResponse `json:"default_meter_items"`
 }
 
@@ -39,6 +41,8 @@ func ToUnitResponse(unit *domainunit.Unit) UnitResponse {
 		Address:           unit.Address,
 		City:              unit.City,
 		Province:          unit.Province,
+		AccessType:        unit.AccessType,
+		IsOwner:           unit.AccessType == domainunit.AccessTypeOwned,
 		DefaultMeterItems: toUnitMeterItemResponses(unit.DefaultMeterItems),
 	}
 }

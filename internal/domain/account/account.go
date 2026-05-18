@@ -1,6 +1,10 @@
 package account
 
-import "time"
+import (
+	"fmt"
+	"strings"
+	"time"
+)
 
 type Account struct {
 	ID           int
@@ -12,4 +16,18 @@ type Account struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time
+}
+
+func NewWechatAccount(openID string) (*Account, error) {
+	openID = strings.TrimSpace(openID)
+	if openID == "" {
+		return nil, ErrWechatOpenIDRequired
+	}
+	return &Account{
+		Name:         fmt.Sprintf("wechat_%s", openID),
+		Email:        fmt.Sprintf("%s@wechat.local", openID),
+		Password:     openID,
+		WechatOpenID: openID,
+		IsActive:     true,
+	}, nil
 }

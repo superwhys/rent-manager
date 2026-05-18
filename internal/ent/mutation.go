@@ -3627,7 +3627,6 @@ type PermissionMutation struct {
 	updated_at               *time.Time
 	deleted_at               *time.Time
 	code                     *string
-	api_path                 *string
 	description              *string
 	is_active                *bool
 	clearedFields            map[string]struct{}
@@ -3894,42 +3893,6 @@ func (m *PermissionMutation) ResetCode() {
 	m.code = nil
 }
 
-// SetAPIPath sets the "api_path" field.
-func (m *PermissionMutation) SetAPIPath(s string) {
-	m.api_path = &s
-}
-
-// APIPath returns the value of the "api_path" field in the mutation.
-func (m *PermissionMutation) APIPath() (r string, exists bool) {
-	v := m.api_path
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAPIPath returns the old "api_path" field's value of the Permission entity.
-// If the Permission object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PermissionMutation) OldAPIPath(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAPIPath is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAPIPath requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAPIPath: %w", err)
-	}
-	return oldValue.APIPath, nil
-}
-
-// ResetAPIPath resets all changes to the "api_path" field.
-func (m *PermissionMutation) ResetAPIPath() {
-	m.api_path = nil
-}
-
 // SetDescription sets the "description" field.
 func (m *PermissionMutation) SetDescription(s string) {
 	m.description = &s
@@ -4090,7 +4053,7 @@ func (m *PermissionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PermissionMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 6)
 	if m.created_at != nil {
 		fields = append(fields, permission.FieldCreatedAt)
 	}
@@ -4102,9 +4065,6 @@ func (m *PermissionMutation) Fields() []string {
 	}
 	if m.code != nil {
 		fields = append(fields, permission.FieldCode)
-	}
-	if m.api_path != nil {
-		fields = append(fields, permission.FieldAPIPath)
 	}
 	if m.description != nil {
 		fields = append(fields, permission.FieldDescription)
@@ -4128,8 +4088,6 @@ func (m *PermissionMutation) Field(name string) (ent.Value, bool) {
 		return m.DeletedAt()
 	case permission.FieldCode:
 		return m.Code()
-	case permission.FieldAPIPath:
-		return m.APIPath()
 	case permission.FieldDescription:
 		return m.Description()
 	case permission.FieldIsActive:
@@ -4151,8 +4109,6 @@ func (m *PermissionMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldDeletedAt(ctx)
 	case permission.FieldCode:
 		return m.OldCode(ctx)
-	case permission.FieldAPIPath:
-		return m.OldAPIPath(ctx)
 	case permission.FieldDescription:
 		return m.OldDescription(ctx)
 	case permission.FieldIsActive:
@@ -4193,13 +4149,6 @@ func (m *PermissionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCode(v)
-		return nil
-	case permission.FieldAPIPath:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAPIPath(v)
 		return nil
 	case permission.FieldDescription:
 		v, ok := value.(string)
@@ -4284,9 +4233,6 @@ func (m *PermissionMutation) ResetField(name string) error {
 		return nil
 	case permission.FieldCode:
 		m.ResetCode()
-		return nil
-	case permission.FieldAPIPath:
-		m.ResetAPIPath()
 		return nil
 	case permission.FieldDescription:
 		m.ResetDescription()

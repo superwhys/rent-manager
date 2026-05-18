@@ -12,6 +12,7 @@ type Unit struct {
 	Address             string
 	City                string
 	Province            string
+	AccessType          string
 	DefaultMeterItemIDs []int
 	DefaultMeterItems   []*MeterItem
 	CreatedAt           time.Time

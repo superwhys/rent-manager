@@ -28,11 +28,6 @@ func (Permission) Fields() []ent.Field {
 			MaxLen(255).
 			Comment("权限代码"),
 
-		field.String("api_path").
-			NotEmpty().
-			MaxLen(255).
-			Comment("权限路径"),
-
 		field.String("description").
 			NotEmpty().
 			MaxLen(255).
@@ -55,6 +50,5 @@ func (Permission) Edges() []ent.Edge {
 func (Permission) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("code").Unique(),
-		index.Fields("api_path").Unique(),
 	}
 }

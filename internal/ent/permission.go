@@ -25,8 +25,6 @@ type Permission struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// 权限代码
 	Code string `json:"code,omitempty"`
-	// 权限路径
-	APIPath string `json:"api_path,omitempty"`
 	// 权限描述
 	Description string `json:"description,omitempty"`
 	// 权限是否激活
@@ -64,7 +62,7 @@ func (*Permission) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case permission.FieldID:
 			values[i] = new(sql.NullInt64)
-		case permission.FieldCode, permission.FieldAPIPath, permission.FieldDescription:
+		case permission.FieldCode, permission.FieldDescription:
 			values[i] = new(sql.NullString)
 		case permission.FieldCreatedAt, permission.FieldUpdatedAt, permission.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -113,12 +111,6 @@ func (_m *Permission) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
 				_m.Code = value.String
-			}
-		case permission.FieldAPIPath:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field api_path", values[i])
-			} else if value.Valid {
-				_m.APIPath = value.String
 			}
 		case permission.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -186,9 +178,6 @@ func (_m *Permission) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("code=")
 	builder.WriteString(_m.Code)
-	builder.WriteString(", ")
-	builder.WriteString("api_path=")
-	builder.WriteString(_m.APIPath)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(_m.Description)
