@@ -21,10 +21,13 @@ import (
 // @description Rent Manager Server
 // @BasePath /api
 func SetupRouter(
-	appService *services.AppService,
+	rbacService *services.RBACService,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
-		routers.AppRouter(appService),
+		ginutils.WithGroupHandlers(
+			ginutils.WithPrefix("/admin"),
+			routers.AdminRouter(rbacService),
+		),
 	)
 
 	return engine

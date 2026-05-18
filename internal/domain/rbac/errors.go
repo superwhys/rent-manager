@@ -17,6 +17,14 @@ var (
 	ErrPermissionAPIPathRequired = errors.New("permission api path is required")
 	// ErrPermissionDescriptionRequired 表示权限描述不能为空。
 	ErrPermissionDescriptionRequired = errors.New("permission description is required")
+	// ErrPermissionGroupAlreadyExists 表示权限组已经存在。
+	ErrPermissionGroupAlreadyExists = errors.New("permission group already exists")
+	// ErrPermissionAlreadyExists 表示权限已经存在。
+	ErrPermissionAlreadyExists = errors.New("permission already exists")
+	// ErrPermissionGroupNotFound 表示权限组不存在。
+	ErrPermissionGroupNotFound = errors.New("permission group not found")
+	// ErrPermissionNotFound 表示权限不存在。
+	ErrPermissionNotFound = errors.New("permission not found")
 	// ErrRoleNotInAccount 表示角色不属于当前账号。
 	ErrRoleNotInAccount = errors.New("role is not in account")
 	// ErrUnitNotInAccount 表示单元不属于当前账号。

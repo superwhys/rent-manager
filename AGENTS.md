@@ -8,7 +8,7 @@ This file provides guidance to Codex and other coding agents when working in thi
 - `go test ./internal/app/services` - run tests for one package.
 - `go test ./internal/app/services -run TestName` - run a single Go test by name.
 - `go build ./...` - compile all packages.
-- `go run .` - run the server on `0.0.0.0:8080`.
+- `go run .` - run the server on `0.0.0.0:8080`; it currently requires MySQL flags parsed by `github.com/miebyte/goutils/flags`.
 - `gofmt -w <files>` - format changed Go files before finishing code changes.
 - `make generate` or `go generate ./internal/ent` - regenerate Ent code after changing schemas under `internal/ent/schema`.
 - `go generate ./api` - regenerate Swagger docs from annotations in `api/`.
@@ -23,22 +23,23 @@ This file provides guidance to Codex and other coding agents when working in thi
 
 ## Architecture
 
-This is a Go 1.26.2 Gin API server for a rent-management backend. The current codebase is intentionally reduced to a minimal skeleton while the domain design is being rebuilt. `main.go` wires `services.AppService`, creates the HTTP router, and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
+This is a Go 1.26.2 Gin API server for a rent-management backend. The current codebase is being rebuilt from a reduced skeleton. `main.go` wires MySQL/Ent, `services.AppService`, `services.RBACService`, creates the HTTP router, and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
 
 The repository follows a DDD-style architecture:
 
 - Interface layer: `api/` contains HTTP router registration, handlers, middleware, and generated Swagger docs.
-- Application layer: `internal/app/` currently contains only `services.AppService`.
+- Application layer: `internal/app/` contains use-case services, currently `AppService` and permission/permission-group focused `RBACService`.
 - Domain layer: `internal/domain/` contains domain models, params, repository interfaces, and domain errors.
-- Infrastructure layer: `internal/infra/` contains supporting infrastructure packages. The old Ent-backed repository implementations under `internal/infra/repo` have been removed.
+- Infrastructure layer: `internal/infra/` contains supporting infrastructure packages and Ent-backed repositories under `internal/infra/repo`.
 
 Routing is centralized in `api/api.go`. Route groups live in `api/routers` and are registered with `github.com/miebyte/goutils/ginutils` options rather than direct `gin.Engine.Group` calls.
 
 Current route surface:
 
 - `GET /api/health` calls `AppService.Health`.
+- `/api/admin/permission-groups/*` and `/api/admin/permissions/*` call the RBAC service and Ent repository.
 
-There is currently no authentication, rate-limit, or permission-check middleware wired into `api/api.go`; do not document or assume runtime API authorization unless the code is updated.
+There is currently no authentication, rate-limit, or permission-check middleware wired into `api/api.go`; `/admin` is only a route prefix at the moment.
 
 Handlers should follow the existing flow:
 
@@ -50,7 +51,7 @@ Handlers should follow the existing flow:
 
 ## Persistence
 
-Ent schemas and generated code still exist, but persistence is not currently wired into `main.go`, the API layer, or the application layer. The old repository implementations have been deleted. When persistence is reintroduced, prefer rebuilding concrete repositories under `internal/infra/repo` from the current domain model rather than restoring stale behavior blindly.
+Persistence uses Ent with MySQL. `main.go` opens the MySQL client, runs Ent migration, and wires the RBAC repository. Repository implementations should live under `internal/infra/repo`.
 
 Important locations:
 
@@ -76,7 +77,7 @@ Effective authorization follows:
 
 `account -> role -> permission_group -> permission`
 
-RBAC schemas and domain packages still exist, but no RBAC application service or repository is currently wired. Rebuild the service/repository flow from the target product model before exposing RBAC endpoints again.
+The currently wired RBAC API covers global permission and permission-group management only: create/list permissions, create/list permission groups, and add/remove permissions on permission groups.
 
 Stored `permissions.api_path` values generally should not include `/api`, because the router is mounted under `/api`.
 

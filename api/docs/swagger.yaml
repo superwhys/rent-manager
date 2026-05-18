@@ -1,5 +1,32 @@
 basePath: /api
 definitions:
+  ginutils.Ret-any:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message: {}
+    type: object
+  ginutils.Ret-array_response_PermissionGroupResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.PermissionGroupResponse'
+        type: array
+      message: {}
+    type: object
+  ginutils.Ret-array_response_PermissionResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.PermissionResponse'
+        type: array
+      message: {}
+    type: object
   ginutils.Ret-string:
     properties:
       code:
@@ -8,12 +35,218 @@ definitions:
         type: string
       message: {}
     type: object
+  requests.CreatePermissionGroupItem:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      sort_order:
+        type: integer
+    required:
+    - code
+    - name
+    type: object
+  requests.CreatePermissionGroupsCommand:
+    properties:
+      permission_groups:
+        items:
+          $ref: '#/definitions/requests.CreatePermissionGroupItem'
+        minItems: 1
+        type: array
+    required:
+    - permission_groups
+    type: object
+  requests.CreatePermissionItem:
+    properties:
+      api_path:
+        type: string
+      code:
+        type: string
+      description:
+        type: string
+    required:
+    - api_path
+    - code
+    - description
+    type: object
+  requests.CreatePermissionsCommand:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/requests.CreatePermissionItem'
+        minItems: 1
+        type: array
+    required:
+    - permissions
+    type: object
+  requests.PermissionGroupPermissionsCommand:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      permissionGroupID:
+        minimum: 1
+        type: integer
+    required:
+    - permissionGroupID
+    - permission_ids
+    type: object
+  response.PermissionGroupResponse:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+    type: object
+  response.PermissionResponse:
+    properties:
+      api_path:
+        type: string
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+    type: object
 info:
   contact: {}
   description: Rent Manager Server
   title: Rent Manager Server API
   version: "1.0"
 paths:
+  /admin/permission-groups:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionGroupResponse'
+      summary: 获取权限组列表
+      tags:
+      - admin
+  /admin/permission-groups/{permission_group_id}/permissions:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限组ID
+        in: path
+        name: permission_group_id
+        required: true
+        type: integer
+      - description: 权限ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.PermissionGroupPermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      summary: 从权限组移除权限
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限组ID
+        in: path
+        name: permission_group_id
+        required: true
+        type: integer
+      - description: 权限ID列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.PermissionGroupPermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      summary: 给权限组绑定权限
+      tags:
+      - admin
+  /admin/permission-groups/batch:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限组列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreatePermissionGroupsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionGroupResponse'
+      summary: 批量创建权限组
+      tags:
+      - admin
+  /admin/permissions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionResponse'
+      summary: 获取权限列表
+      tags:
+      - admin
+  /admin/permissions/batch:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 权限列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreatePermissionsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_PermissionResponse'
+      summary: 批量创建权限
+      tags:
+      - admin
   /health:
     get:
       produces:
