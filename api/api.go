@@ -11,8 +11,10 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
+	"github.com/superwhys/rent-manager-server/api/middlewares"
 	"github.com/superwhys/rent-manager-server/api/routers"
 	"github.com/superwhys/rent-manager-server/internal/app/services"
+	"github.com/ulule/limiter/v3"
 )
 
 // SetupRouter godoc
@@ -21,9 +23,11 @@ import (
 // @description Rent Manager Server
 // @BasePath /api
 func SetupRouter(
+	httpLimiter *limiter.Limiter,
 	rbacService *services.RBACService,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
+		ginutils.WithMiddleware(middlewares.RateLimitMiddleware(httpLimiter, nil)),
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/admin"),
 			routers.AdminRouter(rbacService),

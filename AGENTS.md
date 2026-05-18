@@ -8,7 +8,7 @@ This file provides guidance to Codex and other coding agents when working in thi
 - `go test ./internal/app/services` - run tests for one package.
 - `go test ./internal/app/services -run TestName` - run a single Go test by name.
 - `go build ./...` - compile all packages.
-- `go run .` - run the server on `0.0.0.0:8080`; it currently requires MySQL flags parsed by `github.com/miebyte/goutils/flags`.
+- `go run .` - run the server on `0.0.0.0:8080`; it currently requires MySQL and Redis flags parsed by `github.com/miebyte/goutils/flags`.
 - `gofmt -w <files>` - format changed Go files before finishing code changes.
 - `make generate` or `go generate ./internal/ent` - regenerate Ent code after changing schemas under `internal/ent/schema`.
 - `go generate ./api` - regenerate Swagger docs from annotations in `api/`.
@@ -23,7 +23,7 @@ This file provides guidance to Codex and other coding agents when working in thi
 
 ## Architecture
 
-This is a Go 1.26.2 Gin API server for a rent-management backend. The current codebase is being rebuilt from a reduced skeleton. `main.go` wires MySQL/Ent, `services.AppService`, `services.RBACService`, creates the HTTP router, and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
+This is a Go 1.26.2 Gin API server for a rent-management backend. The current codebase is being rebuilt from a reduced skeleton. `main.go` wires MySQL/Ent, Redis rate limiting, `services.AppService`, `services.RBACService`, creates the HTTP router, and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
 
 The repository follows a DDD-style architecture:
 
@@ -39,7 +39,7 @@ Current route surface:
 - `GET /api/health` calls `AppService.Health`.
 - `/api/admin/permission-groups/*` and `/api/admin/permissions/*` call the RBAC service and Ent repository.
 
-There is currently no authentication, rate-limit, or permission-check middleware wired into `api/api.go`; `/admin` is only a route prefix at the moment.
+Global Redis-backed rate limiting is wired in `api/api.go` via `RateLimitMiddleware`. There is currently no authentication or permission-check middleware wired into `api/api.go`; `/admin` is only a route prefix at the moment.
 
 Handlers should follow the existing flow:
 
