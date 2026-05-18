@@ -17,6 +17,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
+	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
@@ -38,6 +39,7 @@ const (
 	TypeMeterReading    = "MeterReading"
 	TypePermission      = "Permission"
 	TypePermissionGroup = "PermissionGroup"
+	TypeRentBill        = "RentBill"
 	TypeRole            = "Role"
 	TypeRoom            = "Room"
 	TypeRoomType        = "RoomType"
@@ -1282,29 +1284,34 @@ func (m *AccountMutation) ResetEdge(name string) error {
 // MeterItemMutation represents an operation that mutates the MeterItem nodes in the graph.
 type MeterItemMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	created_at      *time.Time
-	updated_at      *time.Time
-	deleted_at      *time.Time
-	code            *string
-	unit            *string
-	is_system       *bool
-	calc_type       *meteritem.CalcType
-	remark          *string
-	clearedFields   map[string]struct{}
-	accounts        *int
-	clearedaccounts bool
-	rooms           map[int]struct{}
-	removedrooms    map[int]struct{}
-	clearedrooms    bool
-	uint            map[int]struct{}
-	removeduint     map[int]struct{}
-	cleareduint     bool
-	done            bool
-	oldValue        func(context.Context) (*MeterItem, error)
-	predicates      []predicate.MeterItem
+	op                    Op
+	typ                   string
+	id                    *int
+	created_at            *time.Time
+	updated_at            *time.Time
+	deleted_at            *time.Time
+	code                  *string
+	unit                  *string
+	unit_price            *int
+	addunit_price         *int
+	is_system             *bool
+	calc_type             *meteritem.CalcType
+	remark                *string
+	clearedFields         map[string]struct{}
+	accounts              *int
+	clearedaccounts       bool
+	rooms                 map[int]struct{}
+	removedrooms          map[int]struct{}
+	clearedrooms          bool
+	meter_readings        map[int]struct{}
+	removedmeter_readings map[int]struct{}
+	clearedmeter_readings bool
+	uint                  map[int]struct{}
+	removeduint           map[int]struct{}
+	cleareduint           bool
+	done                  bool
+	oldValue              func(context.Context) (*MeterItem, error)
+	predicates            []predicate.MeterItem
 }
 
 var _ ent.Mutation = (*MeterItemMutation)(nil)
@@ -1634,6 +1641,62 @@ func (m *MeterItemMutation) ResetUnit() {
 	m.unit = nil
 }
 
+// SetUnitPrice sets the "unit_price" field.
+func (m *MeterItemMutation) SetUnitPrice(i int) {
+	m.unit_price = &i
+	m.addunit_price = nil
+}
+
+// UnitPrice returns the value of the "unit_price" field in the mutation.
+func (m *MeterItemMutation) UnitPrice() (r int, exists bool) {
+	v := m.unit_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUnitPrice returns the old "unit_price" field's value of the MeterItem entity.
+// If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterItemMutation) OldUnitPrice(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUnitPrice is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUnitPrice requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUnitPrice: %w", err)
+	}
+	return oldValue.UnitPrice, nil
+}
+
+// AddUnitPrice adds i to the "unit_price" field.
+func (m *MeterItemMutation) AddUnitPrice(i int) {
+	if m.addunit_price != nil {
+		*m.addunit_price += i
+	} else {
+		m.addunit_price = &i
+	}
+}
+
+// AddedUnitPrice returns the value that was added to the "unit_price" field in this mutation.
+func (m *MeterItemMutation) AddedUnitPrice() (r int, exists bool) {
+	v := m.addunit_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUnitPrice resets all changes to the "unit_price" field.
+func (m *MeterItemMutation) ResetUnitPrice() {
+	m.unit_price = nil
+	m.addunit_price = nil
+}
+
 // SetIsSystem sets the "is_system" field.
 func (m *MeterItemMutation) SetIsSystem(b bool) {
 	m.is_system = &b
@@ -1849,6 +1912,60 @@ func (m *MeterItemMutation) ResetRooms() {
 	m.removedrooms = nil
 }
 
+// AddMeterReadingIDs adds the "meter_readings" edge to the MeterReading entity by ids.
+func (m *MeterItemMutation) AddMeterReadingIDs(ids ...int) {
+	if m.meter_readings == nil {
+		m.meter_readings = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.meter_readings[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMeterReadings clears the "meter_readings" edge to the MeterReading entity.
+func (m *MeterItemMutation) ClearMeterReadings() {
+	m.clearedmeter_readings = true
+}
+
+// MeterReadingsCleared reports if the "meter_readings" edge to the MeterReading entity was cleared.
+func (m *MeterItemMutation) MeterReadingsCleared() bool {
+	return m.clearedmeter_readings
+}
+
+// RemoveMeterReadingIDs removes the "meter_readings" edge to the MeterReading entity by IDs.
+func (m *MeterItemMutation) RemoveMeterReadingIDs(ids ...int) {
+	if m.removedmeter_readings == nil {
+		m.removedmeter_readings = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.meter_readings, ids[i])
+		m.removedmeter_readings[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMeterReadings returns the removed IDs of the "meter_readings" edge to the MeterReading entity.
+func (m *MeterItemMutation) RemovedMeterReadingsIDs() (ids []int) {
+	for id := range m.removedmeter_readings {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MeterReadingsIDs returns the "meter_readings" edge IDs in the mutation.
+func (m *MeterItemMutation) MeterReadingsIDs() (ids []int) {
+	for id := range m.meter_readings {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMeterReadings resets all changes to the "meter_readings" edge.
+func (m *MeterItemMutation) ResetMeterReadings() {
+	m.meter_readings = nil
+	m.clearedmeter_readings = false
+	m.removedmeter_readings = nil
+}
+
 // AddUintIDs adds the "uint" edge to the Unit entity by ids.
 func (m *MeterItemMutation) AddUintIDs(ids ...int) {
 	if m.uint == nil {
@@ -1937,7 +2054,7 @@ func (m *MeterItemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MeterItemMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.created_at != nil {
 		fields = append(fields, meteritem.FieldCreatedAt)
 	}
@@ -1955,6 +2072,9 @@ func (m *MeterItemMutation) Fields() []string {
 	}
 	if m.unit != nil {
 		fields = append(fields, meteritem.FieldUnit)
+	}
+	if m.unit_price != nil {
+		fields = append(fields, meteritem.FieldUnitPrice)
 	}
 	if m.is_system != nil {
 		fields = append(fields, meteritem.FieldIsSystem)
@@ -1985,6 +2105,8 @@ func (m *MeterItemMutation) Field(name string) (ent.Value, bool) {
 		return m.Code()
 	case meteritem.FieldUnit:
 		return m.Unit()
+	case meteritem.FieldUnitPrice:
+		return m.UnitPrice()
 	case meteritem.FieldIsSystem:
 		return m.IsSystem()
 	case meteritem.FieldCalcType:
@@ -2012,6 +2134,8 @@ func (m *MeterItemMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldCode(ctx)
 	case meteritem.FieldUnit:
 		return m.OldUnit(ctx)
+	case meteritem.FieldUnitPrice:
+		return m.OldUnitPrice(ctx)
 	case meteritem.FieldIsSystem:
 		return m.OldIsSystem(ctx)
 	case meteritem.FieldCalcType:
@@ -2069,6 +2193,13 @@ func (m *MeterItemMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUnit(v)
 		return nil
+	case meteritem.FieldUnitPrice:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUnitPrice(v)
+		return nil
 	case meteritem.FieldIsSystem:
 		v, ok := value.(bool)
 		if !ok {
@@ -2098,6 +2229,9 @@ func (m *MeterItemMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *MeterItemMutation) AddedFields() []string {
 	var fields []string
+	if m.addunit_price != nil {
+		fields = append(fields, meteritem.FieldUnitPrice)
+	}
 	return fields
 }
 
@@ -2106,6 +2240,8 @@ func (m *MeterItemMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *MeterItemMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case meteritem.FieldUnitPrice:
+		return m.AddedUnitPrice()
 	}
 	return nil, false
 }
@@ -2115,6 +2251,13 @@ func (m *MeterItemMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *MeterItemMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case meteritem.FieldUnitPrice:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUnitPrice(v)
+		return nil
 	}
 	return fmt.Errorf("unknown MeterItem numeric field %s", name)
 }
@@ -2175,6 +2318,9 @@ func (m *MeterItemMutation) ResetField(name string) error {
 	case meteritem.FieldUnit:
 		m.ResetUnit()
 		return nil
+	case meteritem.FieldUnitPrice:
+		m.ResetUnitPrice()
+		return nil
 	case meteritem.FieldIsSystem:
 		m.ResetIsSystem()
 		return nil
@@ -2190,12 +2336,15 @@ func (m *MeterItemMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *MeterItemMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.accounts != nil {
 		edges = append(edges, meteritem.EdgeAccounts)
 	}
 	if m.rooms != nil {
 		edges = append(edges, meteritem.EdgeRooms)
+	}
+	if m.meter_readings != nil {
+		edges = append(edges, meteritem.EdgeMeterReadings)
 	}
 	if m.uint != nil {
 		edges = append(edges, meteritem.EdgeUint)
@@ -2217,6 +2366,12 @@ func (m *MeterItemMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case meteritem.EdgeMeterReadings:
+		ids := make([]ent.Value, 0, len(m.meter_readings))
+		for id := range m.meter_readings {
+			ids = append(ids, id)
+		}
+		return ids
 	case meteritem.EdgeUint:
 		ids := make([]ent.Value, 0, len(m.uint))
 		for id := range m.uint {
@@ -2229,9 +2384,12 @@ func (m *MeterItemMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *MeterItemMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedrooms != nil {
 		edges = append(edges, meteritem.EdgeRooms)
+	}
+	if m.removedmeter_readings != nil {
+		edges = append(edges, meteritem.EdgeMeterReadings)
 	}
 	if m.removeduint != nil {
 		edges = append(edges, meteritem.EdgeUint)
@@ -2249,6 +2407,12 @@ func (m *MeterItemMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case meteritem.EdgeMeterReadings:
+		ids := make([]ent.Value, 0, len(m.removedmeter_readings))
+		for id := range m.removedmeter_readings {
+			ids = append(ids, id)
+		}
+		return ids
 	case meteritem.EdgeUint:
 		ids := make([]ent.Value, 0, len(m.removeduint))
 		for id := range m.removeduint {
@@ -2261,12 +2425,15 @@ func (m *MeterItemMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *MeterItemMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedaccounts {
 		edges = append(edges, meteritem.EdgeAccounts)
 	}
 	if m.clearedrooms {
 		edges = append(edges, meteritem.EdgeRooms)
+	}
+	if m.clearedmeter_readings {
+		edges = append(edges, meteritem.EdgeMeterReadings)
 	}
 	if m.cleareduint {
 		edges = append(edges, meteritem.EdgeUint)
@@ -2282,6 +2449,8 @@ func (m *MeterItemMutation) EdgeCleared(name string) bool {
 		return m.clearedaccounts
 	case meteritem.EdgeRooms:
 		return m.clearedrooms
+	case meteritem.EdgeMeterReadings:
+		return m.clearedmeter_readings
 	case meteritem.EdgeUint:
 		return m.cleareduint
 	}
@@ -2308,6 +2477,9 @@ func (m *MeterItemMutation) ResetEdge(name string) error {
 		return nil
 	case meteritem.EdgeRooms:
 		m.ResetRooms()
+		return nil
+	case meteritem.EdgeMeterReadings:
+		m.ResetMeterReadings()
 		return nil
 	case meteritem.EdgeUint:
 		m.ResetUint()
@@ -2337,6 +2509,8 @@ type MeterReadingMutation struct {
 	clearedFields       map[string]struct{}
 	room                *int
 	clearedroom         bool
+	meter_item          *int
+	clearedmeter_item   bool
 	done                bool
 	oldValue            func(context.Context) (*MeterReading, error)
 	predicates          []predicate.MeterReading
@@ -2474,6 +2648,42 @@ func (m *MeterReadingMutation) OldRoomID(ctx context.Context) (v int, err error)
 // ResetRoomID resets all changes to the "room_id" field.
 func (m *MeterReadingMutation) ResetRoomID() {
 	m.room = nil
+}
+
+// SetMeterItemID sets the "meter_item_id" field.
+func (m *MeterReadingMutation) SetMeterItemID(i int) {
+	m.meter_item = &i
+}
+
+// MeterItemID returns the value of the "meter_item_id" field in the mutation.
+func (m *MeterReadingMutation) MeterItemID() (r int, exists bool) {
+	v := m.meter_item
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMeterItemID returns the old "meter_item_id" field's value of the MeterReading entity.
+// If the MeterReading object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MeterReadingMutation) OldMeterItemID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMeterItemID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMeterItemID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMeterItemID: %w", err)
+	}
+	return oldValue.MeterItemID, nil
+}
+
+// ResetMeterItemID resets all changes to the "meter_item_id" field.
+func (m *MeterReadingMutation) ResetMeterItemID() {
+	m.meter_item = nil
 }
 
 // SetPeriodMonth sets the "period_month" field.
@@ -2926,6 +3136,33 @@ func (m *MeterReadingMutation) ResetRoom() {
 	m.clearedroom = false
 }
 
+// ClearMeterItem clears the "meter_item" edge to the MeterItem entity.
+func (m *MeterReadingMutation) ClearMeterItem() {
+	m.clearedmeter_item = true
+	m.clearedFields[meterreading.FieldMeterItemID] = struct{}{}
+}
+
+// MeterItemCleared reports if the "meter_item" edge to the MeterItem entity was cleared.
+func (m *MeterReadingMutation) MeterItemCleared() bool {
+	return m.clearedmeter_item
+}
+
+// MeterItemIDs returns the "meter_item" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MeterItemID instead. It exists only for internal usage by the builders.
+func (m *MeterReadingMutation) MeterItemIDs() (ids []int) {
+	if id := m.meter_item; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMeterItem resets all changes to the "meter_item" edge.
+func (m *MeterReadingMutation) ResetMeterItem() {
+	m.meter_item = nil
+	m.clearedmeter_item = false
+}
+
 // Where appends a list predicates to the MeterReadingMutation builder.
 func (m *MeterReadingMutation) Where(ps ...predicate.MeterReading) {
 	m.predicates = append(m.predicates, ps...)
@@ -2960,9 +3197,12 @@ func (m *MeterReadingMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MeterReadingMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.room != nil {
 		fields = append(fields, meterreading.FieldRoomID)
+	}
+	if m.meter_item != nil {
+		fields = append(fields, meterreading.FieldMeterItemID)
 	}
 	if m.period_month != nil {
 		fields = append(fields, meterreading.FieldPeriodMonth)
@@ -2998,6 +3238,8 @@ func (m *MeterReadingMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case meterreading.FieldRoomID:
 		return m.RoomID()
+	case meterreading.FieldMeterItemID:
+		return m.MeterItemID()
 	case meterreading.FieldPeriodMonth:
 		return m.PeriodMonth()
 	case meterreading.FieldPreviousReading:
@@ -3025,6 +3267,8 @@ func (m *MeterReadingMutation) OldField(ctx context.Context, name string) (ent.V
 	switch name {
 	case meterreading.FieldRoomID:
 		return m.OldRoomID(ctx)
+	case meterreading.FieldMeterItemID:
+		return m.OldMeterItemID(ctx)
 	case meterreading.FieldPeriodMonth:
 		return m.OldPeriodMonth(ctx)
 	case meterreading.FieldPreviousReading:
@@ -3056,6 +3300,13 @@ func (m *MeterReadingMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRoomID(v)
+		return nil
+	case meterreading.FieldMeterItemID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMeterItemID(v)
 		return nil
 	case meterreading.FieldPeriodMonth:
 		v, ok := value.(string)
@@ -3243,6 +3494,9 @@ func (m *MeterReadingMutation) ResetField(name string) error {
 	case meterreading.FieldRoomID:
 		m.ResetRoomID()
 		return nil
+	case meterreading.FieldMeterItemID:
+		m.ResetMeterItemID()
+		return nil
 	case meterreading.FieldPeriodMonth:
 		m.ResetPeriodMonth()
 		return nil
@@ -3273,9 +3527,12 @@ func (m *MeterReadingMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *MeterReadingMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.room != nil {
 		edges = append(edges, meterreading.EdgeRoom)
+	}
+	if m.meter_item != nil {
+		edges = append(edges, meterreading.EdgeMeterItem)
 	}
 	return edges
 }
@@ -3288,13 +3545,17 @@ func (m *MeterReadingMutation) AddedIDs(name string) []ent.Value {
 		if id := m.room; id != nil {
 			return []ent.Value{*id}
 		}
+	case meterreading.EdgeMeterItem:
+		if id := m.meter_item; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *MeterReadingMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -3306,9 +3567,12 @@ func (m *MeterReadingMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *MeterReadingMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedroom {
 		edges = append(edges, meterreading.EdgeRoom)
+	}
+	if m.clearedmeter_item {
+		edges = append(edges, meterreading.EdgeMeterItem)
 	}
 	return edges
 }
@@ -3319,6 +3583,8 @@ func (m *MeterReadingMutation) EdgeCleared(name string) bool {
 	switch name {
 	case meterreading.EdgeRoom:
 		return m.clearedroom
+	case meterreading.EdgeMeterItem:
+		return m.clearedmeter_item
 	}
 	return false
 }
@@ -3330,6 +3596,9 @@ func (m *MeterReadingMutation) ClearEdge(name string) error {
 	case meterreading.EdgeRoom:
 		m.ClearRoom()
 		return nil
+	case meterreading.EdgeMeterItem:
+		m.ClearMeterItem()
+		return nil
 	}
 	return fmt.Errorf("unknown MeterReading unique edge %s", name)
 }
@@ -3340,6 +3609,9 @@ func (m *MeterReadingMutation) ResetEdge(name string) error {
 	switch name {
 	case meterreading.EdgeRoom:
 		m.ResetRoom()
+		return nil
+	case meterreading.EdgeMeterItem:
+		m.ResetMeterItem()
 		return nil
 	}
 	return fmt.Errorf("unknown MeterReading edge %s", name)
@@ -5067,6 +5339,1088 @@ func (m *PermissionGroupMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown PermissionGroup edge %s", name)
 }
 
+// RentBillMutation represents an operation that mutates the RentBill nodes in the graph.
+type RentBillMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *int
+	created_at      *time.Time
+	updated_at      *time.Time
+	deleted_at      *time.Time
+	period_month    *string
+	base_rent       *int
+	addbase_rent    *int
+	meter_fee       *int
+	addmeter_fee    *int
+	total_amount    *int
+	addtotal_amount *int
+	status          *rentbill.Status
+	paid_at         *time.Time
+	remark          *string
+	clearedFields   map[string]struct{}
+	room            *int
+	clearedroom     bool
+	done            bool
+	oldValue        func(context.Context) (*RentBill, error)
+	predicates      []predicate.RentBill
+}
+
+var _ ent.Mutation = (*RentBillMutation)(nil)
+
+// rentbillOption allows management of the mutation configuration using functional options.
+type rentbillOption func(*RentBillMutation)
+
+// newRentBillMutation creates new mutation for the RentBill entity.
+func newRentBillMutation(c config, op Op, opts ...rentbillOption) *RentBillMutation {
+	m := &RentBillMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeRentBill,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withRentBillID sets the ID field of the mutation.
+func withRentBillID(id int) rentbillOption {
+	return func(m *RentBillMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *RentBill
+		)
+		m.oldValue = func(ctx context.Context) (*RentBill, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().RentBill.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withRentBill sets the old RentBill of the mutation.
+func withRentBill(node *RentBill) rentbillOption {
+	return func(m *RentBillMutation) {
+		m.oldValue = func(context.Context) (*RentBill, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m RentBillMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m RentBillMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *RentBillMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *RentBillMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().RentBill.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *RentBillMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *RentBillMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *RentBillMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *RentBillMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *RentBillMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *RentBillMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *RentBillMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *RentBillMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *RentBillMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[rentbill.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *RentBillMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[rentbill.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *RentBillMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, rentbill.FieldDeletedAt)
+}
+
+// SetRoomID sets the "room_id" field.
+func (m *RentBillMutation) SetRoomID(i int) {
+	m.room = &i
+}
+
+// RoomID returns the value of the "room_id" field in the mutation.
+func (m *RentBillMutation) RoomID() (r int, exists bool) {
+	v := m.room
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRoomID returns the old "room_id" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldRoomID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRoomID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRoomID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRoomID: %w", err)
+	}
+	return oldValue.RoomID, nil
+}
+
+// ResetRoomID resets all changes to the "room_id" field.
+func (m *RentBillMutation) ResetRoomID() {
+	m.room = nil
+}
+
+// SetPeriodMonth sets the "period_month" field.
+func (m *RentBillMutation) SetPeriodMonth(s string) {
+	m.period_month = &s
+}
+
+// PeriodMonth returns the value of the "period_month" field in the mutation.
+func (m *RentBillMutation) PeriodMonth() (r string, exists bool) {
+	v := m.period_month
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPeriodMonth returns the old "period_month" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldPeriodMonth(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPeriodMonth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPeriodMonth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPeriodMonth: %w", err)
+	}
+	return oldValue.PeriodMonth, nil
+}
+
+// ResetPeriodMonth resets all changes to the "period_month" field.
+func (m *RentBillMutation) ResetPeriodMonth() {
+	m.period_month = nil
+}
+
+// SetBaseRent sets the "base_rent" field.
+func (m *RentBillMutation) SetBaseRent(i int) {
+	m.base_rent = &i
+	m.addbase_rent = nil
+}
+
+// BaseRent returns the value of the "base_rent" field in the mutation.
+func (m *RentBillMutation) BaseRent() (r int, exists bool) {
+	v := m.base_rent
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBaseRent returns the old "base_rent" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldBaseRent(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBaseRent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBaseRent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBaseRent: %w", err)
+	}
+	return oldValue.BaseRent, nil
+}
+
+// AddBaseRent adds i to the "base_rent" field.
+func (m *RentBillMutation) AddBaseRent(i int) {
+	if m.addbase_rent != nil {
+		*m.addbase_rent += i
+	} else {
+		m.addbase_rent = &i
+	}
+}
+
+// AddedBaseRent returns the value that was added to the "base_rent" field in this mutation.
+func (m *RentBillMutation) AddedBaseRent() (r int, exists bool) {
+	v := m.addbase_rent
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetBaseRent resets all changes to the "base_rent" field.
+func (m *RentBillMutation) ResetBaseRent() {
+	m.base_rent = nil
+	m.addbase_rent = nil
+}
+
+// SetMeterFee sets the "meter_fee" field.
+func (m *RentBillMutation) SetMeterFee(i int) {
+	m.meter_fee = &i
+	m.addmeter_fee = nil
+}
+
+// MeterFee returns the value of the "meter_fee" field in the mutation.
+func (m *RentBillMutation) MeterFee() (r int, exists bool) {
+	v := m.meter_fee
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMeterFee returns the old "meter_fee" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldMeterFee(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMeterFee is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMeterFee requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMeterFee: %w", err)
+	}
+	return oldValue.MeterFee, nil
+}
+
+// AddMeterFee adds i to the "meter_fee" field.
+func (m *RentBillMutation) AddMeterFee(i int) {
+	if m.addmeter_fee != nil {
+		*m.addmeter_fee += i
+	} else {
+		m.addmeter_fee = &i
+	}
+}
+
+// AddedMeterFee returns the value that was added to the "meter_fee" field in this mutation.
+func (m *RentBillMutation) AddedMeterFee() (r int, exists bool) {
+	v := m.addmeter_fee
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMeterFee resets all changes to the "meter_fee" field.
+func (m *RentBillMutation) ResetMeterFee() {
+	m.meter_fee = nil
+	m.addmeter_fee = nil
+}
+
+// SetTotalAmount sets the "total_amount" field.
+func (m *RentBillMutation) SetTotalAmount(i int) {
+	m.total_amount = &i
+	m.addtotal_amount = nil
+}
+
+// TotalAmount returns the value of the "total_amount" field in the mutation.
+func (m *RentBillMutation) TotalAmount() (r int, exists bool) {
+	v := m.total_amount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalAmount returns the old "total_amount" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldTotalAmount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalAmount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalAmount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalAmount: %w", err)
+	}
+	return oldValue.TotalAmount, nil
+}
+
+// AddTotalAmount adds i to the "total_amount" field.
+func (m *RentBillMutation) AddTotalAmount(i int) {
+	if m.addtotal_amount != nil {
+		*m.addtotal_amount += i
+	} else {
+		m.addtotal_amount = &i
+	}
+}
+
+// AddedTotalAmount returns the value that was added to the "total_amount" field in this mutation.
+func (m *RentBillMutation) AddedTotalAmount() (r int, exists bool) {
+	v := m.addtotal_amount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalAmount resets all changes to the "total_amount" field.
+func (m *RentBillMutation) ResetTotalAmount() {
+	m.total_amount = nil
+	m.addtotal_amount = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *RentBillMutation) SetStatus(r rentbill.Status) {
+	m.status = &r
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *RentBillMutation) Status() (r rentbill.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldStatus(ctx context.Context) (v rentbill.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *RentBillMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetPaidAt sets the "paid_at" field.
+func (m *RentBillMutation) SetPaidAt(t time.Time) {
+	m.paid_at = &t
+}
+
+// PaidAt returns the value of the "paid_at" field in the mutation.
+func (m *RentBillMutation) PaidAt() (r time.Time, exists bool) {
+	v := m.paid_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPaidAt returns the old "paid_at" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldPaidAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPaidAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPaidAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPaidAt: %w", err)
+	}
+	return oldValue.PaidAt, nil
+}
+
+// ClearPaidAt clears the value of the "paid_at" field.
+func (m *RentBillMutation) ClearPaidAt() {
+	m.paid_at = nil
+	m.clearedFields[rentbill.FieldPaidAt] = struct{}{}
+}
+
+// PaidAtCleared returns if the "paid_at" field was cleared in this mutation.
+func (m *RentBillMutation) PaidAtCleared() bool {
+	_, ok := m.clearedFields[rentbill.FieldPaidAt]
+	return ok
+}
+
+// ResetPaidAt resets all changes to the "paid_at" field.
+func (m *RentBillMutation) ResetPaidAt() {
+	m.paid_at = nil
+	delete(m.clearedFields, rentbill.FieldPaidAt)
+}
+
+// SetRemark sets the "remark" field.
+func (m *RentBillMutation) SetRemark(s string) {
+	m.remark = &s
+}
+
+// Remark returns the value of the "remark" field in the mutation.
+func (m *RentBillMutation) Remark() (r string, exists bool) {
+	v := m.remark
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRemark returns the old "remark" field's value of the RentBill entity.
+// If the RentBill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RentBillMutation) OldRemark(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRemark is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRemark requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRemark: %w", err)
+	}
+	return oldValue.Remark, nil
+}
+
+// ClearRemark clears the value of the "remark" field.
+func (m *RentBillMutation) ClearRemark() {
+	m.remark = nil
+	m.clearedFields[rentbill.FieldRemark] = struct{}{}
+}
+
+// RemarkCleared returns if the "remark" field was cleared in this mutation.
+func (m *RentBillMutation) RemarkCleared() bool {
+	_, ok := m.clearedFields[rentbill.FieldRemark]
+	return ok
+}
+
+// ResetRemark resets all changes to the "remark" field.
+func (m *RentBillMutation) ResetRemark() {
+	m.remark = nil
+	delete(m.clearedFields, rentbill.FieldRemark)
+}
+
+// ClearRoom clears the "room" edge to the Room entity.
+func (m *RentBillMutation) ClearRoom() {
+	m.clearedroom = true
+	m.clearedFields[rentbill.FieldRoomID] = struct{}{}
+}
+
+// RoomCleared reports if the "room" edge to the Room entity was cleared.
+func (m *RentBillMutation) RoomCleared() bool {
+	return m.clearedroom
+}
+
+// RoomIDs returns the "room" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RoomID instead. It exists only for internal usage by the builders.
+func (m *RentBillMutation) RoomIDs() (ids []int) {
+	if id := m.room; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRoom resets all changes to the "room" edge.
+func (m *RentBillMutation) ResetRoom() {
+	m.room = nil
+	m.clearedroom = false
+}
+
+// Where appends a list predicates to the RentBillMutation builder.
+func (m *RentBillMutation) Where(ps ...predicate.RentBill) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the RentBillMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *RentBillMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.RentBill, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *RentBillMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *RentBillMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (RentBill).
+func (m *RentBillMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *RentBillMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.created_at != nil {
+		fields = append(fields, rentbill.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, rentbill.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, rentbill.FieldDeletedAt)
+	}
+	if m.room != nil {
+		fields = append(fields, rentbill.FieldRoomID)
+	}
+	if m.period_month != nil {
+		fields = append(fields, rentbill.FieldPeriodMonth)
+	}
+	if m.base_rent != nil {
+		fields = append(fields, rentbill.FieldBaseRent)
+	}
+	if m.meter_fee != nil {
+		fields = append(fields, rentbill.FieldMeterFee)
+	}
+	if m.total_amount != nil {
+		fields = append(fields, rentbill.FieldTotalAmount)
+	}
+	if m.status != nil {
+		fields = append(fields, rentbill.FieldStatus)
+	}
+	if m.paid_at != nil {
+		fields = append(fields, rentbill.FieldPaidAt)
+	}
+	if m.remark != nil {
+		fields = append(fields, rentbill.FieldRemark)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *RentBillMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case rentbill.FieldCreatedAt:
+		return m.CreatedAt()
+	case rentbill.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case rentbill.FieldDeletedAt:
+		return m.DeletedAt()
+	case rentbill.FieldRoomID:
+		return m.RoomID()
+	case rentbill.FieldPeriodMonth:
+		return m.PeriodMonth()
+	case rentbill.FieldBaseRent:
+		return m.BaseRent()
+	case rentbill.FieldMeterFee:
+		return m.MeterFee()
+	case rentbill.FieldTotalAmount:
+		return m.TotalAmount()
+	case rentbill.FieldStatus:
+		return m.Status()
+	case rentbill.FieldPaidAt:
+		return m.PaidAt()
+	case rentbill.FieldRemark:
+		return m.Remark()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *RentBillMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case rentbill.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case rentbill.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case rentbill.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case rentbill.FieldRoomID:
+		return m.OldRoomID(ctx)
+	case rentbill.FieldPeriodMonth:
+		return m.OldPeriodMonth(ctx)
+	case rentbill.FieldBaseRent:
+		return m.OldBaseRent(ctx)
+	case rentbill.FieldMeterFee:
+		return m.OldMeterFee(ctx)
+	case rentbill.FieldTotalAmount:
+		return m.OldTotalAmount(ctx)
+	case rentbill.FieldStatus:
+		return m.OldStatus(ctx)
+	case rentbill.FieldPaidAt:
+		return m.OldPaidAt(ctx)
+	case rentbill.FieldRemark:
+		return m.OldRemark(ctx)
+	}
+	return nil, fmt.Errorf("unknown RentBill field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *RentBillMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case rentbill.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case rentbill.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case rentbill.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case rentbill.FieldRoomID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRoomID(v)
+		return nil
+	case rentbill.FieldPeriodMonth:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPeriodMonth(v)
+		return nil
+	case rentbill.FieldBaseRent:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBaseRent(v)
+		return nil
+	case rentbill.FieldMeterFee:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMeterFee(v)
+		return nil
+	case rentbill.FieldTotalAmount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalAmount(v)
+		return nil
+	case rentbill.FieldStatus:
+		v, ok := value.(rentbill.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case rentbill.FieldPaidAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPaidAt(v)
+		return nil
+	case rentbill.FieldRemark:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRemark(v)
+		return nil
+	}
+	return fmt.Errorf("unknown RentBill field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *RentBillMutation) AddedFields() []string {
+	var fields []string
+	if m.addbase_rent != nil {
+		fields = append(fields, rentbill.FieldBaseRent)
+	}
+	if m.addmeter_fee != nil {
+		fields = append(fields, rentbill.FieldMeterFee)
+	}
+	if m.addtotal_amount != nil {
+		fields = append(fields, rentbill.FieldTotalAmount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *RentBillMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case rentbill.FieldBaseRent:
+		return m.AddedBaseRent()
+	case rentbill.FieldMeterFee:
+		return m.AddedMeterFee()
+	case rentbill.FieldTotalAmount:
+		return m.AddedTotalAmount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *RentBillMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case rentbill.FieldBaseRent:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddBaseRent(v)
+		return nil
+	case rentbill.FieldMeterFee:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMeterFee(v)
+		return nil
+	case rentbill.FieldTotalAmount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalAmount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown RentBill numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *RentBillMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(rentbill.FieldDeletedAt) {
+		fields = append(fields, rentbill.FieldDeletedAt)
+	}
+	if m.FieldCleared(rentbill.FieldPaidAt) {
+		fields = append(fields, rentbill.FieldPaidAt)
+	}
+	if m.FieldCleared(rentbill.FieldRemark) {
+		fields = append(fields, rentbill.FieldRemark)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *RentBillMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *RentBillMutation) ClearField(name string) error {
+	switch name {
+	case rentbill.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case rentbill.FieldPaidAt:
+		m.ClearPaidAt()
+		return nil
+	case rentbill.FieldRemark:
+		m.ClearRemark()
+		return nil
+	}
+	return fmt.Errorf("unknown RentBill nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *RentBillMutation) ResetField(name string) error {
+	switch name {
+	case rentbill.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case rentbill.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case rentbill.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case rentbill.FieldRoomID:
+		m.ResetRoomID()
+		return nil
+	case rentbill.FieldPeriodMonth:
+		m.ResetPeriodMonth()
+		return nil
+	case rentbill.FieldBaseRent:
+		m.ResetBaseRent()
+		return nil
+	case rentbill.FieldMeterFee:
+		m.ResetMeterFee()
+		return nil
+	case rentbill.FieldTotalAmount:
+		m.ResetTotalAmount()
+		return nil
+	case rentbill.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case rentbill.FieldPaidAt:
+		m.ResetPaidAt()
+		return nil
+	case rentbill.FieldRemark:
+		m.ResetRemark()
+		return nil
+	}
+	return fmt.Errorf("unknown RentBill field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *RentBillMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.room != nil {
+		edges = append(edges, rentbill.EdgeRoom)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *RentBillMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case rentbill.EdgeRoom:
+		if id := m.room; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *RentBillMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *RentBillMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *RentBillMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedroom {
+		edges = append(edges, rentbill.EdgeRoom)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *RentBillMutation) EdgeCleared(name string) bool {
+	switch name {
+	case rentbill.EdgeRoom:
+		return m.clearedroom
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *RentBillMutation) ClearEdge(name string) error {
+	switch name {
+	case rentbill.EdgeRoom:
+		m.ClearRoom()
+		return nil
+	}
+	return fmt.Errorf("unknown RentBill unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *RentBillMutation) ResetEdge(name string) error {
+	switch name {
+	case rentbill.EdgeRoom:
+		m.ResetRoom()
+		return nil
+	}
+	return fmt.Errorf("unknown RentBill edge %s", name)
+}
+
 // RoleMutation represents an operation that mutates the Role nodes in the graph.
 type RoleMutation struct {
 	config
@@ -6005,6 +7359,9 @@ type RoomMutation struct {
 	meter_readings        map[int]struct{}
 	removedmeter_readings map[int]struct{}
 	clearedmeter_readings bool
+	rent_bills            map[int]struct{}
+	removedrent_bills     map[int]struct{}
+	clearedrent_bills     bool
 	done                  bool
 	oldValue              func(context.Context) (*Room, error)
 	predicates            []predicate.Room
@@ -6703,6 +8060,60 @@ func (m *RoomMutation) ResetMeterReadings() {
 	m.removedmeter_readings = nil
 }
 
+// AddRentBillIDs adds the "rent_bills" edge to the RentBill entity by ids.
+func (m *RoomMutation) AddRentBillIDs(ids ...int) {
+	if m.rent_bills == nil {
+		m.rent_bills = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.rent_bills[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRentBills clears the "rent_bills" edge to the RentBill entity.
+func (m *RoomMutation) ClearRentBills() {
+	m.clearedrent_bills = true
+}
+
+// RentBillsCleared reports if the "rent_bills" edge to the RentBill entity was cleared.
+func (m *RoomMutation) RentBillsCleared() bool {
+	return m.clearedrent_bills
+}
+
+// RemoveRentBillIDs removes the "rent_bills" edge to the RentBill entity by IDs.
+func (m *RoomMutation) RemoveRentBillIDs(ids ...int) {
+	if m.removedrent_bills == nil {
+		m.removedrent_bills = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.rent_bills, ids[i])
+		m.removedrent_bills[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRentBills returns the removed IDs of the "rent_bills" edge to the RentBill entity.
+func (m *RoomMutation) RemovedRentBillsIDs() (ids []int) {
+	for id := range m.removedrent_bills {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RentBillsIDs returns the "rent_bills" edge IDs in the mutation.
+func (m *RoomMutation) RentBillsIDs() (ids []int) {
+	for id := range m.rent_bills {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRentBills resets all changes to the "rent_bills" edge.
+func (m *RoomMutation) ResetRentBills() {
+	m.rent_bills = nil
+	m.clearedrent_bills = false
+	m.removedrent_bills = nil
+}
+
 // Where appends a list predicates to the RoomMutation builder.
 func (m *RoomMutation) Where(ps ...predicate.Room) {
 	m.predicates = append(m.predicates, ps...)
@@ -7037,7 +8448,7 @@ func (m *RoomMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RoomMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.unit != nil {
 		edges = append(edges, room.EdgeUnit)
 	}
@@ -7049,6 +8460,9 @@ func (m *RoomMutation) AddedEdges() []string {
 	}
 	if m.meter_readings != nil {
 		edges = append(edges, room.EdgeMeterReadings)
+	}
+	if m.rent_bills != nil {
+		edges = append(edges, room.EdgeRentBills)
 	}
 	return edges
 }
@@ -7077,18 +8491,27 @@ func (m *RoomMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case room.EdgeRentBills:
+		ids := make([]ent.Value, 0, len(m.rent_bills))
+		for id := range m.rent_bills {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RoomMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedmeter_items != nil {
 		edges = append(edges, room.EdgeMeterItems)
 	}
 	if m.removedmeter_readings != nil {
 		edges = append(edges, room.EdgeMeterReadings)
+	}
+	if m.removedrent_bills != nil {
+		edges = append(edges, room.EdgeRentBills)
 	}
 	return edges
 }
@@ -7109,13 +8532,19 @@ func (m *RoomMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case room.EdgeRentBills:
+		ids := make([]ent.Value, 0, len(m.removedrent_bills))
+		for id := range m.removedrent_bills {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RoomMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedunit {
 		edges = append(edges, room.EdgeUnit)
 	}
@@ -7127,6 +8556,9 @@ func (m *RoomMutation) ClearedEdges() []string {
 	}
 	if m.clearedmeter_readings {
 		edges = append(edges, room.EdgeMeterReadings)
+	}
+	if m.clearedrent_bills {
+		edges = append(edges, room.EdgeRentBills)
 	}
 	return edges
 }
@@ -7143,6 +8575,8 @@ func (m *RoomMutation) EdgeCleared(name string) bool {
 		return m.clearedmeter_items
 	case room.EdgeMeterReadings:
 		return m.clearedmeter_readings
+	case room.EdgeRentBills:
+		return m.clearedrent_bills
 	}
 	return false
 }
@@ -7176,6 +8610,9 @@ func (m *RoomMutation) ResetEdge(name string) error {
 		return nil
 	case room.EdgeMeterReadings:
 		m.ResetMeterReadings()
+		return nil
+	case room.EdgeRentBills:
+		m.ResetRentBills()
 		return nil
 	}
 	return fmt.Errorf("unknown Room edge %s", name)

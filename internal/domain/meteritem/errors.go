@@ -6,6 +6,7 @@ var (
 	ErrAccountRequired   = errors.New("account is required")
 	ErrCodeRequired      = errors.New("meter item code is required")
 	ErrUnitRequired      = errors.New("meter item unit is required")
+	ErrInvalidUnitPrice  = errors.New("meter item unit price cannot be negative")
 	ErrInvalidCalcType   = errors.New("invalid meter item calc type")
 	ErrNotFound          = errors.New("meter item not found")
 	ErrCodeAlreadyExists = errors.New("meter item code already exists")

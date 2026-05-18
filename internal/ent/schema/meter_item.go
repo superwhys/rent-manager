@@ -41,6 +41,10 @@ func (MeterItem) Fields() []ent.Field {
 			Comment("单位，如 m³/kWh").
 			NotEmpty(),
 
+		field.Int("unit_price").
+			Comment("单价，单位：分/计量单位").
+			Default(0),
+
 		field.Bool("is_system").
 			Comment("是否系统内置").
 			Default(false),
@@ -74,6 +78,9 @@ func (MeterItem) Edges() []ent.Edge {
 		// 抄表项-房间 多对多关系
 		edge.From("rooms", Room.Type).
 			Ref("meter_items"),
+
+		// 抄表项-抄表数据 一对多关系
+		edge.To("meter_readings", MeterReading.Type),
 
 		// 抄表项-楼栋 多对多关系
 		// 用于给楼栋设置默认的抄表项

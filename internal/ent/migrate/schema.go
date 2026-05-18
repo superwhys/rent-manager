@@ -41,6 +41,7 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "code", Type: field.TypeString},
 		{Name: "unit", Type: field.TypeString},
+		{Name: "unit_price", Type: field.TypeInt, Default: 0},
 		{Name: "is_system", Type: field.TypeBool, Default: false},
 		{Name: "calc_type", Type: field.TypeEnum, Enums: []string{"DIFFERENCE", "DIRECT"}, Default: "DIFFERENCE"},
 		{Name: "remark", Type: field.TypeString, Nullable: true},
@@ -54,7 +55,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "meter_items_accounts_meter_items",
-				Columns:    []*schema.Column{MeterItemsColumns[9]},
+				Columns:    []*schema.Column{MeterItemsColumns[10]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -63,7 +64,7 @@ var (
 			{
 				Name:    "meteritem_account_id_code",
 				Unique:  true,
-				Columns: []*schema.Column{MeterItemsColumns[9], MeterItemsColumns[4]},
+				Columns: []*schema.Column{MeterItemsColumns[10], MeterItemsColumns[4]},
 			},
 		},
 	}
@@ -78,6 +79,7 @@ var (
 		{Name: "reader_id", Type: field.TypeInt64, Nullable: true},
 		{Name: "source", Type: field.TypeEnum, Enums: []string{"MANUAL", "IMPORT", "AUTO"}, Default: "MANUAL"},
 		{Name: "remark", Type: field.TypeString, Nullable: true},
+		{Name: "meter_item_id", Type: field.TypeInt},
 		{Name: "room_id", Type: field.TypeInt},
 	}
 	// MeterReadingsTable holds the schema information for the "meter_readings" table.
@@ -87,17 +89,28 @@ var (
 		PrimaryKey: []*schema.Column{MeterReadingsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "meter_readings_rooms_meter_readings",
+				Symbol:     "meter_readings_meter_items_meter_readings",
 				Columns:    []*schema.Column{MeterReadingsColumns[9]},
+				RefColumns: []*schema.Column{MeterItemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "meter_readings_rooms_meter_readings",
+				Columns:    []*schema.Column{MeterReadingsColumns[10]},
 				RefColumns: []*schema.Column{RoomsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "meterreading_room_id_period_month",
+				Name:    "meterreading_room_id_meter_item_id_period_month",
 				Unique:  true,
-				Columns: []*schema.Column{MeterReadingsColumns[9], MeterReadingsColumns[1]},
+				Columns: []*schema.Column{MeterReadingsColumns[10], MeterReadingsColumns[9], MeterReadingsColumns[1]},
+			},
+			{
+				Name:    "meterreading_meter_item_id",
+				Unique:  false,
+				Columns: []*schema.Column{MeterReadingsColumns[9]},
 			},
 			{
 				Name:    "meterreading_period_month",
@@ -157,6 +170,52 @@ var (
 				Name:    "permissiongroup_code",
 				Unique:  true,
 				Columns: []*schema.Column{PermissionGroupsColumns[4]},
+			},
+		},
+	}
+	// RentBillsColumns holds the columns for the "rent_bills" table.
+	RentBillsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "period_month", Type: field.TypeString},
+		{Name: "base_rent", Type: field.TypeInt, Default: 0},
+		{Name: "meter_fee", Type: field.TypeInt, Default: 0},
+		{Name: "total_amount", Type: field.TypeInt, Default: 0},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"UNPAID", "PAID", "CANCELLED"}, Default: "UNPAID"},
+		{Name: "paid_at", Type: field.TypeTime, Nullable: true},
+		{Name: "remark", Type: field.TypeString, Nullable: true},
+		{Name: "room_id", Type: field.TypeInt},
+	}
+	// RentBillsTable holds the schema information for the "rent_bills" table.
+	RentBillsTable = &schema.Table{
+		Name:       "rent_bills",
+		Columns:    RentBillsColumns,
+		PrimaryKey: []*schema.Column{RentBillsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "rent_bills_rooms_rent_bills",
+				Columns:    []*schema.Column{RentBillsColumns[11]},
+				RefColumns: []*schema.Column{RoomsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "rentbill_room_id_period_month",
+				Unique:  true,
+				Columns: []*schema.Column{RentBillsColumns[11], RentBillsColumns[4]},
+			},
+			{
+				Name:    "rentbill_period_month",
+				Unique:  false,
+				Columns: []*schema.Column{RentBillsColumns[4]},
+			},
+			{
+				Name:    "rentbill_status",
+				Unique:  false,
+				Columns: []*schema.Column{RentBillsColumns[8]},
 			},
 		},
 	}
@@ -462,6 +521,7 @@ var (
 		MeterReadingsTable,
 		PermissionsTable,
 		PermissionGroupsTable,
+		RentBillsTable,
 		RolesTable,
 		RoomsTable,
 		RoomTypesTable,
@@ -476,7 +536,9 @@ var (
 
 func init() {
 	MeterItemsTable.ForeignKeys[0].RefTable = AccountsTable
-	MeterReadingsTable.ForeignKeys[0].RefTable = RoomsTable
+	MeterReadingsTable.ForeignKeys[0].RefTable = MeterItemsTable
+	MeterReadingsTable.ForeignKeys[1].RefTable = RoomsTable
+	RentBillsTable.ForeignKeys[0].RefTable = RoomsTable
 	RolesTable.ForeignKeys[0].RefTable = AccountsTable
 	RoomsTable.ForeignKeys[0].RefTable = RoomTypesTable
 	RoomsTable.ForeignKeys[1].RefTable = UnitsTable

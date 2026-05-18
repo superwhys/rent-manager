@@ -60,6 +60,11 @@ func RoomID(v int) predicate.MeterReading {
 	return predicate.MeterReading(sql.FieldEQ(FieldRoomID, v))
 }
 
+// MeterItemID applies equality check predicate on the "meter_item_id" field. It's identical to MeterItemIDEQ.
+func MeterItemID(v int) predicate.MeterReading {
+	return predicate.MeterReading(sql.FieldEQ(FieldMeterItemID, v))
+}
+
 // PeriodMonth applies equality check predicate on the "period_month" field. It's identical to PeriodMonthEQ.
 func PeriodMonth(v string) predicate.MeterReading {
 	return predicate.MeterReading(sql.FieldEQ(FieldPeriodMonth, v))
@@ -113,6 +118,26 @@ func RoomIDIn(vs ...int) predicate.MeterReading {
 // RoomIDNotIn applies the NotIn predicate on the "room_id" field.
 func RoomIDNotIn(vs ...int) predicate.MeterReading {
 	return predicate.MeterReading(sql.FieldNotIn(FieldRoomID, vs...))
+}
+
+// MeterItemIDEQ applies the EQ predicate on the "meter_item_id" field.
+func MeterItemIDEQ(v int) predicate.MeterReading {
+	return predicate.MeterReading(sql.FieldEQ(FieldMeterItemID, v))
+}
+
+// MeterItemIDNEQ applies the NEQ predicate on the "meter_item_id" field.
+func MeterItemIDNEQ(v int) predicate.MeterReading {
+	return predicate.MeterReading(sql.FieldNEQ(FieldMeterItemID, v))
+}
+
+// MeterItemIDIn applies the In predicate on the "meter_item_id" field.
+func MeterItemIDIn(vs ...int) predicate.MeterReading {
+	return predicate.MeterReading(sql.FieldIn(FieldMeterItemID, vs...))
+}
+
+// MeterItemIDNotIn applies the NotIn predicate on the "meter_item_id" field.
+func MeterItemIDNotIn(vs ...int) predicate.MeterReading {
+	return predicate.MeterReading(sql.FieldNotIn(FieldMeterItemID, vs...))
 }
 
 // PeriodMonthEQ applies the EQ predicate on the "period_month" field.
@@ -520,6 +545,29 @@ func HasRoom() predicate.MeterReading {
 func HasRoomWith(preds ...predicate.Room) predicate.MeterReading {
 	return predicate.MeterReading(func(s *sql.Selector) {
 		step := newRoomStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMeterItem applies the HasEdge predicate on the "meter_item" edge.
+func HasMeterItem() predicate.MeterReading {
+	return predicate.MeterReading(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, MeterItemTable, MeterItemColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMeterItemWith applies the HasEdge predicate on the "meter_item" edge with a given conditions (other predicates).
+func HasMeterItemWith(preds ...predicate.MeterItem) predicate.MeterReading {
+	return predicate.MeterReading(func(s *sql.Selector) {
+		step := newMeterItemStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

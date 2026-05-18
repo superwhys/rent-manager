@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/unit"
@@ -99,6 +100,27 @@ func (_u *MeterItemUpdate) SetNillableUnit(v *string) *MeterItemUpdate {
 	return _u
 }
 
+// SetUnitPrice sets the "unit_price" field.
+func (_u *MeterItemUpdate) SetUnitPrice(v int) *MeterItemUpdate {
+	_u.mutation.ResetUnitPrice()
+	_u.mutation.SetUnitPrice(v)
+	return _u
+}
+
+// SetNillableUnitPrice sets the "unit_price" field if the given value is not nil.
+func (_u *MeterItemUpdate) SetNillableUnitPrice(v *int) *MeterItemUpdate {
+	if v != nil {
+		_u.SetUnitPrice(*v)
+	}
+	return _u
+}
+
+// AddUnitPrice adds value to the "unit_price" field.
+func (_u *MeterItemUpdate) AddUnitPrice(v int) *MeterItemUpdate {
+	_u.mutation.AddUnitPrice(v)
+	return _u
+}
+
 // SetIsSystem sets the "is_system" field.
 func (_u *MeterItemUpdate) SetIsSystem(v bool) *MeterItemUpdate {
 	_u.mutation.SetIsSystem(v)
@@ -173,6 +195,21 @@ func (_u *MeterItemUpdate) AddRooms(v ...*Room) *MeterItemUpdate {
 	return _u.AddRoomIDs(ids...)
 }
 
+// AddMeterReadingIDs adds the "meter_readings" edge to the MeterReading entity by IDs.
+func (_u *MeterItemUpdate) AddMeterReadingIDs(ids ...int) *MeterItemUpdate {
+	_u.mutation.AddMeterReadingIDs(ids...)
+	return _u
+}
+
+// AddMeterReadings adds the "meter_readings" edges to the MeterReading entity.
+func (_u *MeterItemUpdate) AddMeterReadings(v ...*MeterReading) *MeterItemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMeterReadingIDs(ids...)
+}
+
 // AddUintIDs adds the "uint" edge to the Unit entity by IDs.
 func (_u *MeterItemUpdate) AddUintIDs(ids ...int) *MeterItemUpdate {
 	_u.mutation.AddUintIDs(ids...)
@@ -218,6 +255,27 @@ func (_u *MeterItemUpdate) RemoveRooms(v ...*Room) *MeterItemUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRoomIDs(ids...)
+}
+
+// ClearMeterReadings clears all "meter_readings" edges to the MeterReading entity.
+func (_u *MeterItemUpdate) ClearMeterReadings() *MeterItemUpdate {
+	_u.mutation.ClearMeterReadings()
+	return _u
+}
+
+// RemoveMeterReadingIDs removes the "meter_readings" edge to MeterReading entities by IDs.
+func (_u *MeterItemUpdate) RemoveMeterReadingIDs(ids ...int) *MeterItemUpdate {
+	_u.mutation.RemoveMeterReadingIDs(ids...)
+	return _u
+}
+
+// RemoveMeterReadings removes "meter_readings" edges to MeterReading entities.
+func (_u *MeterItemUpdate) RemoveMeterReadings(v ...*MeterReading) *MeterItemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMeterReadingIDs(ids...)
 }
 
 // ClearUint clears all "uint" edges to the Unit entity.
@@ -327,6 +385,12 @@ func (_u *MeterItemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Unit(); ok {
 		_spec.SetField(meteritem.FieldUnit, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.UnitPrice(); ok {
+		_spec.SetField(meteritem.FieldUnitPrice, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedUnitPrice(); ok {
+		_spec.AddField(meteritem.FieldUnitPrice, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.IsSystem(); ok {
 		_spec.SetField(meteritem.FieldIsSystem, field.TypeBool, value)
 	}
@@ -406,6 +470,51 @@ func (_u *MeterItemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MeterReadingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   meteritem.MeterReadingsTable,
+			Columns: []string{meteritem.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMeterReadingsIDs(); len(nodes) > 0 && !_u.mutation.MeterReadingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   meteritem.MeterReadingsTable,
+			Columns: []string{meteritem.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MeterReadingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   meteritem.MeterReadingsTable,
+			Columns: []string{meteritem.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -546,6 +655,27 @@ func (_u *MeterItemUpdateOne) SetNillableUnit(v *string) *MeterItemUpdateOne {
 	return _u
 }
 
+// SetUnitPrice sets the "unit_price" field.
+func (_u *MeterItemUpdateOne) SetUnitPrice(v int) *MeterItemUpdateOne {
+	_u.mutation.ResetUnitPrice()
+	_u.mutation.SetUnitPrice(v)
+	return _u
+}
+
+// SetNillableUnitPrice sets the "unit_price" field if the given value is not nil.
+func (_u *MeterItemUpdateOne) SetNillableUnitPrice(v *int) *MeterItemUpdateOne {
+	if v != nil {
+		_u.SetUnitPrice(*v)
+	}
+	return _u
+}
+
+// AddUnitPrice adds value to the "unit_price" field.
+func (_u *MeterItemUpdateOne) AddUnitPrice(v int) *MeterItemUpdateOne {
+	_u.mutation.AddUnitPrice(v)
+	return _u
+}
+
 // SetIsSystem sets the "is_system" field.
 func (_u *MeterItemUpdateOne) SetIsSystem(v bool) *MeterItemUpdateOne {
 	_u.mutation.SetIsSystem(v)
@@ -620,6 +750,21 @@ func (_u *MeterItemUpdateOne) AddRooms(v ...*Room) *MeterItemUpdateOne {
 	return _u.AddRoomIDs(ids...)
 }
 
+// AddMeterReadingIDs adds the "meter_readings" edge to the MeterReading entity by IDs.
+func (_u *MeterItemUpdateOne) AddMeterReadingIDs(ids ...int) *MeterItemUpdateOne {
+	_u.mutation.AddMeterReadingIDs(ids...)
+	return _u
+}
+
+// AddMeterReadings adds the "meter_readings" edges to the MeterReading entity.
+func (_u *MeterItemUpdateOne) AddMeterReadings(v ...*MeterReading) *MeterItemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMeterReadingIDs(ids...)
+}
+
 // AddUintIDs adds the "uint" edge to the Unit entity by IDs.
 func (_u *MeterItemUpdateOne) AddUintIDs(ids ...int) *MeterItemUpdateOne {
 	_u.mutation.AddUintIDs(ids...)
@@ -665,6 +810,27 @@ func (_u *MeterItemUpdateOne) RemoveRooms(v ...*Room) *MeterItemUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRoomIDs(ids...)
+}
+
+// ClearMeterReadings clears all "meter_readings" edges to the MeterReading entity.
+func (_u *MeterItemUpdateOne) ClearMeterReadings() *MeterItemUpdateOne {
+	_u.mutation.ClearMeterReadings()
+	return _u
+}
+
+// RemoveMeterReadingIDs removes the "meter_readings" edge to MeterReading entities by IDs.
+func (_u *MeterItemUpdateOne) RemoveMeterReadingIDs(ids ...int) *MeterItemUpdateOne {
+	_u.mutation.RemoveMeterReadingIDs(ids...)
+	return _u
+}
+
+// RemoveMeterReadings removes "meter_readings" edges to MeterReading entities.
+func (_u *MeterItemUpdateOne) RemoveMeterReadings(v ...*MeterReading) *MeterItemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMeterReadingIDs(ids...)
 }
 
 // ClearUint clears all "uint" edges to the Unit entity.
@@ -804,6 +970,12 @@ func (_u *MeterItemUpdateOne) sqlSave(ctx context.Context) (_node *MeterItem, er
 	if value, ok := _u.mutation.Unit(); ok {
 		_spec.SetField(meteritem.FieldUnit, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.UnitPrice(); ok {
+		_spec.SetField(meteritem.FieldUnitPrice, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedUnitPrice(); ok {
+		_spec.AddField(meteritem.FieldUnitPrice, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.IsSystem(); ok {
 		_spec.SetField(meteritem.FieldIsSystem, field.TypeBool, value)
 	}
@@ -883,6 +1055,51 @@ func (_u *MeterItemUpdateOne) sqlSave(ctx context.Context) (_node *MeterItem, er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MeterReadingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   meteritem.MeterReadingsTable,
+			Columns: []string{meteritem.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMeterReadingsIDs(); len(nodes) > 0 && !_u.mutation.MeterReadingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   meteritem.MeterReadingsTable,
+			Columns: []string{meteritem.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MeterReadingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   meteritem.MeterReadingsTable,
+			Columns: []string{meteritem.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

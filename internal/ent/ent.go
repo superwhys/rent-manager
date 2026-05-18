@@ -17,6 +17,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
+	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
@@ -87,6 +88,7 @@ func checkColumn(t, c string) error {
 			meterreading.Table:    meterreading.ValidColumn,
 			permission.Table:      permission.ValidColumn,
 			permissiongroup.Table: permissiongroup.ValidColumn,
+			rentbill.Table:        rentbill.ValidColumn,
 			role.Table:            role.ValidColumn,
 			room.Table:            room.ValidColumn,
 			roomtype.Table:        roomtype.ValidColumn,

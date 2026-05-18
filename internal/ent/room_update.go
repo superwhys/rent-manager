@@ -14,6 +14,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
+	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 	"github.com/superwhys/rent-manager-server/internal/ent/unit"
@@ -217,6 +218,21 @@ func (_u *RoomUpdate) AddMeterReadings(v ...*MeterReading) *RoomUpdate {
 	return _u.AddMeterReadingIDs(ids...)
 }
 
+// AddRentBillIDs adds the "rent_bills" edge to the RentBill entity by IDs.
+func (_u *RoomUpdate) AddRentBillIDs(ids ...int) *RoomUpdate {
+	_u.mutation.AddRentBillIDs(ids...)
+	return _u
+}
+
+// AddRentBills adds the "rent_bills" edges to the RentBill entity.
+func (_u *RoomUpdate) AddRentBills(v ...*RentBill) *RoomUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRentBillIDs(ids...)
+}
+
 // Mutation returns the RoomMutation object of the builder.
 func (_u *RoomUpdate) Mutation() *RoomMutation {
 	return _u.mutation
@@ -274,6 +290,27 @@ func (_u *RoomUpdate) RemoveMeterReadings(v ...*MeterReading) *RoomUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMeterReadingIDs(ids...)
+}
+
+// ClearRentBills clears all "rent_bills" edges to the RentBill entity.
+func (_u *RoomUpdate) ClearRentBills() *RoomUpdate {
+	_u.mutation.ClearRentBills()
+	return _u
+}
+
+// RemoveRentBillIDs removes the "rent_bills" edge to RentBill entities by IDs.
+func (_u *RoomUpdate) RemoveRentBillIDs(ids ...int) *RoomUpdate {
+	_u.mutation.RemoveRentBillIDs(ids...)
+	return _u
+}
+
+// RemoveRentBills removes "rent_bills" edges to RentBill entities.
+func (_u *RoomUpdate) RemoveRentBills(v ...*RentBill) *RoomUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRentBillIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -521,6 +558,51 @@ func (_u *RoomUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.RentBillsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.RentBillsTable,
+			Columns: []string{room.RentBillsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rentbill.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRentBillsIDs(); len(nodes) > 0 && !_u.mutation.RentBillsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.RentBillsTable,
+			Columns: []string{room.RentBillsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rentbill.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RentBillsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.RentBillsTable,
+			Columns: []string{room.RentBillsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rentbill.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{room.Label}
@@ -726,6 +808,21 @@ func (_u *RoomUpdateOne) AddMeterReadings(v ...*MeterReading) *RoomUpdateOne {
 	return _u.AddMeterReadingIDs(ids...)
 }
 
+// AddRentBillIDs adds the "rent_bills" edge to the RentBill entity by IDs.
+func (_u *RoomUpdateOne) AddRentBillIDs(ids ...int) *RoomUpdateOne {
+	_u.mutation.AddRentBillIDs(ids...)
+	return _u
+}
+
+// AddRentBills adds the "rent_bills" edges to the RentBill entity.
+func (_u *RoomUpdateOne) AddRentBills(v ...*RentBill) *RoomUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRentBillIDs(ids...)
+}
+
 // Mutation returns the RoomMutation object of the builder.
 func (_u *RoomUpdateOne) Mutation() *RoomMutation {
 	return _u.mutation
@@ -783,6 +880,27 @@ func (_u *RoomUpdateOne) RemoveMeterReadings(v ...*MeterReading) *RoomUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMeterReadingIDs(ids...)
+}
+
+// ClearRentBills clears all "rent_bills" edges to the RentBill entity.
+func (_u *RoomUpdateOne) ClearRentBills() *RoomUpdateOne {
+	_u.mutation.ClearRentBills()
+	return _u
+}
+
+// RemoveRentBillIDs removes the "rent_bills" edge to RentBill entities by IDs.
+func (_u *RoomUpdateOne) RemoveRentBillIDs(ids ...int) *RoomUpdateOne {
+	_u.mutation.RemoveRentBillIDs(ids...)
+	return _u
+}
+
+// RemoveRentBills removes "rent_bills" edges to RentBill entities.
+func (_u *RoomUpdateOne) RemoveRentBills(v ...*RentBill) *RoomUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRentBillIDs(ids...)
 }
 
 // Where appends a list predicates to the RoomUpdate builder.
@@ -1053,6 +1171,51 @@ func (_u *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RentBillsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.RentBillsTable,
+			Columns: []string{room.RentBillsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rentbill.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRentBillsIDs(); len(nodes) > 0 && !_u.mutation.RentBillsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.RentBillsTable,
+			Columns: []string{room.RentBillsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rentbill.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RentBillsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.RentBillsTable,
+			Columns: []string{room.RentBillsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rentbill.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

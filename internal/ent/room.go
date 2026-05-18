@@ -55,9 +55,11 @@ type RoomEdges struct {
 	MeterItems []*MeterItem `json:"meter_items,omitempty"`
 	// MeterReadings holds the value of the meter_readings edge.
 	MeterReadings []*MeterReading `json:"meter_readings,omitempty"`
+	// RentBills holds the value of the rent_bills edge.
+	RentBills []*RentBill `json:"rent_bills,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // UnitOrErr returns the Unit value or an error if the edge
@@ -98,6 +100,15 @@ func (e RoomEdges) MeterReadingsOrErr() ([]*MeterReading, error) {
 		return e.MeterReadings, nil
 	}
 	return nil, &NotLoadedError{edge: "meter_readings"}
+}
+
+// RentBillsOrErr returns the RentBills value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoomEdges) RentBillsOrErr() ([]*RentBill, error) {
+	if e.loadedTypes[4] {
+		return e.RentBills, nil
+	}
+	return nil, &NotLoadedError{edge: "rent_bills"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -226,6 +237,11 @@ func (_m *Room) QueryMeterItems() *MeterItemQuery {
 // QueryMeterReadings queries the "meter_readings" edge of the Room entity.
 func (_m *Room) QueryMeterReadings() *MeterReadingQuery {
 	return NewRoomClient(_m.config).QueryMeterReadings(_m)
+}
+
+// QueryRentBills queries the "rent_bills" edge of the Room entity.
+func (_m *Room) QueryRentBills() *RentBillQuery {
+	return NewRoomClient(_m.config).QueryRentBills(_m)
 }
 
 // Update returns a builder for updating this Room.

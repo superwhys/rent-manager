@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
@@ -39,6 +40,20 @@ func (_u *MeterReadingUpdate) SetRoomID(v int) *MeterReadingUpdate {
 func (_u *MeterReadingUpdate) SetNillableRoomID(v *int) *MeterReadingUpdate {
 	if v != nil {
 		_u.SetRoomID(*v)
+	}
+	return _u
+}
+
+// SetMeterItemID sets the "meter_item_id" field.
+func (_u *MeterReadingUpdate) SetMeterItemID(v int) *MeterReadingUpdate {
+	_u.mutation.SetMeterItemID(v)
+	return _u
+}
+
+// SetNillableMeterItemID sets the "meter_item_id" field if the given value is not nil.
+func (_u *MeterReadingUpdate) SetNillableMeterItemID(v *int) *MeterReadingUpdate {
+	if v != nil {
+		_u.SetMeterItemID(*v)
 	}
 	return _u
 }
@@ -212,6 +227,11 @@ func (_u *MeterReadingUpdate) SetRoom(v *Room) *MeterReadingUpdate {
 	return _u.SetRoomID(v.ID)
 }
 
+// SetMeterItem sets the "meter_item" edge to the MeterItem entity.
+func (_u *MeterReadingUpdate) SetMeterItem(v *MeterItem) *MeterReadingUpdate {
+	return _u.SetMeterItemID(v.ID)
+}
+
 // Mutation returns the MeterReadingMutation object of the builder.
 func (_u *MeterReadingUpdate) Mutation() *MeterReadingMutation {
 	return _u.mutation
@@ -220,6 +240,12 @@ func (_u *MeterReadingUpdate) Mutation() *MeterReadingMutation {
 // ClearRoom clears the "room" edge to the Room entity.
 func (_u *MeterReadingUpdate) ClearRoom() *MeterReadingUpdate {
 	_u.mutation.ClearRoom()
+	return _u
+}
+
+// ClearMeterItem clears the "meter_item" edge to the MeterItem entity.
+func (_u *MeterReadingUpdate) ClearMeterItem() *MeterReadingUpdate {
+	_u.mutation.ClearMeterItem()
 	return _u
 }
 
@@ -264,6 +290,9 @@ func (_u *MeterReadingUpdate) check() error {
 	}
 	if _u.mutation.RoomCleared() && len(_u.mutation.RoomIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MeterReading.room"`)
+	}
+	if _u.mutation.MeterItemCleared() && len(_u.mutation.MeterItemIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "MeterReading.meter_item"`)
 	}
 	return nil
 }
@@ -357,6 +386,35 @@ func (_u *MeterReadingUpdate) sqlSave(ctx context.Context) (_node int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.MeterItemCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   meterreading.MeterItemTable,
+			Columns: []string{meterreading.MeterItemColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MeterItemIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   meterreading.MeterItemTable,
+			Columns: []string{meterreading.MeterItemColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{meterreading.Label}
@@ -387,6 +445,20 @@ func (_u *MeterReadingUpdateOne) SetRoomID(v int) *MeterReadingUpdateOne {
 func (_u *MeterReadingUpdateOne) SetNillableRoomID(v *int) *MeterReadingUpdateOne {
 	if v != nil {
 		_u.SetRoomID(*v)
+	}
+	return _u
+}
+
+// SetMeterItemID sets the "meter_item_id" field.
+func (_u *MeterReadingUpdateOne) SetMeterItemID(v int) *MeterReadingUpdateOne {
+	_u.mutation.SetMeterItemID(v)
+	return _u
+}
+
+// SetNillableMeterItemID sets the "meter_item_id" field if the given value is not nil.
+func (_u *MeterReadingUpdateOne) SetNillableMeterItemID(v *int) *MeterReadingUpdateOne {
+	if v != nil {
+		_u.SetMeterItemID(*v)
 	}
 	return _u
 }
@@ -560,6 +632,11 @@ func (_u *MeterReadingUpdateOne) SetRoom(v *Room) *MeterReadingUpdateOne {
 	return _u.SetRoomID(v.ID)
 }
 
+// SetMeterItem sets the "meter_item" edge to the MeterItem entity.
+func (_u *MeterReadingUpdateOne) SetMeterItem(v *MeterItem) *MeterReadingUpdateOne {
+	return _u.SetMeterItemID(v.ID)
+}
+
 // Mutation returns the MeterReadingMutation object of the builder.
 func (_u *MeterReadingUpdateOne) Mutation() *MeterReadingMutation {
 	return _u.mutation
@@ -568,6 +645,12 @@ func (_u *MeterReadingUpdateOne) Mutation() *MeterReadingMutation {
 // ClearRoom clears the "room" edge to the Room entity.
 func (_u *MeterReadingUpdateOne) ClearRoom() *MeterReadingUpdateOne {
 	_u.mutation.ClearRoom()
+	return _u
+}
+
+// ClearMeterItem clears the "meter_item" edge to the MeterItem entity.
+func (_u *MeterReadingUpdateOne) ClearMeterItem() *MeterReadingUpdateOne {
+	_u.mutation.ClearMeterItem()
 	return _u
 }
 
@@ -625,6 +708,9 @@ func (_u *MeterReadingUpdateOne) check() error {
 	}
 	if _u.mutation.RoomCleared() && len(_u.mutation.RoomIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MeterReading.room"`)
+	}
+	if _u.mutation.MeterItemCleared() && len(_u.mutation.MeterItemIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "MeterReading.meter_item"`)
 	}
 	return nil
 }
@@ -728,6 +814,35 @@ func (_u *MeterReadingUpdateOne) sqlSave(ctx context.Context) (_node *MeterReadi
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MeterItemCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   meterreading.MeterItemTable,
+			Columns: []string{meterreading.MeterItemColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MeterItemIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   meterreading.MeterItemTable,
+			Columns: []string{meterreading.MeterItemColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 )
@@ -24,6 +25,12 @@ type MeterReadingCreate struct {
 // SetRoomID sets the "room_id" field.
 func (_c *MeterReadingCreate) SetRoomID(v int) *MeterReadingCreate {
 	_c.mutation.SetRoomID(v)
+	return _c
+}
+
+// SetMeterItemID sets the "meter_item_id" field.
+func (_c *MeterReadingCreate) SetMeterItemID(v int) *MeterReadingCreate {
+	_c.mutation.SetMeterItemID(v)
 	return _c
 }
 
@@ -120,6 +127,11 @@ func (_c *MeterReadingCreate) SetRoom(v *Room) *MeterReadingCreate {
 	return _c.SetRoomID(v.ID)
 }
 
+// SetMeterItem sets the "meter_item" edge to the MeterItem entity.
+func (_c *MeterReadingCreate) SetMeterItem(v *MeterItem) *MeterReadingCreate {
+	return _c.SetMeterItemID(v.ID)
+}
+
 // Mutation returns the MeterReadingMutation object of the builder.
 func (_c *MeterReadingCreate) Mutation() *MeterReadingMutation {
 	return _c.mutation
@@ -166,6 +178,9 @@ func (_c *MeterReadingCreate) check() error {
 	if _, ok := _c.mutation.RoomID(); !ok {
 		return &ValidationError{Name: "room_id", err: errors.New(`ent: missing required field "MeterReading.room_id"`)}
 	}
+	if _, ok := _c.mutation.MeterItemID(); !ok {
+		return &ValidationError{Name: "meter_item_id", err: errors.New(`ent: missing required field "MeterReading.meter_item_id"`)}
+	}
 	if _, ok := _c.mutation.PeriodMonth(); !ok {
 		return &ValidationError{Name: "period_month", err: errors.New(`ent: missing required field "MeterReading.period_month"`)}
 	}
@@ -190,6 +205,9 @@ func (_c *MeterReadingCreate) check() error {
 	}
 	if len(_c.mutation.RoomIDs()) == 0 {
 		return &ValidationError{Name: "room", err: errors.New(`ent: missing required edge "MeterReading.room"`)}
+	}
+	if len(_c.mutation.MeterItemIDs()) == 0 {
+		return &ValidationError{Name: "meter_item", err: errors.New(`ent: missing required edge "MeterReading.meter_item"`)}
 	}
 	return nil
 }
@@ -264,6 +282,23 @@ func (_c *MeterReadingCreate) createSpec() (*MeterReading, *sqlgraph.CreateSpec)
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.RoomID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MeterItemIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   meterreading.MeterItemTable,
+			Columns: []string{meterreading.MeterItemColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.MeterItemID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

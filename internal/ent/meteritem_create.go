@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/unit"
 )
@@ -83,6 +84,20 @@ func (_c *MeterItemCreate) SetUnit(v string) *MeterItemCreate {
 	return _c
 }
 
+// SetUnitPrice sets the "unit_price" field.
+func (_c *MeterItemCreate) SetUnitPrice(v int) *MeterItemCreate {
+	_c.mutation.SetUnitPrice(v)
+	return _c
+}
+
+// SetNillableUnitPrice sets the "unit_price" field if the given value is not nil.
+func (_c *MeterItemCreate) SetNillableUnitPrice(v *int) *MeterItemCreate {
+	if v != nil {
+		_c.SetUnitPrice(*v)
+	}
+	return _c
+}
+
 // SetIsSystem sets the "is_system" field.
 func (_c *MeterItemCreate) SetIsSystem(v bool) *MeterItemCreate {
 	_c.mutation.SetIsSystem(v)
@@ -151,6 +166,21 @@ func (_c *MeterItemCreate) AddRooms(v ...*Room) *MeterItemCreate {
 	return _c.AddRoomIDs(ids...)
 }
 
+// AddMeterReadingIDs adds the "meter_readings" edge to the MeterReading entity by IDs.
+func (_c *MeterItemCreate) AddMeterReadingIDs(ids ...int) *MeterItemCreate {
+	_c.mutation.AddMeterReadingIDs(ids...)
+	return _c
+}
+
+// AddMeterReadings adds the "meter_readings" edges to the MeterReading entity.
+func (_c *MeterItemCreate) AddMeterReadings(v ...*MeterReading) *MeterItemCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMeterReadingIDs(ids...)
+}
+
 // AddUintIDs adds the "uint" edge to the Unit entity by IDs.
 func (_c *MeterItemCreate) AddUintIDs(ids ...int) *MeterItemCreate {
 	_c.mutation.AddUintIDs(ids...)
@@ -209,6 +239,10 @@ func (_c *MeterItemCreate) defaults() {
 		v := meteritem.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.UnitPrice(); !ok {
+		v := meteritem.DefaultUnitPrice
+		_c.mutation.SetUnitPrice(v)
+	}
 	if _, ok := _c.mutation.IsSystem(); !ok {
 		v := meteritem.DefaultIsSystem
 		_c.mutation.SetIsSystem(v)
@@ -245,6 +279,9 @@ func (_c *MeterItemCreate) check() error {
 		if err := meteritem.UnitValidator(v); err != nil {
 			return &ValidationError{Name: "unit", err: fmt.Errorf(`ent: validator failed for field "MeterItem.unit": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.UnitPrice(); !ok {
+		return &ValidationError{Name: "unit_price", err: errors.New(`ent: missing required field "MeterItem.unit_price"`)}
 	}
 	if _, ok := _c.mutation.IsSystem(); !ok {
 		return &ValidationError{Name: "is_system", err: errors.New(`ent: missing required field "MeterItem.is_system"`)}
@@ -306,6 +343,10 @@ func (_c *MeterItemCreate) createSpec() (*MeterItem, *sqlgraph.CreateSpec) {
 		_spec.SetField(meteritem.FieldUnit, field.TypeString, value)
 		_node.Unit = value
 	}
+	if value, ok := _c.mutation.UnitPrice(); ok {
+		_spec.SetField(meteritem.FieldUnitPrice, field.TypeInt, value)
+		_node.UnitPrice = value
+	}
 	if value, ok := _c.mutation.IsSystem(); ok {
 		_spec.SetField(meteritem.FieldIsSystem, field.TypeBool, value)
 		_node.IsSystem = value
@@ -344,6 +385,22 @@ func (_c *MeterItemCreate) createSpec() (*MeterItem, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MeterReadingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   meteritem.MeterReadingsTable,
+			Columns: []string{meteritem.MeterReadingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

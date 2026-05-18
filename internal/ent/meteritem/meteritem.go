@@ -27,6 +27,8 @@ const (
 	FieldCode = "code"
 	// FieldUnit holds the string denoting the unit field in the database.
 	FieldUnit = "unit"
+	// FieldUnitPrice holds the string denoting the unit_price field in the database.
+	FieldUnitPrice = "unit_price"
 	// FieldIsSystem holds the string denoting the is_system field in the database.
 	FieldIsSystem = "is_system"
 	// FieldCalcType holds the string denoting the calc_type field in the database.
@@ -37,6 +39,8 @@ const (
 	EdgeAccounts = "accounts"
 	// EdgeRooms holds the string denoting the rooms edge name in mutations.
 	EdgeRooms = "rooms"
+	// EdgeMeterReadings holds the string denoting the meter_readings edge name in mutations.
+	EdgeMeterReadings = "meter_readings"
 	// EdgeUint holds the string denoting the uint edge name in mutations.
 	EdgeUint = "uint"
 	// Table holds the table name of the meteritem in the database.
@@ -53,6 +57,13 @@ const (
 	// RoomsInverseTable is the table name for the Room entity.
 	// It exists in this package in order to avoid circular dependency with the "room" package.
 	RoomsInverseTable = "rooms"
+	// MeterReadingsTable is the table that holds the meter_readings relation/edge.
+	MeterReadingsTable = "meter_readings"
+	// MeterReadingsInverseTable is the table name for the MeterReading entity.
+	// It exists in this package in order to avoid circular dependency with the "meterreading" package.
+	MeterReadingsInverseTable = "meter_readings"
+	// MeterReadingsColumn is the table column denoting the meter_readings relation/edge.
+	MeterReadingsColumn = "meter_item_id"
 	// UintTable is the table that holds the uint relation/edge. The primary key declared below.
 	UintTable = "unit_meter_items"
 	// UintInverseTable is the table name for the Unit entity.
@@ -69,6 +80,7 @@ var Columns = []string{
 	FieldAccountID,
 	FieldCode,
 	FieldUnit,
+	FieldUnitPrice,
 	FieldIsSystem,
 	FieldCalcType,
 	FieldRemark,
@@ -104,6 +116,8 @@ var (
 	CodeValidator func(string) error
 	// UnitValidator is a validator for the "unit" field. It is called by the builders before save.
 	UnitValidator func(string) error
+	// DefaultUnitPrice holds the default value on creation for the "unit_price" field.
+	DefaultUnitPrice int
 	// DefaultIsSystem holds the default value on creation for the "is_system" field.
 	DefaultIsSystem bool
 )
@@ -172,6 +186,11 @@ func ByUnit(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUnit, opts...).ToFunc()
 }
 
+// ByUnitPrice orders the results by the unit_price field.
+func ByUnitPrice(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUnitPrice, opts...).ToFunc()
+}
+
 // ByIsSystem orders the results by the is_system field.
 func ByIsSystem(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsSystem, opts...).ToFunc()
@@ -208,6 +227,20 @@ func ByRooms(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByMeterReadingsCount orders the results by meter_readings count.
+func ByMeterReadingsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMeterReadingsStep(), opts...)
+	}
+}
+
+// ByMeterReadings orders the results by meter_readings terms.
+func ByMeterReadings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMeterReadingsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUintCount orders the results by uint count.
 func ByUintCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -233,6 +266,13 @@ func newRoomsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoomsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, RoomsTable, RoomsPrimaryKey...),
+	)
+}
+func newMeterReadingsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MeterReadingsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MeterReadingsTable, MeterReadingsColumn),
 	)
 }
 func newUintStep() *sqlgraph.Step {

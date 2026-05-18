@@ -20,6 +20,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
+	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
@@ -42,6 +43,8 @@ type Client struct {
 	Permission *PermissionClient
 	// PermissionGroup is the client for interacting with the PermissionGroup builders.
 	PermissionGroup *PermissionGroupClient
+	// RentBill is the client for interacting with the RentBill builders.
+	RentBill *RentBillClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
 	// Room is the client for interacting with the Room builders.
@@ -68,6 +71,7 @@ func (c *Client) init() {
 	c.MeterReading = NewMeterReadingClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
 	c.PermissionGroup = NewPermissionGroupClient(c.config)
+	c.RentBill = NewRentBillClient(c.config)
 	c.Role = NewRoleClient(c.config)
 	c.Room = NewRoomClient(c.config)
 	c.RoomType = NewRoomTypeClient(c.config)
@@ -170,6 +174,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		MeterReading:    NewMeterReadingClient(cfg),
 		Permission:      NewPermissionClient(cfg),
 		PermissionGroup: NewPermissionGroupClient(cfg),
+		RentBill:        NewRentBillClient(cfg),
 		Role:            NewRoleClient(cfg),
 		Room:            NewRoomClient(cfg),
 		RoomType:        NewRoomTypeClient(cfg),
@@ -199,6 +204,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		MeterReading:    NewMeterReadingClient(cfg),
 		Permission:      NewPermissionClient(cfg),
 		PermissionGroup: NewPermissionGroupClient(cfg),
+		RentBill:        NewRentBillClient(cfg),
 		Role:            NewRoleClient(cfg),
 		Room:            NewRoomClient(cfg),
 		RoomType:        NewRoomTypeClient(cfg),
@@ -233,8 +239,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Account, c.MeterItem, c.MeterReading, c.Permission, c.PermissionGroup, c.Role,
-		c.Room, c.RoomType, c.Unit, c.UnitAccountRole,
+		c.Account, c.MeterItem, c.MeterReading, c.Permission, c.PermissionGroup,
+		c.RentBill, c.Role, c.Room, c.RoomType, c.Unit, c.UnitAccountRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -244,8 +250,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Account, c.MeterItem, c.MeterReading, c.Permission, c.PermissionGroup, c.Role,
-		c.Room, c.RoomType, c.Unit, c.UnitAccountRole,
+		c.Account, c.MeterItem, c.MeterReading, c.Permission, c.PermissionGroup,
+		c.RentBill, c.Role, c.Room, c.RoomType, c.Unit, c.UnitAccountRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -264,6 +270,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Permission.mutate(ctx, m)
 	case *PermissionGroupMutation:
 		return c.PermissionGroup.mutate(ctx, m)
+	case *RentBillMutation:
+		return c.RentBill.mutate(ctx, m)
 	case *RoleMutation:
 		return c.Role.mutate(ctx, m)
 	case *RoomMutation:
@@ -648,6 +656,22 @@ func (c *MeterItemClient) QueryRooms(_m *MeterItem) *RoomQuery {
 	return query
 }
 
+// QueryMeterReadings queries the meter_readings edge of a MeterItem.
+func (c *MeterItemClient) QueryMeterReadings(_m *MeterItem) *MeterReadingQuery {
+	query := (&MeterReadingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(meteritem.Table, meteritem.FieldID, id),
+			sqlgraph.To(meterreading.Table, meterreading.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, meteritem.MeterReadingsTable, meteritem.MeterReadingsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUint queries the uint edge of a MeterItem.
 func (c *MeterItemClient) QueryUint(_m *MeterItem) *UnitQuery {
 	query := (&UnitClient{config: c.config}).Query()
@@ -806,6 +830,22 @@ func (c *MeterReadingClient) QueryRoom(_m *MeterReading) *RoomQuery {
 			sqlgraph.From(meterreading.Table, meterreading.FieldID, id),
 			sqlgraph.To(room.Table, room.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, meterreading.RoomTable, meterreading.RoomColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMeterItem queries the meter_item edge of a MeterReading.
+func (c *MeterReadingClient) QueryMeterItem(_m *MeterReading) *MeterItemQuery {
+	query := (&MeterItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(meterreading.Table, meterreading.FieldID, id),
+			sqlgraph.To(meteritem.Table, meteritem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, meterreading.MeterItemTable, meterreading.MeterItemColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -1149,6 +1189,155 @@ func (c *PermissionGroupClient) mutate(ctx context.Context, m *PermissionGroupMu
 		return (&PermissionGroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown PermissionGroup mutation op: %q", m.Op())
+	}
+}
+
+// RentBillClient is a client for the RentBill schema.
+type RentBillClient struct {
+	config
+}
+
+// NewRentBillClient returns a client for the RentBill from the given config.
+func NewRentBillClient(c config) *RentBillClient {
+	return &RentBillClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rentbill.Hooks(f(g(h())))`.
+func (c *RentBillClient) Use(hooks ...Hook) {
+	c.hooks.RentBill = append(c.hooks.RentBill, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `rentbill.Intercept(f(g(h())))`.
+func (c *RentBillClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RentBill = append(c.inters.RentBill, interceptors...)
+}
+
+// Create returns a builder for creating a RentBill entity.
+func (c *RentBillClient) Create() *RentBillCreate {
+	mutation := newRentBillMutation(c.config, OpCreate)
+	return &RentBillCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RentBill entities.
+func (c *RentBillClient) CreateBulk(builders ...*RentBillCreate) *RentBillCreateBulk {
+	return &RentBillCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RentBillClient) MapCreateBulk(slice any, setFunc func(*RentBillCreate, int)) *RentBillCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RentBillCreateBulk{err: fmt.Errorf("calling to RentBillClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RentBillCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RentBillCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RentBill.
+func (c *RentBillClient) Update() *RentBillUpdate {
+	mutation := newRentBillMutation(c.config, OpUpdate)
+	return &RentBillUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RentBillClient) UpdateOne(_m *RentBill) *RentBillUpdateOne {
+	mutation := newRentBillMutation(c.config, OpUpdateOne, withRentBill(_m))
+	return &RentBillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RentBillClient) UpdateOneID(id int) *RentBillUpdateOne {
+	mutation := newRentBillMutation(c.config, OpUpdateOne, withRentBillID(id))
+	return &RentBillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RentBill.
+func (c *RentBillClient) Delete() *RentBillDelete {
+	mutation := newRentBillMutation(c.config, OpDelete)
+	return &RentBillDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RentBillClient) DeleteOne(_m *RentBill) *RentBillDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RentBillClient) DeleteOneID(id int) *RentBillDeleteOne {
+	builder := c.Delete().Where(rentbill.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RentBillDeleteOne{builder}
+}
+
+// Query returns a query builder for RentBill.
+func (c *RentBillClient) Query() *RentBillQuery {
+	return &RentBillQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRentBill},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RentBill entity by its id.
+func (c *RentBillClient) Get(ctx context.Context, id int) (*RentBill, error) {
+	return c.Query().Where(rentbill.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RentBillClient) GetX(ctx context.Context, id int) *RentBill {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRoom queries the room edge of a RentBill.
+func (c *RentBillClient) QueryRoom(_m *RentBill) *RoomQuery {
+	query := (&RoomClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(rentbill.Table, rentbill.FieldID, id),
+			sqlgraph.To(room.Table, room.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, rentbill.RoomTable, rentbill.RoomColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *RentBillClient) Hooks() []Hook {
+	return c.hooks.RentBill
+}
+
+// Interceptors returns the client interceptors.
+func (c *RentBillClient) Interceptors() []Interceptor {
+	return c.inters.RentBill
+}
+
+func (c *RentBillClient) mutate(ctx context.Context, m *RentBillMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RentBillCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RentBillUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RentBillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RentBillDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RentBill mutation op: %q", m.Op())
 	}
 }
 
@@ -1498,6 +1687,22 @@ func (c *RoomClient) QueryMeterReadings(_m *Room) *MeterReadingQuery {
 			sqlgraph.From(room.Table, room.FieldID, id),
 			sqlgraph.To(meterreading.Table, meterreading.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, room.MeterReadingsTable, room.MeterReadingsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRentBills queries the rent_bills edge of a Room.
+func (c *RoomClient) QueryRentBills(_m *Room) *RentBillQuery {
+	query := (&RentBillClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(room.Table, room.FieldID, id),
+			sqlgraph.To(rentbill.Table, rentbill.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, room.RentBillsTable, room.RentBillsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2092,11 +2297,11 @@ func (c *UnitAccountRoleClient) mutate(ctx context.Context, m *UnitAccountRoleMu
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Account, MeterItem, MeterReading, Permission, PermissionGroup, Role, Room,
-		RoomType, Unit, UnitAccountRole []ent.Hook
+		Account, MeterItem, MeterReading, Permission, PermissionGroup, RentBill, Role,
+		Room, RoomType, Unit, UnitAccountRole []ent.Hook
 	}
 	inters struct {
-		Account, MeterItem, MeterReading, Permission, PermissionGroup, Role, Room,
-		RoomType, Unit, UnitAccountRole []ent.Interceptor
+		Account, MeterItem, MeterReading, Permission, PermissionGroup, RentBill, Role,
+		Room, RoomType, Unit, UnitAccountRole []ent.Interceptor
 	}
 )

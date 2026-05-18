@@ -12,6 +12,7 @@ type MeterItem struct {
 	AccountID int
 	Code      string
 	Unit      string
+	UnitPrice int
 	IsSystem  bool
 	CalcType  string
 	Remark    *string
@@ -24,6 +25,7 @@ func NewMeterItem(params CreateParams) (*MeterItem, error) {
 		AccountID: params.AccountID,
 		Code:      strings.TrimSpace(params.Code),
 		Unit:      strings.TrimSpace(params.Unit),
+		UnitPrice: params.UnitPrice,
 		CalcType:  normalizeCalcType(params.CalcType),
 		Remark:    normalizeRemark(params.Remark),
 	}
@@ -38,6 +40,7 @@ func (i *MeterItem) Update(params UpdateParams) error {
 	i.AccountID = params.AccountID
 	i.Code = strings.TrimSpace(params.Code)
 	i.Unit = strings.TrimSpace(params.Unit)
+	i.UnitPrice = params.UnitPrice
 	i.CalcType = normalizeCalcType(params.CalcType)
 	i.Remark = normalizeRemark(params.Remark)
 	return i.Validate()
@@ -52,6 +55,9 @@ func (i *MeterItem) Validate() error {
 	}
 	if i.Unit == "" {
 		return ErrUnitRequired
+	}
+	if i.UnitPrice < 0 {
+		return ErrInvalidUnitPrice
 	}
 	switch i.CalcType {
 	case consts.CalcTypeDifference, consts.CalcTypeDirect:

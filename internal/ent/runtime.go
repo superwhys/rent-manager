@@ -10,6 +10,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/permission"
 	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
+	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
 	"github.com/superwhys/rent-manager-server/internal/ent/role"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
@@ -136,14 +137,18 @@ func init() {
 	meteritemDescUnit := meteritemFields[1].Descriptor()
 	// meteritem.UnitValidator is a validator for the "unit" field. It is called by the builders before save.
 	meteritem.UnitValidator = meteritemDescUnit.Validators[0].(func(string) error)
+	// meteritemDescUnitPrice is the schema descriptor for unit_price field.
+	meteritemDescUnitPrice := meteritemFields[2].Descriptor()
+	// meteritem.DefaultUnitPrice holds the default value on creation for the unit_price field.
+	meteritem.DefaultUnitPrice = meteritemDescUnitPrice.Default.(int)
 	// meteritemDescIsSystem is the schema descriptor for is_system field.
-	meteritemDescIsSystem := meteritemFields[2].Descriptor()
+	meteritemDescIsSystem := meteritemFields[3].Descriptor()
 	// meteritem.DefaultIsSystem holds the default value on creation for the is_system field.
 	meteritem.DefaultIsSystem = meteritemDescIsSystem.Default.(bool)
 	meterreadingFields := schema.MeterReading{}.Fields()
 	_ = meterreadingFields
 	// meterreadingDescPeriodMonth is the schema descriptor for period_month field.
-	meterreadingDescPeriodMonth := meterreadingFields[1].Descriptor()
+	meterreadingDescPeriodMonth := meterreadingFields[2].Descriptor()
 	// meterreading.PeriodMonthValidator is a validator for the "period_month" field. It is called by the builders before save.
 	meterreading.PeriodMonthValidator = meterreadingDescPeriodMonth.Validators[0].(func(string) error)
 	permissionMixin := schema.Permission{}.Mixin()
@@ -282,6 +287,37 @@ func init() {
 	permissiongroupDescIsActive := permissiongroupFields[4].Descriptor()
 	// permissiongroup.DefaultIsActive holds the default value on creation for the is_active field.
 	permissiongroup.DefaultIsActive = permissiongroupDescIsActive.Default.(bool)
+	rentbillMixin := schema.RentBill{}.Mixin()
+	rentbillMixinFields0 := rentbillMixin[0].Fields()
+	_ = rentbillMixinFields0
+	rentbillFields := schema.RentBill{}.Fields()
+	_ = rentbillFields
+	// rentbillDescCreatedAt is the schema descriptor for created_at field.
+	rentbillDescCreatedAt := rentbillMixinFields0[0].Descriptor()
+	// rentbill.DefaultCreatedAt holds the default value on creation for the created_at field.
+	rentbill.DefaultCreatedAt = rentbillDescCreatedAt.Default.(func() time.Time)
+	// rentbillDescUpdatedAt is the schema descriptor for updated_at field.
+	rentbillDescUpdatedAt := rentbillMixinFields0[1].Descriptor()
+	// rentbill.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	rentbill.DefaultUpdatedAt = rentbillDescUpdatedAt.Default.(func() time.Time)
+	// rentbill.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	rentbill.UpdateDefaultUpdatedAt = rentbillDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// rentbillDescPeriodMonth is the schema descriptor for period_month field.
+	rentbillDescPeriodMonth := rentbillFields[1].Descriptor()
+	// rentbill.PeriodMonthValidator is a validator for the "period_month" field. It is called by the builders before save.
+	rentbill.PeriodMonthValidator = rentbillDescPeriodMonth.Validators[0].(func(string) error)
+	// rentbillDescBaseRent is the schema descriptor for base_rent field.
+	rentbillDescBaseRent := rentbillFields[2].Descriptor()
+	// rentbill.DefaultBaseRent holds the default value on creation for the base_rent field.
+	rentbill.DefaultBaseRent = rentbillDescBaseRent.Default.(int)
+	// rentbillDescMeterFee is the schema descriptor for meter_fee field.
+	rentbillDescMeterFee := rentbillFields[3].Descriptor()
+	// rentbill.DefaultMeterFee holds the default value on creation for the meter_fee field.
+	rentbill.DefaultMeterFee = rentbillDescMeterFee.Default.(int)
+	// rentbillDescTotalAmount is the schema descriptor for total_amount field.
+	rentbillDescTotalAmount := rentbillFields[4].Descriptor()
+	// rentbill.DefaultTotalAmount holds the default value on creation for the total_amount field.
+	rentbill.DefaultTotalAmount = rentbillDescTotalAmount.Default.(int)
 	roleMixin := schema.Role{}.Mixin()
 	roleMixinFields0 := roleMixin[0].Fields()
 	_ = roleMixinFields0

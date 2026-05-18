@@ -8,7 +8,7 @@ This file provides guidance to Codex and other coding agents when working in thi
 - `go test ./internal/app/services` - run tests for one package.
 - `go test ./internal/app/services -run TestName` - run a single Go test by name.
 - `go build ./...` - compile all packages.
-- `go run .` - run the server; it expects WeChat, JWT, Redis, and MySQL config flags parsed by `github.com/miebyte/goutils/flags` in `main.go`.
+- `go run .` - run the server on `0.0.0.0:8080`.
 - `gofmt -w <files>` - format changed Go files before finishing code changes.
 - `make generate` or `go generate ./internal/ent` - regenerate Ent code after changing schemas under `internal/ent/schema`.
 - `go generate ./api` - regenerate Swagger docs from annotations in `api/`.
@@ -23,25 +23,22 @@ This file provides guidance to Codex and other coding agents when working in thi
 
 ## Architecture
 
-This is a Go 1.26.2 Gin API server for a rent-management backend. `main.go` wires configuration, Redis rate limiting, MySQL/Ent, repositories, services, system RBAC initialization, and the HTTP server. The Gin engine is mounted under `/api` via `cores.WithHttpHandler("/api", router)`.
+This is a Go 1.26.2 Gin API server for a rent-management backend. The current codebase is intentionally reduced to a minimal skeleton while the domain design is being rebuilt. `main.go` wires `services.AppService`, creates the HTTP router, and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
 
 The repository follows a DDD-style architecture:
 
 - Interface layer: `api/` contains HTTP router registration, handlers, middleware, and generated Swagger docs.
-- Application layer: `internal/app/` contains use-case services that orchestrate domain logic and repositories.
+- Application layer: `internal/app/` currently contains only `services.AppService`.
 - Domain layer: `internal/domain/` contains domain models, params, repository interfaces, and domain errors.
-- Infrastructure layer: `internal/infra/` contains concrete infrastructure implementations, currently Ent-backed repositories in `internal/infra/repo`.
+- Infrastructure layer: `internal/infra/` contains supporting infrastructure packages. The old Ent-backed repository implementations under `internal/infra/repo` have been removed.
 
 Routing is centralized in `api/api.go`. Route groups live in `api/routers` and are registered with `github.com/miebyte/goutils/ginutils` options rather than direct `gin.Engine.Group` calls.
 
-Current route groups:
+Current route surface:
 
-- Global middleware: `RateLimitMiddleware`.
-- `/auth`: public auth routes.
-- `/admin`: token-protected admin RBAC routes.
-- Protected application routes: units, rooms, meter items, and role assignment routes, all using `TokenVerifyMiddleware`.
+- `GET /api/health` calls `AppService.Health`.
 
-There is currently no permission-check middleware wired into `api/api.go`; do not document or assume runtime API authorization beyond token validation unless the code is updated.
+There is currently no authentication, rate-limit, or permission-check middleware wired into `api/api.go`; do not document or assume runtime API authorization unless the code is updated.
 
 Handlers should follow the existing flow:
 
@@ -49,23 +46,21 @@ Handlers should follow the existing flow:
 - Use `ginutils.RequestHandler` for binding and validation.
 - Call an app service from `internal/app/services`.
 - Return response DTOs from `internal/models/response`.
-- Use `response.HandleRouterError` for business/application errors.
+- Use `response.HandleRouterError` for business/application errors once business services are reintroduced.
 
 ## Persistence
 
-Persistence uses Ent with MySQL. `main.go` currently calls auto-migration on startup. Soft deletes are represented by `deleted_at`; repository queries usually filter `DeletedAtIsNil()` and deletes set `deleted_at` rather than removing rows.
+Ent schemas and generated code still exist, but persistence is not currently wired into `main.go`, the API layer, or the application layer. The old repository implementations have been deleted. When persistence is reintroduced, prefer rebuilding concrete repositories under `internal/infra/repo` from the current domain model rather than restoring stale behavior blindly.
 
 Important locations:
 
 - `internal/ent/schema` - Ent schema definitions.
 - `internal/ent` - generated Ent code.
-- `internal/infra/repo` - concrete repository implementations.
+- `internal/infra/repo` - intended location for future concrete repository implementations.
 
 ## Authentication And RBAC
 
-Authentication uses JWT utilities in `internal/jwtutils`. `TokenVerifyMiddleware` stores `AccountTokenClaims` in both Gin context and request context.
-
-The authenticated account ID comes from `AccountTokenClaims.UserID`; application services read it through `services.AccountIDFromContext`.
+Authentication utilities still exist in `internal/jwtutils` and `api/middlewares`, but they are not currently wired into the active API router. The previous `services.AccountIDFromContext` helper was removed with the old application services.
 
 RBAC and business resources are currently account-scoped, not organization-scoped. There is no `organization_id` field or organization model in the current Ent schemas.
 
@@ -81,20 +76,17 @@ Effective authorization follows:
 
 `account -> role -> permission_group -> permission`
 
-System RBAC is initialized on startup by `RBACService.InitSystemRBAC`, which ensures the super-admin permission group and allow-all permission exist and are linked.
-
-Admin RBAC endpoints are under `/admin`. Global permission and permission-group management stays there. Role creation and role-to-permission-group binding are account-scoped: repositories filter roles by the authenticated owner account ID. Unit-account role assignment verifies that the granting account owns the target unit and that assigned roles belong to that granting account.
+RBAC schemas and domain packages still exist, but no RBAC application service or repository is currently wired. Rebuild the service/repository flow from the target product model before exposing RBAC endpoints again.
 
 Stored `permissions.api_path` values generally should not include `/api`, because the router is mounted under `/api`.
 
 ## Resource Ownership
 
-Business resources are scoped by the authenticated account:
+The remaining Ent schemas model business resources as account-scoped:
 
 - `Unit`, `Role`, and `MeterItem` use `account_id` through `AccountMixin`.
-- `Room` is scoped through its owning unit; room repository queries use a unit account predicate.
-- Unit default meter items and room meter items must belong to the same authenticated account.
-- Soft-deleted records should not be returned or mutated unless the specific restore/init flow requires `ClearDeletedAt`.
+- `Room` is scoped through its owning unit.
+- Future repository queries should enforce account ownership and filter soft-deleted records.
 
 ## API Docs
 

@@ -30,6 +30,8 @@ type MeterItem struct {
 	Code string `json:"code,omitempty"`
 	// 单位，如 m³/kWh
 	Unit string `json:"unit,omitempty"`
+	// 单价，单位：分/计量单位
+	UnitPrice int `json:"unit_price,omitempty"`
 	// 是否系统内置
 	IsSystem bool `json:"is_system,omitempty"`
 	// 计算方式：DIFFERENCE-差值型，DIRECT-直接录入型
@@ -48,11 +50,13 @@ type MeterItemEdges struct {
 	Accounts *Account `json:"accounts,omitempty"`
 	// Rooms holds the value of the rooms edge.
 	Rooms []*Room `json:"rooms,omitempty"`
+	// MeterReadings holds the value of the meter_readings edge.
+	MeterReadings []*MeterReading `json:"meter_readings,omitempty"`
 	// Uint holds the value of the uint edge.
 	Uint []*Unit `json:"uint,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // AccountsOrErr returns the Accounts value or an error if the edge
@@ -75,10 +79,19 @@ func (e MeterItemEdges) RoomsOrErr() ([]*Room, error) {
 	return nil, &NotLoadedError{edge: "rooms"}
 }
 
+// MeterReadingsOrErr returns the MeterReadings value or an error if the edge
+// was not loaded in eager-loading.
+func (e MeterItemEdges) MeterReadingsOrErr() ([]*MeterReading, error) {
+	if e.loadedTypes[2] {
+		return e.MeterReadings, nil
+	}
+	return nil, &NotLoadedError{edge: "meter_readings"}
+}
+
 // UintOrErr returns the Uint value or an error if the edge
 // was not loaded in eager-loading.
 func (e MeterItemEdges) UintOrErr() ([]*Unit, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Uint, nil
 	}
 	return nil, &NotLoadedError{edge: "uint"}
@@ -91,7 +104,7 @@ func (*MeterItem) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case meteritem.FieldIsSystem:
 			values[i] = new(sql.NullBool)
-		case meteritem.FieldID, meteritem.FieldAccountID:
+		case meteritem.FieldID, meteritem.FieldAccountID, meteritem.FieldUnitPrice:
 			values[i] = new(sql.NullInt64)
 		case meteritem.FieldCode, meteritem.FieldUnit, meteritem.FieldCalcType, meteritem.FieldRemark:
 			values[i] = new(sql.NullString)
@@ -155,6 +168,12 @@ func (_m *MeterItem) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Unit = value.String
 			}
+		case meteritem.FieldUnitPrice:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field unit_price", values[i])
+			} else if value.Valid {
+				_m.UnitPrice = int(value.Int64)
+			}
 		case meteritem.FieldIsSystem:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_system", values[i])
@@ -195,6 +214,11 @@ func (_m *MeterItem) QueryAccounts() *AccountQuery {
 // QueryRooms queries the "rooms" edge of the MeterItem entity.
 func (_m *MeterItem) QueryRooms() *RoomQuery {
 	return NewMeterItemClient(_m.config).QueryRooms(_m)
+}
+
+// QueryMeterReadings queries the "meter_readings" edge of the MeterItem entity.
+func (_m *MeterItem) QueryMeterReadings() *MeterReadingQuery {
+	return NewMeterItemClient(_m.config).QueryMeterReadings(_m)
 }
 
 // QueryUint queries the "uint" edge of the MeterItem entity.
@@ -244,6 +268,9 @@ func (_m *MeterItem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("unit=")
 	builder.WriteString(_m.Unit)
+	builder.WriteString(", ")
+	builder.WriteString("unit_price=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UnitPrice))
 	builder.WriteString(", ")
 	builder.WriteString("is_system=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsSystem))

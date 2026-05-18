@@ -27,6 +27,9 @@ func (MeterReading) Fields() []ent.Field {
 		field.Int("room_id").
 			Comment("所属房间ID"),
 
+		field.Int("meter_item_id").
+			Comment("所属抄表项ID"),
+
 		field.String("period_month").
 			NotEmpty().
 			Comment("抄表月份，格式 YYYY-MM"),
@@ -72,12 +75,20 @@ func (MeterReading) Edges() []ent.Edge {
 			Ref("meter_readings").
 			Unique().
 			Required(),
+
+		// 抄表数据-抄表项 多对一关系
+		edge.From("meter_item", MeterItem.Type).
+			Field("meter_item_id").
+			Ref("meter_readings").
+			Unique().
+			Required(),
 	}
 }
 
 func (MeterReading) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("room_id", "period_month").Unique(),
+		index.Fields("room_id", "meter_item_id", "period_month").Unique(),
+		index.Fields("meter_item_id"),
 		index.Fields("period_month"),
 	}
 }

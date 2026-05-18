@@ -11,6 +11,7 @@ type MeterItemResponse struct {
 	AccountID int     `json:"account_id"`
 	Code      string  `json:"code"`
 	Unit      string  `json:"unit"`
+	UnitPrice int     `json:"unit_price"`
 	IsSystem  bool    `json:"is_system"`
 	CalcType  string  `json:"calc_type"`
 	Remark    *string `json:"remark,omitempty"`
@@ -26,6 +27,7 @@ func ToMeterItemResponse(item *domainmeteritem.MeterItem) MeterItemResponse {
 		AccountID: item.AccountID,
 		Code:      item.Code,
 		Unit:      item.Unit,
+		UnitPrice: item.UnitPrice,
 		IsSystem:  item.IsSystem,
 		CalcType:  item.CalcType,
 		Remark:    item.Remark,

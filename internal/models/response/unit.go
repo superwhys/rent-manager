@@ -7,12 +7,13 @@ import (
 
 // UnitMeterItemResponse 是单元默认抄表项响应。
 type UnitMeterItemResponse struct {
-	ID       int     `json:"id"`
-	Code     string  `json:"code"`
-	Unit     string  `json:"unit"`
-	IsSystem bool    `json:"is_system"`
-	CalcType string  `json:"calc_type"`
-	Remark   *string `json:"remark,omitempty"`
+	ID        int     `json:"id"`
+	Code      string  `json:"code"`
+	Unit      string  `json:"unit"`
+	UnitPrice int     `json:"unit_price"`
+	IsSystem  bool    `json:"is_system"`
+	CalcType  string  `json:"calc_type"`
+	Remark    *string `json:"remark,omitempty"`
 }
 
 // UnitResponse 是单元响应。
@@ -68,12 +69,13 @@ func toUnitMeterItemResponses(items []*domainunit.MeterItem) []UnitMeterItemResp
 			continue
 		}
 		ret = append(ret, UnitMeterItemResponse{
-			ID:       item.ID,
-			Code:     item.Code,
-			Unit:     item.Unit,
-			IsSystem: item.IsSystem,
-			CalcType: item.CalcType,
-			Remark:   item.Remark,
+			ID:        item.ID,
+			Code:      item.Code,
+			Unit:      item.Unit,
+			UnitPrice: item.UnitPrice,
+			IsSystem:  item.IsSystem,
+			CalcType:  item.CalcType,
+			Remark:    item.Remark,
 		})
 	}
 	return ret

@@ -19,12 +19,13 @@ type Unit struct {
 }
 
 type MeterItem struct {
-	ID       int
-	Code     string
-	Unit     string
-	IsSystem bool
-	CalcType string
-	Remark   *string
+	ID        int
+	Code      string
+	Unit      string
+	UnitPrice int
+	IsSystem  bool
+	CalcType  string
+	Remark    *string
 }
 
 func NewUnit(params CreateParams) (*Unit, error) {

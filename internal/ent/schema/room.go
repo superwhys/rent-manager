@@ -70,5 +70,8 @@ func (Room) Edges() []ent.Edge {
 
 		// 房间-抄表数据 多对多关系
 		edge.To("meter_readings", MeterReading.Type),
+
+		// 房间-租金账单 一对多关系
+		edge.To("rent_bills", RentBill.Type),
 	}
 }

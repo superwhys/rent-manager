@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
+	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 	"github.com/superwhys/rent-manager-server/internal/ent/unit"
@@ -154,6 +155,21 @@ func (_c *RoomCreate) AddMeterReadings(v ...*MeterReading) *RoomCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddMeterReadingIDs(ids...)
+}
+
+// AddRentBillIDs adds the "rent_bills" edge to the RentBill entity by IDs.
+func (_c *RoomCreate) AddRentBillIDs(ids ...int) *RoomCreate {
+	_c.mutation.AddRentBillIDs(ids...)
+	return _c
+}
+
+// AddRentBills adds the "rent_bills" edges to the RentBill entity.
+func (_c *RoomCreate) AddRentBills(v ...*RentBill) *RoomCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRentBillIDs(ids...)
 }
 
 // Mutation returns the RoomMutation object of the builder.
@@ -362,6 +378,22 @@ func (_c *RoomCreate) createSpec() (*Room, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RentBillsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.RentBillsTable,
+			Columns: []string{room.RentBillsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rentbill.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

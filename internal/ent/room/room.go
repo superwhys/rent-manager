@@ -42,6 +42,8 @@ const (
 	EdgeMeterItems = "meter_items"
 	// EdgeMeterReadings holds the string denoting the meter_readings edge name in mutations.
 	EdgeMeterReadings = "meter_readings"
+	// EdgeRentBills holds the string denoting the rent_bills edge name in mutations.
+	EdgeRentBills = "rent_bills"
 	// Table holds the table name of the room in the database.
 	Table = "rooms"
 	// UnitTable is the table that holds the unit relation/edge.
@@ -70,6 +72,13 @@ const (
 	MeterReadingsInverseTable = "meter_readings"
 	// MeterReadingsColumn is the table column denoting the meter_readings relation/edge.
 	MeterReadingsColumn = "room_id"
+	// RentBillsTable is the table that holds the rent_bills relation/edge.
+	RentBillsTable = "rent_bills"
+	// RentBillsInverseTable is the table name for the RentBill entity.
+	// It exists in this package in order to avoid circular dependency with the "rentbill" package.
+	RentBillsInverseTable = "rent_bills"
+	// RentBillsColumn is the table column denoting the rent_bills relation/edge.
+	RentBillsColumn = "room_id"
 )
 
 // Columns holds all SQL columns for room fields.
@@ -215,6 +224,20 @@ func ByMeterReadings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMeterReadingsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByRentBillsCount orders the results by rent_bills count.
+func ByRentBillsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRentBillsStep(), opts...)
+	}
+}
+
+// ByRentBills orders the results by rent_bills terms.
+func ByRentBills(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRentBillsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUnitStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -241,5 +264,12 @@ func newMeterReadingsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MeterReadingsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MeterReadingsTable, MeterReadingsColumn),
+	)
+}
+func newRentBillsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RentBillsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RentBillsTable, RentBillsColumn),
 	)
 }

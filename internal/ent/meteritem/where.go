@@ -85,6 +85,11 @@ func Unit(v string) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldEQ(FieldUnit, v))
 }
 
+// UnitPrice applies equality check predicate on the "unit_price" field. It's identical to UnitPriceEQ.
+func UnitPrice(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldEQ(FieldUnitPrice, v))
+}
+
 // IsSystem applies equality check predicate on the "is_system" field. It's identical to IsSystemEQ.
 func IsSystem(v bool) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldEQ(FieldIsSystem, v))
@@ -375,6 +380,46 @@ func UnitContainsFold(v string) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldContainsFold(FieldUnit, v))
 }
 
+// UnitPriceEQ applies the EQ predicate on the "unit_price" field.
+func UnitPriceEQ(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldEQ(FieldUnitPrice, v))
+}
+
+// UnitPriceNEQ applies the NEQ predicate on the "unit_price" field.
+func UnitPriceNEQ(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldNEQ(FieldUnitPrice, v))
+}
+
+// UnitPriceIn applies the In predicate on the "unit_price" field.
+func UnitPriceIn(vs ...int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldIn(FieldUnitPrice, vs...))
+}
+
+// UnitPriceNotIn applies the NotIn predicate on the "unit_price" field.
+func UnitPriceNotIn(vs ...int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldNotIn(FieldUnitPrice, vs...))
+}
+
+// UnitPriceGT applies the GT predicate on the "unit_price" field.
+func UnitPriceGT(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldGT(FieldUnitPrice, v))
+}
+
+// UnitPriceGTE applies the GTE predicate on the "unit_price" field.
+func UnitPriceGTE(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldGTE(FieldUnitPrice, v))
+}
+
+// UnitPriceLT applies the LT predicate on the "unit_price" field.
+func UnitPriceLT(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldLT(FieldUnitPrice, v))
+}
+
+// UnitPriceLTE applies the LTE predicate on the "unit_price" field.
+func UnitPriceLTE(v int) predicate.MeterItem {
+	return predicate.MeterItem(sql.FieldLTE(FieldUnitPrice, v))
+}
+
 // IsSystemEQ applies the EQ predicate on the "is_system" field.
 func IsSystemEQ(v bool) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldEQ(FieldIsSystem, v))
@@ -518,6 +563,29 @@ func HasRooms() predicate.MeterItem {
 func HasRoomsWith(preds ...predicate.Room) predicate.MeterItem {
 	return predicate.MeterItem(func(s *sql.Selector) {
 		step := newRoomsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMeterReadings applies the HasEdge predicate on the "meter_readings" edge.
+func HasMeterReadings() predicate.MeterItem {
+	return predicate.MeterItem(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MeterReadingsTable, MeterReadingsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMeterReadingsWith applies the HasEdge predicate on the "meter_readings" edge with a given conditions (other predicates).
+func HasMeterReadingsWith(preds ...predicate.MeterReading) predicate.MeterItem {
+	return predicate.MeterItem(func(s *sql.Selector) {
+		step := newMeterReadingsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

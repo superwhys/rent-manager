@@ -5,6 +5,7 @@ type CreateParams struct {
 	AccountID int
 	Code      string
 	Unit      string
+	UnitPrice int
 	CalcType  string
 	Remark    *string
 }
@@ -15,6 +16,7 @@ type UpdateParams struct {
 	AccountID int
 	Code      string
 	Unit      string
+	UnitPrice int
 	CalcType  string
 	Remark    *string
 }

@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/superwhys/rent-manager-server/internal/ent/account"
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/unit"
@@ -22,13 +23,14 @@ import (
 // MeterItemQuery is the builder for querying MeterItem entities.
 type MeterItemQuery struct {
 	config
-	ctx          *QueryContext
-	order        []meteritem.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.MeterItem
-	withAccounts *AccountQuery
-	withRooms    *RoomQuery
-	withUint     *UnitQuery
+	ctx               *QueryContext
+	order             []meteritem.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.MeterItem
+	withAccounts      *AccountQuery
+	withRooms         *RoomQuery
+	withMeterReadings *MeterReadingQuery
+	withUint          *UnitQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -102,6 +104,28 @@ func (_q *MeterItemQuery) QueryRooms() *RoomQuery {
 			sqlgraph.From(meteritem.Table, meteritem.FieldID, selector),
 			sqlgraph.To(room.Table, room.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, meteritem.RoomsTable, meteritem.RoomsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMeterReadings chains the current query on the "meter_readings" edge.
+func (_q *MeterItemQuery) QueryMeterReadings() *MeterReadingQuery {
+	query := (&MeterReadingClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(meteritem.Table, meteritem.FieldID, selector),
+			sqlgraph.To(meterreading.Table, meterreading.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, meteritem.MeterReadingsTable, meteritem.MeterReadingsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -318,14 +342,15 @@ func (_q *MeterItemQuery) Clone() *MeterItemQuery {
 		return nil
 	}
 	return &MeterItemQuery{
-		config:       _q.config,
-		ctx:          _q.ctx.Clone(),
-		order:        append([]meteritem.OrderOption{}, _q.order...),
-		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.MeterItem{}, _q.predicates...),
-		withAccounts: _q.withAccounts.Clone(),
-		withRooms:    _q.withRooms.Clone(),
-		withUint:     _q.withUint.Clone(),
+		config:            _q.config,
+		ctx:               _q.ctx.Clone(),
+		order:             append([]meteritem.OrderOption{}, _q.order...),
+		inters:            append([]Interceptor{}, _q.inters...),
+		predicates:        append([]predicate.MeterItem{}, _q.predicates...),
+		withAccounts:      _q.withAccounts.Clone(),
+		withRooms:         _q.withRooms.Clone(),
+		withMeterReadings: _q.withMeterReadings.Clone(),
+		withUint:          _q.withUint.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -351,6 +376,17 @@ func (_q *MeterItemQuery) WithRooms(opts ...func(*RoomQuery)) *MeterItemQuery {
 		opt(query)
 	}
 	_q.withRooms = query
+	return _q
+}
+
+// WithMeterReadings tells the query-builder to eager-load the nodes that are connected to
+// the "meter_readings" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *MeterItemQuery) WithMeterReadings(opts ...func(*MeterReadingQuery)) *MeterItemQuery {
+	query := (&MeterReadingClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMeterReadings = query
 	return _q
 }
 
@@ -443,9 +479,10 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 	var (
 		nodes       = []*MeterItem{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withAccounts != nil,
 			_q.withRooms != nil,
+			_q.withMeterReadings != nil,
 			_q.withUint != nil,
 		}
 	)
@@ -477,6 +514,13 @@ func (_q *MeterItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Me
 		if err := _q.loadRooms(ctx, query, nodes,
 			func(n *MeterItem) { n.Edges.Rooms = []*Room{} },
 			func(n *MeterItem, e *Room) { n.Edges.Rooms = append(n.Edges.Rooms, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMeterReadings; query != nil {
+		if err := _q.loadMeterReadings(ctx, query, nodes,
+			func(n *MeterItem) { n.Edges.MeterReadings = []*MeterReading{} },
+			func(n *MeterItem, e *MeterReading) { n.Edges.MeterReadings = append(n.Edges.MeterReadings, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -577,6 +621,36 @@ func (_q *MeterItemQuery) loadRooms(ctx context.Context, query *RoomQuery, nodes
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (_q *MeterItemQuery) loadMeterReadings(ctx context.Context, query *MeterReadingQuery, nodes []*MeterItem, init func(*MeterItem), assign func(*MeterItem, *MeterReading)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*MeterItem)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(meterreading.FieldMeterItemID)
+	}
+	query.Where(predicate.MeterReading(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(meteritem.MeterReadingsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.MeterItemID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "meter_item_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

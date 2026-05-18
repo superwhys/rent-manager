@@ -15,6 +15,7 @@ import (
 	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
+	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
 	"github.com/superwhys/rent-manager-server/internal/ent/unit"
@@ -31,6 +32,7 @@ type RoomQuery struct {
 	withRoomType      *RoomTypeQuery
 	withMeterItems    *MeterItemQuery
 	withMeterReadings *MeterReadingQuery
+	withRentBills     *RentBillQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -148,6 +150,28 @@ func (_q *RoomQuery) QueryMeterReadings() *MeterReadingQuery {
 			sqlgraph.From(room.Table, room.FieldID, selector),
 			sqlgraph.To(meterreading.Table, meterreading.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, room.MeterReadingsTable, room.MeterReadingsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRentBills chains the current query on the "rent_bills" edge.
+func (_q *RoomQuery) QueryRentBills() *RentBillQuery {
+	query := (&RentBillClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(room.Table, room.FieldID, selector),
+			sqlgraph.To(rentbill.Table, rentbill.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, room.RentBillsTable, room.RentBillsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -351,6 +375,7 @@ func (_q *RoomQuery) Clone() *RoomQuery {
 		withRoomType:      _q.withRoomType.Clone(),
 		withMeterItems:    _q.withMeterItems.Clone(),
 		withMeterReadings: _q.withMeterReadings.Clone(),
+		withRentBills:     _q.withRentBills.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -398,6 +423,17 @@ func (_q *RoomQuery) WithMeterReadings(opts ...func(*MeterReadingQuery)) *RoomQu
 		opt(query)
 	}
 	_q.withMeterReadings = query
+	return _q
+}
+
+// WithRentBills tells the query-builder to eager-load the nodes that are connected to
+// the "rent_bills" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RoomQuery) WithRentBills(opts ...func(*RentBillQuery)) *RoomQuery {
+	query := (&RentBillClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRentBills = query
 	return _q
 }
 
@@ -479,11 +515,12 @@ func (_q *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 	var (
 		nodes       = []*Room{}
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			_q.withUnit != nil,
 			_q.withRoomType != nil,
 			_q.withMeterItems != nil,
 			_q.withMeterReadings != nil,
+			_q.withRentBills != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -527,6 +564,13 @@ func (_q *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 		if err := _q.loadMeterReadings(ctx, query, nodes,
 			func(n *Room) { n.Edges.MeterReadings = []*MeterReading{} },
 			func(n *Room, e *MeterReading) { n.Edges.MeterReadings = append(n.Edges.MeterReadings, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRentBills; query != nil {
+		if err := _q.loadRentBills(ctx, query, nodes,
+			func(n *Room) { n.Edges.RentBills = []*RentBill{} },
+			func(n *Room, e *RentBill) { n.Edges.RentBills = append(n.Edges.RentBills, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -667,6 +711,36 @@ func (_q *RoomQuery) loadMeterReadings(ctx context.Context, query *MeterReadingQ
 	}
 	query.Where(predicate.MeterReading(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(room.MeterReadingsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RoomID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "room_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *RoomQuery) loadRentBills(ctx context.Context, query *RentBillQuery, nodes []*Room, init func(*Room), assign func(*Room, *RentBill)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Room)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(rentbill.FieldRoomID)
+	}
+	query.Where(predicate.RentBill(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(room.RentBillsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -16,6 +16,8 @@ const (
 	FieldID = "id"
 	// FieldRoomID holds the string denoting the room_id field in the database.
 	FieldRoomID = "room_id"
+	// FieldMeterItemID holds the string denoting the meter_item_id field in the database.
+	FieldMeterItemID = "meter_item_id"
 	// FieldPeriodMonth holds the string denoting the period_month field in the database.
 	FieldPeriodMonth = "period_month"
 	// FieldPreviousReading holds the string denoting the previous_reading field in the database.
@@ -34,6 +36,8 @@ const (
 	FieldRemark = "remark"
 	// EdgeRoom holds the string denoting the room edge name in mutations.
 	EdgeRoom = "room"
+	// EdgeMeterItem holds the string denoting the meter_item edge name in mutations.
+	EdgeMeterItem = "meter_item"
 	// Table holds the table name of the meterreading in the database.
 	Table = "meter_readings"
 	// RoomTable is the table that holds the room relation/edge.
@@ -43,12 +47,20 @@ const (
 	RoomInverseTable = "rooms"
 	// RoomColumn is the table column denoting the room relation/edge.
 	RoomColumn = "room_id"
+	// MeterItemTable is the table that holds the meter_item relation/edge.
+	MeterItemTable = "meter_readings"
+	// MeterItemInverseTable is the table name for the MeterItem entity.
+	// It exists in this package in order to avoid circular dependency with the "meteritem" package.
+	MeterItemInverseTable = "meter_items"
+	// MeterItemColumn is the table column denoting the meter_item relation/edge.
+	MeterItemColumn = "meter_item_id"
 )
 
 // Columns holds all SQL columns for meterreading fields.
 var Columns = []string{
 	FieldID,
 	FieldRoomID,
+	FieldMeterItemID,
 	FieldPeriodMonth,
 	FieldPreviousReading,
 	FieldCurrentReading,
@@ -114,6 +126,11 @@ func ByRoomID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRoomID, opts...).ToFunc()
 }
 
+// ByMeterItemID orders the results by the meter_item_id field.
+func ByMeterItemID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMeterItemID, opts...).ToFunc()
+}
+
 // ByPeriodMonth orders the results by the period_month field.
 func ByPeriodMonth(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPeriodMonth, opts...).ToFunc()
@@ -160,10 +177,24 @@ func ByRoomField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRoomStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByMeterItemField orders the results by meter_item field.
+func ByMeterItemField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMeterItemStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newRoomStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoomInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, RoomTable, RoomColumn),
+	)
+}
+func newMeterItemStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MeterItemInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, MeterItemTable, MeterItemColumn),
 	)
 }

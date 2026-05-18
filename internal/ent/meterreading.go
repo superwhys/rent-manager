@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
 	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
 	"github.com/superwhys/rent-manager-server/internal/ent/room"
 )
@@ -20,6 +21,8 @@ type MeterReading struct {
 	ID int `json:"id,omitempty"`
 	// 所属房间ID
 	RoomID int `json:"room_id,omitempty"`
+	// 所属抄表项ID
+	MeterItemID int `json:"meter_item_id,omitempty"`
 	// 抄表月份，格式 YYYY-MM
 	PeriodMonth string `json:"period_month,omitempty"`
 	// 上次读数
@@ -46,9 +49,11 @@ type MeterReading struct {
 type MeterReadingEdges struct {
 	// Room holds the value of the room edge.
 	Room *Room `json:"room,omitempty"`
+	// MeterItem holds the value of the meter_item edge.
+	MeterItem *MeterItem `json:"meter_item,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // RoomOrErr returns the Room value or an error if the edge
@@ -62,6 +67,17 @@ func (e MeterReadingEdges) RoomOrErr() (*Room, error) {
 	return nil, &NotLoadedError{edge: "room"}
 }
 
+// MeterItemOrErr returns the MeterItem value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e MeterReadingEdges) MeterItemOrErr() (*MeterItem, error) {
+	if e.MeterItem != nil {
+		return e.MeterItem, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: meteritem.Label}
+	}
+	return nil, &NotLoadedError{edge: "meter_item"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*MeterReading) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -69,7 +85,7 @@ func (*MeterReading) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case meterreading.FieldPreviousReading, meterreading.FieldCurrentReading, meterreading.FieldUsageAmount:
 			values[i] = new(sql.NullFloat64)
-		case meterreading.FieldID, meterreading.FieldRoomID, meterreading.FieldReaderID:
+		case meterreading.FieldID, meterreading.FieldRoomID, meterreading.FieldMeterItemID, meterreading.FieldReaderID:
 			values[i] = new(sql.NullInt64)
 		case meterreading.FieldPeriodMonth, meterreading.FieldSource, meterreading.FieldRemark:
 			values[i] = new(sql.NullString)
@@ -101,6 +117,12 @@ func (_m *MeterReading) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field room_id", values[i])
 			} else if value.Valid {
 				_m.RoomID = int(value.Int64)
+			}
+		case meterreading.FieldMeterItemID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field meter_item_id", values[i])
+			} else if value.Valid {
+				_m.MeterItemID = int(value.Int64)
 			}
 		case meterreading.FieldPeriodMonth:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -172,6 +194,11 @@ func (_m *MeterReading) QueryRoom() *RoomQuery {
 	return NewMeterReadingClient(_m.config).QueryRoom(_m)
 }
 
+// QueryMeterItem queries the "meter_item" edge of the MeterReading entity.
+func (_m *MeterReading) QueryMeterItem() *MeterItemQuery {
+	return NewMeterReadingClient(_m.config).QueryMeterItem(_m)
+}
+
 // Update returns a builder for updating this MeterReading.
 // Note that you need to call MeterReading.Unwrap() before calling this method if this MeterReading
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -197,6 +224,9 @@ func (_m *MeterReading) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("room_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RoomID))
+	builder.WriteString(", ")
+	builder.WriteString("meter_item_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MeterItemID))
 	builder.WriteString(", ")
 	builder.WriteString("period_month=")
 	builder.WriteString(_m.PeriodMonth)
