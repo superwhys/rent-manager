@@ -59,9 +59,14 @@ var (
 	ErrForbidden       = Error{ErrCode: 100403, Message: "禁止访问"}
 	ErrTooManyRequests = Error{ErrCode: 100429, Message: "请求过于频繁，请稍后再试"}
 
-	ErrTokenExpired = Error{ErrCode: 400002, Message: "登录已过期"}
-	ErrInvalidToken = Error{ErrCode: 400003, Message: "登录无效"}
+	ErrTokenExpired = Error{ErrCode: 400002, Message: "令牌已过期"}
+	ErrLoginExpired = Error{ErrCode: 400002, Message: "登录已过期"}
+	ErrInvalidToken = Error{ErrCode: 400003, Message: "无效令牌"}
 )
+
+func IsAuthExpired(err error) bool {
+	return errors.Is(err, ErrTokenExpired) || errors.Is(err, ErrLoginExpired)
+}
 
 func AsErrcode(err error) (Error, bool) {
 	if err == nil {

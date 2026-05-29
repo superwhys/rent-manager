@@ -5,15 +5,29 @@ import (
 	"testing"
 
 	domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac"
+	domainroom "github.com/superwhys/rent-manager-server/internal/domain/room"
 	domainunit "github.com/superwhys/rent-manager-server/internal/domain/unit"
 	"github.com/superwhys/rent-manager-server/internal/models/requests"
 )
 
 func TestUnitServiceListUnitsDefaultsToAllScope(t *testing.T) {
-	repo := &fakeUnitRepository{}
-	service := NewUnitService(repo, nil)
+	repo := &fakeUnitRepository{
+		listUnits: []*domainunit.Unit{
+			{ID: 10, AccountID: 1, Name: "A"},
+			{ID: 20, AccountID: 1, Name: "B"},
+		},
+	}
+	roomRepo := &fakeRoomRepository{
+		rooms: map[int]*domainroom.Room{
+			1: {ID: 1, UnitID: 10, IsActive: true},
+			2: {ID: 2, UnitID: 10, IsActive: false},
+			3: {ID: 3, UnitID: 20, IsActive: true},
+			4: {ID: 4, UnitID: 20, IsActive: true},
+		},
+	}
+	service := NewUnitService(repo, roomRepo, nil)
 
-	_, err := service.ListUnits(tokenContext(1), &requests.ListUnitsQuery{})
+	summaries, err := service.ListUnits(tokenContext(1), &requests.ListUnitsQuery{})
 	if err != nil {
 		t.Fatalf("expected list units, got %v", err)
 	}
@@ -23,10 +37,28 @@ func TestUnitServiceListUnitsDefaultsToAllScope(t *testing.T) {
 	if repo.listQuery.Scope != domainunit.ListScopeAll {
 		t.Fatalf("expected all scope, got %q", repo.listQuery.Scope)
 	}
+	if len(summaries) != 2 {
+		t.Fatalf("expected 2 summaries, got %d", len(summaries))
+	}
+	if summaries[0].RoomCount != 2 || summaries[0].RentedCount != 1 {
+		t.Fatalf("unexpected room summary: %#v", summaries[0])
+	}
+	if summaries[0].OccupancyStatus != "vacancy" {
+		t.Fatalf("expected vacancy status, got %q", summaries[0].OccupancyStatus)
+	}
+	if summaries[1].RoomCount != 2 || summaries[1].RentedCount != 2 {
+		t.Fatalf("unexpected full room summary: %#v", summaries[1])
+	}
+	if summaries[1].OccupancyStatus != "full" {
+		t.Fatalf("expected full status, got %q", summaries[1].OccupancyStatus)
+	}
+	if summaries[0].MonthlyRentAmount == "" || summaries[1].MonthlyRentAmount == "" {
+		t.Fatalf("expected mock monthly rent amount")
+	}
 }
 
 func TestUnitServiceListUnitsRejectsInvalidScope(t *testing.T) {
-	service := NewUnitService(&fakeUnitRepository{}, nil)
+	service := NewUnitService(&fakeUnitRepository{}, &fakeRoomRepository{}, nil)
 
 	_, err := service.ListUnits(tokenContext(1), &requests.ListUnitsQuery{Scope: "bad"})
 	if !errors.Is(err, domainunit.ErrInvalidListScope) {
@@ -39,7 +71,7 @@ func TestUnitServiceGetUnitAllowsOwnerWithoutRBAC(t *testing.T) {
 		units: map[int]*domainunit.Unit{
 			10: {ID: 10, AccountID: 1, Name: "A", Address: "addr", City: "city", Province: "province"},
 		},
-	}, nil)
+	}, nil, nil)
 
 	unit, err := service.GetUnit(tokenContext(1), 10)
 	if err != nil {
@@ -56,14 +88,14 @@ func TestUnitServiceGetUnitRequiresViewPermissionForGrantedUnit(t *testing.T) {
 			10: {ID: 10, AccountID: 1, Name: "A", Address: "addr", City: "city", Province: "province"},
 		},
 	}
-	service := NewUnitService(repo, NewRBACService(&fakeRBACRepository{}, nil))
+	service := NewUnitService(repo, nil, NewRBACService(&fakeRBACRepository{}, nil))
 
 	_, err := service.GetUnit(tokenContext(2), 10)
 	if !errors.Is(err, domainrbac.ErrForbidden) {
 		t.Fatalf("expected forbidden without unit.view, got %v", err)
 	}
 
-	service = NewUnitService(repo, NewRBACService(&fakeRBACRepository{
+	service = NewUnitService(repo, nil, NewRBACService(&fakeRBACRepository{
 		unitPermissions: map[int]map[int]map[string]bool{
 			2: {10: {domainrbac.PermissionUnitView: true}},
 		},
@@ -90,7 +122,7 @@ func TestUnitServiceUpdateUnitRequiresUpdatePermissionForGrantedUnit(t *testing.
 		City:     "city2",
 		Province: "province2",
 	}
-	service := NewUnitService(repo, NewRBACService(&fakeRBACRepository{
+	service := NewUnitService(repo, nil, NewRBACService(&fakeRBACRepository{
 		unitPermissions: map[int]map[int]map[string]bool{
 			2: {10: {domainrbac.PermissionUnitView: true}},
 		},
@@ -101,7 +133,7 @@ func TestUnitServiceUpdateUnitRequiresUpdatePermissionForGrantedUnit(t *testing.
 		t.Fatalf("expected forbidden without unit.update, got %v", err)
 	}
 
-	service = NewUnitService(repo, NewRBACService(&fakeRBACRepository{
+	service = NewUnitService(repo, nil, NewRBACService(&fakeRBACRepository{
 		unitPermissions: map[int]map[int]map[string]bool{
 			2: {10: {domainrbac.PermissionUnitUpdate: true}},
 		},

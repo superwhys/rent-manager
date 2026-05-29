@@ -15,6 +15,25 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/accout/self": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accout"
+                ],
+                "summary": "获取个人信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_AccountResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/permission-groups": {
             "get": {
                 "produces": [
@@ -258,6 +277,25 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ginutils.Ret-response_TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/home": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "home"
+                ],
+                "summary": "获取首页聚合数据",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_HomeResponse"
                         }
                     }
                 }
@@ -898,36 +936,6 @@ const docTemplate = `{
                 "summary": "获取单元列表",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "分页数量",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "分页偏移",
-                        "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "单元名称",
-                        "name": "name",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "城市",
-                        "name": "city",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "省份",
-                        "name": "province",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
                         "description": "列表范围: all/owned/granted，默认 all",
                         "name": "scope",
@@ -1417,6 +1425,30 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/response.UnitResponse"
                     }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_AccountResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.AccountResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_HomeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.HomeResponse"
                 },
                 "message": {}
             }
@@ -1948,6 +1980,109 @@ const docTemplate = `{
                 }
             }
         },
+        "response.AccountResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "wechat_openid": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.HomeBuildingRoomSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "building_count": {
+                    "type": "integer"
+                },
+                "rented_room_count": {
+                    "type": "integer"
+                },
+                "room_count": {
+                    "type": "integer"
+                },
+                "vacant_room_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.HomeResponse": {
+            "type": "object",
+            "properties": {
+                "building_room_summary": {
+                    "$ref": "#/definitions/response.HomeBuildingRoomSummaryResponse"
+                },
+                "currentMonth": {
+                    "type": "string"
+                },
+                "incomeAmount": {
+                    "type": "string"
+                },
+                "incomeDecimal": {
+                    "type": "string"
+                },
+                "monthlyGrowth": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.HomeStatResponse"
+                    }
+                },
+                "todos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.HomeTodoResponse"
+                    }
+                }
+            }
+        },
+        "response.HomeStatResponse": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "tone": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.HomeTodoResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "response.MeterItemResponse": {
             "type": "object",
             "properties": {
@@ -2176,11 +2311,23 @@ const docTemplate = `{
                 "is_owner": {
                     "type": "boolean"
                 },
+                "monthlyRentAmount": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "occupancyStatus": {
                     "type": "string"
                 },
                 "province": {
                     "type": "string"
+                },
+                "rentedCount": {
+                    "type": "integer"
+                },
+                "roomCount": {
+                    "type": "integer"
                 }
             }
         }

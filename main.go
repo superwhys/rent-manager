@@ -73,8 +73,10 @@ func main() {
 	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
 	rbacService := services.NewRBACService(rbacRepo, adminConfig)
 	adminServices := &services.AdminServices{
+		Account:   services.NewAccountService(accountRepo),
+		Home:      services.NewHomeService(unitRepo, roomRepo),
 		RBAC:      rbacService,
-		Unit:      services.NewUnitService(unitRepo, rbacService),
+		Unit:      services.NewUnitService(unitRepo, roomRepo, rbacService),
 		Room:      services.NewRoomService(roomRepo, unitRepo, rbacService),
 		RoomType:  services.NewRoomTypeService(roomTypeRepo),
 		MeterItem: services.NewMeterItemService(meterItemRepo),

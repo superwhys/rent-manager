@@ -31,9 +31,4 @@ type UpdateParams struct {
 type ListQuery struct {
 	AccountID int
 	Scope     string
-	Name      string
-	City      string
-	Province  string
-	Limit     int
-	Offset    int
 }

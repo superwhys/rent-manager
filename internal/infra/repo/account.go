@@ -16,6 +16,19 @@ func NewAccountRepository(client *entclient.Client) *AccountRepository {
 	return &AccountRepository{client: client}
 }
 
+func (r *AccountRepository) Get(ctx context.Context, id int) (*account.Account, error) {
+	record, err := r.client.Account.Query().
+		Where(entaccount.ID(id), entaccount.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		if entclient.IsNotFound(err) {
+			return nil, account.ErrAccountNotFound
+		}
+		return nil, err
+	}
+	return toDomainAccount(record), nil
+}
+
 func (r *AccountRepository) GetByWechatOpenID(ctx context.Context, wechatOpenID string) (*account.Account, error) {
 	record, err := r.client.Account.Query().
 		Where(entaccount.WechatOpenid(wechatOpenID), entaccount.DeletedAtIsNil()).

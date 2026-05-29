@@ -87,6 +87,22 @@ definitions:
         type: array
       message: {}
     type: object
+  ginutils.Ret-response_AccountResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.AccountResponse'
+      message: {}
+    type: object
+  ginutils.Ret-response_HomeResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.HomeResponse'
+      message: {}
+    type: object
   ginutils.Ret-response_MeterItemResponse:
     properties:
       code:
@@ -453,6 +469,73 @@ definitions:
     required:
     - code
     type: object
+  response.AccountResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      wechat_openid:
+        type: string
+    type: object
+  response.HomeBuildingRoomSummaryResponse:
+    properties:
+      building_count:
+        type: integer
+      rented_room_count:
+        type: integer
+      room_count:
+        type: integer
+      vacant_room_count:
+        type: integer
+    type: object
+  response.HomeResponse:
+    properties:
+      building_room_summary:
+        $ref: '#/definitions/response.HomeBuildingRoomSummaryResponse'
+      currentMonth:
+        type: string
+      incomeAmount:
+        type: string
+      incomeDecimal:
+        type: string
+      monthlyGrowth:
+        type: string
+      stats:
+        items:
+          $ref: '#/definitions/response.HomeStatResponse'
+        type: array
+      todos:
+        items:
+          $ref: '#/definitions/response.HomeTodoResponse'
+        type: array
+    type: object
+  response.HomeStatResponse:
+    properties:
+      label:
+        type: string
+      tone:
+        type: string
+      value:
+        type: string
+    type: object
+  response.HomeTodoResponse:
+    properties:
+      description:
+        type: string
+      tag:
+        type: string
+      title:
+        type: string
+    type: object
   response.MeterItemResponse:
     properties:
       account_id:
@@ -602,10 +685,18 @@ definitions:
         type: integer
       is_owner:
         type: boolean
+      monthlyRentAmount:
+        type: string
       name:
+        type: string
+      occupancyStatus:
         type: string
       province:
         type: string
+      rentedCount:
+        type: integer
+      roomCount:
+        type: integer
     type: object
 info:
   contact: {}
@@ -613,6 +704,18 @@ info:
   title: Rent Manager Server API
   version: "1.0"
 paths:
+  /accout/self:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_AccountResponse'
+      summary: 获取个人信息
+      tags:
+      - accout
   /admin/permission-groups:
     get:
       produces:
@@ -772,6 +875,18 @@ paths:
       summary: 微信登录
       tags:
       - auth
+  /home:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_HomeResponse'
+      summary: 获取首页聚合数据
+      tags:
+      - home
   /meter-items:
     get:
       parameters:
@@ -1180,26 +1295,6 @@ paths:
   /units:
     get:
       parameters:
-      - description: 分页数量
-        in: query
-        name: limit
-        type: integer
-      - description: 分页偏移
-        in: query
-        name: offset
-        type: integer
-      - description: 单元名称
-        in: query
-        name: name
-        type: string
-      - description: 城市
-        in: query
-        name: city
-        type: string
-      - description: 省份
-        in: query
-        name: province
-        type: string
       - description: '列表范围: all/owned/granted，默认 all'
         in: query
         name: scope

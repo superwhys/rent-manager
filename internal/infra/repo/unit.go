@@ -88,21 +88,6 @@ func (r *UnitRepository) List(ctx context.Context, query domainunit.ListQuery) (
 	default:
 		return nil, domainunit.ErrInvalidListScope
 	}
-	if query.Name != "" {
-		q = q.Where(entunit.NameContains(query.Name))
-	}
-	if query.City != "" {
-		q = q.Where(entunit.CityContains(query.City))
-	}
-	if query.Province != "" {
-		q = q.Where(entunit.ProvinceContains(query.Province))
-	}
-	if query.Limit > 0 {
-		q = q.Limit(query.Limit)
-	}
-	if query.Offset > 0 {
-		q = q.Offset(query.Offset)
-	}
 	records, err := q.Order(entclient.Desc(entunit.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err

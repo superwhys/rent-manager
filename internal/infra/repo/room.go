@@ -74,19 +74,7 @@ func (r *RoomRepository) GetByID(ctx context.Context, id int) (*domainroom.Room,
 }
 
 func (r *RoomRepository) List(ctx context.Context, accountID int, query domainroom.ListQuery) ([]*domainroom.Room, error) {
-	q := r.client.Room.Query().
-		Where(
-			entroom.UnitID(query.UnitID),
-			entroom.DeletedAtIsNil(),
-			entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
-		).
-		WithMeterItems()
-	if query.RoomTypeID > 0 {
-		q = q.Where(entroom.RoomTypeID(query.RoomTypeID))
-	}
-	if query.IsActive != nil {
-		q = q.Where(entroom.IsActive(*query.IsActive))
-	}
+	q := r.queryRooms(accountID, query).WithMeterItems()
 	if query.Limit > 0 {
 		q = q.Limit(query.Limit)
 	}
@@ -98,6 +86,26 @@ func (r *RoomRepository) List(ctx context.Context, accountID int, query domainro
 		return nil, err
 	}
 	return toDomainRooms(records), nil
+}
+
+func (r *RoomRepository) Count(ctx context.Context, accountID int, query domainroom.ListQuery) (int, error) {
+	return r.queryRooms(accountID, query).Count(ctx)
+}
+
+func (r *RoomRepository) queryRooms(accountID int, query domainroom.ListQuery) *entclient.RoomQuery {
+	q := r.client.Room.Query().
+		Where(
+			entroom.UnitID(query.UnitID),
+			entroom.DeletedAtIsNil(),
+			entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
+		)
+	if query.RoomTypeID > 0 {
+		q = q.Where(entroom.RoomTypeID(query.RoomTypeID))
+	}
+	if query.IsActive != nil {
+		q = q.Where(entroom.IsActive(*query.IsActive))
+	}
+	return q
 }
 
 func (r *RoomRepository) Update(ctx context.Context, accountID int, room *domainroom.Room) (*domainroom.Room, error) {

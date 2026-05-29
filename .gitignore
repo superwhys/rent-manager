@@ -1,4 +1,5 @@
 go.work*
 content/
 .claude/
+.cursor/
 rent-manager-server

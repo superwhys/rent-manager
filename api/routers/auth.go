@@ -32,7 +32,7 @@ func WechatLoginHandler(authService *services.AuthService) gin.HandlerFunc {
 		if response.HandleRouterError(c, err, "wechat login failed", errcode.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(token))
+		c.JSON(http.StatusOK, response.ToTokenResponseRet(token))
 	})
 }
 
@@ -50,6 +50,6 @@ func RefreshTokenHandler(authService *services.AuthService) gin.HandlerFunc {
 		if response.HandleRouterError(c, err, "refresh token failed", errcode.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(token))
+		c.JSON(http.StatusOK, response.ToTokenResponseRet(token))
 	})
 }

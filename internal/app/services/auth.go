@@ -8,14 +8,21 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/superwhys/rent-manager-server/config"
 	"github.com/superwhys/rent-manager-server/internal/domain/account"
 	"github.com/superwhys/rent-manager-server/internal/errcode"
 	"github.com/superwhys/rent-manager-server/internal/jwtutils"
 	"github.com/superwhys/rent-manager-server/internal/models/requests"
-	"github.com/superwhys/rent-manager-server/internal/models/response"
 )
 
+// TokenResult 描述认证用例签发的访问令牌。
+type TokenResult struct {
+	AccessToken  string
+	RefreshToken string
+}
+
+// AuthService 提供登录和令牌刷新用例。
 type AuthService struct {
 	jwtConfig    *config.JwtConfig
 	wechatConfig *config.WechatConfig
@@ -23,6 +30,7 @@ type AuthService struct {
 	httpClient   *http.Client
 }
 
+// NewAuthService 创建认证服务。
 func NewAuthService(jwtConfig *config.JwtConfig, wechatConfig *config.WechatConfig, accountRepo account.Repository) *AuthService {
 	return &AuthService{
 		jwtConfig:    jwtConfig,
@@ -32,7 +40,8 @@ func NewAuthService(jwtConfig *config.JwtConfig, wechatConfig *config.WechatConf
 	}
 }
 
-func (s *AuthService) WechatLogin(ctx context.Context, req *requests.WechatLoginReq) (*response.TokenResponse, error) {
+// WechatLogin 使用微信 code 登录并签发令牌。
+func (s *AuthService) WechatLogin(ctx context.Context, req *requests.WechatLoginReq) (*TokenResult, error) {
 	if req.Code == "" {
 		return nil, errcode.ErrBadRequest.WithMessage("微信登录 code 不能为空")
 	}
@@ -67,21 +76,26 @@ func (s *AuthService) WechatLogin(ctx context.Context, req *requests.WechatLogin
 		return nil, err
 	}
 
-	return &response.TokenResponse{
+	return &TokenResult{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
-func (s *AuthService) RefreshToken(ctx context.Context, req *requests.RefreshTokenReq) (*response.TokenResponse, error) {
+// RefreshToken 使用 refresh token 换取新的 access token。
+func (s *AuthService) RefreshToken(ctx context.Context, req *requests.RefreshTokenReq) (*TokenResult, error) {
 	if req.RefreshToken == "" {
 		return nil, errcode.ErrBadRequest.WithMessage("刷新令牌不能为空")
 	}
 
 	claims, err := jwtutils.ParseToken(req.RefreshToken, []byte(s.jwtConfig.JwtSecret))
 	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, errcode.ErrLoginExpired
+		}
 		return nil, errcode.ErrInvalidToken
 	}
+
 	if claims.TokenType != jwtutils.TokenTypeRefresh {
 		return nil, errcode.ErrInvalidToken
 	}
@@ -96,7 +110,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *requests.RefreshTok
 		return nil, err
 	}
 
-	return &response.TokenResponse{
+	return &TokenResult{
 		AccessToken:  accessToken,
 		RefreshToken: req.RefreshToken,
 	}, nil

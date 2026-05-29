@@ -48,21 +48,16 @@ func CreateUnitHandler(unitService *services.UnitService) gin.HandlerFunc {
 // @Summary 获取单元列表
 // @Tags unit
 // @Produce json
-// @Param limit query int false "分页数量"
-// @Param offset query int false "分页偏移"
-// @Param name query string false "单元名称"
-// @Param city query string false "城市"
-// @Param province query string false "省份"
 // @Param scope query string false "列表范围: all/owned/granted，默认 all"
 // @Success 200 {object} ginutils.Ret[[]response.UnitResponse]
 // @Router /units [get]
 func ListUnitsHandler(unitService *services.UnitService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *requests.ListUnitsQuery) {
-		units, err := unitService.ListUnits(c.Request.Context(), req)
+		summaries, err := unitService.ListUnits(c.Request.Context(), req)
 		if response.HandleRouterError(c, err, "list units failed", errcode.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.UnitListResponseRet(units))
+		c.JSON(http.StatusOK, response.UnitListResponseRet(summaries))
 	})
 }
 

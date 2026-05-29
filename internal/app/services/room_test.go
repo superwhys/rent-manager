@@ -91,6 +91,7 @@ func TestRoomServiceUpdateRoomRequiresManagePermissionForGrantedUnit(t *testing.
 
 type fakeUnitRepository struct {
 	units     map[int]*domainunit.Unit
+	listUnits []*domainunit.Unit
 	listQuery domainunit.ListQuery
 }
 
@@ -119,7 +120,7 @@ func (f *fakeUnitRepository) GetByID(_ context.Context, id int) (*domainunit.Uni
 
 func (f *fakeUnitRepository) List(_ context.Context, query domainunit.ListQuery) ([]*domainunit.Unit, error) {
 	f.listQuery = query
-	return nil, nil
+	return f.listUnits, nil
 }
 
 func (f *fakeUnitRepository) Update(_ context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
@@ -139,6 +140,12 @@ type fakeRoomRepository struct {
 	rooms         map[int]*domainroom.Room
 	listAccountID int
 	listQuery     domainroom.ListQuery
+	countCalls    []roomCountCall
+}
+
+type roomCountCall struct {
+	accountID int
+	query     domainroom.ListQuery
 }
 
 func (f *fakeRoomRepository) Create(context.Context, int, *domainroom.Room) (*domainroom.Room, error) {
@@ -162,6 +169,24 @@ func (f *fakeRoomRepository) List(_ context.Context, accountID int, query domain
 	f.listAccountID = accountID
 	f.listQuery = query
 	return nil, nil
+}
+
+func (f *fakeRoomRepository) Count(_ context.Context, accountID int, query domainroom.ListQuery) (int, error) {
+	f.countCalls = append(f.countCalls, roomCountCall{accountID: accountID, query: query})
+	count := 0
+	for _, room := range f.rooms {
+		if room.UnitID != query.UnitID {
+			continue
+		}
+		if query.RoomTypeID > 0 && room.RoomTypeID != query.RoomTypeID {
+			continue
+		}
+		if query.IsActive != nil && room.IsActive != *query.IsActive {
+			continue
+		}
+		count++
+	}
+	return count, nil
 }
 
 func (f *fakeRoomRepository) Update(_ context.Context, accountID int, room *domainroom.Room) (*domainroom.Room, error) {
