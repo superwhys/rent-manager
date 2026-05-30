@@ -11,11 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
-	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/role"
-	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/permissiongroup"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/predicate"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/role"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // RoleUpdate is the builder for updating Role entities.

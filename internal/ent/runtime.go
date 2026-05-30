@@ -5,18 +5,18 @@ package ent
 import (
 	"time"
 
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
-	"github.com/superwhys/rent-manager-server/internal/ent/permission"
-	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
-	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
-	"github.com/superwhys/rent-manager-server/internal/ent/role"
-	"github.com/superwhys/rent-manager-server/internal/ent/room"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
-	"github.com/superwhys/rent-manager-server/internal/ent/schema"
-	"github.com/superwhys/rent-manager-server/internal/ent/unit"
-	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/meteritem"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/meterreading"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/permission"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/permissiongroup"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/rentbill"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/role"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/room"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/roomtype"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/schema"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unit"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // The init function reads all schema descriptors with runtime code

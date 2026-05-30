@@ -10,12 +10,12 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
-	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
-	"github.com/superwhys/rent-manager-server/internal/ent/room"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
-	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/meteritem"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/meterreading"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/rentbill"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/room"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/roomtype"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unit"
 )
 
 // RoomCreate is the builder for creating a Room entity.

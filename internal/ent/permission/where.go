@@ -7,7 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

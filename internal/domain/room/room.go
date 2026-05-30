@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	domainmeteritem "github.com/superwhys/rent-manager-server/internal/domain/meteritem"
+	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
 )
 
 type Room struct {

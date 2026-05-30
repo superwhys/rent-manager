@@ -1,6 +1,6 @@
 package response
 
-import domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac"
+import domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
 
 type RoleResponse struct {
 	ID             int    `json:"id"`

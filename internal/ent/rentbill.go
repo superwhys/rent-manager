@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
-	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/rentbill"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/room"
 )
 
 // RentBill is the model entity for the RentBill schema.

@@ -10,9 +10,9 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/permission"
-	"github.com/superwhys/rent-manager-server/internal/ent/permissiongroup"
-	"github.com/superwhys/rent-manager-server/internal/ent/role"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/permission"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/permissiongroup"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/role"
 )
 
 // PermissionGroupCreate is the builder for creating a PermissionGroup entity.

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	domainaccount "github.com/superwhys/rent-manager-server/internal/domain/account"
-	"github.com/superwhys/rent-manager-server/internal/jwtutils"
+	domainaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
 )
 
 func TestAccountServiceSelf(t *testing.T) {

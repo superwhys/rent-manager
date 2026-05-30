@@ -1,8 +1,8 @@
 package response
 
 import (
+	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
 	"github.com/miebyte/goutils/ginutils"
-	domainunit "github.com/superwhys/rent-manager-server/internal/domain/unit"
 )
 
 // UnitMeterItemResponse 是单元默认抄表项响应。

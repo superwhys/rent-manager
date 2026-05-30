@@ -8,9 +8,9 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/miebyte/goutils/mysqlutils"
-	"github.com/superwhys/rent-manager-server/internal/ent"
 )
 
 // OpenMysqlClient initializes an Ent client from MySQL config.

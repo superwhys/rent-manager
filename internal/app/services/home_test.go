@@ -3,8 +3,8 @@ package services
 import (
 	"testing"
 
-	domainroom "github.com/superwhys/rent-manager-server/internal/domain/room"
-	domainunit "github.com/superwhys/rent-manager-server/internal/domain/unit"
+	domainroom "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/room"
+	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
 )
 
 func TestHomeServiceGetHomeSummaryAggregatesAccessibleUnits(t *testing.T) {

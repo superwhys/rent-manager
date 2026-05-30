@@ -9,10 +9,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/role"
-	"github.com/superwhys/rent-manager-server/internal/ent/unit"
-	"github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/role"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unit"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 // UnitAccountRole is the model entity for the UnitAccountRole schema.

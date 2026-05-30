@@ -13,7 +13,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/superwhys/rent-manager-server/internal/ent/schema/mixin"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/schema/mixin"
 )
 
 // 房间类型实体

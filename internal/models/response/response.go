@@ -1,8 +1,8 @@
 package response
 
 import (
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
 	"github.com/miebyte/goutils/ginutils"
-	"github.com/superwhys/rent-manager-server/internal/errcode"
 )
 
 func ResponseSuccess() *ginutils.Ret[any] {

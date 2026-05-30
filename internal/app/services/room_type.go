@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 
-	domainroomtype "github.com/superwhys/rent-manager-server/internal/domain/roomtype"
-	"github.com/superwhys/rent-manager-server/internal/models/requests"
+	domainroomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/roomtype"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
 )
 
 type RoomTypeService struct {

@@ -10,9 +10,9 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/account"
-	"github.com/superwhys/rent-manager-server/internal/ent/room"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/room"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/roomtype"
 )
 
 // RoomTypeCreate is the builder for creating a RoomType entity.

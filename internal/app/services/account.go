@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 
-	domainaccount "github.com/superwhys/rent-manager-server/internal/domain/account"
+	domainaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
 )
 
 type AccountService struct {

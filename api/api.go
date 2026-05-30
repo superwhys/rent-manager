@@ -9,12 +9,12 @@
 package api
 
 import (
+	"git.superwhys.top/rent-manager/rent-manager-server/api/middlewares"
+	"git.superwhys.top/rent-manager/rent-manager-server/api/routers"
+	"git.superwhys.top/rent-manager/rent-manager-server/config"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
-	"github.com/superwhys/rent-manager-server/api/middlewares"
-	"github.com/superwhys/rent-manager-server/api/routers"
-	"github.com/superwhys/rent-manager-server/config"
-	"github.com/superwhys/rent-manager-server/internal/app/services"
 	"github.com/ulule/limiter/v3"
 )
 

@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/predicate"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/roomtype"
 )
 
 // RoomTypeDelete is the builder for deleting a RoomType entity.

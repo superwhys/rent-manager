@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/superwhys/rent-manager-server/internal/errcode"
 )
 
 func GenerateTokenPair(signingKey []byte, accessTimeout, refreshTimeout time.Duration, userID int) (string, string, string, error) {

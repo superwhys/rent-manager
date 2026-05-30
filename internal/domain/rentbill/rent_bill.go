@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/superwhys/rent-manager-server/internal/models/consts"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/consts"
 )
 
 type RentBill struct {

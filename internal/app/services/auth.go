@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"git.superwhys.top/rent-manager/rent-manager-server/config"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/superwhys/rent-manager-server/config"
-	"github.com/superwhys/rent-manager-server/internal/domain/account"
-	"github.com/superwhys/rent-manager-server/internal/errcode"
-	"github.com/superwhys/rent-manager-server/internal/jwtutils"
-	"github.com/superwhys/rent-manager-server/internal/models/requests"
 )
 
 // TokenResult 描述认证用例签发的访问令牌。

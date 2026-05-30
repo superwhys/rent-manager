@@ -3,9 +3,9 @@ package repo
 import (
 	"context"
 
-	domainmeteritem "github.com/superwhys/rent-manager-server/internal/domain/meteritem"
-	entclient "github.com/superwhys/rent-manager-server/internal/ent"
-	entmeteritem "github.com/superwhys/rent-manager-server/internal/ent/meteritem"
+	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
+	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/ent"
+	entmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/ent/meteritem"
 )
 
 type MeterItemRepository struct {

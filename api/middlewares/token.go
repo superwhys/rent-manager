@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"strings"
 
+	"git.superwhys.top/rent-manager/rent-manager-server/config"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/miebyte/goutils/logging"
-	"github.com/superwhys/rent-manager-server/config"
-	"github.com/superwhys/rent-manager-server/internal/errcode"
-	"github.com/superwhys/rent-manager-server/internal/jwtutils"
-	"github.com/superwhys/rent-manager-server/internal/models/response"
 )
 
 func TokenVerifyMiddleware(jwtConfig *config.JwtConfig) gin.HandlerFunc {

@@ -1,4 +1,4 @@
-module github.com/superwhys/rent-manager-server
+module git.superwhys.top/rent-manager/rent-manager-server
 
 go 1.26.2
 

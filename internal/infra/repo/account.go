@@ -3,9 +3,9 @@ package repo
 import (
 	"context"
 
-	"github.com/superwhys/rent-manager-server/internal/domain/account"
-	entclient "github.com/superwhys/rent-manager-server/internal/ent"
-	entaccount "github.com/superwhys/rent-manager-server/internal/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
+	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/ent"
+	entaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/ent/account"
 )
 
 type AccountRepository struct {

@@ -3,12 +3,12 @@ package routers
 import (
 	"net/http"
 
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
-	"github.com/superwhys/rent-manager-server/internal/app/services"
-	"github.com/superwhys/rent-manager-server/internal/errcode"
-	"github.com/superwhys/rent-manager-server/internal/models/requests"
-	"github.com/superwhys/rent-manager-server/internal/models/response"
 )
 
 func RoleRouter(rbacService *services.RBACService) ginutils.Option {

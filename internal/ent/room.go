@@ -9,9 +9,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/superwhys/rent-manager-server/internal/ent/room"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
-	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/room"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/roomtype"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unit"
 )
 
 // Room is the model entity for the Room schema.

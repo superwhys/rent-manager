@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 
-	"github.com/superwhys/rent-manager-server/internal/jwtutils"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
 )
 
 func AccountIDFromContext(ctx context.Context) (int, error) {

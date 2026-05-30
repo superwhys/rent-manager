@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
-	"github.com/superwhys/rent-manager-server/internal/ent/room"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/predicate"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/rentbill"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/room"
 )
 
 // RentBillQuery is the builder for querying RentBill entities.

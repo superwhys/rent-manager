@@ -1,8 +1,8 @@
 package response
 
 import (
+	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
 	"github.com/miebyte/goutils/ginutils"
-	domainmeteritem "github.com/superwhys/rent-manager-server/internal/domain/meteritem"
 )
 
 // MeterItemResponse 是抄表项响应。

@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 
-	domainmeteritem "github.com/superwhys/rent-manager-server/internal/domain/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/models/requests"
+	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
 )
 
 type MeterItemService struct {

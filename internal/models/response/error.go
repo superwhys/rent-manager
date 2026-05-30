@@ -4,18 +4,18 @@ import (
 	"errors"
 	"net/http"
 
+	domainaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
+	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
+	domainmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meterreading"
+	domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
+	domainrentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rentbill"
+	domainroom "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/room"
+	domainroomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/roomtype"
+	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/miebyte/goutils/logging"
-	domainaccount "github.com/superwhys/rent-manager-server/internal/domain/account"
-	domainmeteritem "github.com/superwhys/rent-manager-server/internal/domain/meteritem"
-	domainmeterreading "github.com/superwhys/rent-manager-server/internal/domain/meterreading"
-	domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac"
-	domainrentbill "github.com/superwhys/rent-manager-server/internal/domain/rentbill"
-	domainroom "github.com/superwhys/rent-manager-server/internal/domain/room"
-	domainroomtype "github.com/superwhys/rent-manager-server/internal/domain/roomtype"
-	domainunit "github.com/superwhys/rent-manager-server/internal/domain/unit"
-	"github.com/superwhys/rent-manager-server/internal/errcode"
 )
 
 // common.HandleRouterError 处理业务逻辑错误响应。

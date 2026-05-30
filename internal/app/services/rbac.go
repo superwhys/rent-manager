@@ -3,10 +3,10 @@ package services
 import (
 	"context"
 
-	"github.com/superwhys/rent-manager-server/config"
-	"github.com/superwhys/rent-manager-server/internal/models/requests"
+	"git.superwhys.top/rent-manager/rent-manager-server/config"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
 
-	domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac"
+	domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
 )
 
 type RBACService struct {

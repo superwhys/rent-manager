@@ -11,13 +11,13 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/superwhys/rent-manager-server/internal/ent/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/ent/meterreading"
-	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	"github.com/superwhys/rent-manager-server/internal/ent/rentbill"
-	"github.com/superwhys/rent-manager-server/internal/ent/room"
-	"github.com/superwhys/rent-manager-server/internal/ent/roomtype"
-	"github.com/superwhys/rent-manager-server/internal/ent/unit"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/meteritem"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/meterreading"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/predicate"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/rentbill"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/room"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/roomtype"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unit"
 )
 
 // RoomUpdate is the builder for updating Room entities.

@@ -1,8 +1,8 @@
 package response
 
 import (
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
 	"github.com/miebyte/goutils/ginutils"
-	"github.com/superwhys/rent-manager-server/internal/app/services"
 )
 
 // TokenResponse 是认证令牌响应。

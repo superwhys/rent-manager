@@ -1,8 +1,8 @@
 package response
 
 import (
+	domainroomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/roomtype"
 	"github.com/miebyte/goutils/ginutils"
-	domainroomtype "github.com/superwhys/rent-manager-server/internal/domain/roomtype"
 )
 
 type RoomTypeResponse struct {

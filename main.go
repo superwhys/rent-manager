@@ -11,16 +11,16 @@ package main
 import (
 	"time"
 
+	"git.superwhys.top/rent-manager/rent-manager-server/api"
+	"git.superwhys.top/rent-manager/rent-manager-server/config"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/ratelimit"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/repo"
 	"github.com/miebyte/goutils/cores"
 	"github.com/miebyte/goutils/flags"
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/mysqlutils"
 	"github.com/miebyte/goutils/redisutils"
-	"github.com/superwhys/rent-manager-server/api"
-	"github.com/superwhys/rent-manager-server/config"
-	"github.com/superwhys/rent-manager-server/internal/app/services"
-	"github.com/superwhys/rent-manager-server/internal/infra/ratelimit"
-	"github.com/superwhys/rent-manager-server/internal/infra/repo"
 )
 
 var (

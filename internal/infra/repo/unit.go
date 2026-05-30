@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	domainunit "github.com/superwhys/rent-manager-server/internal/domain/unit"
-	entclient "github.com/superwhys/rent-manager-server/internal/ent"
-	entmeteritem "github.com/superwhys/rent-manager-server/internal/ent/meteritem"
-	"github.com/superwhys/rent-manager-server/internal/ent/predicate"
-	entrole "github.com/superwhys/rent-manager-server/internal/ent/role"
-	entroom "github.com/superwhys/rent-manager-server/internal/ent/room"
-	entunit "github.com/superwhys/rent-manager-server/internal/ent/unit"
-	entunitaccountrole "github.com/superwhys/rent-manager-server/internal/ent/unitaccountrole"
+	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
+	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/ent"
+	entmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/ent/meteritem"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/ent/predicate"
+	entrole "git.superwhys.top/rent-manager/rent-manager-server/internal/ent/role"
+	entroom "git.superwhys.top/rent-manager/rent-manager-server/internal/ent/room"
+	entunit "git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unit"
+	entunitaccountrole "git.superwhys.top/rent-manager/rent-manager-server/internal/ent/unitaccountrole"
 )
 
 type UnitRepository struct {

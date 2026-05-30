@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/superwhys/rent-manager-server/config"
-	domainrbac "github.com/superwhys/rent-manager-server/internal/domain/rbac"
-	"github.com/superwhys/rent-manager-server/internal/jwtutils"
-	"github.com/superwhys/rent-manager-server/internal/models/requests"
+	"git.superwhys.top/rent-manager/rent-manager-server/config"
+	domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
 )
 
 func TestRBACServiceCreatePermissionsRequiresSuperAdmin(t *testing.T) {
