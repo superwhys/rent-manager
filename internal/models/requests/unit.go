@@ -35,7 +35,7 @@ type CreateRoomInUnitCommand struct {
 	RoomNo       string `json:"room_no" validate:"required"`
 	Floor        int    `json:"floor"`
 	Price        int    `json:"price" validate:"required,min=1"`
-	Size         int    `json:"size" validate:"required,min=1"`
+	Size         int    `json:"size" validate:"omitempty,min=1"`
 	RoomTypeID   int    `json:"room_type_id" validate:"required,min=1"`
 	MeterItemIDs []int  `json:"meter_item_ids" validate:"omitempty,dive,min=1"`
 }

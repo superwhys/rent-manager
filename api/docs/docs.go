@@ -1657,7 +1657,6 @@ const docTemplate = `{
                 "price",
                 "room_no",
                 "room_type_id",
-                "size",
                 "unitID"
             ],
             "properties": {
@@ -2029,16 +2028,16 @@ const docTemplate = `{
                 "building_room_summary": {
                     "$ref": "#/definitions/response.HomeBuildingRoomSummaryResponse"
                 },
-                "currentMonth": {
+                "current_month": {
                     "type": "string"
                 },
-                "incomeAmount": {
+                "income_amount": {
                     "type": "string"
                 },
-                "incomeDecimal": {
+                "income_decimal": {
                     "type": "string"
                 },
-                "monthlyGrowth": {
+                "monthly_growth": {
                     "type": "string"
                 },
                 "stats": {
@@ -2311,22 +2310,22 @@ const docTemplate = `{
                 "is_owner": {
                     "type": "boolean"
                 },
-                "monthlyRentAmount": {
+                "monthly_rent_amount": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
-                "occupancyStatus": {
+                "occupancy_status": {
                     "type": "string"
                 },
                 "province": {
                     "type": "string"
                 },
-                "rentedCount": {
+                "rented_count": {
                     "type": "integer"
                 },
-                "roomCount": {
+                "room_count": {
                     "type": "integer"
                 }
             }

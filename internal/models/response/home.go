@@ -27,10 +27,10 @@ type HomeTodoResponse struct {
 // HomeResponse 是首页聚合数据响应。
 type HomeResponse struct {
 	BuildingRoomSummary HomeBuildingRoomSummaryResponse `json:"building_room_summary"`
-	IncomeAmount        string                          `json:"incomeAmount"`
-	IncomeDecimal       string                          `json:"incomeDecimal"`
-	MonthlyGrowth       string                          `json:"monthlyGrowth"`
-	CurrentMonth        string                          `json:"currentMonth"`
+	IncomeAmount        string                          `json:"income_amount"`
+	IncomeDecimal       string                          `json:"income_decimal"`
+	MonthlyGrowth       string                          `json:"monthly_growth"`
+	CurrentMonth        string                          `json:"current_month"`
 	Stats               []HomeStatResponse              `json:"stats"`
 	Todos               []HomeTodoResponse              `json:"todos"`
 }

@@ -226,8 +226,8 @@ github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D
 github.com/mattn/go-sqlite3 v1.14.28 h1:ThEiQrnbtumT+QMknw63Befp/ce/nUPgBPMlRFEum7A=
 github.com/mattn/go-sqlite3 v1.14.28/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/miebyte/goutils v1.1.61 h1:4P9GI2RtyWOln0SXoKZeL6oKWW8K2RQNLVT6H8YcgX4=
-github.com/miebyte/goutils v1.1.61/go.mod h1:hUyPgY+5BzsDJiWe9DzTjvF9i+3chPEAJTBQlPDbfZc=
+github.com/miebyte/goutils v1.1.62 h1:RgutTJH0w9xo+WHczK9IWTe9B7EpmMNedpeqZKPs/mg=
+github.com/miebyte/goutils v1.1.62/go.mod h1:hUyPgY+5BzsDJiWe9DzTjvF9i+3chPEAJTBQlPDbfZc=
 github.com/miekg/dns v1.1.56 h1:5imZaSeoRNvpM9SzWNhEcP9QliKiz20/dA2QabIGVnE=
 github.com/miekg/dns v1.1.56/go.mod h1:cRm6Oo2C8TY9ZS/TqsSrseAcncm74lfK5G+ikN2SWWY=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=

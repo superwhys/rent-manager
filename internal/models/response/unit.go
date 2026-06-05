@@ -27,10 +27,10 @@ type UnitResponse struct {
 	AccessType        string                  `json:"access_type"`
 	IsOwner           bool                    `json:"is_owner"`
 	DefaultMeterItems []UnitMeterItemResponse `json:"default_meter_items"`
-	RoomCount         int                     `json:"roomCount"`
-	RentedCount       int                     `json:"rentedCount"`
-	MonthlyRentAmount string                  `json:"monthlyRentAmount"`
-	OccupancyStatus   string                  `json:"occupancyStatus"`
+	RoomCount         int                     `json:"room_count"`
+	RentedCount       int                     `json:"rented_count"`
+	MonthlyRentAmount string                  `json:"monthly_rent_amount"`
+	OccupancyStatus   string                  `json:"occupancy_status"`
 }
 
 // ToUnitResponse 将单元领域对象转换为响应对象。
