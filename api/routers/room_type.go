@@ -3,15 +3,15 @@ package routers
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	approomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/app/roomtype"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 )
 
-func RoomTypeRouter(roomTypeService *services.RoomTypeService) ginutils.Option {
+// RoomTypeRouter 注册房型路由。
+func RoomTypeRouter(roomTypeService *approomtype.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodPost, "", CreateRoomTypeHandler(roomTypeService)),
 		ginutils.WithHandler(http.MethodGet, "", ListRoomTypesHandler(roomTypeService)),
@@ -26,16 +26,16 @@ func RoomTypeRouter(roomTypeService *services.RoomTypeService) ginutils.Option {
 // @Tags room_type
 // @Accept json
 // @Produce json
-// @Param request body requests.CreateRoomTypeCommand true "房型信息"
-// @Success 200 {object} ginutils.Ret[response.RoomTypeResponse]
+// @Param request body roomtype.CreateRoomTypeCommand true "房型信息"
+// @Success 200 {object} ginutils.Ret[roomtype.RoomTypeResponse]
 // @Router /room-types [post]
-func CreateRoomTypeHandler(roomTypeService *services.RoomTypeService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreateRoomTypeCommand) {
+func CreateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.CreateRoomTypeCommand) {
 		roomType, err := roomTypeService.CreateRoomType(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "create room type failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "create room type failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.RoomTypeResponseRet(roomType))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)))
 	})
 }
 
@@ -46,15 +46,15 @@ func CreateRoomTypeHandler(roomTypeService *services.RoomTypeService) gin.Handle
 // @Param limit query int false "分页数量"
 // @Param offset query int false "分页偏移"
 // @Param name query string false "房型名称"
-// @Success 200 {object} ginutils.Ret[[]response.RoomTypeResponse]
+// @Success 200 {object} ginutils.Ret[[]roomtype.RoomTypeResponse]
 // @Router /room-types [get]
-func ListRoomTypesHandler(roomTypeService *services.RoomTypeService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.ListRoomTypesQuery) {
+func ListRoomTypesHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.ListRoomTypesQuery) {
 		roomTypes, err := roomTypeService.ListRoomTypes(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "list room types failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "list room types failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.RoomTypeListResponseRet(roomTypes))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approomtype.ToRoomTypeListResponse(roomTypes)))
 	})
 }
 
@@ -63,15 +63,15 @@ func ListRoomTypesHandler(roomTypeService *services.RoomTypeService) gin.Handler
 // @Tags room_type
 // @Produce json
 // @Param room_type_id path int true "房型ID"
-// @Success 200 {object} ginutils.Ret[response.RoomTypeResponse]
+// @Success 200 {object} ginutils.Ret[roomtype.RoomTypeResponse]
 // @Router /room-types/{room_type_id} [get]
-func GetRoomTypeHandler(roomTypeService *services.RoomTypeService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RoomTypeIDQuery) {
+func GetRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.RoomTypeIDQuery) {
 		roomType, err := roomTypeService.GetRoomType(c.Request.Context(), req.RoomTypeID)
-		if response.HandleRouterError(c, err, "get room type failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "get room type failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.RoomTypeResponseRet(roomType))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)))
 	})
 }
 
@@ -81,16 +81,16 @@ func GetRoomTypeHandler(roomTypeService *services.RoomTypeService) gin.HandlerFu
 // @Accept json
 // @Produce json
 // @Param room_type_id path int true "房型ID"
-// @Param request body requests.UpdateRoomTypeCommand true "房型信息"
-// @Success 200 {object} ginutils.Ret[response.RoomTypeResponse]
+// @Param request body roomtype.UpdateRoomTypeCommand true "房型信息"
+// @Success 200 {object} ginutils.Ret[roomtype.RoomTypeResponse]
 // @Router /room-types/{room_type_id} [put]
-func UpdateRoomTypeHandler(roomTypeService *services.RoomTypeService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.UpdateRoomTypeCommand) {
+func UpdateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.UpdateRoomTypeCommand) {
 		roomType, err := roomTypeService.UpdateRoomType(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "update room type failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "update room type failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.RoomTypeResponseRet(roomType))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)))
 	})
 }
 
@@ -101,12 +101,12 @@ func UpdateRoomTypeHandler(roomTypeService *services.RoomTypeService) gin.Handle
 // @Param room_type_id path int true "房型ID"
 // @Success 200 {object} ginutils.Ret[any]
 // @Router /room-types/{room_type_id} [delete]
-func DeleteRoomTypeHandler(roomTypeService *services.RoomTypeService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RoomTypeIDQuery) {
+func DeleteRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.RoomTypeIDQuery) {
 		err := roomTypeService.DeleteRoomType(c.Request.Context(), req.RoomTypeID)
-		if response.HandleRouterError(c, err, "delete room type failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "delete room type failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())
 	})
 }

@@ -3,15 +3,15 @@ package routers
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meteritem"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 )
 
-func MeterItemRouter(meterItemService *services.MeterItemService) ginutils.Option {
+// MeterItemRouter 注册抄表项路由。
+func MeterItemRouter(meterItemService *appmeteritem.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodPost, "", CreateMeterItemHandler(meterItemService)),
 		ginutils.WithHandler(http.MethodGet, "", ListMeterItemsHandler(meterItemService)),
@@ -25,16 +25,16 @@ func MeterItemRouter(meterItemService *services.MeterItemService) ginutils.Optio
 // @Tags meter_item
 // @Accept json
 // @Produce json
-// @Param request body requests.CreateMeterItemCommand true "抄表项信息"
-// @Success 200 {object} ginutils.Ret[response.MeterItemResponse]
+// @Param request body meteritem.CreateMeterItemCommand true "抄表项信息"
+// @Success 200 {object} ginutils.Ret[meteritem.MeterItemResponse]
 // @Router /meter-items [post]
-func CreateMeterItemHandler(meterItemService *services.MeterItemService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreateMeterItemCommand) {
+func CreateMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.CreateMeterItemCommand) {
 		item, err := meterItemService.CreateMeterItem(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "create meter item failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "create meter item failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.MeterItemResponseRet(item))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appmeteritem.ToMeterItemResponse(item)))
 	})
 }
 
@@ -47,15 +47,15 @@ func CreateMeterItemHandler(meterItemService *services.MeterItemService) gin.Han
 // @Param code query string false "抄表项编码"
 // @Param is_system query bool false "是否系统内置"
 // @Param calc_type query string false "计费类型"
-// @Success 200 {object} ginutils.Ret[[]response.MeterItemResponse]
+// @Success 200 {object} ginutils.Ret[[]meteritem.MeterItemResponse]
 // @Router /meter-items [get]
-func ListMeterItemsHandler(meterItemService *services.MeterItemService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.ListMeterItemsQuery) {
+func ListMeterItemsHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.ListMeterItemsQuery) {
 		items, err := meterItemService.ListMeterItems(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "list meter items failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "list meter items failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.MeterItemListResponseRet(items))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appmeteritem.ToMeterItemListResponse(items)))
 	})
 }
 
@@ -64,15 +64,15 @@ func ListMeterItemsHandler(meterItemService *services.MeterItemService) gin.Hand
 // @Tags meter_item
 // @Produce json
 // @Param meter_item_id path int true "抄表项ID"
-// @Success 200 {object} ginutils.Ret[response.MeterItemResponse]
+// @Success 200 {object} ginutils.Ret[meteritem.MeterItemResponse]
 // @Router /meter-items/{meter_item_id} [get]
-func GetMeterItemHandler(meterItemService *services.MeterItemService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.MeterItemIDQuery) {
+func GetMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.MeterItemIDQuery) {
 		item, err := meterItemService.GetMeterItem(c.Request.Context(), req.MeterItemID)
-		if response.HandleRouterError(c, err, "get meter item failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "get meter item failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.MeterItemResponseRet(item))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appmeteritem.ToMeterItemResponse(item)))
 	})
 }
 
@@ -82,15 +82,15 @@ func GetMeterItemHandler(meterItemService *services.MeterItemService) gin.Handle
 // @Accept json
 // @Produce json
 // @Param meter_item_id path int true "抄表项ID"
-// @Param request body requests.UpdateMeterItemCommand true "抄表项信息"
-// @Success 200 {object} ginutils.Ret[response.MeterItemResponse]
+// @Param request body meteritem.UpdateMeterItemCommand true "抄表项信息"
+// @Success 200 {object} ginutils.Ret[meteritem.MeterItemResponse]
 // @Router /meter-items/{meter_item_id} [put]
-func UpdateMeterItemHandler(meterItemService *services.MeterItemService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.UpdateMeterItemCommand) {
+func UpdateMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.UpdateMeterItemCommand) {
 		item, err := meterItemService.UpdateMeterItem(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "update meter item failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "update meter item failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.MeterItemResponseRet(item))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appmeteritem.ToMeterItemResponse(item)))
 	})
 }

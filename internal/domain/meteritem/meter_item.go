@@ -3,8 +3,6 @@ package meteritem
 import (
 	"strings"
 	"time"
-
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/consts"
 )
 
 type MeterItem struct {
@@ -60,7 +58,7 @@ func (i *MeterItem) Validate() error {
 		return ErrInvalidUnitPrice
 	}
 	switch i.CalcType {
-	case consts.CalcTypeDifference, consts.CalcTypeDirect:
+	case CalcTypeDifference, CalcTypeDirect:
 		return nil
 	default:
 		return ErrInvalidCalcType
@@ -70,7 +68,7 @@ func (i *MeterItem) Validate() error {
 func normalizeCalcType(calcType string) string {
 	calcType = strings.TrimSpace(calcType)
 	if calcType == "" {
-		return consts.CalcTypeDifference
+		return CalcTypeDifference
 	}
 	return calcType
 }

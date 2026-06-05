@@ -3,8 +3,6 @@ package rentbill
 import (
 	"strings"
 	"time"
-
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/consts"
 )
 
 type RentBill struct {
@@ -45,7 +43,7 @@ func GenerateRentBill(params GenerateParams) (*RentBill, error) {
 		PeriodMonth: params.PeriodMonth,
 		BaseRent:    params.BaseRent,
 		MeterFee:    params.MeterFee,
-		Status:      consts.RentBillStatusUnpaid,
+		Status:      StatusUnpaid,
 		Remark:      params.Remark,
 	})
 }
@@ -83,11 +81,11 @@ func (b *RentBill) Validate() error {
 		return ErrInvalidTotalAmount
 	}
 	switch b.Status {
-	case consts.RentBillStatusUnpaid, consts.RentBillStatusPaid, consts.RentBillStatusCancelled:
+	case StatusUnpaid, StatusPaid, StatusCancelled:
 	default:
 		return ErrInvalidStatus
 	}
-	if b.Status == consts.RentBillStatusPaid && b.PaidAt == nil {
+	if b.Status == StatusPaid && b.PaidAt == nil {
 		return ErrPaidAtRequired
 	}
 	return nil
@@ -98,25 +96,25 @@ func (b *RentBill) CalculateTotal() {
 }
 
 func (b *RentBill) MarkPaid(paidAt time.Time) error {
-	if b.Status == consts.RentBillStatusCancelled {
+	if b.Status == StatusCancelled {
 		return ErrCancelled
 	}
-	if b.Status == consts.RentBillStatusPaid {
+	if b.Status == StatusPaid {
 		return ErrAlreadyPaid
 	}
 	if paidAt.IsZero() {
 		return ErrPaidAtRequired
 	}
-	b.Status = consts.RentBillStatusPaid
+	b.Status = StatusPaid
 	b.PaidAt = &paidAt
 	return nil
 }
 
 func (b *RentBill) Cancel() error {
-	if b.Status == consts.RentBillStatusPaid {
+	if b.Status == StatusPaid {
 		return ErrAlreadyPaid
 	}
-	b.Status = consts.RentBillStatusCancelled
+	b.Status = StatusCancelled
 	return nil
 }
 
@@ -128,7 +126,7 @@ func isValidPeriodMonth(periodMonth string) bool {
 func normalizeStatus(status string) string {
 	status = strings.TrimSpace(status)
 	if status == "" {
-		return consts.RentBillStatusUnpaid
+		return StatusUnpaid
 	}
 	return status
 }

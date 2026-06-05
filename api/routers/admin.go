@@ -3,15 +3,16 @@ package routers
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
+	apprbac "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rbac"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 )
 
-func AdminRouter(rbacService *services.RBACService) ginutils.Option {
+// AdminRouter 注册全局权限管理路由。
+func AdminRouter(rbacService *apprbac.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodPost, "/permission-groups/batch", CreatePermissionGroupsHandler(rbacService)),
 		ginutils.WithHandler(http.MethodGet, "/permission-groups", ListPermissionGroupsHandler(rbacService)),
@@ -27,16 +28,16 @@ func AdminRouter(rbacService *services.RBACService) ginutils.Option {
 // @Tags admin
 // @Accept json
 // @Produce json
-// @Param request body requests.CreatePermissionGroupsCommand true "权限组列表"
-// @Success 200 {object} ginutils.Ret[[]response.PermissionGroupResponse]
+// @Param request body rbac.CreatePermissionGroupsCommand true "权限组列表"
+// @Success 200 {object} ginutils.Ret[[]rbac.PermissionGroupResponse]
 // @Router /admin/permission-groups/batch [post]
-func CreatePermissionGroupsHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreatePermissionGroupsCommand) {
+func CreatePermissionGroupsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.CreatePermissionGroupsCommand) {
 		groups, err := rbacService.CreatePermissionGroups(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "create permission groups failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "create permission groups failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToPermissionGroupListResponse(groups)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprbac.ToPermissionGroupListResponse(groups)))
 	})
 }
 
@@ -44,15 +45,15 @@ func CreatePermissionGroupsHandler(rbacService *services.RBACService) gin.Handle
 // @Summary 获取权限组列表
 // @Tags admin
 // @Produce json
-// @Success 200 {object} ginutils.Ret[[]response.PermissionGroupResponse]
+// @Success 200 {object} ginutils.Ret[[]rbac.PermissionGroupResponse]
 // @Router /admin/permission-groups [get]
-func ListPermissionGroupsHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.EmptyRequest) {
+func ListPermissionGroupsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {
 		groups, err := rbacService.ListPermissionGroups(c.Request.Context())
-		if response.HandleRouterError(c, err, "list permission groups failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "list permission groups failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToPermissionGroupListResponse(groups)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprbac.ToPermissionGroupListResponse(groups)))
 	})
 }
 
@@ -61,16 +62,16 @@ func ListPermissionGroupsHandler(rbacService *services.RBACService) gin.HandlerF
 // @Tags admin
 // @Accept json
 // @Produce json
-// @Param request body requests.CreatePermissionsCommand true "权限列表"
-// @Success 200 {object} ginutils.Ret[[]response.PermissionResponse]
+// @Param request body rbac.CreatePermissionsCommand true "权限列表"
+// @Success 200 {object} ginutils.Ret[[]rbac.PermissionResponse]
 // @Router /admin/permissions/batch [post]
-func CreatePermissionsHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreatePermissionsCommand) {
+func CreatePermissionsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.CreatePermissionsCommand) {
 		permissions, err := rbacService.CreatePermissions(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "create permissions failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "create permissions failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToPermissionListResponse(permissions)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprbac.ToPermissionListResponse(permissions)))
 	})
 }
 
@@ -78,15 +79,15 @@ func CreatePermissionsHandler(rbacService *services.RBACService) gin.HandlerFunc
 // @Summary 获取权限列表
 // @Tags admin
 // @Produce json
-// @Success 200 {object} ginutils.Ret[[]response.PermissionResponse]
+// @Success 200 {object} ginutils.Ret[[]rbac.PermissionResponse]
 // @Router /admin/permissions [get]
-func ListPermissionsHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.EmptyRequest) {
+func ListPermissionsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {
 		permissions, err := rbacService.ListPermissions(c.Request.Context())
-		if response.HandleRouterError(c, err, "list permissions failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "list permissions failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToPermissionListResponse(permissions)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprbac.ToPermissionListResponse(permissions)))
 	})
 }
 
@@ -96,16 +97,16 @@ func ListPermissionsHandler(rbacService *services.RBACService) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param permission_group_id path int true "权限组ID"
-// @Param request body requests.PermissionGroupPermissionsCommand true "权限ID列表"
+// @Param request body rbac.PermissionGroupPermissionsCommand true "权限ID列表"
 // @Success 200 {object} ginutils.Ret[any]
 // @Router /admin/permission-groups/{permission_group_id}/permissions [post]
-func AddPermissionsToPermissionGroupHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.PermissionGroupPermissionsCommand) {
+func AddPermissionsToPermissionGroupHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.PermissionGroupPermissionsCommand) {
 		err := rbacService.AddPermissionsToPermissionGroup(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "add permissions to permission group failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "add permissions to permission group failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())
 	})
 }
 
@@ -115,15 +116,15 @@ func AddPermissionsToPermissionGroupHandler(rbacService *services.RBACService) g
 // @Accept json
 // @Produce json
 // @Param permission_group_id path int true "权限组ID"
-// @Param request body requests.PermissionGroupPermissionsCommand true "权限ID列表"
+// @Param request body rbac.PermissionGroupPermissionsCommand true "权限ID列表"
 // @Success 200 {object} ginutils.Ret[any]
 // @Router /admin/permission-groups/{permission_group_id}/permissions [delete]
-func RemovePermissionsFromPermissionGroupHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.PermissionGroupPermissionsCommand) {
+func RemovePermissionsFromPermissionGroupHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.PermissionGroupPermissionsCommand) {
 		err := rbacService.RemovePermissionsFromPermissionGroup(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "remove permissions from permission group failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "remove permissions from permission group failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())
 	})
 }

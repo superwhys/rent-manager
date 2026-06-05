@@ -3,16 +3,16 @@ package routers
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
+	apphome "git.superwhys.top/rent-manager/rent-manager-server/internal/app/home"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 )
 
 // HomeRouter 注册首页聚合数据路由。
-func HomeRouter(homeService *services.HomeService) ginutils.Option {
+func HomeRouter(homeService *apphome.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodGet, "", GetHomeHandler(homeService)),
 	)
@@ -22,59 +22,15 @@ func HomeRouter(homeService *services.HomeService) ginutils.Option {
 // @Summary 获取首页聚合数据
 // @Tags home
 // @Produce json
-// @Success 200 {object} ginutils.Ret[response.HomeResponse]
+// @Success 200 {object} ginutils.Ret[home.Response]
 // @Router /home [get]
-func GetHomeHandler(homeService *services.HomeService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.EmptyRequest) {
+func GetHomeHandler(homeService *apphome.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {
 		summary, err := homeService.GetHomeSummary(c.Request.Context())
-		if response.HandleRouterError(c, err, "get home failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "get home failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.HomeResponseRet(response.HomeResponse{
-			BuildingRoomSummary: response.HomeBuildingRoomSummaryResponse{
-				BuildingCount:   summary.BuildingCount,
-				RoomCount:       summary.RoomCount,
-				RentedRoomCount: summary.RentedRoomCount,
-				VacantRoomCount: summary.VacantRoomCount,
-			},
-			IncomeAmount:  "38,650",
-			IncomeDecimal: ".00",
-			MonthlyGrowth: "+¥1,280",
-			CurrentMonth:  "2025-05",
-			Stats: []response.HomeStatResponse{
-				{
-					Value: "5",
-					Label: "楼栋",
-					Tone:  "green",
-				},
-				{
-					Value: "42",
-					Label: "房间",
-					Tone:  "blue",
-				},
-				{
-					Value: "6",
-					Label: "待收",
-					Tone:  "orange",
-				},
-			},
-			Todos: []response.HomeTodoResponse{
-				{
-					Title:       "幸福小区 · 3栋",
-					Description: "还有 8 间房未抄表",
-					Tag:         "抄表",
-				},
-				{
-					Title:       "阳光花园 · 2栋",
-					Description: "还有 6 笔租金待收",
-					Tag:         "收租",
-				},
-				{
-					Title:       "城市公寓 · 801",
-					Description: "租约将在 12 天后到期",
-					Tag:         "续租",
-				},
-			},
-		}))
+
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apphome.ToSummaryResponse(summary)))
 	})
 }

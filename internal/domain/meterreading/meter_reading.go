@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/consts"
+	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
 )
 
 type MeterReading struct {
@@ -84,7 +84,7 @@ func (r *MeterReading) Validate() error {
 		return ErrReadingTimeRequired
 	}
 	switch r.Source {
-	case consts.SourceManual, consts.SourceImport, consts.SourceAuto:
+	case SourceManual, SourceImport, SourceAuto:
 		return nil
 	default:
 		return ErrInvalidSource
@@ -93,11 +93,11 @@ func (r *MeterReading) Validate() error {
 
 func (r *MeterReading) CalculateUsage(calcType string) error {
 	switch normalizeCalcType(calcType) {
-	case consts.CalcTypeDirect:
+	case domainmeteritem.CalcTypeDirect:
 		usage := r.CurrentReading
 		r.UsageAmount = &usage
 		return nil
-	case consts.CalcTypeDifference:
+	case domainmeteritem.CalcTypeDifference:
 		if r.PreviousReading == nil {
 			return ErrPreviousReadingRequired
 		}
@@ -130,7 +130,7 @@ func isValidPeriodMonth(periodMonth string) bool {
 func normalizeSource(source string) string {
 	source = strings.TrimSpace(source)
 	if source == "" {
-		return consts.SourceManual
+		return SourceManual
 	}
 	return source
 }
@@ -138,7 +138,7 @@ func normalizeSource(source string) string {
 func normalizeCalcType(calcType string) string {
 	calcType = strings.TrimSpace(calcType)
 	if calcType == "" {
-		return consts.CalcTypeDifference
+		return domainmeteritem.CalcTypeDifference
 	}
 	return calcType
 }

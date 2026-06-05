@@ -28,7 +28,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_AccountResponse"
+                            "$ref": "#/definitions/ginutils.Ret-account_AccountResponse"
                         }
                     }
                 }
@@ -47,7 +47,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionGroupResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_rbac_PermissionGroupResponse"
                         }
                     }
                 }
@@ -72,7 +72,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.CreatePermissionGroupsCommand"
+                            "$ref": "#/definitions/rbac.CreatePermissionGroupsCommand"
                         }
                     }
                 ],
@@ -80,7 +80,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionGroupResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_rbac_PermissionGroupResponse"
                         }
                     }
                 }
@@ -112,7 +112,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.PermissionGroupPermissionsCommand"
+                            "$ref": "#/definitions/rbac.PermissionGroupPermissionsCommand"
                         }
                     }
                 ],
@@ -150,7 +150,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.PermissionGroupPermissionsCommand"
+                            "$ref": "#/definitions/rbac.PermissionGroupPermissionsCommand"
                         }
                     }
                 ],
@@ -177,7 +177,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_rbac_PermissionResponse"
                         }
                     }
                 }
@@ -202,7 +202,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.CreatePermissionsCommand"
+                            "$ref": "#/definitions/rbac.CreatePermissionsCommand"
                         }
                     }
                 ],
@@ -210,7 +210,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_PermissionResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_rbac_PermissionResponse"
                         }
                     }
                 }
@@ -235,7 +235,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.RefreshTokenReq"
+                            "$ref": "#/definitions/auth.RefreshTokenReq"
                         }
                     }
                 ],
@@ -243,7 +243,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_TokenResponse"
+                            "$ref": "#/definitions/ginutils.Ret-auth_TokenResponse"
                         }
                     }
                 }
@@ -268,7 +268,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.WechatLoginReq"
+                            "$ref": "#/definitions/auth.WechatLoginReq"
                         }
                     }
                 ],
@@ -276,7 +276,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_TokenResponse"
+                            "$ref": "#/definitions/ginutils.Ret-auth_TokenResponse"
                         }
                     }
                 }
@@ -295,7 +295,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_HomeResponse"
+                            "$ref": "#/definitions/ginutils.Ret-home_Response"
                         }
                     }
                 }
@@ -346,7 +346,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_MeterItemResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_meteritem_MeterItemResponse"
                         }
                     }
                 }
@@ -369,7 +369,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.CreateMeterItemCommand"
+                            "$ref": "#/definitions/meteritem.CreateMeterItemCommand"
                         }
                     }
                 ],
@@ -377,7 +377,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_MeterItemResponse"
+                            "$ref": "#/definitions/ginutils.Ret-meteritem_MeterItemResponse"
                         }
                     }
                 }
@@ -405,7 +405,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_MeterItemResponse"
+                            "$ref": "#/definitions/ginutils.Ret-meteritem_MeterItemResponse"
                         }
                     }
                 }
@@ -435,7 +435,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UpdateMeterItemCommand"
+                            "$ref": "#/definitions/meteritem.UpdateMeterItemCommand"
                         }
                     }
                 ],
@@ -443,7 +443,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_MeterItemResponse"
+                            "$ref": "#/definitions/ginutils.Ret-meteritem_MeterItemResponse"
                         }
                     }
                 }
@@ -462,7 +462,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_RoleResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_rbac_RoleResponse"
                         }
                     }
                 }
@@ -487,7 +487,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.CreateRolesCommand"
+                            "$ref": "#/definitions/rbac.CreateRolesCommand"
                         }
                     }
                 ],
@@ -495,7 +495,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_RoleResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_rbac_RoleResponse"
                         }
                     }
                 }
@@ -523,7 +523,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoleResponse"
+                            "$ref": "#/definitions/ginutils.Ret-rbac_RoleResponse"
                         }
                     }
                 }
@@ -553,7 +553,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UpdateRoleCommand"
+                            "$ref": "#/definitions/rbac.UpdateRoleCommand"
                         }
                     }
                 ],
@@ -561,7 +561,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoleResponse"
+                            "$ref": "#/definitions/ginutils.Ret-rbac_RoleResponse"
                         }
                     }
                 }
@@ -619,7 +619,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.RolePermissionGroupsCommand"
+                            "$ref": "#/definitions/rbac.RolePermissionGroupsCommand"
                         }
                     }
                 ],
@@ -657,7 +657,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.RolePermissionGroupsCommand"
+                            "$ref": "#/definitions/rbac.RolePermissionGroupsCommand"
                         }
                     }
                 ],
@@ -704,7 +704,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_RoomTypeResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_roomtype_RoomTypeResponse"
                         }
                     }
                 }
@@ -727,7 +727,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.CreateRoomTypeCommand"
+                            "$ref": "#/definitions/roomtype.CreateRoomTypeCommand"
                         }
                     }
                 ],
@@ -735,7 +735,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoomTypeResponse"
+                            "$ref": "#/definitions/ginutils.Ret-roomtype_RoomTypeResponse"
                         }
                     }
                 }
@@ -763,7 +763,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoomTypeResponse"
+                            "$ref": "#/definitions/ginutils.Ret-roomtype_RoomTypeResponse"
                         }
                     }
                 }
@@ -793,7 +793,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UpdateRoomTypeCommand"
+                            "$ref": "#/definitions/roomtype.UpdateRoomTypeCommand"
                         }
                     }
                 ],
@@ -801,7 +801,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoomTypeResponse"
+                            "$ref": "#/definitions/ginutils.Ret-roomtype_RoomTypeResponse"
                         }
                     }
                 }
@@ -855,7 +855,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                            "$ref": "#/definitions/ginutils.Ret-room_RoomResponse"
                         }
                     }
                 }
@@ -885,7 +885,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UpdateRoomCommand"
+                            "$ref": "#/definitions/room.UpdateRoomCommand"
                         }
                     }
                 ],
@@ -893,7 +893,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                            "$ref": "#/definitions/ginutils.Ret-room_RoomResponse"
                         }
                     }
                 }
@@ -946,7 +946,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_UnitResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_unit_UnitResponse"
                         }
                     }
                 }
@@ -969,7 +969,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.CreateUnitCommand"
+                            "$ref": "#/definitions/unit.CreateUnitCommand"
                         }
                     }
                 ],
@@ -977,7 +977,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                            "$ref": "#/definitions/ginutils.Ret-unit_UnitResponse"
                         }
                     }
                 }
@@ -1005,7 +1005,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                            "$ref": "#/definitions/ginutils.Ret-unit_UnitResponse"
                         }
                     }
                 }
@@ -1035,7 +1035,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UpdateUnitCommand"
+                            "$ref": "#/definitions/unit.UpdateUnitCommand"
                         }
                     }
                 ],
@@ -1043,7 +1043,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_UnitResponse"
+                            "$ref": "#/definitions/ginutils.Ret-unit_UnitResponse"
                         }
                     }
                 }
@@ -1108,7 +1108,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UnitAccountRolesCommand"
+                            "$ref": "#/definitions/rbac.UnitAccountRolesCommand"
                         }
                     }
                 ],
@@ -1116,7 +1116,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_UnitGrantResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_rbac_UnitGrantResponse"
                         }
                     }
                 }
@@ -1153,7 +1153,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UnitAccountRolesCommand"
+                            "$ref": "#/definitions/rbac.UnitAccountRolesCommand"
                         }
                     }
                 ],
@@ -1201,7 +1201,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_UnitGrantResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_rbac_UnitGrantResponse"
                         }
                     }
                 }
@@ -1253,7 +1253,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_response_RoomResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_room_RoomResponse"
                         }
                     }
                 }
@@ -1283,7 +1283,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.CreateRoomInUnitCommand"
+                            "$ref": "#/definitions/room.CreateRoomInUnitCommand"
                         }
                     }
                 ],
@@ -1291,7 +1291,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-response_RoomResponse"
+                            "$ref": "#/definitions/ginutils.Ret-room_RoomResponse"
                         }
                     }
                 }
@@ -1299,6 +1299,77 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "account.AccountResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "wechat_openid": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.RefreshTokenReq": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.WechatLoginReq": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "ginutils.Ret-account_AccountResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/account.AccountResponse"
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-any": {
             "type": "object",
             "properties": {
@@ -1309,7 +1380,7 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "ginutils.Ret-array_response_MeterItemResponse": {
+        "ginutils.Ret-array_meteritem_MeterItemResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1318,13 +1389,13 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.MeterItemResponse"
+                        "$ref": "#/definitions/meteritem.MeterItemResponse"
                     }
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-array_response_PermissionGroupResponse": {
+        "ginutils.Ret-array_rbac_PermissionGroupResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1333,13 +1404,13 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.PermissionGroupResponse"
+                        "$ref": "#/definitions/rbac.PermissionGroupResponse"
                     }
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-array_response_PermissionResponse": {
+        "ginutils.Ret-array_rbac_PermissionResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1348,13 +1419,13 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.PermissionResponse"
+                        "$ref": "#/definitions/rbac.PermissionResponse"
                     }
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-array_response_RoleResponse": {
+        "ginutils.Ret-array_rbac_RoleResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1363,13 +1434,13 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.RoleResponse"
+                        "$ref": "#/definitions/rbac.RoleResponse"
                     }
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-array_response_RoomResponse": {
+        "ginutils.Ret-array_rbac_UnitGrantResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1378,13 +1449,13 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.RoomResponse"
+                        "$ref": "#/definitions/rbac.UnitGrantResponse"
                     }
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-array_response_RoomTypeResponse": {
+        "ginutils.Ret-array_room_RoomResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1393,13 +1464,13 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.RoomTypeResponse"
+                        "$ref": "#/definitions/room.RoomResponse"
                     }
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-array_response_UnitGrantResponse": {
+        "ginutils.Ret-array_roomtype_RoomTypeResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1408,13 +1479,13 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.UnitGrantResponse"
+                        "$ref": "#/definitions/roomtype.RoomTypeResponse"
                     }
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-array_response_UnitResponse": {
+        "ginutils.Ret-array_unit_UnitResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1423,109 +1494,174 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.UnitResponse"
+                        "$ref": "#/definitions/unit.UnitResponse"
                     }
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-response_AccountResponse": {
+        "ginutils.Ret-auth_TokenResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/response.AccountResponse"
+                    "$ref": "#/definitions/auth.TokenResponse"
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-response_HomeResponse": {
+        "ginutils.Ret-home_Response": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/response.HomeResponse"
+                    "$ref": "#/definitions/home.Response"
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-response_MeterItemResponse": {
+        "ginutils.Ret-meteritem_MeterItemResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/response.MeterItemResponse"
+                    "$ref": "#/definitions/meteritem.MeterItemResponse"
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-response_RoleResponse": {
+        "ginutils.Ret-rbac_RoleResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/response.RoleResponse"
+                    "$ref": "#/definitions/rbac.RoleResponse"
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-response_RoomResponse": {
+        "ginutils.Ret-room_RoomResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/response.RoomResponse"
+                    "$ref": "#/definitions/room.RoomResponse"
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-response_RoomTypeResponse": {
+        "ginutils.Ret-roomtype_RoomTypeResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/response.RoomTypeResponse"
+                    "$ref": "#/definitions/roomtype.RoomTypeResponse"
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-response_TokenResponse": {
+        "ginutils.Ret-unit_UnitResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/response.TokenResponse"
+                    "$ref": "#/definitions/unit.UnitResponse"
                 },
                 "message": {}
             }
         },
-        "ginutils.Ret-response_UnitResponse": {
+        "home.BuildingRoomSummaryResponse": {
             "type": "object",
             "properties": {
-                "code": {
+                "building_count": {
                     "type": "integer"
                 },
-                "data": {
-                    "$ref": "#/definitions/response.UnitResponse"
+                "rented_room_count": {
+                    "type": "integer"
                 },
-                "message": {}
+                "room_count": {
+                    "type": "integer"
+                },
+                "vacant_room_count": {
+                    "type": "integer"
+                }
             }
         },
-        "requests.CreateMeterItemCommand": {
+        "home.Response": {
+            "type": "object",
+            "properties": {
+                "building_room_summary": {
+                    "$ref": "#/definitions/home.BuildingRoomSummaryResponse"
+                },
+                "current_month": {
+                    "type": "string"
+                },
+                "income_amount": {
+                    "type": "string"
+                },
+                "income_decimal": {
+                    "type": "string"
+                },
+                "monthly_growth": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/home.StatResponse"
+                    }
+                },
+                "todos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/home.TodoResponse"
+                    }
+                }
+            }
+        },
+        "home.StatResponse": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "tone": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "home.TodoResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "meteritem.CreateMeterItemCommand": {
             "type": "object",
             "required": [
                 "code",
@@ -1556,7 +1692,72 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.CreatePermissionGroupItem": {
+        "meteritem.MeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "calc_type": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "unit_price": {
+                    "type": "integer"
+                }
+            }
+        },
+        "meteritem.UpdateMeterItemCommand": {
+            "type": "object",
+            "required": [
+                "code",
+                "meterItemID",
+                "unit"
+            ],
+            "properties": {
+                "calc_type": {
+                    "type": "string",
+                    "enum": [
+                        "DIFFERENCE",
+                        "DIRECT"
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "meterItemID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "unit_price": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "rbac.CreatePermissionGroupItem": {
             "type": "object",
             "required": [
                 "code",
@@ -1577,7 +1778,7 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.CreatePermissionGroupsCommand": {
+        "rbac.CreatePermissionGroupsCommand": {
             "type": "object",
             "required": [
                 "permission_groups"
@@ -1587,12 +1788,12 @@ const docTemplate = `{
                     "type": "array",
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/requests.CreatePermissionGroupItem"
+                        "$ref": "#/definitions/rbac.CreatePermissionGroupItem"
                     }
                 }
             }
         },
-        "requests.CreatePermissionItem": {
+        "rbac.CreatePermissionItem": {
             "type": "object",
             "required": [
                 "code",
@@ -1607,7 +1808,7 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.CreatePermissionsCommand": {
+        "rbac.CreatePermissionsCommand": {
             "type": "object",
             "required": [
                 "permissions"
@@ -1617,12 +1818,12 @@ const docTemplate = `{
                     "type": "array",
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/requests.CreatePermissionItem"
+                        "$ref": "#/definitions/rbac.CreatePermissionItem"
                     }
                 }
             }
         },
-        "requests.CreateRoleItem": {
+        "rbac.CreateRoleItem": {
             "type": "object",
             "required": [
                 "name"
@@ -1636,7 +1837,7 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.CreateRolesCommand": {
+        "rbac.CreateRolesCommand": {
             "type": "object",
             "required": [
                 "roles"
@@ -1646,12 +1847,185 @@ const docTemplate = `{
                     "type": "array",
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/requests.CreateRoleItem"
+                        "$ref": "#/definitions/rbac.CreateRoleItem"
                     }
                 }
             }
         },
-        "requests.CreateRoomInUnitCommand": {
+        "rbac.PermissionGroupPermissionsCommand": {
+            "type": "object",
+            "required": [
+                "permissionGroupID",
+                "permission_ids"
+            ],
+            "properties": {
+                "permissionGroupID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "permission_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "rbac.PermissionGroupResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                }
+            }
+        },
+        "rbac.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "rbac.RolePermissionGroupsCommand": {
+            "type": "object",
+            "required": [
+                "permission_group_ids",
+                "roleID"
+            ],
+            "properties": {
+                "permission_group_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "roleID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "rbac.RoleResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_default_owner": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "rbac.UnitAccountRolesCommand": {
+            "type": "object",
+            "required": [
+                "accountID",
+                "role_ids",
+                "unitID"
+            ],
+            "properties": {
+                "accountID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "role_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "unitID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "rbac.UnitGrantResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "granted_by_account_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "$ref": "#/definitions/rbac.RoleResponse"
+                },
+                "role_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "unit_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "rbac.UpdateRoleCommand": {
+            "type": "object",
+            "required": [
+                "name",
+                "roleID"
+            ],
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_default_owner": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "roleID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "room.CreateRoomInUnitCommand": {
             "type": "object",
             "required": [
                 "price",
@@ -1690,186 +2064,42 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.CreateRoomTypeCommand": {
+        "room.RoomResponse": {
             "type": "object",
-            "required": [
-                "name"
-            ],
             "properties": {
-                "name": {
-                    "type": "string",
-                    "maxLength": 12
-                }
-            }
-        },
-        "requests.CreateUnitCommand": {
-            "type": "object",
-            "required": [
-                "address",
-                "city",
-                "name",
-                "province"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string",
-                    "maxLength": 255
+                "floor": {
+                    "type": "integer"
                 },
-                "city": {
-                    "type": "string",
-                    "maxLength": 255
+                "id": {
+                    "type": "integer"
                 },
-                "default_meter_item_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "province": {
-                    "type": "string",
-                    "maxLength": 255
-                }
-            }
-        },
-        "requests.PermissionGroupPermissionsCommand": {
-            "type": "object",
-            "required": [
-                "permissionGroupID",
-                "permission_ids"
-            ],
-            "properties": {
-                "permissionGroupID": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "permission_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "requests.RefreshTokenReq": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "requests.RolePermissionGroupsCommand": {
-            "type": "object",
-            "required": [
-                "permission_group_ids",
-                "roleID"
-            ],
-            "properties": {
-                "permission_group_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "roleID": {
-                    "type": "integer",
-                    "minimum": 1
-                }
-            }
-        },
-        "requests.UnitAccountRolesCommand": {
-            "type": "object",
-            "required": [
-                "accountID",
-                "role_ids",
-                "unitID"
-            ],
-            "properties": {
-                "accountID": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "role_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "unitID": {
-                    "type": "integer",
-                    "minimum": 1
-                }
-            }
-        },
-        "requests.UpdateMeterItemCommand": {
-            "type": "object",
-            "required": [
-                "code",
-                "meterItemID",
-                "unit"
-            ],
-            "properties": {
-                "calc_type": {
-                    "type": "string",
-                    "enum": [
-                        "DIFFERENCE",
-                        "DIRECT"
-                    ]
-                },
-                "code": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "meterItemID": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "unit": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "unit_price": {
-                    "type": "integer",
-                    "minimum": 0
-                }
-            }
-        },
-        "requests.UpdateRoleCommand": {
-            "type": "object",
-            "required": [
-                "name",
-                "roleID"
-            ],
-            "properties": {
                 "is_active": {
                     "type": "boolean"
                 },
-                "is_default_owner": {
-                    "type": "boolean"
+                "meter_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/meteritem.MeterItemResponse"
+                    }
                 },
-                "name": {
+                "price": {
+                    "type": "integer"
+                },
+                "room_no": {
                     "type": "string"
                 },
-                "roleID": {
-                    "type": "integer",
-                    "minimum": 1
+                "room_type_id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "unit_id": {
+                    "type": "integer"
                 }
             }
         },
-        "requests.UpdateRoomCommand": {
+        "room.UpdateRoomCommand": {
             "type": "object",
             "required": [
                 "roomID"
@@ -1913,7 +2143,33 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.UpdateRoomTypeCommand": {
+        "roomtype.CreateRoomTypeCommand": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 12
+                }
+            }
+        },
+        "roomtype.RoomTypeResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "roomtype.UpdateRoomTypeCommand": {
             "type": "object",
             "required": [
                 "name",
@@ -1930,7 +2186,113 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.UpdateUnitCommand": {
+        "unit.CreateUnitCommand": {
+            "type": "object",
+            "required": [
+                "address",
+                "city",
+                "name",
+                "province"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "default_meter_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "province": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "unit.UnitMeterItemResponse": {
+            "type": "object",
+            "properties": {
+                "calc_type": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "unit_price": {
+                    "type": "integer"
+                }
+            }
+        },
+        "unit.UnitResponse": {
+            "type": "object",
+            "properties": {
+                "access_type": {
+                    "type": "string"
+                },
+                "account_id": {
+                    "type": "integer"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "default_meter_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/unit.UnitMeterItemResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_owner": {
+                    "type": "boolean"
+                },
+                "monthly_rent_amount": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "occupancy_status": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
+                },
+                "rented_count": {
+                    "type": "integer"
+                },
+                "room_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "unit.UpdateUnitCommand": {
             "type": "object",
             "required": [
                 "address",
@@ -1965,368 +2327,6 @@ const docTemplate = `{
                 "unitID": {
                     "type": "integer",
                     "minimum": 1
-                }
-            }
-        },
-        "requests.WechatLoginReq": {
-            "type": "object",
-            "required": [
-                "code"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.AccountResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "wechat_openid": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.HomeBuildingRoomSummaryResponse": {
-            "type": "object",
-            "properties": {
-                "building_count": {
-                    "type": "integer"
-                },
-                "rented_room_count": {
-                    "type": "integer"
-                },
-                "room_count": {
-                    "type": "integer"
-                },
-                "vacant_room_count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.HomeResponse": {
-            "type": "object",
-            "properties": {
-                "building_room_summary": {
-                    "$ref": "#/definitions/response.HomeBuildingRoomSummaryResponse"
-                },
-                "current_month": {
-                    "type": "string"
-                },
-                "income_amount": {
-                    "type": "string"
-                },
-                "income_decimal": {
-                    "type": "string"
-                },
-                "monthly_growth": {
-                    "type": "string"
-                },
-                "stats": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.HomeStatResponse"
-                    }
-                },
-                "todos": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.HomeTodoResponse"
-                    }
-                }
-            }
-        },
-        "response.HomeStatResponse": {
-            "type": "object",
-            "properties": {
-                "label": {
-                    "type": "string"
-                },
-                "tone": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.HomeTodoResponse": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "tag": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.MeterItemResponse": {
-            "type": "object",
-            "properties": {
-                "account_id": {
-                    "type": "integer"
-                },
-                "calc_type": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_system": {
-                    "type": "boolean"
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "unit": {
-                    "type": "string"
-                },
-                "unit_price": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.PermissionGroupResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.PermissionResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "response.RoleResponse": {
-            "type": "object",
-            "properties": {
-                "account_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "is_default_owner": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.RoomResponse": {
-            "type": "object",
-            "properties": {
-                "floor": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "meter_items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.MeterItemResponse"
-                    }
-                },
-                "price": {
-                    "type": "integer"
-                },
-                "room_no": {
-                    "type": "string"
-                },
-                "room_type_id": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                },
-                "unit_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.RoomTypeResponse": {
-            "type": "object",
-            "properties": {
-                "account_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.UnitGrantResponse": {
-            "type": "object",
-            "properties": {
-                "account_id": {
-                    "type": "integer"
-                },
-                "granted_by_account_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "role": {
-                    "$ref": "#/definitions/response.RoleResponse"
-                },
-                "role_id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "unit_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.UnitMeterItemResponse": {
-            "type": "object",
-            "properties": {
-                "calc_type": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_system": {
-                    "type": "boolean"
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "unit": {
-                    "type": "string"
-                },
-                "unit_price": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.UnitResponse": {
-            "type": "object",
-            "properties": {
-                "access_type": {
-                    "type": "string"
-                },
-                "account_id": {
-                    "type": "integer"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "default_meter_items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.UnitMeterItemResponse"
-                    }
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_owner": {
-                    "type": "boolean"
-                },
-                "monthly_rent_amount": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "occupancy_status": {
-                    "type": "string"
-                },
-                "province": {
-                    "type": "string"
-                },
-                "rented_count": {
-                    "type": "integer"
-                },
-                "room_count": {
-                    "type": "integer"
                 }
             }
         }

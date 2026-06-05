@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -107,7 +107,7 @@ const TokenContextKey ContextKey = "user_token_claims"
 func TokenClaimsFromContext(ctx context.Context) (*AccountTokenClaims, error) {
 	claims, ok := ctx.Value(TokenContextKey).(*AccountTokenClaims)
 	if !ok {
-		return nil, errcode.ErrUnauthorized
+		return nil, xerr.ErrUnauthorized
 	}
 	return claims, nil
 }

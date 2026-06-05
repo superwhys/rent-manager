@@ -3,15 +3,15 @@ package routers
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 )
 
-func AuthRouter(authService *services.AuthService) ginutils.Option {
+// AuthRouter 注册认证路由。
+func AuthRouter(authService *appauth.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodPost, "/wechat-login", WechatLoginHandler(authService)),
 		ginutils.WithHandler(http.MethodPost, "/refresh-token", RefreshTokenHandler(authService)),
@@ -23,16 +23,16 @@ func AuthRouter(authService *services.AuthService) ginutils.Option {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body requests.WechatLoginReq true "微信登录参数"
-// @Success 200 {object} ginutils.Ret[response.TokenResponse]
+// @Param request body auth.WechatLoginReq true "微信登录参数"
+// @Success 200 {object} ginutils.Ret[auth.TokenResponse]
 // @Router /auth/wechat-login [post]
-func WechatLoginHandler(authService *services.AuthService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.WechatLoginReq) {
+func WechatLoginHandler(authService *appauth.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appauth.WechatLoginReq) {
 		token, err := authService.WechatLogin(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "wechat login failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "wechat login failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ToTokenResponseRet(token))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appauth.ToTokenResponse(token)))
 	})
 }
 
@@ -41,15 +41,15 @@ func WechatLoginHandler(authService *services.AuthService) gin.HandlerFunc {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body requests.RefreshTokenReq true "刷新令牌参数"
-// @Success 200 {object} ginutils.Ret[response.TokenResponse]
+// @Param request body auth.RefreshTokenReq true "刷新令牌参数"
+// @Success 200 {object} ginutils.Ret[auth.TokenResponse]
 // @Router /auth/refresh-token [post]
-func RefreshTokenHandler(authService *services.AuthService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RefreshTokenReq) {
+func RefreshTokenHandler(authService *appauth.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appauth.RefreshTokenReq) {
 		token, err := authService.RefreshToken(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "refresh token failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "refresh token failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ToTokenResponseRet(token))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appauth.ToTokenResponse(token)))
 	})
 }

@@ -1,5 +1,51 @@
 basePath: /api
 definitions:
+  account.AccountResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      wechat_openid:
+        type: string
+    type: object
+  auth.RefreshTokenReq:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  auth.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  auth.WechatLoginReq:
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
+  ginutils.Ret-account_AccountResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/account.AccountResponse'
+      message: {}
+    type: object
   ginutils.Ret-any:
     properties:
       code:
@@ -7,151 +53,193 @@ definitions:
       data: {}
       message: {}
     type: object
-  ginutils.Ret-array_response_MeterItemResponse:
+  ginutils.Ret-array_meteritem_MeterItemResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/response.MeterItemResponse'
+          $ref: '#/definitions/meteritem.MeterItemResponse'
         type: array
       message: {}
     type: object
-  ginutils.Ret-array_response_PermissionGroupResponse:
+  ginutils.Ret-array_rbac_PermissionGroupResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/response.PermissionGroupResponse'
+          $ref: '#/definitions/rbac.PermissionGroupResponse'
         type: array
       message: {}
     type: object
-  ginutils.Ret-array_response_PermissionResponse:
+  ginutils.Ret-array_rbac_PermissionResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/response.PermissionResponse'
+          $ref: '#/definitions/rbac.PermissionResponse'
         type: array
       message: {}
     type: object
-  ginutils.Ret-array_response_RoleResponse:
+  ginutils.Ret-array_rbac_RoleResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/response.RoleResponse'
+          $ref: '#/definitions/rbac.RoleResponse'
         type: array
       message: {}
     type: object
-  ginutils.Ret-array_response_RoomResponse:
+  ginutils.Ret-array_rbac_UnitGrantResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/response.RoomResponse'
+          $ref: '#/definitions/rbac.UnitGrantResponse'
         type: array
       message: {}
     type: object
-  ginutils.Ret-array_response_RoomTypeResponse:
+  ginutils.Ret-array_room_RoomResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/response.RoomTypeResponse'
+          $ref: '#/definitions/room.RoomResponse'
         type: array
       message: {}
     type: object
-  ginutils.Ret-array_response_UnitGrantResponse:
+  ginutils.Ret-array_roomtype_RoomTypeResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/response.UnitGrantResponse'
+          $ref: '#/definitions/roomtype.RoomTypeResponse'
         type: array
       message: {}
     type: object
-  ginutils.Ret-array_response_UnitResponse:
+  ginutils.Ret-array_unit_UnitResponse:
     properties:
       code:
         type: integer
       data:
         items:
-          $ref: '#/definitions/response.UnitResponse'
+          $ref: '#/definitions/unit.UnitResponse'
         type: array
       message: {}
     type: object
-  ginutils.Ret-response_AccountResponse:
+  ginutils.Ret-auth_TokenResponse:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/response.AccountResponse'
+        $ref: '#/definitions/auth.TokenResponse'
       message: {}
     type: object
-  ginutils.Ret-response_HomeResponse:
+  ginutils.Ret-home_Response:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/response.HomeResponse'
+        $ref: '#/definitions/home.Response'
       message: {}
     type: object
-  ginutils.Ret-response_MeterItemResponse:
+  ginutils.Ret-meteritem_MeterItemResponse:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/response.MeterItemResponse'
+        $ref: '#/definitions/meteritem.MeterItemResponse'
       message: {}
     type: object
-  ginutils.Ret-response_RoleResponse:
+  ginutils.Ret-rbac_RoleResponse:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/response.RoleResponse'
+        $ref: '#/definitions/rbac.RoleResponse'
       message: {}
     type: object
-  ginutils.Ret-response_RoomResponse:
+  ginutils.Ret-room_RoomResponse:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/response.RoomResponse'
+        $ref: '#/definitions/room.RoomResponse'
       message: {}
     type: object
-  ginutils.Ret-response_RoomTypeResponse:
+  ginutils.Ret-roomtype_RoomTypeResponse:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/response.RoomTypeResponse'
+        $ref: '#/definitions/roomtype.RoomTypeResponse'
       message: {}
     type: object
-  ginutils.Ret-response_TokenResponse:
+  ginutils.Ret-unit_UnitResponse:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/response.TokenResponse'
+        $ref: '#/definitions/unit.UnitResponse'
       message: {}
     type: object
-  ginutils.Ret-response_UnitResponse:
+  home.BuildingRoomSummaryResponse:
     properties:
-      code:
+      building_count:
         type: integer
-      data:
-        $ref: '#/definitions/response.UnitResponse'
-      message: {}
+      rented_room_count:
+        type: integer
+      room_count:
+        type: integer
+      vacant_room_count:
+        type: integer
     type: object
-  requests.CreateMeterItemCommand:
+  home.Response:
+    properties:
+      building_room_summary:
+        $ref: '#/definitions/home.BuildingRoomSummaryResponse'
+      current_month:
+        type: string
+      income_amount:
+        type: string
+      income_decimal:
+        type: string
+      monthly_growth:
+        type: string
+      stats:
+        items:
+          $ref: '#/definitions/home.StatResponse'
+        type: array
+      todos:
+        items:
+          $ref: '#/definitions/home.TodoResponse'
+        type: array
+    type: object
+  home.StatResponse:
+    properties:
+      label:
+        type: string
+      tone:
+        type: string
+      value:
+        type: string
+    type: object
+  home.TodoResponse:
+    properties:
+      description:
+        type: string
+      tag:
+        type: string
+      title:
+        type: string
+    type: object
+  meteritem.CreateMeterItemCommand:
     properties:
       calc_type:
         enum:
@@ -173,7 +261,52 @@ definitions:
     - code
     - unit
     type: object
-  requests.CreatePermissionGroupItem:
+  meteritem.MeterItemResponse:
+    properties:
+      account_id:
+        type: integer
+      calc_type:
+        type: string
+      code:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      remark:
+        type: string
+      unit:
+        type: string
+      unit_price:
+        type: integer
+    type: object
+  meteritem.UpdateMeterItemCommand:
+    properties:
+      calc_type:
+        enum:
+        - DIFFERENCE
+        - DIRECT
+        type: string
+      code:
+        maxLength: 255
+        type: string
+      meterItemID:
+        minimum: 1
+        type: integer
+      remark:
+        type: string
+      unit:
+        maxLength: 255
+        type: string
+      unit_price:
+        minimum: 0
+        type: integer
+    required:
+    - code
+    - meterItemID
+    - unit
+    type: object
+  rbac.CreatePermissionGroupItem:
     properties:
       code:
         type: string
@@ -187,17 +320,17 @@ definitions:
     - code
     - name
     type: object
-  requests.CreatePermissionGroupsCommand:
+  rbac.CreatePermissionGroupsCommand:
     properties:
       permission_groups:
         items:
-          $ref: '#/definitions/requests.CreatePermissionGroupItem'
+          $ref: '#/definitions/rbac.CreatePermissionGroupItem'
         minItems: 1
         type: array
     required:
     - permission_groups
     type: object
-  requests.CreatePermissionItem:
+  rbac.CreatePermissionItem:
     properties:
       code:
         type: string
@@ -207,17 +340,17 @@ definitions:
     - code
     - description
     type: object
-  requests.CreatePermissionsCommand:
+  rbac.CreatePermissionsCommand:
     properties:
       permissions:
         items:
-          $ref: '#/definitions/requests.CreatePermissionItem'
+          $ref: '#/definitions/rbac.CreatePermissionItem'
         minItems: 1
         type: array
     required:
     - permissions
     type: object
-  requests.CreateRoleItem:
+  rbac.CreateRoleItem:
     properties:
       is_default_owner:
         type: boolean
@@ -226,17 +359,134 @@ definitions:
     required:
     - name
     type: object
-  requests.CreateRolesCommand:
+  rbac.CreateRolesCommand:
     properties:
       roles:
         items:
-          $ref: '#/definitions/requests.CreateRoleItem'
+          $ref: '#/definitions/rbac.CreateRoleItem'
         minItems: 1
         type: array
     required:
     - roles
     type: object
-  requests.CreateRoomInUnitCommand:
+  rbac.PermissionGroupPermissionsCommand:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      permissionGroupID:
+        minimum: 1
+        type: integer
+    required:
+    - permissionGroupID
+    - permission_ids
+    type: object
+  rbac.PermissionGroupResponse:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+    type: object
+  rbac.PermissionResponse:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+    type: object
+  rbac.RolePermissionGroupsCommand:
+    properties:
+      permission_group_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      roleID:
+        minimum: 1
+        type: integer
+    required:
+    - permission_group_ids
+    - roleID
+    type: object
+  rbac.RoleResponse:
+    properties:
+      account_id:
+        type: integer
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_default_owner:
+        type: boolean
+      name:
+        type: string
+    type: object
+  rbac.UnitAccountRolesCommand:
+    properties:
+      accountID:
+        minimum: 1
+        type: integer
+      role_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      unitID:
+        minimum: 1
+        type: integer
+    required:
+    - accountID
+    - role_ids
+    - unitID
+    type: object
+  rbac.UnitGrantResponse:
+    properties:
+      account_id:
+        type: integer
+      granted_by_account_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        $ref: '#/definitions/rbac.RoleResponse'
+      role_id:
+        type: integer
+      status:
+        type: string
+      unit_id:
+        type: integer
+    type: object
+  rbac.UpdateRoleCommand:
+    properties:
+      is_active:
+        type: boolean
+      is_default_owner:
+        type: boolean
+      name:
+        type: string
+      roleID:
+        minimum: 1
+        type: integer
+    required:
+    - name
+    - roleID
+    type: object
+  room.CreateRoomInUnitCommand:
     properties:
       floor:
         type: integer
@@ -264,133 +514,30 @@ definitions:
     - room_type_id
     - unitID
     type: object
-  requests.CreateRoomTypeCommand:
+  room.RoomResponse:
     properties:
-      name:
-        maxLength: 12
-        type: string
-    required:
-    - name
-    type: object
-  requests.CreateUnitCommand:
-    properties:
-      address:
-        maxLength: 255
-        type: string
-      city:
-        maxLength: 255
-        type: string
-      default_meter_item_ids:
-        items:
-          type: integer
-        type: array
-      name:
-        maxLength: 255
-        type: string
-      province:
-        maxLength: 255
-        type: string
-    required:
-    - address
-    - city
-    - name
-    - province
-    type: object
-  requests.PermissionGroupPermissionsCommand:
-    properties:
-      permission_ids:
-        items:
-          type: integer
-        minItems: 1
-        type: array
-      permissionGroupID:
-        minimum: 1
+      floor:
         type: integer
-    required:
-    - permissionGroupID
-    - permission_ids
-    type: object
-  requests.RefreshTokenReq:
-    properties:
-      refresh_token:
-        type: string
-    required:
-    - refresh_token
-    type: object
-  requests.RolePermissionGroupsCommand:
-    properties:
-      permission_group_ids:
-        items:
-          type: integer
-        minItems: 1
-        type: array
-      roleID:
-        minimum: 1
+      id:
         type: integer
-    required:
-    - permission_group_ids
-    - roleID
-    type: object
-  requests.UnitAccountRolesCommand:
-    properties:
-      accountID:
-        minimum: 1
-        type: integer
-      role_ids:
-        items:
-          type: integer
-        minItems: 1
-        type: array
-      unitID:
-        minimum: 1
-        type: integer
-    required:
-    - accountID
-    - role_ids
-    - unitID
-    type: object
-  requests.UpdateMeterItemCommand:
-    properties:
-      calc_type:
-        enum:
-        - DIFFERENCE
-        - DIRECT
-        type: string
-      code:
-        maxLength: 255
-        type: string
-      meterItemID:
-        minimum: 1
-        type: integer
-      remark:
-        type: string
-      unit:
-        maxLength: 255
-        type: string
-      unit_price:
-        minimum: 0
-        type: integer
-    required:
-    - code
-    - meterItemID
-    - unit
-    type: object
-  requests.UpdateRoleCommand:
-    properties:
       is_active:
         type: boolean
-      is_default_owner:
-        type: boolean
-      name:
-        type: string
-      roleID:
-        minimum: 1
+      meter_items:
+        items:
+          $ref: '#/definitions/meteritem.MeterItemResponse'
+        type: array
+      price:
         type: integer
-    required:
-    - name
-    - roleID
+      room_no:
+        type: string
+      room_type_id:
+        type: integer
+      size:
+        type: integer
+      unit_id:
+        type: integer
     type: object
-  requests.UpdateRoomCommand:
+  room.UpdateRoomCommand:
     properties:
       floor:
         minimum: 0
@@ -421,7 +568,24 @@ definitions:
     required:
     - roomID
     type: object
-  requests.UpdateRoomTypeCommand:
+  roomtype.CreateRoomTypeCommand:
+    properties:
+      name:
+        maxLength: 12
+        type: string
+    required:
+    - name
+    type: object
+  roomtype.RoomTypeResponse:
+    properties:
+      account_id:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  roomtype.UpdateRoomTypeCommand:
     properties:
       name:
         maxLength: 12
@@ -433,7 +597,79 @@ definitions:
     - name
     - roomTypeID
     type: object
-  requests.UpdateUnitCommand:
+  unit.CreateUnitCommand:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      city:
+        maxLength: 255
+        type: string
+      default_meter_item_ids:
+        items:
+          type: integer
+        type: array
+      name:
+        maxLength: 255
+        type: string
+      province:
+        maxLength: 255
+        type: string
+    required:
+    - address
+    - city
+    - name
+    - province
+    type: object
+  unit.UnitMeterItemResponse:
+    properties:
+      calc_type:
+        type: string
+      code:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      remark:
+        type: string
+      unit:
+        type: string
+      unit_price:
+        type: integer
+    type: object
+  unit.UnitResponse:
+    properties:
+      access_type:
+        type: string
+      account_id:
+        type: integer
+      address:
+        type: string
+      city:
+        type: string
+      default_meter_items:
+        items:
+          $ref: '#/definitions/unit.UnitMeterItemResponse'
+        type: array
+      id:
+        type: integer
+      is_owner:
+        type: boolean
+      monthly_rent_amount:
+        type: string
+      name:
+        type: string
+      occupancy_status:
+        type: string
+      province:
+        type: string
+      rented_count:
+        type: integer
+      room_count:
+        type: integer
+    type: object
+  unit.UpdateUnitCommand:
     properties:
       address:
         maxLength: 255
@@ -461,242 +697,6 @@ definitions:
     - province
     - unitID
     type: object
-  requests.WechatLoginReq:
-    properties:
-      code:
-        type: string
-    required:
-    - code
-    type: object
-  response.AccountResponse:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      name:
-        type: string
-      updated_at:
-        type: string
-      wechat_openid:
-        type: string
-    type: object
-  response.HomeBuildingRoomSummaryResponse:
-    properties:
-      building_count:
-        type: integer
-      rented_room_count:
-        type: integer
-      room_count:
-        type: integer
-      vacant_room_count:
-        type: integer
-    type: object
-  response.HomeResponse:
-    properties:
-      building_room_summary:
-        $ref: '#/definitions/response.HomeBuildingRoomSummaryResponse'
-      current_month:
-        type: string
-      income_amount:
-        type: string
-      income_decimal:
-        type: string
-      monthly_growth:
-        type: string
-      stats:
-        items:
-          $ref: '#/definitions/response.HomeStatResponse'
-        type: array
-      todos:
-        items:
-          $ref: '#/definitions/response.HomeTodoResponse'
-        type: array
-    type: object
-  response.HomeStatResponse:
-    properties:
-      label:
-        type: string
-      tone:
-        type: string
-      value:
-        type: string
-    type: object
-  response.HomeTodoResponse:
-    properties:
-      description:
-        type: string
-      tag:
-        type: string
-      title:
-        type: string
-    type: object
-  response.MeterItemResponse:
-    properties:
-      account_id:
-        type: integer
-      calc_type:
-        type: string
-      code:
-        type: string
-      id:
-        type: integer
-      is_system:
-        type: boolean
-      remark:
-        type: string
-      unit:
-        type: string
-      unit_price:
-        type: integer
-    type: object
-  response.PermissionGroupResponse:
-    properties:
-      code:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      name:
-        type: string
-      sort_order:
-        type: integer
-    type: object
-  response.PermissionResponse:
-    properties:
-      code:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-    type: object
-  response.RoleResponse:
-    properties:
-      account_id:
-        type: integer
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      is_default_owner:
-        type: boolean
-      name:
-        type: string
-    type: object
-  response.RoomResponse:
-    properties:
-      floor:
-        type: integer
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      meter_items:
-        items:
-          $ref: '#/definitions/response.MeterItemResponse'
-        type: array
-      price:
-        type: integer
-      room_no:
-        type: string
-      room_type_id:
-        type: integer
-      size:
-        type: integer
-      unit_id:
-        type: integer
-    type: object
-  response.RoomTypeResponse:
-    properties:
-      account_id:
-        type: integer
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  response.TokenResponse:
-    properties:
-      access_token:
-        type: string
-      refresh_token:
-        type: string
-    type: object
-  response.UnitGrantResponse:
-    properties:
-      account_id:
-        type: integer
-      granted_by_account_id:
-        type: integer
-      id:
-        type: integer
-      role:
-        $ref: '#/definitions/response.RoleResponse'
-      role_id:
-        type: integer
-      status:
-        type: string
-      unit_id:
-        type: integer
-    type: object
-  response.UnitMeterItemResponse:
-    properties:
-      calc_type:
-        type: string
-      code:
-        type: string
-      id:
-        type: integer
-      is_system:
-        type: boolean
-      remark:
-        type: string
-      unit:
-        type: string
-      unit_price:
-        type: integer
-    type: object
-  response.UnitResponse:
-    properties:
-      access_type:
-        type: string
-      account_id:
-        type: integer
-      address:
-        type: string
-      city:
-        type: string
-      default_meter_items:
-        items:
-          $ref: '#/definitions/response.UnitMeterItemResponse'
-        type: array
-      id:
-        type: integer
-      is_owner:
-        type: boolean
-      monthly_rent_amount:
-        type: string
-      name:
-        type: string
-      occupancy_status:
-        type: string
-      province:
-        type: string
-      rented_count:
-        type: integer
-      room_count:
-        type: integer
-    type: object
 info:
   contact: {}
   description: Rent Manager Server
@@ -711,7 +711,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_AccountResponse'
+            $ref: '#/definitions/ginutils.Ret-account_AccountResponse'
       summary: 获取个人信息
       tags:
       - accout
@@ -723,7 +723,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_PermissionGroupResponse'
+            $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionGroupResponse'
       summary: 获取权限组列表
       tags:
       - admin
@@ -742,7 +742,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.PermissionGroupPermissionsCommand'
+          $ref: '#/definitions/rbac.PermissionGroupPermissionsCommand'
       produces:
       - application/json
       responses:
@@ -767,7 +767,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.PermissionGroupPermissionsCommand'
+          $ref: '#/definitions/rbac.PermissionGroupPermissionsCommand'
       produces:
       - application/json
       responses:
@@ -788,14 +788,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.CreatePermissionGroupsCommand'
+          $ref: '#/definitions/rbac.CreatePermissionGroupsCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_PermissionGroupResponse'
+            $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionGroupResponse'
       summary: 批量创建权限组
       tags:
       - admin
@@ -807,7 +807,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_PermissionResponse'
+            $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionResponse'
       summary: 获取权限列表
       tags:
       - admin
@@ -821,14 +821,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.CreatePermissionsCommand'
+          $ref: '#/definitions/rbac.CreatePermissionsCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_PermissionResponse'
+            $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionResponse'
       summary: 批量创建权限
       tags:
       - admin
@@ -842,14 +842,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.RefreshTokenReq'
+          $ref: '#/definitions/auth.RefreshTokenReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_TokenResponse'
+            $ref: '#/definitions/ginutils.Ret-auth_TokenResponse'
       summary: 刷新访问令牌
       tags:
       - auth
@@ -863,14 +863,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.WechatLoginReq'
+          $ref: '#/definitions/auth.WechatLoginReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_TokenResponse'
+            $ref: '#/definitions/ginutils.Ret-auth_TokenResponse'
       summary: 微信登录
       tags:
       - auth
@@ -882,7 +882,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_HomeResponse'
+            $ref: '#/definitions/ginutils.Ret-home_Response'
       summary: 获取首页聚合数据
       tags:
       - home
@@ -915,7 +915,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_MeterItemResponse'
+            $ref: '#/definitions/ginutils.Ret-array_meteritem_MeterItemResponse'
       summary: 获取抄表项列表
       tags:
       - meter_item
@@ -928,14 +928,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.CreateMeterItemCommand'
+          $ref: '#/definitions/meteritem.CreateMeterItemCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_MeterItemResponse'
+            $ref: '#/definitions/ginutils.Ret-meteritem_MeterItemResponse'
       summary: 创建抄表项
       tags:
       - meter_item
@@ -953,7 +953,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_MeterItemResponse'
+            $ref: '#/definitions/ginutils.Ret-meteritem_MeterItemResponse'
       summary: 获取抄表项详情
       tags:
       - meter_item
@@ -971,14 +971,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.UpdateMeterItemCommand'
+          $ref: '#/definitions/meteritem.UpdateMeterItemCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_MeterItemResponse'
+            $ref: '#/definitions/ginutils.Ret-meteritem_MeterItemResponse'
       summary: 更新抄表项
       tags:
       - meter_item
@@ -990,7 +990,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_RoleResponse'
+            $ref: '#/definitions/ginutils.Ret-array_rbac_RoleResponse'
       summary: 获取当前账号角色列表
       tags:
       - role
@@ -1025,7 +1025,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_RoleResponse'
+            $ref: '#/definitions/ginutils.Ret-rbac_RoleResponse'
       summary: 获取角色详情
       tags:
       - role
@@ -1043,14 +1043,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.UpdateRoleCommand'
+          $ref: '#/definitions/rbac.UpdateRoleCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_RoleResponse'
+            $ref: '#/definitions/ginutils.Ret-rbac_RoleResponse'
       summary: 更新角色
       tags:
       - role
@@ -1069,7 +1069,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.RolePermissionGroupsCommand'
+          $ref: '#/definitions/rbac.RolePermissionGroupsCommand'
       produces:
       - application/json
       responses:
@@ -1094,7 +1094,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.RolePermissionGroupsCommand'
+          $ref: '#/definitions/rbac.RolePermissionGroupsCommand'
       produces:
       - application/json
       responses:
@@ -1115,14 +1115,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.CreateRolesCommand'
+          $ref: '#/definitions/rbac.CreateRolesCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_RoleResponse'
+            $ref: '#/definitions/ginutils.Ret-array_rbac_RoleResponse'
       summary: 批量创建角色
       tags:
       - role
@@ -1147,7 +1147,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_RoomTypeResponse'
+            $ref: '#/definitions/ginutils.Ret-array_roomtype_RoomTypeResponse'
       summary: 获取房型列表
       tags:
       - room_type
@@ -1160,14 +1160,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.CreateRoomTypeCommand'
+          $ref: '#/definitions/roomtype.CreateRoomTypeCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_RoomTypeResponse'
+            $ref: '#/definitions/ginutils.Ret-roomtype_RoomTypeResponse'
       summary: 创建房型
       tags:
       - room_type
@@ -1202,7 +1202,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_RoomTypeResponse'
+            $ref: '#/definitions/ginutils.Ret-roomtype_RoomTypeResponse'
       summary: 获取房型详情
       tags:
       - room_type
@@ -1220,14 +1220,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.UpdateRoomTypeCommand'
+          $ref: '#/definitions/roomtype.UpdateRoomTypeCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_RoomTypeResponse'
+            $ref: '#/definitions/ginutils.Ret-roomtype_RoomTypeResponse'
       summary: 更新房型
       tags:
       - room_type
@@ -1262,7 +1262,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+            $ref: '#/definitions/ginutils.Ret-room_RoomResponse'
       summary: 获取房间详情
       tags:
       - room
@@ -1280,14 +1280,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.UpdateRoomCommand'
+          $ref: '#/definitions/room.UpdateRoomCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+            $ref: '#/definitions/ginutils.Ret-room_RoomResponse'
       summary: 更新房间
       tags:
       - room
@@ -1304,7 +1304,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_UnitResponse'
+            $ref: '#/definitions/ginutils.Ret-array_unit_UnitResponse'
       summary: 获取单元列表
       tags:
       - unit
@@ -1317,14 +1317,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.CreateUnitCommand'
+          $ref: '#/definitions/unit.CreateUnitCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_UnitResponse'
+            $ref: '#/definitions/ginutils.Ret-unit_UnitResponse'
       summary: 创建单元
       tags:
       - unit
@@ -1359,7 +1359,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_UnitResponse'
+            $ref: '#/definitions/ginutils.Ret-unit_UnitResponse'
       summary: 获取单元详情
       tags:
       - unit
@@ -1377,14 +1377,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.UpdateUnitCommand'
+          $ref: '#/definitions/unit.UpdateUnitCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_UnitResponse'
+            $ref: '#/definitions/ginutils.Ret-unit_UnitResponse'
       summary: 更新单元
       tags:
       - unit
@@ -1408,7 +1408,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.UnitAccountRolesCommand'
+          $ref: '#/definitions/rbac.UnitAccountRolesCommand'
       produces:
       - application/json
       responses:
@@ -1438,14 +1438,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.UnitAccountRolesCommand'
+          $ref: '#/definitions/rbac.UnitAccountRolesCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_UnitGrantResponse'
+            $ref: '#/definitions/ginutils.Ret-array_rbac_UnitGrantResponse'
       summary: 授权账号管理单元角色
       tags:
       - unit
@@ -1471,7 +1471,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_UnitGrantResponse'
+            $ref: '#/definitions/ginutils.Ret-array_rbac_UnitGrantResponse'
       summary: 获取单元授权列表
       tags:
       - unit
@@ -1505,7 +1505,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-array_response_RoomResponse'
+            $ref: '#/definitions/ginutils.Ret-array_room_RoomResponse'
       summary: 获取单元房间列表
       tags:
       - room
@@ -1523,14 +1523,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/requests.CreateRoomInUnitCommand'
+          $ref: '#/definitions/room.CreateRoomInUnitCommand'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-response_RoomResponse'
+            $ref: '#/definitions/ginutils.Ret-room_RoomResponse'
       summary: 在单元下创建房间
       tags:
       - room

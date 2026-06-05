@@ -12,7 +12,8 @@ import (
 	"git.superwhys.top/rent-manager/rent-manager-server/api/middlewares"
 	"git.superwhys.top/rent-manager/rent-manager-server/api/routers"
 	"git.superwhys.top/rent-manager/rent-manager-server/config"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
+	appadmin "git.superwhys.top/rent-manager/rent-manager-server/internal/app/admin"
+	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/ulule/limiter/v3"
@@ -26,8 +27,8 @@ import (
 func SetupRouter(
 	httpLimiter *limiter.Limiter,
 	jwtConfig *config.JwtConfig,
-	authService *services.AuthService,
-	adminServices *services.AdminServices,
+	authService *appauth.Service,
+	adminServices *appadmin.Services,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(middlewares.RateLimitMiddleware(httpLimiter, nil)),

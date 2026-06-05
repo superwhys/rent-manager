@@ -3,15 +3,16 @@ package routers
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
+	apprbac "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rbac"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 )
 
-func RoleRouter(rbacService *services.RBACService) ginutils.Option {
+// RoleRouter 注册角色管理路由。
+func RoleRouter(rbacService *apprbac.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodPost, "/batch", CreateRolesHandler(rbacService)),
 		ginutils.WithHandler(http.MethodGet, "", ListRolesHandler(rbacService)),
@@ -28,16 +29,16 @@ func RoleRouter(rbacService *services.RBACService) ginutils.Option {
 // @Tags role
 // @Accept json
 // @Produce json
-// @Param request body requests.CreateRolesCommand true "角色列表"
-// @Success 200 {object} ginutils.Ret[[]response.RoleResponse]
+// @Param request body rbac.CreateRolesCommand true "角色列表"
+// @Success 200 {object} ginutils.Ret[[]rbac.RoleResponse]
 // @Router /roles/batch [post]
-func CreateRolesHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreateRolesCommand) {
+func CreateRolesHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.CreateRolesCommand) {
 		roles, err := rbacService.CreateRoles(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "create roles failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "create roles failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToRoleListResponse(roles)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprbac.ToRoleListResponse(roles)))
 	})
 }
 
@@ -45,15 +46,15 @@ func CreateRolesHandler(rbacService *services.RBACService) gin.HandlerFunc {
 // @Summary 获取当前账号角色列表
 // @Tags role
 // @Produce json
-// @Success 200 {object} ginutils.Ret[[]response.RoleResponse]
+// @Success 200 {object} ginutils.Ret[[]rbac.RoleResponse]
 // @Router /roles [get]
-func ListRolesHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.EmptyRequest) {
+func ListRolesHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {
 		roles, err := rbacService.ListRoles(c.Request.Context())
-		if response.HandleRouterError(c, err, "list roles failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "list roles failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToRoleListResponse(roles)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprbac.ToRoleListResponse(roles)))
 	})
 }
 
@@ -62,15 +63,15 @@ func ListRolesHandler(rbacService *services.RBACService) gin.HandlerFunc {
 // @Tags role
 // @Produce json
 // @Param role_id path int true "角色ID"
-// @Success 200 {object} ginutils.Ret[response.RoleResponse]
+// @Success 200 {object} ginutils.Ret[rbac.RoleResponse]
 // @Router /roles/{role_id} [get]
-func GetRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RoleIDCommand) {
+func GetRoleHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.RoleIDCommand) {
 		role, err := rbacService.GetRole(c.Request.Context(), req.RoleID)
-		if response.HandleRouterError(c, err, "get role failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "get role failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToRoleResponse(role)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprbac.ToRoleResponse(role)))
 	})
 }
 
@@ -80,16 +81,16 @@ func GetRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param role_id path int true "角色ID"
-// @Param request body requests.UpdateRoleCommand true "角色信息"
-// @Success 200 {object} ginutils.Ret[response.RoleResponse]
+// @Param request body rbac.UpdateRoleCommand true "角色信息"
+// @Success 200 {object} ginutils.Ret[rbac.RoleResponse]
 // @Router /roles/{role_id} [put]
-func UpdateRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.UpdateRoleCommand) {
+func UpdateRoleHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.UpdateRoleCommand) {
 		role, err := rbacService.UpdateRole(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "update role failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "update role failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToRoleResponse(role)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprbac.ToRoleResponse(role)))
 	})
 }
 
@@ -100,13 +101,13 @@ func UpdateRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
 // @Param role_id path int true "角色ID"
 // @Success 200 {object} ginutils.Ret[any]
 // @Router /roles/{role_id} [delete]
-func DeleteRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RoleIDCommand) {
+func DeleteRoleHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.RoleIDCommand) {
 		err := rbacService.DeleteRole(c.Request.Context(), req.RoleID)
-		if response.HandleRouterError(c, err, "delete role failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "delete role failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())
 	})
 }
 
@@ -116,16 +117,16 @@ func DeleteRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param role_id path int true "角色ID"
-// @Param request body requests.RolePermissionGroupsCommand true "权限组ID列表"
+// @Param request body rbac.RolePermissionGroupsCommand true "权限组ID列表"
 // @Success 200 {object} ginutils.Ret[any]
 // @Router /roles/{role_id}/permission-groups [post]
-func AddPermissionGroupsToRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RolePermissionGroupsCommand) {
+func AddPermissionGroupsToRoleHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.RolePermissionGroupsCommand) {
 		err := rbacService.AddPermissionGroupsToRole(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "add permission groups to role failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "add permission groups to role failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())
 	})
 }
 
@@ -135,15 +136,15 @@ func AddPermissionGroupsToRoleHandler(rbacService *services.RBACService) gin.Han
 // @Accept json
 // @Produce json
 // @Param role_id path int true "角色ID"
-// @Param request body requests.RolePermissionGroupsCommand true "权限组ID列表"
+// @Param request body rbac.RolePermissionGroupsCommand true "权限组ID列表"
 // @Success 200 {object} ginutils.Ret[any]
 // @Router /roles/{role_id}/permission-groups [delete]
-func RemovePermissionGroupsFromRoleHandler(rbacService *services.RBACService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RolePermissionGroupsCommand) {
+func RemovePermissionGroupsFromRoleHandler(rbacService *apprbac.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.RolePermissionGroupsCommand) {
 		err := rbacService.RemovePermissionGroupsFromRole(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "remove permission groups from role failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "remove permission groups from role failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())
 	})
 }

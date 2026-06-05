@@ -3,15 +3,16 @@ package routers
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
+	appaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/app/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 )
 
-func AccountRouter(accountService *services.AccountService) ginutils.Option {
+// AccountRouter 注册账号相关路由。
+func AccountRouter(accountService *appaccount.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodGet, "/self", AccountSelfHandler(accountService)),
 	)
@@ -21,14 +22,14 @@ func AccountRouter(accountService *services.AccountService) ginutils.Option {
 // @Summary 获取个人信息
 // @Tags accout
 // @Produce json
-// @Success 200 {object} ginutils.Ret[response.AccountResponse]
+// @Success 200 {object} ginutils.Ret[account.AccountResponse]
 // @Router /accout/self [get]
-func AccountSelfHandler(accountService *services.AccountService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.EmptyRequest) {
+func AccountSelfHandler(accountService *appaccount.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {
 		accountInfo, err := accountService.Self(c.Request.Context())
-		if response.HandleRouterError(c, err, "get account self failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "get account self failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseWithData(response.ToAccountResponse(accountInfo)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appaccount.ToAccountResponse(accountInfo)))
 	})
 }

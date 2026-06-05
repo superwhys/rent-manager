@@ -3,15 +3,15 @@ package routers
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/requests"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	approom "git.superwhys.top/rent-manager/rent-manager-server/internal/app/room"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 )
 
-func RoomRouter(roomService *services.RoomService) ginutils.Option {
+// RoomRouter 注册房间路由。
+func RoomRouter(roomService *approom.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodGet, "/:room_id", GetRoomHandler(roomService)),
 		ginutils.WithHandler(http.MethodPut, "/:room_id", UpdateRoomHandler(roomService)),
@@ -25,16 +25,16 @@ func RoomRouter(roomService *services.RoomService) ginutils.Option {
 // @Accept json
 // @Produce json
 // @Param unit_id path int true "单元ID"
-// @Param request body requests.CreateRoomInUnitCommand true "房间信息"
-// @Success 200 {object} ginutils.Ret[response.RoomResponse]
+// @Param request body room.CreateRoomInUnitCommand true "房间信息"
+// @Success 200 {object} ginutils.Ret[room.RoomResponse]
 // @Router /units/{unit_id}/rooms [post]
-func CreateRoomInUnitHandler(roomService *services.RoomService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.CreateRoomInUnitCommand) {
+func CreateRoomInUnitHandler(roomService *approom.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approom.CreateRoomInUnitCommand) {
 		room, err := roomService.CreateRoomInUnit(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "create room failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "create room failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.RoomResponseRet(room))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approom.ToRoomResponse(room)))
 	})
 }
 
@@ -47,15 +47,15 @@ func CreateRoomInUnitHandler(roomService *services.RoomService) gin.HandlerFunc 
 // @Param offset query int false "分页偏移"
 // @Param room_type_id query int false "房型ID"
 // @Param is_active query bool false "是否启用"
-// @Success 200 {object} ginutils.Ret[[]response.RoomResponse]
+// @Success 200 {object} ginutils.Ret[[]room.RoomResponse]
 // @Router /units/{unit_id}/rooms [get]
-func ListRoomsInUnitHandler(roomService *services.RoomService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.UnitRoomsQuery) {
+func ListRoomsInUnitHandler(roomService *approom.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approom.UnitRoomsQuery) {
 		rooms, err := roomService.ListRoomsInUnit(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "list rooms failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "list rooms failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.RoomListResponseRet(rooms))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approom.ToRoomListResponse(rooms)))
 	})
 }
 
@@ -64,15 +64,15 @@ func ListRoomsInUnitHandler(roomService *services.RoomService) gin.HandlerFunc {
 // @Tags room
 // @Produce json
 // @Param room_id path int true "房间ID"
-// @Success 200 {object} ginutils.Ret[response.RoomResponse]
+// @Success 200 {object} ginutils.Ret[room.RoomResponse]
 // @Router /rooms/{room_id} [get]
-func GetRoomHandler(roomService *services.RoomService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RoomIdQuery) {
+func GetRoomHandler(roomService *approom.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approom.RoomIDQuery) {
 		room, err := roomService.GetRoom(c.Request.Context(), req.RoomID)
-		if response.HandleRouterError(c, err, "get room failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "get room failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.RoomResponseRet(room))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approom.ToRoomResponse(room)))
 	})
 }
 
@@ -82,16 +82,16 @@ func GetRoomHandler(roomService *services.RoomService) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param room_id path int true "房间ID"
-// @Param request body requests.UpdateRoomCommand true "房间信息"
-// @Success 200 {object} ginutils.Ret[response.RoomResponse]
+// @Param request body room.UpdateRoomCommand true "房间信息"
+// @Success 200 {object} ginutils.Ret[room.RoomResponse]
 // @Router /rooms/{room_id} [put]
-func UpdateRoomHandler(roomService *services.RoomService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.UpdateRoomCommand) {
+func UpdateRoomHandler(roomService *approom.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approom.UpdateRoomCommand) {
 		room, err := roomService.UpdateRoom(c.Request.Context(), req)
-		if response.HandleRouterError(c, err, "update room failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "update room failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.RoomResponseRet(room))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approom.ToRoomResponse(room)))
 	})
 }
 
@@ -102,12 +102,12 @@ func UpdateRoomHandler(roomService *services.RoomService) gin.HandlerFunc {
 // @Param room_id path int true "房间ID"
 // @Success 200 {object} ginutils.Ret[any]
 // @Router /rooms/{room_id} [delete]
-func DeleteRoomHandler(roomService *services.RoomService) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *requests.RoomIdQuery) {
+func DeleteRoomHandler(roomService *approom.Service) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *approom.RoomIDQuery) {
 		err := roomService.DeleteRoom(c.Request.Context(), req.RoomID)
-		if response.HandleRouterError(c, err, "delete room failed", errcode.ErrSysInternal) {
+		if apiresponse.HandleRouterError(c, err, "delete room failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())
 	})
 }

@@ -13,9 +13,17 @@ import (
 
 	"git.superwhys.top/rent-manager/rent-manager-server/api"
 	"git.superwhys.top/rent-manager/rent-manager-server/config"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/app/services"
+	appaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/app/account"
+	appadmin "git.superwhys.top/rent-manager/rent-manager-server/internal/app/admin"
+	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
+	apphome "git.superwhys.top/rent-manager/rent-manager-server/internal/app/home"
+	appmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meteritem"
+	apprbac "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rbac"
+	approom "git.superwhys.top/rent-manager/rent-manager-server/internal/app/room"
+	approomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/app/roomtype"
+	appunit "git.superwhys.top/rent-manager/rent-manager-server/internal/app/unit"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/mysql"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/ratelimit"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/repo"
 	"github.com/miebyte/goutils/cores"
 	"github.com/miebyte/goutils/flags"
 	"github.com/miebyte/goutils/logging"
@@ -54,32 +62,33 @@ func main() {
 	redisClient, err := redisConf.DialGORedisClient()
 	logging.PanicError(err)
 
-	client, err := repo.OpenMysqlClient(mysqlConf)
+	client, err := mysql.OpenMysqlClient(mysqlConf)
 	logging.PanicError(err)
 	defer client.Close()
 
-	logging.PanicError(repo.MigrateSchema(client))
+	logging.PanicError(mysql.MigrateSchema(client))
 
 	httpLimiter, err := ratelimit.NewRedisLimiter(10, time.Second*10, redisClient, "rent_manager")
 	logging.PanicError(err)
 
-	accountRepo := repo.NewAccountRepository(client)
-	rbacRepo := repo.NewRBACRepository(client)
-	unitRepo := repo.NewUnitRepository(client)
-	roomRepo := repo.NewRoomRepository(client)
-	roomTypeRepo := repo.NewRoomTypeRepository(client)
-	meterItemRepo := repo.NewMeterItemRepository(client)
+	accountRepo := mysql.NewAccountRepository(client)
+	rbacRepo := mysql.NewRBACRepository(client)
+	unitRepo := mysql.NewUnitRepository(client)
+	roomRepo := mysql.NewRoomRepository(client)
+	roomTypeRepo := mysql.NewRoomTypeRepository(client)
+	meterItemRepo := mysql.NewMeterItemRepository(client)
+	rentBillRepo := mysql.NewRentBillRepository(client)
 
-	authService := services.NewAuthService(jwtConfig, wechatConfig, accountRepo)
-	rbacService := services.NewRBACService(rbacRepo, adminConfig)
-	adminServices := &services.AdminServices{
-		Account:   services.NewAccountService(accountRepo),
-		Home:      services.NewHomeService(unitRepo, roomRepo),
+	authService := appauth.NewService(jwtConfig, wechatConfig, accountRepo)
+	rbacService := apprbac.NewService(rbacRepo, adminConfig)
+	adminServices := &appadmin.Services{
+		Account:   appaccount.NewService(accountRepo),
+		Home:      apphome.NewService(unitRepo, roomRepo, rentBillRepo),
 		RBAC:      rbacService,
-		Unit:      services.NewUnitService(unitRepo, roomRepo, rbacService),
-		Room:      services.NewRoomService(roomRepo, unitRepo, rbacService),
-		RoomType:  services.NewRoomTypeService(roomTypeRepo),
-		MeterItem: services.NewMeterItemService(meterItemRepo),
+		Unit:      appunit.NewService(unitRepo, roomRepo, rbacRepo),
+		Room:      approom.NewService(roomRepo, unitRepo, rbacRepo),
+		RoomType:  approomtype.NewService(roomTypeRepo),
+		MeterItem: appmeteritem.NewService(meterItemRepo),
 	}
 	router := api.SetupRouter(httpLimiter, jwtConfig, authService, adminServices)
 

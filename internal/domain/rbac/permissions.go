@@ -18,4 +18,8 @@ const (
 
 	PermissionRentBillView   = "rent_bill.view"
 	PermissionRentBillManage = "rent_bill.manage"
+
+	SystemRoleSuperAdmin                = "SuperAdmin"
+	SystemPermissionAllowAllCode        = "SYSTEM_ALLOW_ALL"
+	SystemPermissionAllowAllDescription = "Allow all APIs"
 )

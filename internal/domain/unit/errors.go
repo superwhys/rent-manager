@@ -1,17 +1,17 @@
 package unit
 
-import "errors"
+import "git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 
 var (
-	ErrAccountRequired    = errors.New("账号不能为空")
-	ErrNameRequired       = errors.New("单元名称不能为空")
-	ErrAddressRequired    = errors.New("单元地址不能为空")
-	ErrCityRequired       = errors.New("单元城市不能为空")
-	ErrProvinceRequired   = errors.New("单元省份不能为空")
-	ErrNameAlreadyExists  = errors.New("单元名称已存在")
-	ErrInvalidListScope   = errors.New("单元列表范围不合法")
-	ErrInvalidMeterItemID = errors.New("抄表项 ID 不合法")
-	ErrMeterItemNotFound  = errors.New("抄表项不存在")
-	ErrNotFound           = errors.New("单元不存在")
-	ErrUnitHasRooms       = errors.New("单元下仍有房间")
+	ErrAccountRequired    = xerr.New(201001, "账号不能为空")
+	ErrNameRequired       = xerr.New(201002, "单元名称不能为空")
+	ErrAddressRequired    = xerr.New(201003, "单元地址不能为空")
+	ErrCityRequired       = xerr.New(201004, "单元城市不能为空")
+	ErrProvinceRequired   = xerr.New(201005, "单元省份不能为空")
+	ErrNameAlreadyExists  = xerr.New(201006, "单元名称已存在")
+	ErrInvalidListScope   = xerr.New(201007, "单元列表范围不合法")
+	ErrInvalidMeterItemID = xerr.New(201008, "抄表项 ID 不合法")
+	ErrMeterItemNotFound  = xerr.New(201009, "抄表项不存在")
+	ErrNotFound           = xerr.New(201010, "单元不存在")
+	ErrUnitHasRooms       = xerr.New(201011, "单元下仍有房间")
 )

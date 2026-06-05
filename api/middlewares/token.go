@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
+	"git.superwhys.top/rent-manager/rent-manager-server/api/response"
 	"git.superwhys.top/rent-manager/rent-manager-server/config"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/miebyte/goutils/logging"
@@ -18,7 +18,7 @@ func TokenVerifyMiddleware(jwtConfig *config.JwtConfig) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
-			ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrUnauthorized))
+			ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrUnauthorized))
 			ctx.Abort()
 			return
 		}
@@ -33,11 +33,11 @@ func TokenVerifyMiddleware(jwtConfig *config.JwtConfig) gin.HandlerFunc {
 
 			// Handle token expiration specifically
 			if errors.Is(err, jwt.ErrTokenExpired) {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrTokenExpired))
-			} else if ec, ok := errcode.AsErrcode(err); ok {
+				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrTokenExpired))
+			} else if ec, ok := xerr.AsErrcode(err); ok {
 				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(ec))
 			} else {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrInvalidToken))
+				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrInvalidToken))
 			}
 			ctx.Abort()
 			return

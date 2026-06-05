@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/errcode"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/models/response"
+	"git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
 	"github.com/ulule/limiter/v3"
@@ -54,11 +54,11 @@ func RateLimitMiddleware(
 		instance,
 		ginlimiter.WithKeyGetter(keyGenerator(excludedPaths)),
 		ginlimiter.WithErrorHandler(func(c *gin.Context, err error) {
-			ret := response.ErrorResponseWithCode(errcode.ErrSysInternal)
+			ret := response.ErrorResponseWithCode(xerr.ErrSysInternal)
 			c.JSON(http.StatusInternalServerError, ret)
 		}),
 		ginlimiter.WithLimitReachedHandler(func(c *gin.Context) {
-			ret := response.ErrorResponseWithCode(errcode.ErrTooManyRequests)
+			ret := response.ErrorResponseWithCode(xerr.ErrTooManyRequests)
 			c.JSON(http.StatusTooManyRequests, ret)
 		}),
 		ginlimiter.WithExcludedKey(func(s string) bool {
