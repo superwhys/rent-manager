@@ -3,11 +3,12 @@ package routers
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"github.com/miebyte/goutils/ginutils"
+
 	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
 	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
-	"github.com/gin-gonic/gin"
-	"github.com/miebyte/goutils/ginutils"
 )
 
 // AuthRouter 注册认证路由。

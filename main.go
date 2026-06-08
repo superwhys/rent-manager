@@ -11,8 +11,17 @@ package main
 import (
 	"time"
 
+	"github.com/miebyte/goutils/cores"
+	"github.com/miebyte/goutils/flags"
+	"github.com/miebyte/goutils/logging"
+	"github.com/miebyte/goutils/mysqlutils"
+	"github.com/miebyte/goutils/redisutils"
+
 	"git.superwhys.top/rent-manager/rent-manager-server/api"
 	"git.superwhys.top/rent-manager/rent-manager-server/config"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/mysql"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/ratelimit"
+
 	appaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/app/account"
 	appadmin "git.superwhys.top/rent-manager/rent-manager-server/internal/app/admin"
 	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
@@ -22,13 +31,7 @@ import (
 	approom "git.superwhys.top/rent-manager/rent-manager-server/internal/app/room"
 	approomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/app/roomtype"
 	appunit "git.superwhys.top/rent-manager/rent-manager-server/internal/app/unit"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/mysql"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/ratelimit"
-	"github.com/miebyte/goutils/cores"
-	"github.com/miebyte/goutils/flags"
-	"github.com/miebyte/goutils/logging"
-	"github.com/miebyte/goutils/mysqlutils"
-	"github.com/miebyte/goutils/redisutils"
+	infraauthjwt "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/auth/jwt"
 )
 
 var (
@@ -79,7 +82,8 @@ func main() {
 	meterItemRepo := mysql.NewMeterItemRepository(client)
 	rentBillRepo := mysql.NewRentBillRepository(client)
 
-	authService := appauth.NewService(jwtConfig, wechatConfig, accountRepo)
+	tokenManager := infraauthjwt.NewManager(jwtConfig)
+	authService := appauth.NewService(wechatConfig, accountRepo, tokenManager)
 	rbacService := apprbac.NewService(rbacRepo, adminConfig)
 	adminServices := &appadmin.Services{
 		Account:   appaccount.NewService(accountRepo),
@@ -90,7 +94,7 @@ func main() {
 		RoomType:  approomtype.NewService(roomTypeRepo),
 		MeterItem: appmeteritem.NewService(meterItemRepo),
 	}
-	router := api.SetupRouter(httpLimiter, jwtConfig, authService, adminServices)
+	router := api.SetupRouter(httpLimiter, tokenManager, authService, adminServices)
 
 	srv := cores.NewCores(
 		cores.WithHttpHandler("/api", router),

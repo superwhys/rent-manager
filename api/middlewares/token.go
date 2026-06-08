@@ -1,20 +1,20 @@
 package middlewares
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	"git.superwhys.top/rent-manager/rent-manager-server/config"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/miebyte/goutils/logging"
+
+	"git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
+	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 )
 
-func TokenVerifyMiddleware(jwtConfig *config.JwtConfig) gin.HandlerFunc {
+// TokenVerifyMiddleware 校验访问令牌并写入当前账号上下文。
+func TokenVerifyMiddleware(tokenManager appauth.TokenManager) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
@@ -27,14 +27,11 @@ func TokenVerifyMiddleware(jwtConfig *config.JwtConfig) gin.HandlerFunc {
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 		tokenStr = strings.TrimSpace(tokenStr)
 
-		claims, err := jwtutils.ParseToken(tokenStr, []byte(jwtConfig.JwtSecret))
+		claims, err := tokenManager.ParseToken(tokenStr)
 		if err != nil {
 			logging.Errorw(ctx.Request.Context(), "verify token failed", logging.Err(err))
 
-			// Handle token expiration specifically
-			if errors.Is(err, jwt.ErrTokenExpired) {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrTokenExpired))
-			} else if ec, ok := xerr.AsErrcode(err); ok {
+			if ec, ok := xerr.AsErrcode(err); ok {
 				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(ec))
 			} else {
 				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrInvalidToken))
@@ -45,9 +42,7 @@ func TokenVerifyMiddleware(jwtConfig *config.JwtConfig) gin.HandlerFunc {
 
 		logging.Debugw(ctx.Request.Context(), "token claims", logging.Any("claims", claims))
 
-		ctx.Set(string(jwtutils.TokenContextKey), claims)
-
-		reqCtx := jwtutils.SetTokenClaimsToContext(ctx.Request.Context(), claims)
+		reqCtx := appcore.SetAccountIDToContext(ctx.Request.Context(), claims.UserID)
 		reqCtx = logging.With(reqCtx, "UserID", claims.UserID)
 		ctx.Request = ctx.Request.WithContext(reqCtx)
 	}

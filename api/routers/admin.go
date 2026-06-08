@@ -3,12 +3,13 @@ package routers
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"github.com/miebyte/goutils/ginutils"
+
 	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
 	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
 	apprbac "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rbac"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
-	"github.com/gin-gonic/gin"
-	"github.com/miebyte/goutils/ginutils"
 )
 
 // AdminRouter 注册全局权限管理路由。

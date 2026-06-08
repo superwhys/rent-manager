@@ -3,11 +3,12 @@ package routers
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"github.com/miebyte/goutils/ginutils"
+
 	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
 	appmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
-	"github.com/gin-gonic/gin"
-	"github.com/miebyte/goutils/ginutils"
 )
 
 // MeterItemRouter 注册抄表项路由。

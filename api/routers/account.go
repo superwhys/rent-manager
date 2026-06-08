@@ -3,12 +3,13 @@ package routers
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"github.com/miebyte/goutils/ginutils"
+
 	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
 	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
 	appaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/app/account"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
-	"github.com/gin-gonic/gin"
-	"github.com/miebyte/goutils/ginutils"
 )
 
 // AccountRouter 注册账号相关路由。

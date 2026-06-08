@@ -3,10 +3,11 @@ package response
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/miebyte/goutils/logging"
+
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 )
 
 // HandleRouterError 处理业务逻辑错误响应。

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
 )
 

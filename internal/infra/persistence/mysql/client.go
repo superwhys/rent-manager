@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
 	"github.com/miebyte/goutils/mysqlutils"
+
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
 
 	entsql "entgo.io/ent/dialect/sql"
 	_ "github.com/go-sql-driver/mysql"

@@ -3,8 +3,10 @@ package app
 import (
 	"context"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 )
+
+type accountIDContextKey struct{}
 
 // EmptyRequest 表示不需要绑定参数的请求。
 type EmptyRequest struct{}
@@ -17,9 +19,14 @@ type Pagination struct {
 
 // AccountIDFromContext 从上下文中的令牌声明获取当前账号 ID。
 func AccountIDFromContext(ctx context.Context) (int, error) {
-	claims, err := jwtutils.TokenClaimsFromContext(ctx)
-	if err != nil {
-		return 0, err
+	accountID, ok := ctx.Value(accountIDContextKey{}).(int)
+	if !ok || accountID <= 0 {
+		return 0, xerr.ErrUnauthorized
 	}
-	return claims.UserID, nil
+	return accountID, nil
+}
+
+// SetAccountIDToContext 将当前账号 ID 写入上下文。
+func SetAccountIDToContext(ctx context.Context, accountID int) context.Context {
+	return context.WithValue(ctx, accountIDContextKey{}, accountID)
 }

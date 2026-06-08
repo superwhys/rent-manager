@@ -10,25 +10,23 @@ import (
 
 	"git.superwhys.top/rent-manager/rent-manager-server/config"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/jwtutils"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 // Service 提供登录和令牌刷新用例。
 type Service struct {
-	jwtConfig    *config.JwtConfig
 	wechatConfig *config.WechatConfig
 	accountRepo  account.Repository
+	tokenManager TokenManager
 	httpClient   *http.Client
 }
 
 // NewService 创建认证服务。
-func NewService(jwtConfig *config.JwtConfig, wechatConfig *config.WechatConfig, accountRepo account.Repository) *Service {
+func NewService(wechatConfig *config.WechatConfig, accountRepo account.Repository, tokenManager TokenManager) *Service {
 	return &Service{
-		jwtConfig:    jwtConfig,
 		wechatConfig: wechatConfig,
 		accountRepo:  accountRepo,
+		tokenManager: tokenManager,
 		httpClient:   http.DefaultClient,
 	}
 }
@@ -59,19 +57,14 @@ func (s *Service) WechatLogin(ctx context.Context, req *WechatLoginReq) (*TokenR
 		}
 	}
 
-	accessToken, refreshToken, _, err := jwtutils.GenerateTokenPair(
-		[]byte(s.jwtConfig.JwtSecret),
-		s.jwtConfig.JwtTimeout,
-		s.jwtConfig.JwtRefreshTimeout,
-		accountInfo.ID,
-	)
+	tokenPair, err := s.tokenManager.GenerateTokenPair(accountInfo.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &TokenResult{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
 	}, nil
 }
 
@@ -81,24 +74,19 @@ func (s *Service) RefreshToken(ctx context.Context, req *RefreshTokenReq) (*Toke
 		return nil, xerr.ErrBadRequest.WithMessage("刷新令牌不能为空")
 	}
 
-	claims, err := jwtutils.ParseToken(req.RefreshToken, []byte(s.jwtConfig.JwtSecret))
+	claims, err := s.tokenManager.ParseToken(req.RefreshToken)
 	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
+		if errors.Is(err, xerr.ErrTokenExpired) {
 			return nil, xerr.ErrLoginExpired
 		}
 		return nil, xerr.ErrInvalidToken
 	}
 
-	if claims.TokenType != jwtutils.TokenTypeRefresh {
+	if claims.TokenType != TokenTypeRefresh {
 		return nil, xerr.ErrInvalidToken
 	}
 
-	accessToken, err := jwtutils.GenerateAccessToken(
-		[]byte(s.jwtConfig.JwtSecret),
-		s.jwtConfig.JwtTimeout,
-		claims.UserID,
-		claims.Subject,
-	)
+	accessToken, err := s.tokenManager.GenerateAccessToken(claims.UserID, claims.Subject)
 	if err != nil {
 		return nil, err
 	}

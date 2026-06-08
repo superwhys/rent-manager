@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/role"

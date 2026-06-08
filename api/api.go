@@ -9,14 +9,14 @@
 package api
 
 import (
-	"git.superwhys.top/rent-manager/rent-manager-server/api/middlewares"
-	"git.superwhys.top/rent-manager/rent-manager-server/api/routers"
-	"git.superwhys.top/rent-manager/rent-manager-server/config"
-	appadmin "git.superwhys.top/rent-manager/rent-manager-server/internal/app/admin"
-	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/ulule/limiter/v3"
+
+	"git.superwhys.top/rent-manager/rent-manager-server/api/middlewares"
+	"git.superwhys.top/rent-manager/rent-manager-server/api/routers"
+	appadmin "git.superwhys.top/rent-manager/rent-manager-server/internal/app/admin"
+	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
 )
 
 // SetupRouter godoc
@@ -26,7 +26,7 @@ import (
 // @BasePath /api
 func SetupRouter(
 	httpLimiter *limiter.Limiter,
-	jwtConfig *config.JwtConfig,
+	tokenManager appauth.TokenManager,
 	authService *appauth.Service,
 	adminServices *appadmin.Services,
 ) *gin.Engine {
@@ -39,49 +39,49 @@ func SetupRouter(
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/accout"),
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.AccountRouter(adminServices.Account),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/home"),
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.HomeRouter(adminServices.Home),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/admin"),
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.AdminRouter(adminServices.RBAC),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/units"),
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.UnitRouter(adminServices.Unit, adminServices.Room, adminServices.RBAC),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/rooms"),
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.RoomRouter(adminServices.Room),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/room-types"),
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.RoomTypeRouter(adminServices.RoomType),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/meter-items"),
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.MeterItemRouter(adminServices.MeterItem),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/roles"),
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(jwtConfig)),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.RoleRouter(adminServices.RBAC),
 		),
 	)
