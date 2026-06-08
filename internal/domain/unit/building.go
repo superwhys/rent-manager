@@ -19,7 +19,6 @@ type Unit struct {
 	UpdatedAt           time.Time
 }
 
-// Summary 描述单元列表中的聚合统计信息。
 type Summary struct {
 	Unit              *Unit
 	RoomCount         int

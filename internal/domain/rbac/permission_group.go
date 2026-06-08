@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// PermissionGroup groups global permissions for account roles.
 type PermissionGroup struct {
 	ID          int
 	Code        string
