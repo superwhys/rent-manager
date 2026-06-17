@@ -15,12 +15,20 @@ import (
 	"entgo.io/ent/schema/index"
 
 	domainmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meterreading"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/schema/mixin"
 )
 
 // 抄表数据实体
 // 用于记录房间的抄表数据
 type MeterReading struct {
 	ent.Schema
+}
+
+func (MeterReading) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		mixin.TimeMixin{},
+		mixin.SoftDeleteMixin{},
+	}
 }
 
 func (MeterReading) Fields() []ent.Field {

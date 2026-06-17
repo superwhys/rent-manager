@@ -65,6 +65,20 @@ func (r *RentBillRepository) Get(ctx context.Context, accountID int, id int) (*d
 	return toDomainRentBill(record), nil
 }
 
+// GetByID 获取指定租金账单，不做账号归属过滤。
+func (r *RentBillRepository) GetByID(ctx context.Context, id int) (*domainrentbill.RentBill, error) {
+	record, err := r.client.RentBill.Query().
+		Where(entrentbill.ID(id), entrentbill.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		if entclient.IsNotFound(err) {
+			return nil, domainrentbill.ErrNotFound
+		}
+		return nil, err
+	}
+	return toDomainRentBill(record), nil
+}
+
 // GetByRoomPeriod 获取账号名下房间指定月份的租金账单。
 func (r *RentBillRepository) GetByRoomPeriod(ctx context.Context, accountID int, roomID int, periodMonth string) (*domainrentbill.RentBill, error) {
 	record, err := r.client.RentBill.Query().
@@ -98,6 +112,78 @@ func (r *RentBillRepository) List(ctx context.Context, accountID int, query doma
 		return nil, err
 	}
 	return toDomainRentBills(records), nil
+}
+
+// SaveGeneratedBills 事务性保存生成的账单：新增、刷新待付账单、跳过已支付或已取消账单。
+func (r *RentBillRepository) SaveGeneratedBills(ctx context.Context, accountID int, bills []*domainrentbill.RentBill) (*domainrentbill.SaveGeneratedBillsResult, error) {
+	if len(bills) == 0 {
+		return nil, domainrentbill.ErrBillsRequired
+	}
+	for _, bill := range bills {
+		if err := r.ensureRentBillRoomInAccount(ctx, accountID, bill.RoomID); err != nil {
+			return nil, err
+		}
+	}
+
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	client := tx.Client()
+	result := &domainrentbill.SaveGeneratedBillsResult{
+		Saved:   make([]*domainrentbill.RentBill, 0, len(bills)),
+		Skipped: make([]*domainrentbill.RentBill, 0),
+	}
+	for _, bill := range bills {
+		record, err := client.RentBill.Query().
+			Where(
+				entrentbill.RoomID(bill.RoomID),
+				entrentbill.PeriodMonth(bill.PeriodMonth),
+				entrentbill.DeletedAtIsNil(),
+				entrentbill.HasRoomWith(r.accountRoomPredicates(accountID)...),
+			).
+			Only(ctx)
+		if err != nil {
+			if !entclient.IsNotFound(err) {
+				return nil, err
+			}
+			created, err := r.createRentBillRecord(ctx, client, bill)
+			if err != nil {
+				if entclient.IsConstraintError(err) {
+					return nil, domainrentbill.ErrAlreadyExists
+				}
+				return nil, err
+			}
+			result.Saved = append(result.Saved, toDomainRentBill(created))
+			continue
+		}
+
+		if record.Status.String() != domainrentbill.StatusUnpaid {
+			result.Skipped = append(result.Skipped, toDomainRentBill(record))
+			continue
+		}
+		updated, err := r.updateRentBillRecord(ctx, client, record.ID, bill)
+		if err != nil {
+			if entclient.IsConstraintError(err) {
+				return nil, domainrentbill.ErrAlreadyExists
+			}
+			return nil, err
+		}
+		result.Saved = append(result.Saved, toDomainRentBill(updated))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	committed = true
+	return result, nil
 }
 
 // Update 更新账号名下指定租金账单。
@@ -157,6 +243,40 @@ func (r *RentBillRepository) Delete(ctx context.Context, accountID int, id int) 
 		return domainrentbill.ErrNotFound
 	}
 	return nil
+}
+
+func (r *RentBillRepository) createRentBillRecord(ctx context.Context, client *entclient.Client, bill *domainrentbill.RentBill) (*entclient.RentBill, error) {
+	return client.RentBill.Create().
+		SetRoomID(bill.RoomID).
+		SetPeriodMonth(bill.PeriodMonth).
+		SetBaseRent(bill.BaseRent).
+		SetMeterFee(bill.MeterFee).
+		SetTotalAmount(bill.TotalAmount).
+		SetStatus(entrentbill.Status(bill.Status)).
+		SetNillablePaidAt(bill.PaidAt).
+		SetNillableRemark(bill.Remark).
+		Save(ctx)
+}
+
+func (r *RentBillRepository) updateRentBillRecord(ctx context.Context, client *entclient.Client, id int, bill *domainrentbill.RentBill) (*entclient.RentBill, error) {
+	updater := client.RentBill.UpdateOneID(id).
+		SetRoomID(bill.RoomID).
+		SetPeriodMonth(bill.PeriodMonth).
+		SetBaseRent(bill.BaseRent).
+		SetMeterFee(bill.MeterFee).
+		SetTotalAmount(bill.TotalAmount).
+		SetStatus(entrentbill.Status(bill.Status))
+	if bill.PaidAt == nil {
+		updater = updater.ClearPaidAt()
+	} else {
+		updater = updater.SetPaidAt(*bill.PaidAt)
+	}
+	if bill.Remark == nil {
+		updater = updater.ClearRemark()
+	} else {
+		updater = updater.SetRemark(*bill.Remark)
+	}
+	return updater.Save(ctx)
 }
 
 // queryRentBills 构建带账号归属约束的租金账单查询。

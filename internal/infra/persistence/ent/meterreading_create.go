@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
@@ -21,6 +20,48 @@ type MeterReadingCreate struct {
 	config
 	mutation *MeterReadingMutation
 	hooks    []Hook
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (_c *MeterReadingCreate) SetCreatedAt(v time.Time) *MeterReadingCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_c *MeterReadingCreate) SetNillableCreatedAt(v *time.Time) *MeterReadingCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
+	}
+	return _c
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_c *MeterReadingCreate) SetUpdatedAt(v time.Time) *MeterReadingCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (_c *MeterReadingCreate) SetNillableUpdatedAt(v *time.Time) *MeterReadingCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
+	}
+	return _c
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *MeterReadingCreate) SetDeletedAt(v time.Time) *MeterReadingCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *MeterReadingCreate) SetNillableDeletedAt(v *time.Time) *MeterReadingCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
 }
 
 // SetRoomID sets the "room_id" field.
@@ -168,6 +209,14 @@ func (_c *MeterReadingCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *MeterReadingCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		v := meterreading.DefaultCreatedAt()
+		_c.mutation.SetCreatedAt(v)
+	}
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		v := meterreading.DefaultUpdatedAt()
+		_c.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := _c.mutation.Source(); !ok {
 		v := meterreading.DefaultSource
 		_c.mutation.SetSource(v)
@@ -176,6 +225,12 @@ func (_c *MeterReadingCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *MeterReadingCreate) check() error {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "MeterReading.created_at"`)}
+	}
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "MeterReading.updated_at"`)}
+	}
 	if _, ok := _c.mutation.RoomID(); !ok {
 		return &ValidationError{Name: "room_id", err: errors.New(`ent: missing required field "MeterReading.room_id"`)}
 	}
@@ -236,6 +291,18 @@ func (_c *MeterReadingCreate) createSpec() (*MeterReading, *sqlgraph.CreateSpec)
 		_node = &MeterReading{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(meterreading.Table, sqlgraph.NewFieldSpec(meterreading.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.CreatedAt(); ok {
+		_spec.SetField(meterreading.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := _c.mutation.UpdatedAt(); ok {
+		_spec.SetField(meterreading.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(meterreading.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
+	}
 	if value, ok := _c.mutation.PeriodMonth(); ok {
 		_spec.SetField(meterreading.FieldPeriodMonth, field.TypeString, value)
 		_node.PeriodMonth = value

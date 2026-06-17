@@ -7,14 +7,16 @@ import (
 	"github.com/miebyte/goutils/ginutils"
 
 	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meterreading"
 	apprbac "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rbac"
+	apprentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rentbill"
 	approom "git.superwhys.top/rent-manager/rent-manager-server/internal/app/room"
 	appunit "git.superwhys.top/rent-manager/rent-manager-server/internal/app/unit"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 )
 
 // UnitRouter 注册单元及单元下资源路由。
-func UnitRouter(unitService *appunit.Service, roomService *approom.Service, rbacService *apprbac.Service) ginutils.Option {
+func UnitRouter(unitService *appunit.Service, roomService *approom.Service, rbacService *apprbac.Service, meterReadingService *appmeterreading.Service, rentBillService *apprentbill.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodPost, "", CreateUnitHandler(unitService)),
 		ginutils.WithHandler(http.MethodGet, "", ListUnitsHandler(unitService)),
@@ -23,6 +25,9 @@ func UnitRouter(unitService *appunit.Service, roomService *approom.Service, rbac
 		ginutils.WithHandler(http.MethodDelete, "/:unit_id", DeleteUnitHandler(unitService)),
 		ginutils.WithHandler(http.MethodPost, "/:unit_id/rooms", CreateRoomInUnitHandler(roomService)),
 		ginutils.WithHandler(http.MethodGet, "/:unit_id/rooms", ListRoomsInUnitHandler(roomService)),
+		ginutils.WithHandler(http.MethodGet, "/:unit_id/meter-readings", GetUnitMeterReadingsHandler(meterReadingService)),
+		ginutils.WithHandler(http.MethodGet, "/:unit_id/rent-bills", ListUnitRentBillsHandler(rentBillService)),
+		ginutils.WithHandler(http.MethodPost, "/:unit_id/rent-bills/generate", GenerateUnitRentBillsHandler(rentBillService)),
 		ginutils.WithHandler(http.MethodGet, "/:unit_id/grants", ListUnitGrantsHandler(rbacService)),
 		ginutils.WithHandler(http.MethodPost, "/:unit_id/accounts/:account_id/roles", GrantUnitRolesHandler(rbacService)),
 		ginutils.WithHandler(http.MethodDelete, "/:unit_id/accounts/:account_id/roles", RevokeUnitRolesHandler(rbacService)),
@@ -73,7 +78,7 @@ func ListUnitsHandler(unitService *appunit.Service) gin.HandlerFunc {
 // @Router /units/{unit_id} [get]
 func GetUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appunit.UnitIDQuery) {
-		unit, err := unitService.GetUnit(c.Request.Context(), req.UnitID)
+		unit, err := unitService.GetUnitInfo(c.Request.Context(), req.UnitID)
 		if apiresponse.HandleRouterError(c, err, "get unit failed", xerr.ErrSysInternal) {
 			return
 		}

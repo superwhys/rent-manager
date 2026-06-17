@@ -68,6 +68,7 @@ func ToSummaryResponse(summary *Summary) *Response {
 		IncomeDecimal: incomeDecimal,
 		MonthlyGrowth: formatSignedCents(summary.MonthlyIncomeGrowthCents),
 		CurrentMonth:  summary.CurrentMonth,
+		// TODO:
 		Stats: []StatResponse{
 			{
 				Value: strconv.Itoa(summary.BuildingCount),
@@ -85,6 +86,7 @@ func ToSummaryResponse(summary *Summary) *Response {
 				Tone:  "orange",
 			},
 		},
+		// TODO:
 		Todos: []TodoResponse{
 			{
 				Title:       "幸福小区 · 3栋",

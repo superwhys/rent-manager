@@ -442,6 +442,114 @@
                 }
             }
         },
+        "/rent-bills/{rent_bill_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rent_bill"
+                ],
+                "summary": "获取账单详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账单ID",
+                        "name": "rent_bill_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-rentbill_RentBillResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/rent-bills/{rent_bill_id}/cancel": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rent_bill"
+                ],
+                "summary": "取消账单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账单ID",
+                        "name": "rent_bill_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "取消参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rentbill.CancelRentBillCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-rentbill_RentBillResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/rent-bills/{rent_bill_id}/paid": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rent_bill"
+                ],
+                "summary": "标记账单已收款",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账单ID",
+                        "name": "rent_bill_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "收款参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rentbill.MarkRentBillPaidCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-rentbill_RentBillResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/roles": {
             "get": {
                 "produces": [
@@ -918,6 +1026,171 @@
                 }
             }
         },
+        "/rooms/{room_id}/meter-readings": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meter_reading"
+                ],
+                "summary": "获取房间月度抄表状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "抄表月份 YYYY-MM",
+                        "name": "period_month",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-meterreading_RoomMonthReadingsResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meter_reading"
+                ],
+                "summary": "保存房间月度抄表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "房间月度抄表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/meterreading.SaveRoomMonthCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-meterreading_RoomMonthReadingsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{room_id}/rent-bills": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rent_bill"
+                ],
+                "summary": "获取房间账单列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "账单月份 YYYY-MM",
+                        "name": "period_month",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "账单状态",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页数量",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_rentbill_RentBillResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{room_id}/rent-bills/generate": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rent_bill"
+                ],
+                "summary": "生成房间月度账单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "房间ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "生成账单参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rentbill.GenerateRoomRentBillCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-rentbill_GeneratedRentBillsResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/units": {
             "get": {
                 "produces": [
@@ -1200,6 +1473,133 @@
                 }
             }
         },
+        "/units/{unit_id}/meter-readings": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meter_reading"
+                ],
+                "summary": "获取单元月度抄表汇总",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "抄表月份 YYYY-MM",
+                        "name": "period_month",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-meterreading_UnitMonthReadingsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}/rent-bills": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rent_bill"
+                ],
+                "summary": "获取单元账单列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "账单月份 YYYY-MM",
+                        "name": "period_month",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "账单状态",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页数量",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_rentbill_RentBillResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{unit_id}/rent-bills/generate": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rent_bill"
+                ],
+                "summary": "批量生成单元月度账单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "单元ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "生成账单参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rentbill.GenerateUnitRentBillsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-rentbill_GeneratedRentBillsResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/units/{unit_id}/rooms": {
             "get": {
                 "produces": [
@@ -1448,6 +1848,21 @@
                 "message": {}
             }
         },
+        "ginutils.Ret-array_rentbill_RentBillResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/rentbill.RentBillResponse"
+                    }
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-array_room_RoomResponse": {
             "type": "object",
             "properties": {
@@ -1529,6 +1944,30 @@
                 "message": {}
             }
         },
+        "ginutils.Ret-meterreading_RoomMonthReadingsResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/meterreading.RoomMonthReadingsResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-meterreading_UnitMonthReadingsResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/meterreading.UnitMonthReadingsResponse"
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-rbac_RoleResponse": {
             "type": "object",
             "properties": {
@@ -1537,6 +1976,30 @@
                 },
                 "data": {
                     "$ref": "#/definitions/rbac.RoleResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-rentbill_GeneratedRentBillsResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/rentbill.GeneratedRentBillsResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-rentbill_RentBillResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/rentbill.RentBillResponse"
                 },
                 "message": {}
             }
@@ -1747,6 +2210,190 @@
                 "unit_price": {
                     "type": "integer",
                     "minimum": 0
+                }
+            }
+        },
+        "meterreading.MeterItemSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "calc_type": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "fee": {
+                    "type": "integer"
+                },
+                "meter_item_id": {
+                    "type": "integer"
+                },
+                "missing": {
+                    "type": "integer"
+                },
+                "recorded": {
+                    "type": "integer"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "unit_price": {
+                    "type": "integer"
+                },
+                "usage_amount": {
+                    "type": "number"
+                }
+            }
+        },
+        "meterreading.MeterReadingInput": {
+            "type": "object",
+            "required": [
+                "meter_item_id"
+            ],
+            "properties": {
+                "current_reading": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "meter_item_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "previous_reading": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "reading_time": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                }
+            }
+        },
+        "meterreading.MeterReadingLineResponse": {
+            "type": "object",
+            "properties": {
+                "current_reading": {
+                    "type": "number"
+                },
+                "fee": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_recorded": {
+                    "type": "boolean"
+                },
+                "meter_item": {
+                    "$ref": "#/definitions/meteritem.MeterItemResponse"
+                },
+                "period_month": {
+                    "type": "string"
+                },
+                "previous_reading": {
+                    "type": "number"
+                },
+                "reader_id": {
+                    "type": "integer"
+                },
+                "reading_time": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "usage_amount": {
+                    "type": "number"
+                }
+            }
+        },
+        "meterreading.RoomMonthReadingsResponse": {
+            "type": "object",
+            "properties": {
+                "missing_count": {
+                    "type": "integer"
+                },
+                "period_month": {
+                    "type": "string"
+                },
+                "readings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/meterreading.MeterReadingLineResponse"
+                    }
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "total_fee": {
+                    "type": "integer"
+                },
+                "unit_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "meterreading.SaveRoomMonthCommand": {
+            "type": "object",
+            "required": [
+                "period_month",
+                "readings",
+                "roomID"
+            ],
+            "properties": {
+                "period_month": {
+                    "type": "string"
+                },
+                "readings": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/meterreading.MeterReadingInput"
+                    }
+                },
+                "roomID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "meterreading.UnitMonthReadingsResponse": {
+            "type": "object",
+            "properties": {
+                "missing_count": {
+                    "type": "integer"
+                },
+                "period_month": {
+                    "type": "string"
+                },
+                "rooms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/meterreading.RoomMonthReadingsResponse"
+                    }
+                },
+                "summaries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/meterreading.MeterItemSummaryResponse"
+                    }
+                },
+                "total_fee": {
+                    "type": "integer"
+                },
+                "unit_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -2015,6 +2662,129 @@
                 "roleID": {
                     "type": "integer",
                     "minimum": 1
+                }
+            }
+        },
+        "rentbill.CancelRentBillCommand": {
+            "type": "object",
+            "required": [
+                "rentBillID"
+            ],
+            "properties": {
+                "remark": {
+                    "type": "string"
+                },
+                "rentBillID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "rentbill.GenerateRoomRentBillCommand": {
+            "type": "object",
+            "required": [
+                "period_month",
+                "roomID"
+            ],
+            "properties": {
+                "period_month": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "roomID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "rentbill.GenerateUnitRentBillsCommand": {
+            "type": "object",
+            "required": [
+                "period_month",
+                "unitID"
+            ],
+            "properties": {
+                "period_month": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "unitID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "rentbill.GeneratedRentBillsResponse": {
+            "type": "object",
+            "properties": {
+                "saved_bills": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/rentbill.RentBillResponse"
+                    }
+                },
+                "skipped_bills": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/rentbill.RentBillResponse"
+                    }
+                }
+            }
+        },
+        "rentbill.MarkRentBillPaidCommand": {
+            "type": "object",
+            "required": [
+                "rentBillID"
+            ],
+            "properties": {
+                "paid_at": {
+                    "type": "string"
+                },
+                "rentBillID": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "rentbill.RentBillResponse": {
+            "type": "object",
+            "properties": {
+                "base_rent": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "meter_fee": {
+                    "type": "integer"
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "period_month": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

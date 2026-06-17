@@ -10,7 +10,6 @@ import (
 	_ "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/migrate"
 )
 

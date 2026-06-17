@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
@@ -28,6 +27,32 @@ type MeterReadingUpdate struct {
 // Where appends a list predicates to the MeterReadingUpdate builder.
 func (_u *MeterReadingUpdate) Where(ps ...predicate.MeterReading) *MeterReadingUpdate {
 	_u.mutation.Where(ps...)
+	return _u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *MeterReadingUpdate) SetUpdatedAt(v time.Time) *MeterReadingUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *MeterReadingUpdate) SetDeletedAt(v time.Time) *MeterReadingUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *MeterReadingUpdate) SetNillableDeletedAt(v *time.Time) *MeterReadingUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *MeterReadingUpdate) ClearDeletedAt() *MeterReadingUpdate {
+	_u.mutation.ClearDeletedAt()
 	return _u
 }
 
@@ -252,6 +277,7 @@ func (_u *MeterReadingUpdate) ClearMeterItem() *MeterReadingUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *MeterReadingUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -274,6 +300,14 @@ func (_u *MeterReadingUpdate) Exec(ctx context.Context) error {
 func (_u *MeterReadingUpdate) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *MeterReadingUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := meterreading.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -309,6 +343,15 @@ func (_u *MeterReadingUpdate) sqlSave(ctx context.Context) (_node int, err error
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(meterreading.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(meterreading.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(meterreading.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.PeriodMonth(); ok {
 		_spec.SetField(meterreading.FieldPeriodMonth, field.TypeString, value)
@@ -434,6 +477,32 @@ type MeterReadingUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *MeterReadingMutation
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *MeterReadingUpdateOne) SetUpdatedAt(v time.Time) *MeterReadingUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *MeterReadingUpdateOne) SetDeletedAt(v time.Time) *MeterReadingUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *MeterReadingUpdateOne) SetNillableDeletedAt(v *time.Time) *MeterReadingUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *MeterReadingUpdateOne) ClearDeletedAt() *MeterReadingUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
 }
 
 // SetRoomID sets the "room_id" field.
@@ -670,6 +739,7 @@ func (_u *MeterReadingUpdateOne) Select(field string, fields ...string) *MeterRe
 
 // Save executes the query and returns the updated MeterReading entity.
 func (_u *MeterReadingUpdateOne) Save(ctx context.Context) (*MeterReading, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -692,6 +762,14 @@ func (_u *MeterReadingUpdateOne) Exec(ctx context.Context) error {
 func (_u *MeterReadingUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *MeterReadingUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := meterreading.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -744,6 +822,15 @@ func (_u *MeterReadingUpdateOne) sqlSave(ctx context.Context) (_node *MeterReadi
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(meterreading.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(meterreading.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(meterreading.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.PeriodMonth(); ok {
 		_spec.SetField(meterreading.FieldPeriodMonth, field.TypeString, value)

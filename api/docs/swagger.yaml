@@ -103,6 +103,16 @@ definitions:
         type: array
       message: {}
     type: object
+  ginutils.Ret-array_rentbill_RentBillResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/rentbill.RentBillResponse'
+        type: array
+      message: {}
+    type: object
   ginutils.Ret-array_room_RoomResponse:
     properties:
       code:
@@ -157,12 +167,44 @@ definitions:
         $ref: '#/definitions/meteritem.MeterItemResponse'
       message: {}
     type: object
+  ginutils.Ret-meterreading_RoomMonthReadingsResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/meterreading.RoomMonthReadingsResponse'
+      message: {}
+    type: object
+  ginutils.Ret-meterreading_UnitMonthReadingsResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/meterreading.UnitMonthReadingsResponse'
+      message: {}
+    type: object
   ginutils.Ret-rbac_RoleResponse:
     properties:
       code:
         type: integer
       data:
         $ref: '#/definitions/rbac.RoleResponse'
+      message: {}
+    type: object
+  ginutils.Ret-rentbill_GeneratedRentBillsResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/rentbill.GeneratedRentBillsResponse'
+      message: {}
+    type: object
+  ginutils.Ret-rentbill_RentBillResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/rentbill.RentBillResponse'
       message: {}
     type: object
   ginutils.Ret-room_RoomResponse:
@@ -305,6 +347,129 @@ definitions:
     - code
     - meterItemID
     - unit
+    type: object
+  meterreading.MeterItemSummaryResponse:
+    properties:
+      calc_type:
+        type: string
+      code:
+        type: string
+      fee:
+        type: integer
+      meter_item_id:
+        type: integer
+      missing:
+        type: integer
+      recorded:
+        type: integer
+      unit:
+        type: string
+      unit_price:
+        type: integer
+      usage_amount:
+        type: number
+    type: object
+  meterreading.MeterReadingInput:
+    properties:
+      current_reading:
+        minimum: 0
+        type: number
+      meter_item_id:
+        minimum: 1
+        type: integer
+      previous_reading:
+        minimum: 0
+        type: number
+      reading_time:
+        type: string
+      remark:
+        type: string
+    required:
+    - meter_item_id
+    type: object
+  meterreading.MeterReadingLineResponse:
+    properties:
+      current_reading:
+        type: number
+      fee:
+        type: integer
+      id:
+        type: integer
+      is_recorded:
+        type: boolean
+      meter_item:
+        $ref: '#/definitions/meteritem.MeterItemResponse'
+      period_month:
+        type: string
+      previous_reading:
+        type: number
+      reader_id:
+        type: integer
+      reading_time:
+        type: string
+      remark:
+        type: string
+      room_id:
+        type: integer
+      source:
+        type: string
+      usage_amount:
+        type: number
+    type: object
+  meterreading.RoomMonthReadingsResponse:
+    properties:
+      missing_count:
+        type: integer
+      period_month:
+        type: string
+      readings:
+        items:
+          $ref: '#/definitions/meterreading.MeterReadingLineResponse'
+        type: array
+      room_id:
+        type: integer
+      room_no:
+        type: string
+      total_fee:
+        type: integer
+      unit_id:
+        type: integer
+    type: object
+  meterreading.SaveRoomMonthCommand:
+    properties:
+      period_month:
+        type: string
+      readings:
+        items:
+          $ref: '#/definitions/meterreading.MeterReadingInput'
+        minItems: 1
+        type: array
+      roomID:
+        minimum: 1
+        type: integer
+    required:
+    - period_month
+    - readings
+    - roomID
+    type: object
+  meterreading.UnitMonthReadingsResponse:
+    properties:
+      missing_count:
+        type: integer
+      period_month:
+        type: string
+      rooms:
+        items:
+          $ref: '#/definitions/meterreading.RoomMonthReadingsResponse'
+        type: array
+      summaries:
+        items:
+          $ref: '#/definitions/meterreading.MeterItemSummaryResponse'
+        type: array
+      total_fee:
+        type: integer
+      unit_id:
+        type: integer
     type: object
   rbac.CreatePermissionGroupItem:
     properties:
@@ -485,6 +650,88 @@ definitions:
     required:
     - name
     - roleID
+    type: object
+  rentbill.CancelRentBillCommand:
+    properties:
+      remark:
+        type: string
+      rentBillID:
+        minimum: 1
+        type: integer
+    required:
+    - rentBillID
+    type: object
+  rentbill.GenerateRoomRentBillCommand:
+    properties:
+      period_month:
+        type: string
+      remark:
+        type: string
+      roomID:
+        minimum: 1
+        type: integer
+    required:
+    - period_month
+    - roomID
+    type: object
+  rentbill.GenerateUnitRentBillsCommand:
+    properties:
+      period_month:
+        type: string
+      remark:
+        type: string
+      unitID:
+        minimum: 1
+        type: integer
+    required:
+    - period_month
+    - unitID
+    type: object
+  rentbill.GeneratedRentBillsResponse:
+    properties:
+      saved_bills:
+        items:
+          $ref: '#/definitions/rentbill.RentBillResponse'
+        type: array
+      skipped_bills:
+        items:
+          $ref: '#/definitions/rentbill.RentBillResponse'
+        type: array
+    type: object
+  rentbill.MarkRentBillPaidCommand:
+    properties:
+      paid_at:
+        type: string
+      rentBillID:
+        minimum: 1
+        type: integer
+    required:
+    - rentBillID
+    type: object
+  rentbill.RentBillResponse:
+    properties:
+      base_rent:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      meter_fee:
+        type: integer
+      paid_at:
+        type: string
+      period_month:
+        type: string
+      remark:
+        type: string
+      room_id:
+        type: integer
+      status:
+        type: string
+      total_amount:
+        type: integer
+      updated_at:
+        type: string
     type: object
   room.CreateRoomInUnitCommand:
     properties:
@@ -982,6 +1229,76 @@ paths:
       summary: 更新抄表项
       tags:
       - meter_item
+  /rent-bills/{rent_bill_id}:
+    get:
+      parameters:
+      - description: 账单ID
+        in: path
+        name: rent_bill_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-rentbill_RentBillResponse'
+      summary: 获取账单详情
+      tags:
+      - rent_bill
+  /rent-bills/{rent_bill_id}/cancel:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账单ID
+        in: path
+        name: rent_bill_id
+        required: true
+        type: integer
+      - description: 取消参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/rentbill.CancelRentBillCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-rentbill_RentBillResponse'
+      summary: 取消账单
+      tags:
+      - rent_bill
+  /rent-bills/{rent_bill_id}/paid:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账单ID
+        in: path
+        name: rent_bill_id
+        required: true
+        type: integer
+      - description: 收款参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/rentbill.MarkRentBillPaidCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-rentbill_RentBillResponse'
+      summary: 标记账单已收款
+      tags:
+      - rent_bill
   /roles:
     get:
       produces:
@@ -1291,6 +1608,114 @@ paths:
       summary: 更新房间
       tags:
       - room
+  /rooms/{room_id}/meter-readings:
+    get:
+      parameters:
+      - description: 房间ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      - description: 抄表月份 YYYY-MM
+        in: query
+        name: period_month
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-meterreading_RoomMonthReadingsResponse'
+      summary: 获取房间月度抄表状态
+      tags:
+      - meter_reading
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 房间ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      - description: 房间月度抄表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/meterreading.SaveRoomMonthCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-meterreading_RoomMonthReadingsResponse'
+      summary: 保存房间月度抄表
+      tags:
+      - meter_reading
+  /rooms/{room_id}/rent-bills:
+    get:
+      parameters:
+      - description: 房间ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      - description: 账单月份 YYYY-MM
+        in: query
+        name: period_month
+        type: string
+      - description: 账单状态
+        in: query
+        name: status
+        type: string
+      - description: 分页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 分页偏移
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_rentbill_RentBillResponse'
+      summary: 获取房间账单列表
+      tags:
+      - rent_bill
+  /rooms/{room_id}/rent-bills/generate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 房间ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      - description: 生成账单参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/rentbill.GenerateRoomRentBillCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-rentbill_GeneratedRentBillsResponse'
+      summary: 生成房间月度账单
+      tags:
+      - rent_bill
   /units:
     get:
       parameters:
@@ -1475,6 +1900,89 @@ paths:
       summary: 获取单元授权列表
       tags:
       - unit
+  /units/{unit_id}/meter-readings:
+    get:
+      parameters:
+      - description: 单元ID
+        in: path
+        name: unit_id
+        required: true
+        type: integer
+      - description: 抄表月份 YYYY-MM
+        in: query
+        name: period_month
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-meterreading_UnitMonthReadingsResponse'
+      summary: 获取单元月度抄表汇总
+      tags:
+      - meter_reading
+  /units/{unit_id}/rent-bills:
+    get:
+      parameters:
+      - description: 单元ID
+        in: path
+        name: unit_id
+        required: true
+        type: integer
+      - description: 账单月份 YYYY-MM
+        in: query
+        name: period_month
+        type: string
+      - description: 账单状态
+        in: query
+        name: status
+        type: string
+      - description: 分页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 分页偏移
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_rentbill_RentBillResponse'
+      summary: 获取单元账单列表
+      tags:
+      - rent_bill
+  /units/{unit_id}/rent-bills/generate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 单元ID
+        in: path
+        name: unit_id
+        required: true
+        type: integer
+      - description: 生成账单参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/rentbill.GenerateUnitRentBillsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-rentbill_GeneratedRentBillsResponse'
+      summary: 批量生成单元月度账单
+      tags:
+      - rent_bill
   /units/{unit_id}/rooms:
     get:
       parameters:

@@ -30,6 +30,7 @@ type UpdateParams struct {
 }
 
 type ListQuery struct {
+	UnitID          int
 	RoomID          int
 	MeterItemID     int
 	PeriodMonth     string

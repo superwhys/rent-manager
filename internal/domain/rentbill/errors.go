@@ -16,4 +16,6 @@ var (
 	ErrNotFound            = xerr.New(206011, "租金账单不存在")
 	ErrAlreadyExists       = xerr.New(206012, "租金账单已存在")
 	ErrRoomNotFound        = xerr.New(206013, "房间不存在")
+	ErrBillsRequired       = xerr.New(206014, "租金账单不能为空")
+	ErrMeterReadingMissing = xerr.New(206015, "抄表未完成，不能生成账单")
 )

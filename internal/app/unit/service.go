@@ -54,7 +54,7 @@ func (s *Service) CreateUnit(ctx context.Context, cmd *CreateUnitCommand) (*doma
 }
 
 // GetUnit 获取当前账号可访问的单元详情。
-func (s *Service) GetUnit(ctx context.Context, id int) (*domainunit.Unit, error) {
+func (s *Service) GetUnitInfo(ctx context.Context, id int) (*domainunit.Unit, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -64,6 +64,11 @@ func (s *Service) GetUnit(ctx context.Context, id int) (*domainunit.Unit, error)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO:
+	// 1. 获取预估月收入
+	// 2. 获取房间数
+	// 3. 获取在租数（可以租的）
 
 	return unit, nil
 }
@@ -143,6 +148,11 @@ func (s *Service) DeleteUnit(ctx context.Context, id int) error {
 
 // requireUnitPermission 校验当前账号对单元的权限并标记访问类型。
 func (s *Service) requireUnitPermission(ctx context.Context, accountID int, unitID int, permissionCode string) (*domainunit.Unit, error) {
+	err := s.rbacService.RequireUnitPermission(ctx, accountID, unitID, permissionCode)
+	if err != nil {
+		return nil, err
+	}
+
 	unit, err := s.repo.GetByID(ctx, unitID)
 	if err != nil {
 		return nil, err
@@ -150,14 +160,10 @@ func (s *Service) requireUnitPermission(ctx context.Context, accountID int, unit
 
 	if unit.AccountID == accountID {
 		unit.AccessType = domainunit.AccessTypeOwned
-		return unit, nil
+	} else {
+		unit.AccessType = domainunit.AccessTypeGranted
 	}
 
-	if err := s.rbacService.RequireUnitPermission(ctx, accountID, unitID, permissionCode); err != nil {
-		return nil, err
-	}
-
-	unit.AccessType = domainunit.AccessTypeGranted
 	return unit, nil
 }
 

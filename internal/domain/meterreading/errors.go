@@ -21,4 +21,6 @@ var (
 	ErrRoomNotFound             = xerr.New(205016, "房间不存在")
 	ErrMeterItemNotFound        = xerr.New(205017, "抄表项不存在")
 	ErrRoomMeterItemNotAssigned = xerr.New(205018, "房间未绑定该抄表项")
+	ErrReadingsRequired         = xerr.New(205019, "抄表记录不能为空")
+	ErrDuplicateMeterItem       = xerr.New(205020, "抄表项不能重复")
 )

@@ -145,8 +145,21 @@ func init() {
 	meteritemDescIsSystem := meteritemFields[3].Descriptor()
 	// meteritem.DefaultIsSystem holds the default value on creation for the is_system field.
 	meteritem.DefaultIsSystem = meteritemDescIsSystem.Default.(bool)
+	meterreadingMixin := schema.MeterReading{}.Mixin()
+	meterreadingMixinFields0 := meterreadingMixin[0].Fields()
+	_ = meterreadingMixinFields0
 	meterreadingFields := schema.MeterReading{}.Fields()
 	_ = meterreadingFields
+	// meterreadingDescCreatedAt is the schema descriptor for created_at field.
+	meterreadingDescCreatedAt := meterreadingMixinFields0[0].Descriptor()
+	// meterreading.DefaultCreatedAt holds the default value on creation for the created_at field.
+	meterreading.DefaultCreatedAt = meterreadingDescCreatedAt.Default.(func() time.Time)
+	// meterreadingDescUpdatedAt is the schema descriptor for updated_at field.
+	meterreadingDescUpdatedAt := meterreadingMixinFields0[1].Descriptor()
+	// meterreading.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	meterreading.DefaultUpdatedAt = meterreadingDescUpdatedAt.Default.(func() time.Time)
+	// meterreading.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	meterreading.UpdateDefaultUpdatedAt = meterreadingDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// meterreadingDescPeriodMonth is the schema descriptor for period_month field.
 	meterreadingDescPeriodMonth := meterreadingFields[2].Descriptor()
 	// meterreading.PeriodMonthValidator is a validator for the "period_month" field. It is called by the builders before save.

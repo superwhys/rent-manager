@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
@@ -335,12 +334,12 @@ func (_q *MeterReadingQuery) WithMeterItem(opts ...func(*MeterItemQuery)) *Meter
 // Example:
 //
 //	var v []struct {
-//		RoomID int `json:"room_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.MeterReading.Query().
-//		GroupBy(meterreading.FieldRoomID).
+//		GroupBy(meterreading.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *MeterReadingQuery) GroupBy(field string, fields ...string) *MeterReadingGroupBy {
@@ -358,11 +357,11 @@ func (_q *MeterReadingQuery) GroupBy(field string, fields ...string) *MeterReadi
 // Example:
 //
 //	var v []struct {
-//		RoomID int `json:"room_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.MeterReading.Query().
-//		Select(meterreading.FieldRoomID).
+//		Select(meterreading.FieldCreatedAt).
 //		Scan(ctx, &v)
 func (_q *MeterReadingQuery) Select(fields ...string) *MeterReadingSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

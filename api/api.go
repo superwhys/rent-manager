@@ -58,13 +58,19 @@ func SetupRouter(
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/units"),
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
-			routers.UnitRouter(adminServices.Unit, adminServices.Room, adminServices.RBAC),
+			routers.UnitRouter(adminServices.Unit, adminServices.Room, adminServices.RBAC, adminServices.MeterReading, adminServices.RentBill),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/rooms"),
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
-			routers.RoomRouter(adminServices.Room),
+			routers.RoomRouter(adminServices.Room, adminServices.MeterReading, adminServices.RentBill),
+		),
+
+		ginutils.WithGroupHandlers(
+			ginutils.WithPrefix("/rent-bills"),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
+			routers.RentBillRouter(adminServices.RentBill),
 		),
 
 		ginutils.WithGroupHandlers(

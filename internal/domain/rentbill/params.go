@@ -41,3 +41,8 @@ type ListQuery struct {
 	Limit           int
 	Offset          int
 }
+
+type SaveGeneratedBillsResult struct {
+	Saved   []*RentBill
+	Skipped []*RentBill
+}

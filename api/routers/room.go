@@ -7,16 +7,22 @@ import (
 	"github.com/miebyte/goutils/ginutils"
 
 	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
+	appmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meterreading"
+	apprentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rentbill"
 	approom "git.superwhys.top/rent-manager/rent-manager-server/internal/app/room"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
 )
 
 // RoomRouter 注册房间路由。
-func RoomRouter(roomService *approom.Service) ginutils.Option {
+func RoomRouter(roomService *approom.Service, meterReadingService *appmeterreading.Service, rentBillService *apprentbill.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodGet, "/:room_id", GetRoomHandler(roomService)),
 		ginutils.WithHandler(http.MethodPut, "/:room_id", UpdateRoomHandler(roomService)),
 		ginutils.WithHandler(http.MethodDelete, "/:room_id", DeleteRoomHandler(roomService)),
+		ginutils.WithHandler(http.MethodGet, "/:room_id/meter-readings", GetRoomMeterReadingsHandler(meterReadingService)),
+		ginutils.WithHandler(http.MethodPut, "/:room_id/meter-readings", SaveRoomMeterReadingsHandler(meterReadingService)),
+		ginutils.WithHandler(http.MethodGet, "/:room_id/rent-bills", ListRoomRentBillsHandler(rentBillService)),
+		ginutils.WithHandler(http.MethodPost, "/:room_id/rent-bills/generate", GenerateRoomRentBillHandler(rentBillService)),
 	)
 }
 

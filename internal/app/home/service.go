@@ -55,7 +55,7 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 		}
 		summary.BuildingCount++
 
-		// 当前尚未建租约模型，出租/空置沿用房间启用状态统计。
+		// TODO: 当前尚未建租约模型，出租/空置沿用房间启用状态统计。
 		rentedCount, err := s.countRoomsInUnit(ctx, unit, &active)
 		if err != nil {
 			return nil, err
@@ -72,6 +72,7 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 			return nil, err
 		}
 	}
+	// TODO:
 	summary.MonthlyIncomeGrowthCents = summary.CurrentMonthIncomeCents - summary.PreviousMonthIncomeCents
 
 	return summary, nil
