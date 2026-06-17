@@ -30,6 +30,7 @@ func RentBillRouter(rentBillService *apprentbill.Service) ginutils.Option {
 // @Param limit query int false "分页数量"
 // @Param offset query int false "分页偏移"
 // @Success 200 {object} ginutils.Ret[[]rentbill.RentBillResponse]
+// @Security BearerAuth
 // @Router /rooms/{room_id}/rent-bills [get]
 func ListRoomRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.RoomRentBillsQuery) {
@@ -49,6 +50,7 @@ func ListRoomRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerF
 // @Param room_id path int true "房间ID"
 // @Param request body rentbill.GenerateRoomRentBillCommand true "生成账单参数"
 // @Success 200 {object} ginutils.Ret[rentbill.GeneratedRentBillsResponse]
+// @Security BearerAuth
 // @Router /rooms/{room_id}/rent-bills/generate [post]
 func GenerateRoomRentBillHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.GenerateRoomRentBillCommand) {
@@ -70,6 +72,7 @@ func GenerateRoomRentBillHandler(rentBillService *apprentbill.Service) gin.Handl
 // @Param limit query int false "分页数量"
 // @Param offset query int false "分页偏移"
 // @Success 200 {object} ginutils.Ret[[]rentbill.RentBillResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id}/rent-bills [get]
 func ListUnitRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.UnitRentBillsQuery) {
@@ -89,6 +92,7 @@ func ListUnitRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerF
 // @Param unit_id path int true "单元ID"
 // @Param request body rentbill.GenerateUnitRentBillsCommand true "生成账单参数"
 // @Success 200 {object} ginutils.Ret[rentbill.GeneratedRentBillsResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id}/rent-bills/generate [post]
 func GenerateUnitRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.GenerateUnitRentBillsCommand) {
@@ -106,6 +110,7 @@ func GenerateUnitRentBillsHandler(rentBillService *apprentbill.Service) gin.Hand
 // @Produce json
 // @Param rent_bill_id path int true "账单ID"
 // @Success 200 {object} ginutils.Ret[rentbill.RentBillResponse]
+// @Security BearerAuth
 // @Router /rent-bills/{rent_bill_id} [get]
 func GetRentBillHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.RentBillIDQuery) {
@@ -125,6 +130,7 @@ func GetRentBillHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 // @Param rent_bill_id path int true "账单ID"
 // @Param request body rentbill.MarkRentBillPaidCommand true "收款参数"
 // @Success 200 {object} ginutils.Ret[rentbill.RentBillResponse]
+// @Security BearerAuth
 // @Router /rent-bills/{rent_bill_id}/paid [post]
 func MarkRentBillPaidHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.MarkRentBillPaidCommand) {
@@ -144,6 +150,7 @@ func MarkRentBillPaidHandler(rentBillService *apprentbill.Service) gin.HandlerFu
 // @Param rent_bill_id path int true "账单ID"
 // @Param request body rentbill.CancelRentBillCommand true "取消参数"
 // @Success 200 {object} ginutils.Ret[rentbill.RentBillResponse]
+// @Security BearerAuth
 // @Router /rent-bills/{rent_bill_id}/cancel [post]
 func CancelRentBillHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.CancelRentBillCommand) {

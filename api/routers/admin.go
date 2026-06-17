@@ -31,6 +31,7 @@ func AdminRouter(rbacService *apprbac.Service) ginutils.Option {
 // @Produce json
 // @Param request body rbac.CreatePermissionGroupsCommand true "权限组列表"
 // @Success 200 {object} ginutils.Ret[[]rbac.PermissionGroupResponse]
+// @Security BearerAuth
 // @Router /admin/permission-groups/batch [post]
 func CreatePermissionGroupsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.CreatePermissionGroupsCommand) {
@@ -47,6 +48,7 @@ func CreatePermissionGroupsHandler(rbacService *apprbac.Service) gin.HandlerFunc
 // @Tags admin
 // @Produce json
 // @Success 200 {object} ginutils.Ret[[]rbac.PermissionGroupResponse]
+// @Security BearerAuth
 // @Router /admin/permission-groups [get]
 func ListPermissionGroupsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {
@@ -65,6 +67,7 @@ func ListPermissionGroupsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 // @Produce json
 // @Param request body rbac.CreatePermissionsCommand true "权限列表"
 // @Success 200 {object} ginutils.Ret[[]rbac.PermissionResponse]
+// @Security BearerAuth
 // @Router /admin/permissions/batch [post]
 func CreatePermissionsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.CreatePermissionsCommand) {
@@ -81,6 +84,7 @@ func CreatePermissionsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 // @Tags admin
 // @Produce json
 // @Success 200 {object} ginutils.Ret[[]rbac.PermissionResponse]
+// @Security BearerAuth
 // @Router /admin/permissions [get]
 func ListPermissionsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {
@@ -100,6 +104,7 @@ func ListPermissionsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 // @Param permission_group_id path int true "权限组ID"
 // @Param request body rbac.PermissionGroupPermissionsCommand true "权限ID列表"
 // @Success 200 {object} ginutils.Ret[any]
+// @Security BearerAuth
 // @Router /admin/permission-groups/{permission_group_id}/permissions [post]
 func AddPermissionsToPermissionGroupHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.PermissionGroupPermissionsCommand) {
@@ -119,6 +124,7 @@ func AddPermissionsToPermissionGroupHandler(rbacService *apprbac.Service) gin.Ha
 // @Param permission_group_id path int true "权限组ID"
 // @Param request body rbac.PermissionGroupPermissionsCommand true "权限ID列表"
 // @Success 200 {object} ginutils.Ret[any]
+// @Security BearerAuth
 // @Router /admin/permission-groups/{permission_group_id}/permissions [delete]
 func RemovePermissionsFromPermissionGroupHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.PermissionGroupPermissionsCommand) {

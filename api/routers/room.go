@@ -34,6 +34,7 @@ func RoomRouter(roomService *approom.Service, meterReadingService *appmeterreadi
 // @Param unit_id path int true "单元ID"
 // @Param request body room.CreateRoomInUnitCommand true "房间信息"
 // @Success 200 {object} ginutils.Ret[room.RoomResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id}/rooms [post]
 func CreateRoomInUnitHandler(roomService *approom.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approom.CreateRoomInUnitCommand) {
@@ -55,6 +56,7 @@ func CreateRoomInUnitHandler(roomService *approom.Service) gin.HandlerFunc {
 // @Param room_type_id query int false "房型ID"
 // @Param is_active query bool false "是否启用"
 // @Success 200 {object} ginutils.Ret[[]room.RoomResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id}/rooms [get]
 func ListRoomsInUnitHandler(roomService *approom.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approom.UnitRoomsQuery) {
@@ -72,6 +74,7 @@ func ListRoomsInUnitHandler(roomService *approom.Service) gin.HandlerFunc {
 // @Produce json
 // @Param room_id path int true "房间ID"
 // @Success 200 {object} ginutils.Ret[room.RoomResponse]
+// @Security BearerAuth
 // @Router /rooms/{room_id} [get]
 func GetRoomHandler(roomService *approom.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approom.RoomIDQuery) {
@@ -91,6 +94,7 @@ func GetRoomHandler(roomService *approom.Service) gin.HandlerFunc {
 // @Param room_id path int true "房间ID"
 // @Param request body room.UpdateRoomCommand true "房间信息"
 // @Success 200 {object} ginutils.Ret[room.RoomResponse]
+// @Security BearerAuth
 // @Router /rooms/{room_id} [put]
 func UpdateRoomHandler(roomService *approom.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approom.UpdateRoomCommand) {
@@ -108,6 +112,7 @@ func UpdateRoomHandler(roomService *approom.Service) gin.HandlerFunc {
 // @Produce json
 // @Param room_id path int true "房间ID"
 // @Success 200 {object} ginutils.Ret[any]
+// @Security BearerAuth
 // @Router /rooms/{room_id} [delete]
 func DeleteRoomHandler(roomService *approom.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approom.RoomIDQuery) {

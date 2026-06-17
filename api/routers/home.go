@@ -24,6 +24,7 @@ func HomeRouter(homeService *apphome.Service) ginutils.Option {
 // @Tags home
 // @Produce json
 // @Success 200 {object} ginutils.Ret[home.Response]
+// @Security BearerAuth
 // @Router /home [get]
 func GetHomeHandler(homeService *apphome.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {

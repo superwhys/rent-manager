@@ -29,6 +29,7 @@ func RoomTypeRouter(roomTypeService *approomtype.Service) ginutils.Option {
 // @Produce json
 // @Param request body roomtype.CreateRoomTypeCommand true "房型信息"
 // @Success 200 {object} ginutils.Ret[roomtype.RoomTypeResponse]
+// @Security BearerAuth
 // @Router /room-types [post]
 func CreateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.CreateRoomTypeCommand) {
@@ -48,6 +49,7 @@ func CreateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc
 // @Param offset query int false "分页偏移"
 // @Param name query string false "房型名称"
 // @Success 200 {object} ginutils.Ret[[]roomtype.RoomTypeResponse]
+// @Security BearerAuth
 // @Router /room-types [get]
 func ListRoomTypesHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.ListRoomTypesQuery) {
@@ -65,6 +67,7 @@ func ListRoomTypesHandler(roomTypeService *approomtype.Service) gin.HandlerFunc 
 // @Produce json
 // @Param room_type_id path int true "房型ID"
 // @Success 200 {object} ginutils.Ret[roomtype.RoomTypeResponse]
+// @Security BearerAuth
 // @Router /room-types/{room_type_id} [get]
 func GetRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.RoomTypeIDQuery) {
@@ -84,6 +87,7 @@ func GetRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
 // @Param room_type_id path int true "房型ID"
 // @Param request body roomtype.UpdateRoomTypeCommand true "房型信息"
 // @Success 200 {object} ginutils.Ret[roomtype.RoomTypeResponse]
+// @Security BearerAuth
 // @Router /room-types/{room_type_id} [put]
 func UpdateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.UpdateRoomTypeCommand) {
@@ -101,6 +105,7 @@ func UpdateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc
 // @Produce json
 // @Param room_type_id path int true "房型ID"
 // @Success 200 {object} ginutils.Ret[any]
+// @Security BearerAuth
 // @Router /room-types/{room_type_id} [delete]
 func DeleteRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.RoomTypeIDQuery) {

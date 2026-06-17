@@ -24,6 +24,7 @@ func AccountRouter(accountService *appaccount.Service) ginutils.Option {
 // @Tags accout
 // @Produce json
 // @Success 200 {object} ginutils.Ret[account.AccountResponse]
+// @Security BearerAuth
 // @Router /accout/self [get]
 func AccountSelfHandler(accountService *appaccount.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {

@@ -18,6 +18,7 @@ import (
 // @Param room_id path int true "房间ID"
 // @Param period_month query string true "抄表月份 YYYY-MM"
 // @Success 200 {object} ginutils.Ret[meterreading.RoomMonthReadingsResponse]
+// @Security BearerAuth
 // @Router /rooms/{room_id}/meter-readings [get]
 func GetRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appmeterreading.RoomMeterReadingsQuery) {
@@ -37,6 +38,7 @@ func GetRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) g
 // @Param room_id path int true "房间ID"
 // @Param request body meterreading.SaveRoomMonthCommand true "房间月度抄表"
 // @Success 200 {object} ginutils.Ret[meterreading.RoomMonthReadingsResponse]
+// @Security BearerAuth
 // @Router /rooms/{room_id}/meter-readings [put]
 func SaveRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appmeterreading.SaveRoomMonthCommand) {
@@ -55,6 +57,7 @@ func SaveRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) 
 // @Param unit_id path int true "单元ID"
 // @Param period_month query string true "抄表月份 YYYY-MM"
 // @Success 200 {object} ginutils.Ret[meterreading.UnitMonthReadingsResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id}/meter-readings [get]
 func GetUnitMeterReadingsHandler(meterReadingService *appmeterreading.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appmeterreading.UnitMeterReadingsQuery) {

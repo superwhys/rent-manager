@@ -959,6 +959,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-account_AccountResponse'
+      security:
+      - BearerAuth: []
       summary: 获取个人信息
       tags:
       - accout
@@ -971,6 +973,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionGroupResponse'
+      security:
+      - BearerAuth: []
       summary: 获取权限组列表
       tags:
       - admin
@@ -997,6 +1001,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 从权限组移除权限
       tags:
       - admin
@@ -1022,6 +1028,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 给权限组绑定权限
       tags:
       - admin
@@ -1043,6 +1051,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionGroupResponse'
+      security:
+      - BearerAuth: []
       summary: 批量创建权限组
       tags:
       - admin
@@ -1055,6 +1065,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionResponse'
+      security:
+      - BearerAuth: []
       summary: 获取权限列表
       tags:
       - admin
@@ -1076,6 +1088,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionResponse'
+      security:
+      - BearerAuth: []
       summary: 批量创建权限
       tags:
       - admin
@@ -1130,6 +1144,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-home_Response'
+      security:
+      - BearerAuth: []
       summary: 获取首页聚合数据
       tags:
       - home
@@ -1163,6 +1179,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_meteritem_MeterItemResponse'
+      security:
+      - BearerAuth: []
       summary: 获取抄表项列表
       tags:
       - meter_item
@@ -1183,6 +1201,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-meteritem_MeterItemResponse'
+      security:
+      - BearerAuth: []
       summary: 创建抄表项
       tags:
       - meter_item
@@ -1201,6 +1221,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-meteritem_MeterItemResponse'
+      security:
+      - BearerAuth: []
       summary: 获取抄表项详情
       tags:
       - meter_item
@@ -1226,6 +1248,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-meteritem_MeterItemResponse'
+      security:
+      - BearerAuth: []
       summary: 更新抄表项
       tags:
       - meter_item
@@ -1244,6 +1268,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-rentbill_RentBillResponse'
+      security:
+      - BearerAuth: []
       summary: 获取账单详情
       tags:
       - rent_bill
@@ -1270,6 +1296,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-rentbill_RentBillResponse'
+      security:
+      - BearerAuth: []
       summary: 取消账单
       tags:
       - rent_bill
@@ -1296,6 +1324,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-rentbill_RentBillResponse'
+      security:
+      - BearerAuth: []
       summary: 标记账单已收款
       tags:
       - rent_bill
@@ -1308,6 +1338,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rbac_RoleResponse'
+      security:
+      - BearerAuth: []
       summary: 获取当前账号角色列表
       tags:
       - role
@@ -1326,6 +1358,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 删除角色
       tags:
       - role
@@ -1343,6 +1377,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-rbac_RoleResponse'
+      security:
+      - BearerAuth: []
       summary: 获取角色详情
       tags:
       - role
@@ -1368,6 +1404,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-rbac_RoleResponse'
+      security:
+      - BearerAuth: []
       summary: 更新角色
       tags:
       - role
@@ -1394,6 +1432,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 从角色移除权限组
       tags:
       - role
@@ -1419,6 +1459,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 给角色绑定权限组
       tags:
       - role
@@ -1440,6 +1482,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rbac_RoleResponse'
+      security:
+      - BearerAuth: []
       summary: 批量创建角色
       tags:
       - role
@@ -1465,6 +1509,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_roomtype_RoomTypeResponse'
+      security:
+      - BearerAuth: []
       summary: 获取房型列表
       tags:
       - room_type
@@ -1485,6 +1531,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-roomtype_RoomTypeResponse'
+      security:
+      - BearerAuth: []
       summary: 创建房型
       tags:
       - room_type
@@ -1503,6 +1551,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 删除房型
       tags:
       - room_type
@@ -1520,6 +1570,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-roomtype_RoomTypeResponse'
+      security:
+      - BearerAuth: []
       summary: 获取房型详情
       tags:
       - room_type
@@ -1545,6 +1597,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-roomtype_RoomTypeResponse'
+      security:
+      - BearerAuth: []
       summary: 更新房型
       tags:
       - room_type
@@ -1563,6 +1617,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 删除房间
       tags:
       - room
@@ -1580,6 +1636,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-room_RoomResponse'
+      security:
+      - BearerAuth: []
       summary: 获取房间详情
       tags:
       - room
@@ -1605,6 +1663,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-room_RoomResponse'
+      security:
+      - BearerAuth: []
       summary: 更新房间
       tags:
       - room
@@ -1628,6 +1688,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-meterreading_RoomMonthReadingsResponse'
+      security:
+      - BearerAuth: []
       summary: 获取房间月度抄表状态
       tags:
       - meter_reading
@@ -1653,6 +1715,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-meterreading_RoomMonthReadingsResponse'
+      security:
+      - BearerAuth: []
       summary: 保存房间月度抄表
       tags:
       - meter_reading
@@ -1687,6 +1751,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rentbill_RentBillResponse'
+      security:
+      - BearerAuth: []
       summary: 获取房间账单列表
       tags:
       - rent_bill
@@ -1713,6 +1779,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-rentbill_GeneratedRentBillsResponse'
+      security:
+      - BearerAuth: []
       summary: 生成房间月度账单
       tags:
       - rent_bill
@@ -1730,6 +1798,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_unit_UnitResponse'
+      security:
+      - BearerAuth: []
       summary: 获取单元列表
       tags:
       - unit
@@ -1750,6 +1820,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-unit_UnitResponse'
+      security:
+      - BearerAuth: []
       summary: 创建单元
       tags:
       - unit
@@ -1768,6 +1840,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 删除单元
       tags:
       - unit
@@ -1785,6 +1859,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-unit_UnitResponse'
+      security:
+      - BearerAuth: []
       summary: 获取单元详情
       tags:
       - unit
@@ -1810,6 +1886,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-unit_UnitResponse'
+      security:
+      - BearerAuth: []
       summary: 更新单元
       tags:
       - unit
@@ -1841,6 +1919,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 撤销账号单元角色授权
       tags:
       - unit
@@ -1871,6 +1951,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rbac_UnitGrantResponse'
+      security:
+      - BearerAuth: []
       summary: 授权账号管理单元角色
       tags:
       - unit
@@ -1897,6 +1979,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rbac_UnitGrantResponse'
+      security:
+      - BearerAuth: []
       summary: 获取单元授权列表
       tags:
       - unit
@@ -1920,6 +2004,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-meterreading_UnitMonthReadingsResponse'
+      security:
+      - BearerAuth: []
       summary: 获取单元月度抄表汇总
       tags:
       - meter_reading
@@ -1954,6 +2040,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_rentbill_RentBillResponse'
+      security:
+      - BearerAuth: []
       summary: 获取单元账单列表
       tags:
       - rent_bill
@@ -1980,6 +2068,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-rentbill_GeneratedRentBillsResponse'
+      security:
+      - BearerAuth: []
       summary: 批量生成单元月度账单
       tags:
       - rent_bill
@@ -2014,6 +2104,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-array_room_RoomResponse'
+      security:
+      - BearerAuth: []
       summary: 获取单元房间列表
       tags:
       - room
@@ -2039,6 +2131,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-room_RoomResponse'
+      security:
+      - BearerAuth: []
       summary: 在单元下创建房间
       tags:
       - room

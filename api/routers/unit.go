@@ -41,6 +41,7 @@ func UnitRouter(unitService *appunit.Service, roomService *approom.Service, rbac
 // @Produce json
 // @Param request body unit.CreateUnitCommand true "单元信息"
 // @Success 200 {object} ginutils.Ret[unit.UnitResponse]
+// @Security BearerAuth
 // @Router /units [post]
 func CreateUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appunit.CreateUnitCommand) {
@@ -58,6 +59,7 @@ func CreateUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 // @Produce json
 // @Param scope query string false "列表范围: all/owned/granted，默认 all"
 // @Success 200 {object} ginutils.Ret[[]unit.UnitResponse]
+// @Security BearerAuth
 // @Router /units [get]
 func ListUnitsHandler(unitService *appunit.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appunit.ListUnitsQuery) {
@@ -75,6 +77,7 @@ func ListUnitsHandler(unitService *appunit.Service) gin.HandlerFunc {
 // @Produce json
 // @Param unit_id path int true "单元ID"
 // @Success 200 {object} ginutils.Ret[unit.UnitResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id} [get]
 func GetUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appunit.UnitIDQuery) {
@@ -94,6 +97,7 @@ func GetUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 // @Param unit_id path int true "单元ID"
 // @Param request body unit.UpdateUnitCommand true "单元信息"
 // @Success 200 {object} ginutils.Ret[unit.UnitResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id} [put]
 func UpdateUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appunit.UpdateUnitCommand) {
@@ -111,6 +115,7 @@ func UpdateUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 // @Produce json
 // @Param unit_id path int true "单元ID"
 // @Success 200 {object} ginutils.Ret[any]
+// @Security BearerAuth
 // @Router /units/{unit_id} [delete]
 func DeleteUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appunit.UnitIDQuery) {
@@ -130,6 +135,7 @@ func DeleteUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 // @Param account_id query int false "被授权账号ID"
 // @Param status query string false "授权状态"
 // @Success 200 {object} ginutils.Ret[[]rbac.UnitGrantResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id}/grants [get]
 func ListUnitGrantsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.UnitGrantsQuery) {
@@ -150,6 +156,7 @@ func ListUnitGrantsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 // @Param account_id path int true "被授权账号ID"
 // @Param request body rbac.UnitAccountRolesCommand true "角色ID列表"
 // @Success 200 {object} ginutils.Ret[[]rbac.UnitGrantResponse]
+// @Security BearerAuth
 // @Router /units/{unit_id}/accounts/{account_id}/roles [post]
 func GrantUnitRolesHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.UnitAccountRolesCommand) {
@@ -170,6 +177,7 @@ func GrantUnitRolesHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 // @Param account_id path int true "被授权账号ID"
 // @Param request body rbac.UnitAccountRolesCommand true "角色ID列表"
 // @Success 200 {object} ginutils.Ret[any]
+// @Security BearerAuth
 // @Router /units/{unit_id}/accounts/{account_id}/roles [delete]
 func RevokeUnitRolesHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.UnitAccountRolesCommand) {

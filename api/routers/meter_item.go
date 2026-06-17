@@ -28,6 +28,7 @@ func MeterItemRouter(meterItemService *appmeteritem.Service) ginutils.Option {
 // @Produce json
 // @Param request body meteritem.CreateMeterItemCommand true "抄表项信息"
 // @Success 200 {object} ginutils.Ret[meteritem.MeterItemResponse]
+// @Security BearerAuth
 // @Router /meter-items [post]
 func CreateMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.CreateMeterItemCommand) {
@@ -49,6 +50,7 @@ func CreateMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerF
 // @Param is_system query bool false "是否系统内置"
 // @Param calc_type query string false "计费类型"
 // @Success 200 {object} ginutils.Ret[[]meteritem.MeterItemResponse]
+// @Security BearerAuth
 // @Router /meter-items [get]
 func ListMeterItemsHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.ListMeterItemsQuery) {
@@ -66,6 +68,7 @@ func ListMeterItemsHandler(meterItemService *appmeteritem.Service) gin.HandlerFu
 // @Produce json
 // @Param meter_item_id path int true "抄表项ID"
 // @Success 200 {object} ginutils.Ret[meteritem.MeterItemResponse]
+// @Security BearerAuth
 // @Router /meter-items/{meter_item_id} [get]
 func GetMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.MeterItemIDQuery) {
@@ -85,6 +88,7 @@ func GetMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc
 // @Param meter_item_id path int true "抄表项ID"
 // @Param request body meteritem.UpdateMeterItemCommand true "抄表项信息"
 // @Success 200 {object} ginutils.Ret[meteritem.MeterItemResponse]
+// @Security BearerAuth
 // @Router /meter-items/{meter_item_id} [put]
 func UpdateMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.UpdateMeterItemCommand) {
