@@ -587,6 +587,29 @@ func HasMeterItemsWith(preds ...predicate.MeterItem) predicate.Account {
 	})
 }
 
+// HasAccountSettings applies the HasEdge predicate on the "account_settings" edge.
+func HasAccountSettings() predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AccountSettingsTable, AccountSettingsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccountSettingsWith applies the HasEdge predicate on the "account_settings" edge with a given conditions (other predicates).
+func HasAccountSettingsWith(preds ...predicate.AccountSetting) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		step := newAccountSettingsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasUnitAccountRoles applies the HasEdge predicate on the "unit_account_roles" edge.
 func HasUnitAccountRoles() predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {

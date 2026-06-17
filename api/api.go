@@ -52,6 +52,12 @@ func SetupRouter(
 		),
 
 		ginutils.WithGroupHandlers(
+			ginutils.WithPrefix("/settings"),
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
+			routers.AccountSettingRouter(adminServices.AccountSetting),
+		),
+
+		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/home"),
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(tokenManager)),
 			routers.HomeRouter(adminServices.Home),

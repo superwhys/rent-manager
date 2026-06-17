@@ -59,6 +59,7 @@ func (Account) Edges() []ent.Edge {
 		edge.To("units", Unit.Type),
 		edge.To("room_types", RoomType.Type),
 		edge.To("meter_items", MeterItem.Type),
+		edge.To("account_settings", AccountSetting.Type),
 
 		// 这个账号被授予了哪些 unit-role
 		edge.To("unit_account_roles", UnitAccountRole.Type),

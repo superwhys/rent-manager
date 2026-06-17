@@ -9,6 +9,9 @@ import (
 // Account is the predicate function for account builders.
 type Account func(*sql.Selector)
 
+// AccountSetting is the predicate function for accountsetting builders.
+type AccountSetting func(*sql.Selector)
+
 // MeterItem is the predicate function for meteritem builders.
 type MeterItem func(*sql.Selector)
 

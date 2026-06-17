@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permission"
@@ -114,6 +115,57 @@ func init() {
 	accountDescIsActive := accountFields[4].Descriptor()
 	// account.DefaultIsActive holds the default value on creation for the is_active field.
 	account.DefaultIsActive = accountDescIsActive.Default.(bool)
+	accountsettingMixin := schema.AccountSetting{}.Mixin()
+	accountsettingMixinFields0 := accountsettingMixin[0].Fields()
+	_ = accountsettingMixinFields0
+	accountsettingFields := schema.AccountSetting{}.Fields()
+	_ = accountsettingFields
+	// accountsettingDescCreatedAt is the schema descriptor for created_at field.
+	accountsettingDescCreatedAt := accountsettingMixinFields0[0].Descriptor()
+	// accountsetting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	accountsetting.DefaultCreatedAt = accountsettingDescCreatedAt.Default.(func() time.Time)
+	// accountsettingDescUpdatedAt is the schema descriptor for updated_at field.
+	accountsettingDescUpdatedAt := accountsettingMixinFields0[1].Descriptor()
+	// accountsetting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	accountsetting.DefaultUpdatedAt = accountsettingDescUpdatedAt.Default.(func() time.Time)
+	// accountsetting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	accountsetting.UpdateDefaultUpdatedAt = accountsettingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// accountsettingDescKey is the schema descriptor for key field.
+	accountsettingDescKey := accountsettingFields[0].Descriptor()
+	// accountsetting.KeyValidator is a validator for the "key" field. It is called by the builders before save.
+	accountsetting.KeyValidator = func() func(string) error {
+		validators := accountsettingDescKey.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(key string) error {
+			for _, fn := range fns {
+				if err := fn(key); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// accountsettingDescValue is the schema descriptor for value field.
+	accountsettingDescValue := accountsettingFields[1].Descriptor()
+	// accountsetting.ValueValidator is a validator for the "value" field. It is called by the builders before save.
+	accountsetting.ValueValidator = func() func(string) error {
+		validators := accountsettingDescValue.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(value string) error {
+			for _, fn := range fns {
+				if err := fn(value); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	meteritemMixin := schema.MeterItem{}.Mixin()
 	meteritemMixinFields0 := meteritemMixin[0].Fields()
 	_ = meteritemMixinFields0

@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permission"
@@ -84,6 +85,7 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			account.Table:         account.ValidColumn,
+			accountsetting.Table:  accountsetting.ValidColumn,
 			meteritem.Table:       meteritem.ValidColumn,
 			meterreading.Table:    meterreading.ValidColumn,
 			permission.Table:      permission.ValidColumn,

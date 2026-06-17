@@ -33,6 +33,37 @@ var (
 			},
 		},
 	}
+	// AccountSettingsColumns holds the columns for the "account_settings" table.
+	AccountSettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "key", Type: field.TypeString, Size: 64},
+		{Name: "value", Type: field.TypeString, Size: 255},
+		{Name: "account_id", Type: field.TypeInt},
+	}
+	// AccountSettingsTable holds the schema information for the "account_settings" table.
+	AccountSettingsTable = &schema.Table{
+		Name:       "account_settings",
+		Columns:    AccountSettingsColumns,
+		PrimaryKey: []*schema.Column{AccountSettingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "account_settings_accounts_account_settings",
+				Columns:    []*schema.Column{AccountSettingsColumns[6]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "accountsetting_account_id_key",
+				Unique:  true,
+				Columns: []*schema.Column{AccountSettingsColumns[6], AccountSettingsColumns[4]},
+			},
+		},
+	}
 	// MeterItemsColumns holds the columns for the "meter_items" table.
 	MeterItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -514,6 +545,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccountsTable,
+		AccountSettingsTable,
 		MeterItemsTable,
 		MeterReadingsTable,
 		PermissionsTable,
@@ -532,6 +564,7 @@ var (
 )
 
 func init() {
+	AccountSettingsTable.ForeignKeys[0].RefTable = AccountsTable
 	MeterItemsTable.ForeignKeys[0].RefTable = AccountsTable
 	MeterReadingsTable.ForeignKeys[0].RefTable = MeterItemsTable
 	MeterReadingsTable.ForeignKeys[1].RefTable = RoomsTable

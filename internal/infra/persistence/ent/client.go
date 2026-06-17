@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permission"
@@ -35,6 +36,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Account is the client for interacting with the Account builders.
 	Account *AccountClient
+	// AccountSetting is the client for interacting with the AccountSetting builders.
+	AccountSetting *AccountSettingClient
 	// MeterItem is the client for interacting with the MeterItem builders.
 	MeterItem *MeterItemClient
 	// MeterReading is the client for interacting with the MeterReading builders.
@@ -67,6 +70,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Account = NewAccountClient(c.config)
+	c.AccountSetting = NewAccountSettingClient(c.config)
 	c.MeterItem = NewMeterItemClient(c.config)
 	c.MeterReading = NewMeterReadingClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
@@ -170,6 +174,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:             ctx,
 		config:          cfg,
 		Account:         NewAccountClient(cfg),
+		AccountSetting:  NewAccountSettingClient(cfg),
 		MeterItem:       NewMeterItemClient(cfg),
 		MeterReading:    NewMeterReadingClient(cfg),
 		Permission:      NewPermissionClient(cfg),
@@ -200,6 +205,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:             ctx,
 		config:          cfg,
 		Account:         NewAccountClient(cfg),
+		AccountSetting:  NewAccountSettingClient(cfg),
 		MeterItem:       NewMeterItemClient(cfg),
 		MeterReading:    NewMeterReadingClient(cfg),
 		Permission:      NewPermissionClient(cfg),
@@ -239,8 +245,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Account, c.MeterItem, c.MeterReading, c.Permission, c.PermissionGroup,
-		c.RentBill, c.Role, c.Room, c.RoomType, c.Unit, c.UnitAccountRole,
+		c.Account, c.AccountSetting, c.MeterItem, c.MeterReading, c.Permission,
+		c.PermissionGroup, c.RentBill, c.Role, c.Room, c.RoomType, c.Unit,
+		c.UnitAccountRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -250,8 +257,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Account, c.MeterItem, c.MeterReading, c.Permission, c.PermissionGroup,
-		c.RentBill, c.Role, c.Room, c.RoomType, c.Unit, c.UnitAccountRole,
+		c.Account, c.AccountSetting, c.MeterItem, c.MeterReading, c.Permission,
+		c.PermissionGroup, c.RentBill, c.Role, c.Room, c.RoomType, c.Unit,
+		c.UnitAccountRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -262,6 +270,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *AccountMutation:
 		return c.Account.mutate(ctx, m)
+	case *AccountSettingMutation:
+		return c.AccountSetting.mutate(ctx, m)
 	case *MeterItemMutation:
 		return c.MeterItem.mutate(ctx, m)
 	case *MeterReadingMutation:
@@ -459,6 +469,22 @@ func (c *AccountClient) QueryMeterItems(_m *Account) *MeterItemQuery {
 	return query
 }
 
+// QueryAccountSettings queries the account_settings edge of a Account.
+func (c *AccountClient) QueryAccountSettings(_m *Account) *AccountSettingQuery {
+	query := (&AccountSettingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(accountsetting.Table, accountsetting.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.AccountSettingsTable, account.AccountSettingsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUnitAccountRoles queries the unit_account_roles edge of a Account.
 func (c *AccountClient) QueryUnitAccountRoles(_m *Account) *UnitAccountRoleQuery {
 	query := (&UnitAccountRoleClient{config: c.config}).Query()
@@ -513,6 +539,155 @@ func (c *AccountClient) mutate(ctx context.Context, m *AccountMutation) (Value, 
 		return (&AccountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Account mutation op: %q", m.Op())
+	}
+}
+
+// AccountSettingClient is a client for the AccountSetting schema.
+type AccountSettingClient struct {
+	config
+}
+
+// NewAccountSettingClient returns a client for the AccountSetting from the given config.
+func NewAccountSettingClient(c config) *AccountSettingClient {
+	return &AccountSettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `accountsetting.Hooks(f(g(h())))`.
+func (c *AccountSettingClient) Use(hooks ...Hook) {
+	c.hooks.AccountSetting = append(c.hooks.AccountSetting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `accountsetting.Intercept(f(g(h())))`.
+func (c *AccountSettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AccountSetting = append(c.inters.AccountSetting, interceptors...)
+}
+
+// Create returns a builder for creating a AccountSetting entity.
+func (c *AccountSettingClient) Create() *AccountSettingCreate {
+	mutation := newAccountSettingMutation(c.config, OpCreate)
+	return &AccountSettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AccountSetting entities.
+func (c *AccountSettingClient) CreateBulk(builders ...*AccountSettingCreate) *AccountSettingCreateBulk {
+	return &AccountSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AccountSettingClient) MapCreateBulk(slice any, setFunc func(*AccountSettingCreate, int)) *AccountSettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AccountSettingCreateBulk{err: fmt.Errorf("calling to AccountSettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AccountSettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AccountSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AccountSetting.
+func (c *AccountSettingClient) Update() *AccountSettingUpdate {
+	mutation := newAccountSettingMutation(c.config, OpUpdate)
+	return &AccountSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AccountSettingClient) UpdateOne(_m *AccountSetting) *AccountSettingUpdateOne {
+	mutation := newAccountSettingMutation(c.config, OpUpdateOne, withAccountSetting(_m))
+	return &AccountSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AccountSettingClient) UpdateOneID(id int) *AccountSettingUpdateOne {
+	mutation := newAccountSettingMutation(c.config, OpUpdateOne, withAccountSettingID(id))
+	return &AccountSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AccountSetting.
+func (c *AccountSettingClient) Delete() *AccountSettingDelete {
+	mutation := newAccountSettingMutation(c.config, OpDelete)
+	return &AccountSettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AccountSettingClient) DeleteOne(_m *AccountSetting) *AccountSettingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AccountSettingClient) DeleteOneID(id int) *AccountSettingDeleteOne {
+	builder := c.Delete().Where(accountsetting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AccountSettingDeleteOne{builder}
+}
+
+// Query returns a query builder for AccountSetting.
+func (c *AccountSettingClient) Query() *AccountSettingQuery {
+	return &AccountSettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAccountSetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AccountSetting entity by its id.
+func (c *AccountSettingClient) Get(ctx context.Context, id int) (*AccountSetting, error) {
+	return c.Query().Where(accountsetting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AccountSettingClient) GetX(ctx context.Context, id int) *AccountSetting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAccount queries the account edge of a AccountSetting.
+func (c *AccountSettingClient) QueryAccount(_m *AccountSetting) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accountsetting.Table, accountsetting.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, accountsetting.AccountTable, accountsetting.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AccountSettingClient) Hooks() []Hook {
+	return c.hooks.AccountSetting
+}
+
+// Interceptors returns the client interceptors.
+func (c *AccountSettingClient) Interceptors() []Interceptor {
+	return c.inters.AccountSetting
+}
+
+func (c *AccountSettingClient) mutate(ctx context.Context, m *AccountSettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AccountSettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AccountSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AccountSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AccountSettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AccountSetting mutation op: %q", m.Op())
 	}
 }
 
@@ -2297,11 +2472,11 @@ func (c *UnitAccountRoleClient) mutate(ctx context.Context, m *UnitAccountRoleMu
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Account, MeterItem, MeterReading, Permission, PermissionGroup, RentBill, Role,
-		Room, RoomType, Unit, UnitAccountRole []ent.Hook
+		Account, AccountSetting, MeterItem, MeterReading, Permission, PermissionGroup,
+		RentBill, Role, Room, RoomType, Unit, UnitAccountRole []ent.Hook
 	}
 	inters struct {
-		Account, MeterItem, MeterReading, Permission, PermissionGroup, RentBill, Role,
-		Room, RoomType, Unit, UnitAccountRole []ent.Interceptor
+		Account, AccountSetting, MeterItem, MeterReading, Permission, PermissionGroup,
+		RentBill, Role, Room, RoomType, Unit, UnitAccountRole []ent.Interceptor
 	}
 )

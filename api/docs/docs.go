@@ -1368,6 +1368,66 @@ const docTemplate = `{
                 }
             }
         },
+        "/settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "获取当前账号配置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-accountsetting_SettingsResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "更新当前账号配置",
+                "parameters": [
+                    {
+                        "description": "账号配置",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accountsetting.UpdateSettingsCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-accountsetting_SettingsResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/units": {
             "get": {
                 "security": [
@@ -1960,6 +2020,27 @@ const docTemplate = `{
                 }
             }
         },
+        "accountsetting.SettingsResponse": {
+            "type": "object",
+            "properties": {
+                "meter_reading_day": {
+                    "type": "integer"
+                }
+            }
+        },
+        "accountsetting.UpdateSettingsCommand": {
+            "type": "object",
+            "required": [
+                "meter_reading_day"
+            ],
+            "properties": {
+                "meter_reading_day": {
+                    "type": "integer",
+                    "maximum": 31,
+                    "minimum": 1
+                }
+            }
+        },
         "auth.RefreshTokenReq": {
             "type": "object",
             "required": [
@@ -2001,6 +2082,18 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/account.AccountResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-accountsetting_SettingsResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/accountsetting.SettingsResponse"
                 },
                 "message": {}
             }

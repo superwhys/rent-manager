@@ -21,6 +21,18 @@ func (f AccountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccountMutation", m)
 }
 
+// The AccountSettingFunc type is an adapter to allow the use of ordinary
+// function as AccountSetting mutator.
+type AccountSettingFunc func(context.Context, *ent.AccountSettingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AccountSettingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AccountSettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccountSettingMutation", m)
+}
+
 // The MeterItemFunc type is an adapter to allow the use of ordinary
 // function as MeterItem mutator.
 type MeterItemFunc func(context.Context, *ent.MeterItemMutation) (ent.Value, error)

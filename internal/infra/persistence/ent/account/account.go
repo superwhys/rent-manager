@@ -38,6 +38,8 @@ const (
 	EdgeRoomTypes = "room_types"
 	// EdgeMeterItems holds the string denoting the meter_items edge name in mutations.
 	EdgeMeterItems = "meter_items"
+	// EdgeAccountSettings holds the string denoting the account_settings edge name in mutations.
+	EdgeAccountSettings = "account_settings"
 	// EdgeUnitAccountRoles holds the string denoting the unit_account_roles edge name in mutations.
 	EdgeUnitAccountRoles = "unit_account_roles"
 	// EdgeGrantedUnitAccountRoles holds the string denoting the granted_unit_account_roles edge name in mutations.
@@ -72,6 +74,13 @@ const (
 	MeterItemsInverseTable = "meter_items"
 	// MeterItemsColumn is the table column denoting the meter_items relation/edge.
 	MeterItemsColumn = "account_id"
+	// AccountSettingsTable is the table that holds the account_settings relation/edge.
+	AccountSettingsTable = "account_settings"
+	// AccountSettingsInverseTable is the table name for the AccountSetting entity.
+	// It exists in this package in order to avoid circular dependency with the "accountsetting" package.
+	AccountSettingsInverseTable = "account_settings"
+	// AccountSettingsColumn is the table column denoting the account_settings relation/edge.
+	AccountSettingsColumn = "account_id"
 	// UnitAccountRolesTable is the table that holds the unit_account_roles relation/edge.
 	UnitAccountRolesTable = "unit_account_roles"
 	// UnitAccountRolesInverseTable is the table name for the UnitAccountRole entity.
@@ -234,6 +243,20 @@ func ByMeterItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByAccountSettingsCount orders the results by account_settings count.
+func ByAccountSettingsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAccountSettingsStep(), opts...)
+	}
+}
+
+// ByAccountSettings orders the results by account_settings terms.
+func ByAccountSettings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccountSettingsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUnitAccountRolesCount orders the results by unit_account_roles count.
 func ByUnitAccountRolesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -287,6 +310,13 @@ func newMeterItemsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MeterItemsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MeterItemsTable, MeterItemsColumn),
+	)
+}
+func newAccountSettingsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccountSettingsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AccountSettingsTable, AccountSettingsColumn),
 	)
 }
 func newUnitAccountRolesStep() *sqlgraph.Step {

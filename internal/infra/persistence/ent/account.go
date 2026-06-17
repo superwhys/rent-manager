@@ -49,13 +49,15 @@ type AccountEdges struct {
 	RoomTypes []*RoomType `json:"room_types,omitempty"`
 	// MeterItems holds the value of the meter_items edge.
 	MeterItems []*MeterItem `json:"meter_items,omitempty"`
+	// AccountSettings holds the value of the account_settings edge.
+	AccountSettings []*AccountSetting `json:"account_settings,omitempty"`
 	// UnitAccountRoles holds the value of the unit_account_roles edge.
 	UnitAccountRoles []*UnitAccountRole `json:"unit_account_roles,omitempty"`
 	// GrantedUnitAccountRoles holds the value of the granted_unit_account_roles edge.
 	GrantedUnitAccountRoles []*UnitAccountRole `json:"granted_unit_account_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 }
 
 // RolesOrErr returns the Roles value or an error if the edge
@@ -94,10 +96,19 @@ func (e AccountEdges) MeterItemsOrErr() ([]*MeterItem, error) {
 	return nil, &NotLoadedError{edge: "meter_items"}
 }
 
+// AccountSettingsOrErr returns the AccountSettings value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccountEdges) AccountSettingsOrErr() ([]*AccountSetting, error) {
+	if e.loadedTypes[4] {
+		return e.AccountSettings, nil
+	}
+	return nil, &NotLoadedError{edge: "account_settings"}
+}
+
 // UnitAccountRolesOrErr returns the UnitAccountRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e AccountEdges) UnitAccountRolesOrErr() ([]*UnitAccountRole, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.UnitAccountRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "unit_account_roles"}
@@ -106,7 +117,7 @@ func (e AccountEdges) UnitAccountRolesOrErr() ([]*UnitAccountRole, error) {
 // GrantedUnitAccountRolesOrErr returns the GrantedUnitAccountRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e AccountEdges) GrantedUnitAccountRolesOrErr() ([]*UnitAccountRole, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.GrantedUnitAccountRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "granted_unit_account_roles"}
@@ -226,6 +237,11 @@ func (_m *Account) QueryRoomTypes() *RoomTypeQuery {
 // QueryMeterItems queries the "meter_items" edge of the Account entity.
 func (_m *Account) QueryMeterItems() *MeterItemQuery {
 	return NewAccountClient(_m.config).QueryMeterItems(_m)
+}
+
+// QueryAccountSettings queries the "account_settings" edge of the Account entity.
+func (_m *Account) QueryAccountSettings() *AccountSettingQuery {
+	return NewAccountClient(_m.config).QueryAccountSettings(_m)
 }
 
 // QueryUnitAccountRoles queries the "unit_account_roles" edge of the Account entity.

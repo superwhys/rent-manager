@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permission"
@@ -35,6 +36,7 @@ const (
 
 	// Node types.
 	TypeAccount         = "Account"
+	TypeAccountSetting  = "AccountSetting"
 	TypeMeterItem       = "MeterItem"
 	TypeMeterReading    = "MeterReading"
 	TypePermission      = "Permission"
@@ -74,6 +76,9 @@ type AccountMutation struct {
 	meter_items                       map[int]struct{}
 	removedmeter_items                map[int]struct{}
 	clearedmeter_items                bool
+	account_settings                  map[int]struct{}
+	removedaccount_settings           map[int]struct{}
+	clearedaccount_settings           bool
 	unit_account_roles                map[int]struct{}
 	removedunit_account_roles         map[int]struct{}
 	clearedunit_account_roles         bool
@@ -700,6 +705,60 @@ func (m *AccountMutation) ResetMeterItems() {
 	m.removedmeter_items = nil
 }
 
+// AddAccountSettingIDs adds the "account_settings" edge to the AccountSetting entity by ids.
+func (m *AccountMutation) AddAccountSettingIDs(ids ...int) {
+	if m.account_settings == nil {
+		m.account_settings = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.account_settings[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAccountSettings clears the "account_settings" edge to the AccountSetting entity.
+func (m *AccountMutation) ClearAccountSettings() {
+	m.clearedaccount_settings = true
+}
+
+// AccountSettingsCleared reports if the "account_settings" edge to the AccountSetting entity was cleared.
+func (m *AccountMutation) AccountSettingsCleared() bool {
+	return m.clearedaccount_settings
+}
+
+// RemoveAccountSettingIDs removes the "account_settings" edge to the AccountSetting entity by IDs.
+func (m *AccountMutation) RemoveAccountSettingIDs(ids ...int) {
+	if m.removedaccount_settings == nil {
+		m.removedaccount_settings = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.account_settings, ids[i])
+		m.removedaccount_settings[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAccountSettings returns the removed IDs of the "account_settings" edge to the AccountSetting entity.
+func (m *AccountMutation) RemovedAccountSettingsIDs() (ids []int) {
+	for id := range m.removedaccount_settings {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AccountSettingsIDs returns the "account_settings" edge IDs in the mutation.
+func (m *AccountMutation) AccountSettingsIDs() (ids []int) {
+	for id := range m.account_settings {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAccountSettings resets all changes to the "account_settings" edge.
+func (m *AccountMutation) ResetAccountSettings() {
+	m.account_settings = nil
+	m.clearedaccount_settings = false
+	m.removedaccount_settings = nil
+}
+
 // AddUnitAccountRoleIDs adds the "unit_account_roles" edge to the UnitAccountRole entity by ids.
 func (m *AccountMutation) AddUnitAccountRoleIDs(ids ...int) {
 	if m.unit_account_roles == nil {
@@ -1069,7 +1128,7 @@ func (m *AccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.roles != nil {
 		edges = append(edges, account.EdgeRoles)
 	}
@@ -1081,6 +1140,9 @@ func (m *AccountMutation) AddedEdges() []string {
 	}
 	if m.meter_items != nil {
 		edges = append(edges, account.EdgeMeterItems)
+	}
+	if m.account_settings != nil {
+		edges = append(edges, account.EdgeAccountSettings)
 	}
 	if m.unit_account_roles != nil {
 		edges = append(edges, account.EdgeUnitAccountRoles)
@@ -1119,6 +1181,12 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case account.EdgeAccountSettings:
+		ids := make([]ent.Value, 0, len(m.account_settings))
+		for id := range m.account_settings {
+			ids = append(ids, id)
+		}
+		return ids
 	case account.EdgeUnitAccountRoles:
 		ids := make([]ent.Value, 0, len(m.unit_account_roles))
 		for id := range m.unit_account_roles {
@@ -1137,7 +1205,7 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removedroles != nil {
 		edges = append(edges, account.EdgeRoles)
 	}
@@ -1149,6 +1217,9 @@ func (m *AccountMutation) RemovedEdges() []string {
 	}
 	if m.removedmeter_items != nil {
 		edges = append(edges, account.EdgeMeterItems)
+	}
+	if m.removedaccount_settings != nil {
+		edges = append(edges, account.EdgeAccountSettings)
 	}
 	if m.removedunit_account_roles != nil {
 		edges = append(edges, account.EdgeUnitAccountRoles)
@@ -1187,6 +1258,12 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case account.EdgeAccountSettings:
+		ids := make([]ent.Value, 0, len(m.removedaccount_settings))
+		for id := range m.removedaccount_settings {
+			ids = append(ids, id)
+		}
+		return ids
 	case account.EdgeUnitAccountRoles:
 		ids := make([]ent.Value, 0, len(m.removedunit_account_roles))
 		for id := range m.removedunit_account_roles {
@@ -1205,7 +1282,7 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.clearedroles {
 		edges = append(edges, account.EdgeRoles)
 	}
@@ -1217,6 +1294,9 @@ func (m *AccountMutation) ClearedEdges() []string {
 	}
 	if m.clearedmeter_items {
 		edges = append(edges, account.EdgeMeterItems)
+	}
+	if m.clearedaccount_settings {
+		edges = append(edges, account.EdgeAccountSettings)
 	}
 	if m.clearedunit_account_roles {
 		edges = append(edges, account.EdgeUnitAccountRoles)
@@ -1239,6 +1319,8 @@ func (m *AccountMutation) EdgeCleared(name string) bool {
 		return m.clearedroom_types
 	case account.EdgeMeterItems:
 		return m.clearedmeter_items
+	case account.EdgeAccountSettings:
+		return m.clearedaccount_settings
 	case account.EdgeUnitAccountRoles:
 		return m.clearedunit_account_roles
 	case account.EdgeGrantedUnitAccountRoles:
@@ -1271,6 +1353,9 @@ func (m *AccountMutation) ResetEdge(name string) error {
 	case account.EdgeMeterItems:
 		m.ResetMeterItems()
 		return nil
+	case account.EdgeAccountSettings:
+		m.ResetAccountSettings()
+		return nil
 	case account.EdgeUnitAccountRoles:
 		m.ResetUnitAccountRoles()
 		return nil
@@ -1279,6 +1364,681 @@ func (m *AccountMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Account edge %s", name)
+}
+
+// AccountSettingMutation represents an operation that mutates the AccountSetting nodes in the graph.
+type AccountSettingMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	created_at     *time.Time
+	updated_at     *time.Time
+	deleted_at     *time.Time
+	key            *string
+	value          *string
+	clearedFields  map[string]struct{}
+	account        *int
+	clearedaccount bool
+	done           bool
+	oldValue       func(context.Context) (*AccountSetting, error)
+	predicates     []predicate.AccountSetting
+}
+
+var _ ent.Mutation = (*AccountSettingMutation)(nil)
+
+// accountsettingOption allows management of the mutation configuration using functional options.
+type accountsettingOption func(*AccountSettingMutation)
+
+// newAccountSettingMutation creates new mutation for the AccountSetting entity.
+func newAccountSettingMutation(c config, op Op, opts ...accountsettingOption) *AccountSettingMutation {
+	m := &AccountSettingMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeAccountSetting,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withAccountSettingID sets the ID field of the mutation.
+func withAccountSettingID(id int) accountsettingOption {
+	return func(m *AccountSettingMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *AccountSetting
+		)
+		m.oldValue = func(ctx context.Context) (*AccountSetting, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().AccountSetting.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withAccountSetting sets the old AccountSetting of the mutation.
+func withAccountSetting(node *AccountSetting) accountsettingOption {
+	return func(m *AccountSettingMutation) {
+		m.oldValue = func(context.Context) (*AccountSetting, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m AccountSettingMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m AccountSettingMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *AccountSettingMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *AccountSettingMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().AccountSetting.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *AccountSettingMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *AccountSettingMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the AccountSetting entity.
+// If the AccountSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountSettingMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *AccountSettingMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *AccountSettingMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *AccountSettingMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the AccountSetting entity.
+// If the AccountSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountSettingMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *AccountSettingMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *AccountSettingMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *AccountSettingMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the AccountSetting entity.
+// If the AccountSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountSettingMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *AccountSettingMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[accountsetting.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *AccountSettingMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[accountsetting.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *AccountSettingMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, accountsetting.FieldDeletedAt)
+}
+
+// SetAccountID sets the "account_id" field.
+func (m *AccountSettingMutation) SetAccountID(i int) {
+	m.account = &i
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *AccountSettingMutation) AccountID() (r int, exists bool) {
+	v := m.account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the AccountSetting entity.
+// If the AccountSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountSettingMutation) OldAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *AccountSettingMutation) ResetAccountID() {
+	m.account = nil
+}
+
+// SetKey sets the "key" field.
+func (m *AccountSettingMutation) SetKey(s string) {
+	m.key = &s
+}
+
+// Key returns the value of the "key" field in the mutation.
+func (m *AccountSettingMutation) Key() (r string, exists bool) {
+	v := m.key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKey returns the old "key" field's value of the AccountSetting entity.
+// If the AccountSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountSettingMutation) OldKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKey: %w", err)
+	}
+	return oldValue.Key, nil
+}
+
+// ResetKey resets all changes to the "key" field.
+func (m *AccountSettingMutation) ResetKey() {
+	m.key = nil
+}
+
+// SetValue sets the "value" field.
+func (m *AccountSettingMutation) SetValue(s string) {
+	m.value = &s
+}
+
+// Value returns the value of the "value" field in the mutation.
+func (m *AccountSettingMutation) Value() (r string, exists bool) {
+	v := m.value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValue returns the old "value" field's value of the AccountSetting entity.
+// If the AccountSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountSettingMutation) OldValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValue: %w", err)
+	}
+	return oldValue.Value, nil
+}
+
+// ResetValue resets all changes to the "value" field.
+func (m *AccountSettingMutation) ResetValue() {
+	m.value = nil
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (m *AccountSettingMutation) ClearAccount() {
+	m.clearedaccount = true
+	m.clearedFields[accountsetting.FieldAccountID] = struct{}{}
+}
+
+// AccountCleared reports if the "account" edge to the Account entity was cleared.
+func (m *AccountSettingMutation) AccountCleared() bool {
+	return m.clearedaccount
+}
+
+// AccountIDs returns the "account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AccountID instead. It exists only for internal usage by the builders.
+func (m *AccountSettingMutation) AccountIDs() (ids []int) {
+	if id := m.account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAccount resets all changes to the "account" edge.
+func (m *AccountSettingMutation) ResetAccount() {
+	m.account = nil
+	m.clearedaccount = false
+}
+
+// Where appends a list predicates to the AccountSettingMutation builder.
+func (m *AccountSettingMutation) Where(ps ...predicate.AccountSetting) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the AccountSettingMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *AccountSettingMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.AccountSetting, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *AccountSettingMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *AccountSettingMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (AccountSetting).
+func (m *AccountSettingMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *AccountSettingMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.created_at != nil {
+		fields = append(fields, accountsetting.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, accountsetting.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, accountsetting.FieldDeletedAt)
+	}
+	if m.account != nil {
+		fields = append(fields, accountsetting.FieldAccountID)
+	}
+	if m.key != nil {
+		fields = append(fields, accountsetting.FieldKey)
+	}
+	if m.value != nil {
+		fields = append(fields, accountsetting.FieldValue)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *AccountSettingMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case accountsetting.FieldCreatedAt:
+		return m.CreatedAt()
+	case accountsetting.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case accountsetting.FieldDeletedAt:
+		return m.DeletedAt()
+	case accountsetting.FieldAccountID:
+		return m.AccountID()
+	case accountsetting.FieldKey:
+		return m.Key()
+	case accountsetting.FieldValue:
+		return m.Value()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *AccountSettingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case accountsetting.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case accountsetting.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case accountsetting.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case accountsetting.FieldAccountID:
+		return m.OldAccountID(ctx)
+	case accountsetting.FieldKey:
+		return m.OldKey(ctx)
+	case accountsetting.FieldValue:
+		return m.OldValue(ctx)
+	}
+	return nil, fmt.Errorf("unknown AccountSetting field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AccountSettingMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case accountsetting.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case accountsetting.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case accountsetting.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case accountsetting.FieldAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
+	case accountsetting.FieldKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKey(v)
+		return nil
+	case accountsetting.FieldValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValue(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AccountSetting field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *AccountSettingMutation) AddedFields() []string {
+	var fields []string
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *AccountSettingMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AccountSettingMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown AccountSetting numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *AccountSettingMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(accountsetting.FieldDeletedAt) {
+		fields = append(fields, accountsetting.FieldDeletedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *AccountSettingMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *AccountSettingMutation) ClearField(name string) error {
+	switch name {
+	case accountsetting.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown AccountSetting nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *AccountSettingMutation) ResetField(name string) error {
+	switch name {
+	case accountsetting.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case accountsetting.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case accountsetting.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case accountsetting.FieldAccountID:
+		m.ResetAccountID()
+		return nil
+	case accountsetting.FieldKey:
+		m.ResetKey()
+		return nil
+	case accountsetting.FieldValue:
+		m.ResetValue()
+		return nil
+	}
+	return fmt.Errorf("unknown AccountSetting field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *AccountSettingMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.account != nil {
+		edges = append(edges, accountsetting.EdgeAccount)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *AccountSettingMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case accountsetting.EdgeAccount:
+		if id := m.account; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *AccountSettingMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *AccountSettingMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *AccountSettingMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedaccount {
+		edges = append(edges, accountsetting.EdgeAccount)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *AccountSettingMutation) EdgeCleared(name string) bool {
+	switch name {
+	case accountsetting.EdgeAccount:
+		return m.clearedaccount
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *AccountSettingMutation) ClearEdge(name string) error {
+	switch name {
+	case accountsetting.EdgeAccount:
+		m.ClearAccount()
+		return nil
+	}
+	return fmt.Errorf("unknown AccountSetting unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *AccountSettingMutation) ResetEdge(name string) error {
+	switch name {
+	case accountsetting.EdgeAccount:
+		m.ResetAccount()
+		return nil
+	}
+	return fmt.Errorf("unknown AccountSetting edge %s", name)
 }
 
 // MeterItemMutation represents an operation that mutates the MeterItem nodes in the graph.

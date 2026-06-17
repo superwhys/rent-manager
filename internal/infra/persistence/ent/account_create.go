@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/role"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/roomtype"
@@ -163,6 +164,21 @@ func (_c *AccountCreate) AddMeterItems(v ...*MeterItem) *AccountCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddMeterItemIDs(ids...)
+}
+
+// AddAccountSettingIDs adds the "account_settings" edge to the AccountSetting entity by IDs.
+func (_c *AccountCreate) AddAccountSettingIDs(ids ...int) *AccountCreate {
+	_c.mutation.AddAccountSettingIDs(ids...)
+	return _c
+}
+
+// AddAccountSettings adds the "account_settings" edges to the AccountSetting entity.
+func (_c *AccountCreate) AddAccountSettings(v ...*AccountSetting) *AccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAccountSettingIDs(ids...)
 }
 
 // AddUnitAccountRoleIDs adds the "unit_account_roles" edge to the UnitAccountRole entity by IDs.
@@ -402,6 +418,22 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AccountSettingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.AccountSettingsTable,
+			Columns: []string{account.AccountSettingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accountsetting.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

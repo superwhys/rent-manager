@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/role"
@@ -189,6 +190,21 @@ func (_u *AccountUpdate) AddMeterItems(v ...*MeterItem) *AccountUpdate {
 	return _u.AddMeterItemIDs(ids...)
 }
 
+// AddAccountSettingIDs adds the "account_settings" edge to the AccountSetting entity by IDs.
+func (_u *AccountUpdate) AddAccountSettingIDs(ids ...int) *AccountUpdate {
+	_u.mutation.AddAccountSettingIDs(ids...)
+	return _u
+}
+
+// AddAccountSettings adds the "account_settings" edges to the AccountSetting entity.
+func (_u *AccountUpdate) AddAccountSettings(v ...*AccountSetting) *AccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAccountSettingIDs(ids...)
+}
+
 // AddUnitAccountRoleIDs adds the "unit_account_roles" edge to the UnitAccountRole entity by IDs.
 func (_u *AccountUpdate) AddUnitAccountRoleIDs(ids ...int) *AccountUpdate {
 	_u.mutation.AddUnitAccountRoleIDs(ids...)
@@ -306,6 +322,27 @@ func (_u *AccountUpdate) RemoveMeterItems(v ...*MeterItem) *AccountUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMeterItemIDs(ids...)
+}
+
+// ClearAccountSettings clears all "account_settings" edges to the AccountSetting entity.
+func (_u *AccountUpdate) ClearAccountSettings() *AccountUpdate {
+	_u.mutation.ClearAccountSettings()
+	return _u
+}
+
+// RemoveAccountSettingIDs removes the "account_settings" edge to AccountSetting entities by IDs.
+func (_u *AccountUpdate) RemoveAccountSettingIDs(ids ...int) *AccountUpdate {
+	_u.mutation.RemoveAccountSettingIDs(ids...)
+	return _u
+}
+
+// RemoveAccountSettings removes "account_settings" edges to AccountSetting entities.
+func (_u *AccountUpdate) RemoveAccountSettings(v ...*AccountSetting) *AccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAccountSettingIDs(ids...)
 }
 
 // ClearUnitAccountRoles clears all "unit_account_roles" edges to the UnitAccountRole entity.
@@ -627,6 +664,51 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.AccountSettingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.AccountSettingsTable,
+			Columns: []string{account.AccountSettingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accountsetting.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAccountSettingsIDs(); len(nodes) > 0 && !_u.mutation.AccountSettingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.AccountSettingsTable,
+			Columns: []string{account.AccountSettingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accountsetting.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AccountSettingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.AccountSettingsTable,
+			Columns: []string{account.AccountSettingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accountsetting.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.UnitAccountRolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -893,6 +975,21 @@ func (_u *AccountUpdateOne) AddMeterItems(v ...*MeterItem) *AccountUpdateOne {
 	return _u.AddMeterItemIDs(ids...)
 }
 
+// AddAccountSettingIDs adds the "account_settings" edge to the AccountSetting entity by IDs.
+func (_u *AccountUpdateOne) AddAccountSettingIDs(ids ...int) *AccountUpdateOne {
+	_u.mutation.AddAccountSettingIDs(ids...)
+	return _u
+}
+
+// AddAccountSettings adds the "account_settings" edges to the AccountSetting entity.
+func (_u *AccountUpdateOne) AddAccountSettings(v ...*AccountSetting) *AccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAccountSettingIDs(ids...)
+}
+
 // AddUnitAccountRoleIDs adds the "unit_account_roles" edge to the UnitAccountRole entity by IDs.
 func (_u *AccountUpdateOne) AddUnitAccountRoleIDs(ids ...int) *AccountUpdateOne {
 	_u.mutation.AddUnitAccountRoleIDs(ids...)
@@ -1010,6 +1107,27 @@ func (_u *AccountUpdateOne) RemoveMeterItems(v ...*MeterItem) *AccountUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMeterItemIDs(ids...)
+}
+
+// ClearAccountSettings clears all "account_settings" edges to the AccountSetting entity.
+func (_u *AccountUpdateOne) ClearAccountSettings() *AccountUpdateOne {
+	_u.mutation.ClearAccountSettings()
+	return _u
+}
+
+// RemoveAccountSettingIDs removes the "account_settings" edge to AccountSetting entities by IDs.
+func (_u *AccountUpdateOne) RemoveAccountSettingIDs(ids ...int) *AccountUpdateOne {
+	_u.mutation.RemoveAccountSettingIDs(ids...)
+	return _u
+}
+
+// RemoveAccountSettings removes "account_settings" edges to AccountSetting entities.
+func (_u *AccountUpdateOne) RemoveAccountSettings(v ...*AccountSetting) *AccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAccountSettingIDs(ids...)
 }
 
 // ClearUnitAccountRoles clears all "unit_account_roles" edges to the UnitAccountRole entity.
@@ -1354,6 +1472,51 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(meteritem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AccountSettingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.AccountSettingsTable,
+			Columns: []string{account.AccountSettingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accountsetting.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAccountSettingsIDs(); len(nodes) > 0 && !_u.mutation.AccountSettingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.AccountSettingsTable,
+			Columns: []string{account.AccountSettingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accountsetting.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AccountSettingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.AccountSettingsTable,
+			Columns: []string{account.AccountSettingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accountsetting.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

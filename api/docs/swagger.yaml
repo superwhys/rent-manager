@@ -17,6 +17,20 @@ definitions:
       wechat_openid:
         type: string
     type: object
+  accountsetting.SettingsResponse:
+    properties:
+      meter_reading_day:
+        type: integer
+    type: object
+  accountsetting.UpdateSettingsCommand:
+    properties:
+      meter_reading_day:
+        maximum: 31
+        minimum: 1
+        type: integer
+    required:
+    - meter_reading_day
+    type: object
   auth.RefreshTokenReq:
     properties:
       refresh_token:
@@ -44,6 +58,14 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/account.AccountResponse'
+      message: {}
+    type: object
+  ginutils.Ret-accountsetting_SettingsResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/accountsetting.SettingsResponse'
       message: {}
     type: object
   ginutils.Ret-any:
@@ -1784,6 +1806,42 @@ paths:
       summary: 生成房间月度账单
       tags:
       - rent_bill
+  /settings:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-accountsetting_SettingsResponse'
+      security:
+      - BearerAuth: []
+      summary: 获取当前账号配置
+      tags:
+      - settings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账号配置
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/accountsetting.UpdateSettingsCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-accountsetting_SettingsResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新当前账号配置
+      tags:
+      - settings
   /units:
     get:
       parameters:

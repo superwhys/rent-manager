@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
+	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
 	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/role"
@@ -32,6 +33,7 @@ type AccountQuery struct {
 	withUnits                   *UnitQuery
 	withRoomTypes               *RoomTypeQuery
 	withMeterItems              *MeterItemQuery
+	withAccountSettings         *AccountSettingQuery
 	withUnitAccountRoles        *UnitAccountRoleQuery
 	withGrantedUnitAccountRoles *UnitAccountRoleQuery
 	// intermediate query (i.e. traversal path).
@@ -151,6 +153,28 @@ func (_q *AccountQuery) QueryMeterItems() *MeterItemQuery {
 			sqlgraph.From(account.Table, account.FieldID, selector),
 			sqlgraph.To(meteritem.Table, meteritem.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, account.MeterItemsTable, account.MeterItemsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAccountSettings chains the current query on the "account_settings" edge.
+func (_q *AccountQuery) QueryAccountSettings() *AccountSettingQuery {
+	query := (&AccountSettingClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, selector),
+			sqlgraph.To(accountsetting.Table, accountsetting.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.AccountSettingsTable, account.AccountSettingsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -398,6 +422,7 @@ func (_q *AccountQuery) Clone() *AccountQuery {
 		withUnits:                   _q.withUnits.Clone(),
 		withRoomTypes:               _q.withRoomTypes.Clone(),
 		withMeterItems:              _q.withMeterItems.Clone(),
+		withAccountSettings:         _q.withAccountSettings.Clone(),
 		withUnitAccountRoles:        _q.withUnitAccountRoles.Clone(),
 		withGrantedUnitAccountRoles: _q.withGrantedUnitAccountRoles.Clone(),
 		// clone intermediate query.
@@ -447,6 +472,17 @@ func (_q *AccountQuery) WithMeterItems(opts ...func(*MeterItemQuery)) *AccountQu
 		opt(query)
 	}
 	_q.withMeterItems = query
+	return _q
+}
+
+// WithAccountSettings tells the query-builder to eager-load the nodes that are connected to
+// the "account_settings" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithAccountSettings(opts ...func(*AccountSettingQuery)) *AccountQuery {
+	query := (&AccountSettingClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAccountSettings = query
 	return _q
 }
 
@@ -550,11 +586,12 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 	var (
 		nodes       = []*Account{}
 		_spec       = _q.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			_q.withRoles != nil,
 			_q.withUnits != nil,
 			_q.withRoomTypes != nil,
 			_q.withMeterItems != nil,
+			_q.withAccountSettings != nil,
 			_q.withUnitAccountRoles != nil,
 			_q.withGrantedUnitAccountRoles != nil,
 		}
@@ -602,6 +639,13 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 		if err := _q.loadMeterItems(ctx, query, nodes,
 			func(n *Account) { n.Edges.MeterItems = []*MeterItem{} },
 			func(n *Account, e *MeterItem) { n.Edges.MeterItems = append(n.Edges.MeterItems, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAccountSettings; query != nil {
+		if err := _q.loadAccountSettings(ctx, query, nodes,
+			func(n *Account) { n.Edges.AccountSettings = []*AccountSetting{} },
+			func(n *Account, e *AccountSetting) { n.Edges.AccountSettings = append(n.Edges.AccountSettings, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -729,6 +773,36 @@ func (_q *AccountQuery) loadMeterItems(ctx context.Context, query *MeterItemQuer
 	}
 	query.Where(predicate.MeterItem(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(account.MeterItemsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AccountID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "account_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *AccountQuery) loadAccountSettings(ctx context.Context, query *AccountSettingQuery, nodes []*Account, init func(*Account), assign func(*Account, *AccountSetting)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Account)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(accountsetting.FieldAccountID)
+	}
+	query.Where(predicate.AccountSetting(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(account.AccountSettingsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
