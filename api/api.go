@@ -9,14 +9,19 @@
 package api
 
 import (
+	"net/http"
+
+	"git.superwhys.top/rent-manager/rent-manager-server/api/middlewares"
+	"git.superwhys.top/rent-manager/rent-manager-server/api/routers"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/ulule/limiter/v3"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/api/middlewares"
-	"git.superwhys.top/rent-manager/rent-manager-server/api/routers"
 	appadmin "git.superwhys.top/rent-manager/rent-manager-server/internal/app/admin"
 	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+
+	_ "git.superwhys.top/rent-manager/rent-manager-server/api/docs"
 )
 
 // SetupRouter godoc
@@ -24,6 +29,9 @@ import (
 // @version 1.0
 // @description Rent Manager Server
 // @BasePath /api
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func SetupRouter(
 	httpLimiter *limiter.Limiter,
 	tokenManager appauth.TokenManager,
@@ -93,4 +101,12 @@ func SetupRouter(
 	)
 
 	return engine
+}
+
+func SwaggerRouter(isProd bool) http.Handler {
+	if isProd {
+		return http.NotFoundHandler()
+	}
+
+	return httpSwagger.Handler()
 }

@@ -90,7 +90,7 @@ func main() {
 	rbacService := apprbac.NewService(rbacRepo, adminConfig)
 	adminServices := &appadmin.Services{
 		Account:      appaccount.NewService(accountRepo),
-		Home:         apphome.NewService(unitRepo, roomRepo, rentBillRepo),
+		Home:         apphome.NewService(unitRepo, roomRepo, rentBillRepo, meterReadingRepo, rbacRepo),
 		RBAC:         rbacService,
 		Unit:         appunit.NewService(unitRepo, roomRepo, rbacRepo),
 		Room:         approom.NewService(roomRepo, unitRepo, rbacRepo),
@@ -103,6 +103,7 @@ func main() {
 
 	srv := cores.NewCores(
 		cores.WithHttpHandler("/api", router),
+		cores.WithHttpHandler("/swagger", api.SwaggerRouter(false)),
 	)
 
 	logging.PanicError(cores.Start(srv, "0.0.0.0:8080"))

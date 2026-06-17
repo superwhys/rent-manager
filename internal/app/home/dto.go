@@ -16,6 +16,14 @@ type Summary struct {
 	PreviousMonthIncomeCents    int
 	MonthlyIncomeGrowthCents    int
 	CurrentMonthUnpaidBillCount int
+	Todos                       []Todo
+}
+
+// Todo 描述首页待办项。
+type Todo struct {
+	Title       string
+	Description string
+	Tag         string
 }
 
 // BuildingRoomSummaryResponse 是首页楼栋与房间汇总响应。
@@ -86,25 +94,20 @@ func ToSummaryResponse(summary *Summary) *Response {
 				Tone:  "orange",
 			},
 		},
-		// TODO:
-		Todos: []TodoResponse{
-			{
-				Title:       "幸福小区 · 3栋",
-				Description: "还有 8 间房未抄表",
-				Tag:         "抄表",
-			},
-			{
-				Title:       "阳光花园 · 2栋",
-				Description: "还有 6 笔租金待收",
-				Tag:         "收租",
-			},
-			{
-				Title:       "城市公寓 · 801",
-				Description: "租约将在 12 天后到期",
-				Tag:         "续租",
-			},
-		},
+		Todos: toTodoResponses(summary.Todos),
 	}
+}
+
+func toTodoResponses(todos []Todo) []TodoResponse {
+	responses := make([]TodoResponse, 0, len(todos))
+	for _, todo := range todos {
+		responses = append(responses, TodoResponse{
+			Title:       todo.Title,
+			Description: todo.Description,
+			Tag:         todo.Tag,
+		})
+	}
+	return responses
 }
 
 // formatCentsParts 将分金额拆成整数金额和小数金额字符串。

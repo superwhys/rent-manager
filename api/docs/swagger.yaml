@@ -2042,4 +2042,9 @@ paths:
       summary: 在单元下创建房间
       tags:
       - room
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
