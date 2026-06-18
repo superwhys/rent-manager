@@ -44,7 +44,7 @@ func (s *Service) CreateRoomInUnit(ctx context.Context, cmd *CreateRoomInUnitCom
 		Size:         cmd.Size,
 		UnitID:       cmd.UnitID,
 		RoomTypeID:   cmd.RoomTypeID,
-		MeterItemIDs: cmd.MeterItemIDs,
+		MeterItemIDs: mergeMeterItemIDs(unit.DefaultMeterItemIDs, cmd.MeterItemIDs),
 	})
 	if err != nil {
 		return nil, err
@@ -201,4 +201,24 @@ func (s *Service) requireUnitPermission(ctx context.Context, accountID int, unit
 	}
 
 	return unit, nil
+}
+
+func mergeMeterItemIDs(defaultIDs []int, extraIDs []int) []int {
+	ids := make([]int, 0, len(defaultIDs)+len(extraIDs))
+	seen := make(map[int]struct{}, len(defaultIDs)+len(extraIDs))
+	for _, id := range defaultIDs {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	for _, id := range extraIDs {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	return ids
 }
