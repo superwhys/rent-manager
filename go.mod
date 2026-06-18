@@ -1,6 +1,6 @@
 module git.superwhys.top/rent-manager/rent-manager-server
 
-go 1.26.2
+go 1.26.4
 
 require (
 	entgo.io/ent v0.14.6

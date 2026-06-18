@@ -19,12 +19,13 @@ func TestGetHomeSummaryBuildsDynamicTodos(t *testing.T) {
 	unit := &domainunit.Unit{ID: 1, AccountID: 10, Name: "幸福小区 · 3栋"}
 	water := &domainmeteritem.MeterItem{ID: 1}
 	rooms := []*domainroom.Room{
-		{ID: 11, UnitID: 1, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}},
-		{ID: 12, UnitID: 1, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}},
-		{ID: 13, UnitID: 1, IsActive: true},
-		{ID: 14, UnitID: 1, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}},
-		{ID: 15, UnitID: 1, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}},
-		{ID: 16, UnitID: 1, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}},
+		{ID: 11, UnitID: 1, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}},
+		{ID: 12, UnitID: 1, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}},
+		{ID: 13, UnitID: 1, IsActive: false},
+		{ID: 14, UnitID: 1, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}},
+		{ID: 15, UnitID: 1, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}},
+		{ID: 16, UnitID: 1, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}},
+		{ID: 17, UnitID: 1, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}},
 	}
 	usage := 1.0
 	paidAt := time.Now()
@@ -50,6 +51,15 @@ func TestGetHomeSummaryBuildsDynamicTodos(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetHomeSummary() error = %v", err)
 	}
+	if summary.RentedRoomCount != 6 {
+		t.Fatalf("rented room count = %d, want 6", summary.RentedRoomCount)
+	}
+	if summary.VacantRoomCount != 1 {
+		t.Fatalf("vacant room count = %d, want 1", summary.VacantRoomCount)
+	}
+	if summary.RoomCount != 7 {
+		t.Fatalf("room count = %d, want 7", summary.RoomCount)
+	}
 	assertHomeTodos(t, summary.Todos, []Todo{
 		{Title: unit.Name, Description: "还有 1 间房未抄表", Tag: todoTagMeterReading},
 		{Title: unit.Name, Description: "还有 2 间房待生成账单", Tag: todoTagBillGeneration},
@@ -62,9 +72,9 @@ func TestGetHomeSummaryFiltersTodosByPermission(t *testing.T) {
 	unit := &domainunit.Unit{ID: 1, AccountID: 20, Name: "阳光公寓 · 1栋"}
 	water := &domainmeteritem.MeterItem{ID: 1}
 	rooms := []*domainroom.Room{
-		{ID: 11, UnitID: 1, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}},
-		{ID: 12, UnitID: 1, IsActive: true},
-		{ID: 13, UnitID: 1, IsActive: true},
+		{ID: 11, UnitID: 1, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}},
+		{ID: 12, UnitID: 1, IsActive: false},
+		{ID: 13, UnitID: 1, IsActive: false},
 	}
 	bills := []*domainrentbill.RentBill{
 		{ID: 1, RoomID: 13, PeriodMonth: periodMonth, Status: domainrentbill.StatusUnpaid, TotalAmount: 1000},

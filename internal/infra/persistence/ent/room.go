@@ -37,7 +37,7 @@ type Room struct {
 	UnitID int `json:"unit_id,omitempty"`
 	// 所属房间类型ID
 	RoomTypeID int `json:"room_type_id,omitempty"`
-	// 房间是否激活
+	// 房间是否可用。若已出租则为不可用
 	IsActive bool `json:"is_active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoomQuery when eager-loading is set.

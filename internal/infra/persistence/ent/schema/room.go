@@ -45,7 +45,7 @@ func (Room) Fields() []ent.Field {
 
 		field.Bool("is_active").
 			Default(true).
-			Comment("房间是否激活"),
+			Comment("房间是否可用。若已出租则为不可用(false)"),
 	}
 }
 

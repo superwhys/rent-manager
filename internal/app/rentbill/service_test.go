@@ -73,7 +73,7 @@ func TestGenerateRoomRentBillRejectsMissingMeterReading(t *testing.T) {
 
 func TestGenerateUnitRentBillsSkipsPaidExistingBill(t *testing.T) {
 	water := &domainmeteritem.MeterItem{ID: 1, Code: "水", Unit: "m3", UnitPrice: 200}
-	room := &domainroom.Room{ID: 11, UnitID: 7, Price: 100000, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}}
+	room := &domainroom.Room{ID: 11, UnitID: 7, Price: 100000, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}}
 	unit := &domainunit.Unit{ID: 7, AccountID: 20}
 	paidAt := time.Now()
 	existing := &domainrentbill.RentBill{ID: 99, RoomID: 11, PeriodMonth: "2026-06", Status: domainrentbill.StatusPaid, PaidAt: &paidAt}
@@ -90,6 +90,28 @@ func TestGenerateUnitRentBillsSkipsPaidExistingBill(t *testing.T) {
 	}
 	if len(result.Skipped) != 1 || result.Skipped[0].ID != 99 {
 		t.Fatalf("skipped = %#v, want bill 99", result.Skipped)
+	}
+	if len(rentBillRepo.saved) != 0 {
+		t.Fatalf("repo saved count = %d, want 0", len(rentBillRepo.saved))
+	}
+}
+
+func TestGenerateUnitRentBillsSkipsAvailableRooms(t *testing.T) {
+	room := &domainroom.Room{ID: 11, UnitID: 7, Price: 100000, IsActive: true}
+	unit := &domainunit.Unit{ID: 7, AccountID: 20}
+	rentBillRepo := &fakeRentBillRepo{}
+	service := newTestService(rentBillRepo, []*domainroom.Room{room}, []*domainunit.Unit{unit}, nil, &fakeRbacService{})
+	ctx := appcore.SetAccountIDToContext(context.Background(), 20)
+
+	result, err := service.GenerateUnitRentBills(ctx, &GenerateUnitRentBillsCommand{UnitID: 7, PeriodMonth: "2026-06"})
+	if err != nil {
+		t.Fatalf("GenerateUnitRentBills() error = %v", err)
+	}
+	if len(result.Saved) != 0 {
+		t.Fatalf("saved count = %d, want 0", len(result.Saved))
+	}
+	if len(result.Skipped) != 0 {
+		t.Fatalf("skipped count = %d, want 0", len(result.Skipped))
 	}
 	if len(rentBillRepo.saved) != 0 {
 		t.Fatalf("repo saved count = %d, want 0", len(rentBillRepo.saved))

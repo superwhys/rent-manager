@@ -170,7 +170,7 @@ func (s *Service) requireUnitPermission(ctx context.Context, accountID int, unit
 // buildUnitSummaries 汇总单元列表的房间统计信息。
 func (s *Service) buildUnitSummaries(ctx context.Context, units []*domainunit.Unit) ([]*domainunit.Summary, error) {
 	summaries := make([]*domainunit.Summary, 0, len(units))
-	active := true
+	rented := false
 
 	for _, unit := range units {
 		if unit == nil {
@@ -185,7 +185,7 @@ func (s *Service) buildUnitSummaries(ctx context.Context, units []*domainunit.Un
 		}
 		rentedCount, err := s.roomRepo.Count(ctx, unit.AccountID, domainroom.ListQuery{
 			UnitID:   unit.ID,
-			IsActive: &active,
+			IsActive: &rented,
 		})
 		if err != nil {
 			return nil, err

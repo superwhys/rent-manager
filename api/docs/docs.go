@@ -1934,7 +1934,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "是否启用",
+                        "description": "是否可用",
                         "name": "is_active",
                         "in": "query"
                     }

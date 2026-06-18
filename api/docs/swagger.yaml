@@ -2151,7 +2151,7 @@ paths:
         in: query
         name: room_type_id
         type: integer
-      - description: 是否启用
+      - description: 是否可用
         in: query
         name: is_active
         type: boolean

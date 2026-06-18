@@ -128,10 +128,10 @@ func (s *Service) GenerateUnitRentBills(ctx context.Context, cmd *GenerateUnitRe
 	if err != nil {
 		return nil, err
 	}
-	active := true
+	rented := false
 	rooms, err := s.roomRepo.List(ctx, unit.AccountID, domainroom.ListQuery{
 		UnitID:   unit.ID,
-		IsActive: &active,
+		IsActive: &rented,
 	})
 	if err != nil {
 		return nil, err

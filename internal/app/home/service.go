@@ -64,37 +64,39 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 	currentMonth, previousMonth := s.currentAndPreviousMonth()
 	summary := &Summary{CurrentMonth: currentMonth}
 	todoBuckets := &homeTodoBuckets{}
-	active := true
-	inactive := false
+
 	for _, unit := range units {
 		if unit == nil {
 			continue
 		}
 		summary.BuildingCount++
 
-		// TODO: 当前尚未建租约模型，出租/空置沿用房间启用状态统计。
-		activeRooms, err := s.listRoomsInUnit(ctx, unit, &active)
-		if err != nil {
-			return nil, err
-		}
-		vacantCount, err := s.countRoomsInUnit(ctx, unit, &inactive)
+		// 查询出所有已出租的房间
+		rentedRooms, err := s.listRoomsInUnit(ctx, unit, new(false))
 		if err != nil {
 			return nil, err
 		}
 
-		summary.RentedRoomCount += len(activeRooms)
-		summary.VacantRoomCount += vacantCount
-		summary.RoomCount += len(activeRooms) + vacantCount
-		if err := s.collectRentBillSummary(ctx, unit, summary, currentMonth, previousMonth); err != nil {
+		// 统计空房的数量
+		availableCount, err := s.countRoomsInUnit(ctx, unit, new(true))
+		if err != nil {
 			return nil, err
 		}
-		unitTodos, err := s.collectUnitTodos(ctx, accountID, unit, activeRooms, currentMonth)
+
+		summary.RentedRoomCount += len(rentedRooms)
+		summary.VacantRoomCount += availableCount
+		summary.RoomCount += len(rentedRooms) + availableCount
+		err = s.collectRentBillSummary(ctx, unit, summary, currentMonth, previousMonth)
+		if err != nil {
+			return nil, err
+		}
+		unitTodos, err := s.collectUnitTodos(ctx, accountID, unit, rentedRooms, currentMonth)
 		if err != nil {
 			return nil, err
 		}
 		todoBuckets.append(unitTodos)
 	}
-	// TODO:
+
 	summary.MonthlyIncomeGrowthCents = summary.CurrentMonthIncomeCents - summary.PreviousMonthIncomeCents
 	summary.Todos = todoBuckets.todos(maxHomeTodos)
 
@@ -162,12 +164,14 @@ func (s *Service) sumRentBills(ctx context.Context, unit *domainunit.Unit, perio
 	return totalAmount, count, nil
 }
 
-func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *domainunit.Unit, activeRooms []*domainroom.Room, periodMonth string) (*unitTodoResult, error) {
+func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *domainunit.Unit, rentedRooms []*domainroom.Room, periodMonth string) (*unitTodoResult, error) {
 	result := &unitTodoResult{}
-	if len(activeRooms) == 0 {
+	// 首页待办只针对已出租房间；可用空房不需要抄表、出账或收租。
+	if len(rentedRooms) == 0 {
 		return result, nil
 	}
 
+	// 先按当前账号权限判断哪些类型的待办允许展示。
 	canViewMeterReading, err := s.canViewUnit(ctx, accountID, unit.ID, domainrbac.PermissionMeterReadingView)
 	if err != nil {
 		return nil, err
@@ -177,15 +181,17 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *dom
 		return nil, err
 	}
 
+	// 抄表待办和账单生成都依赖当月抄表完成度；无权限时跳过查询。
 	needReadings := canViewMeterReading || canViewRentBill
 	readingsByRoom, err := s.listUnitReadingsByRoom(ctx, unit, periodMonth, needReadings)
 	if err != nil {
 		return nil, err
 	}
 
-	completeByRoomID := make(map[int]bool, len(activeRooms))
+	// 逐房间记录抄表是否完成，并统计有抄表项但未完整抄表的房间。
+	completeByRoomID := make(map[int]bool, len(rentedRooms))
 	missingMeterRoomCount := 0
-	for _, room := range activeRooms {
+	for _, room := range rentedRooms {
 		if room == nil {
 			continue
 		}
@@ -199,9 +205,12 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *dom
 		result.meterReading = newHomeTodo(unit.Name, fmt.Sprintf("还有 %d 间房未抄表", missingMeterRoomCount), todoTagMeterReading)
 	}
 
+	// 没有账单查看权限时，只返回前面已经收集到的抄表待办。
 	if !canViewRentBill || s.rentBillRepo == nil {
 		return result, nil
 	}
+
+	// 查询楼栋当月已有账单，用于判断哪些房间已出账、哪些账单还待收。
 	bills, err := s.rentBillRepo.List(ctx, unit.AccountID, domainrentbill.ListQuery{
 		UnitID:      unit.ID,
 		PeriodMonth: periodMonth,
@@ -221,8 +230,9 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *dom
 		}
 	}
 
+	// 只有抄表完成且当月还没有账单的已租房间，才进入待生成账单统计。
 	pendingBillGenerationRoomCount := 0
-	for _, room := range activeRooms {
+	for _, room := range rentedRooms {
 		if room == nil || !completeByRoomID[room.ID] {
 			continue
 		}
@@ -236,6 +246,7 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *dom
 	if unpaidBillCount > 0 {
 		result.rentCollection = newHomeTodo(unit.Name, fmt.Sprintf("还有 %d 笔租金待收", unpaidBillCount), todoTagRentCollection)
 	}
+	// 最终由外层 todoBuckets 负责按类型聚合和限制首页展示数量。
 	return result, nil
 }
 

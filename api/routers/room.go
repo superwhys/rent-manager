@@ -54,7 +54,7 @@ func CreateRoomInUnitHandler(roomService *approom.Service) gin.HandlerFunc {
 // @Param limit query int false "分页数量"
 // @Param offset query int false "分页偏移"
 // @Param room_type_id query int false "房型ID"
-// @Param is_active query bool false "是否启用"
+// @Param is_active query bool false "是否可用"
 // @Success 200 {object} ginutils.Ret[[]room.RoomResponse]
 // @Security BearerAuth
 // @Router /units/{unit_id}/rooms [get]
