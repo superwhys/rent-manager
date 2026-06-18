@@ -29,6 +29,7 @@ type Service struct {
 	rentBillRepo     domainrentbill.Repository
 	meterReadingRepo domainmeterreading.Repository
 	rbacService      domainrbac.IRbacService
+	now              func() time.Time
 }
 
 // NewService 创建首页聚合服务。
@@ -43,6 +44,7 @@ func NewService(unitRepo domainunit.Repository, roomRepo domainroom.Repository, 
 		rentBillRepo:     rentBillRepo,
 		meterReadingRepo: meterReadingRepo,
 		rbacService:      rbacService,
+		now:              time.Now,
 	}
 }
 
@@ -61,7 +63,8 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 		return nil, err
 	}
 
-	currentMonth, previousMonth := s.currentAndPreviousMonth()
+	now := s.currentTime()
+	currentMonth, previousMonth := currentAndPreviousMonth(now)
 	summary := &Summary{CurrentMonth: currentMonth}
 	todoBuckets := &homeTodoBuckets{}
 
@@ -90,7 +93,8 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 		if err != nil {
 			return nil, err
 		}
-		unitTodos, err := s.collectUnitTodos(ctx, accountID, unit, rentedRooms, currentMonth)
+		todoPeriodMonth := unitTodoPeriodMonth(unit, now)
+		unitTodos, err := s.collectUnitTodos(ctx, accountID, unit, rentedRooms, todoPeriodMonth)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +185,7 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *dom
 		return nil, err
 	}
 
-	// 抄表待办和账单生成都依赖当月抄表完成度；无权限时跳过查询。
+	// 抄表待办和账单生成都依赖目标月份的抄表完成度；无权限时跳过查询。
 	needReadings := canViewMeterReading || canViewRentBill
 	readingsByRoom, err := s.listUnitReadingsByRoom(ctx, unit, periodMonth, needReadings)
 	if err != nil {
@@ -210,7 +214,7 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *dom
 		return result, nil
 	}
 
-	// 查询楼栋当月已有账单，用于判断哪些房间已出账、哪些账单还待收。
+	// 查询楼栋目标账单月份已有账单，用于判断哪些房间已出账、哪些账单还待收。
 	bills, err := s.rentBillRepo.List(ctx, unit.AccountID, domainrentbill.ListQuery{
 		UnitID:      unit.ID,
 		PeriodMonth: periodMonth,
@@ -230,7 +234,7 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *dom
 		}
 	}
 
-	// 只有抄表完成且当月还没有账单的已租房间，才进入待生成账单统计。
+	// 只有抄表完成且目标月份还没有账单的已租房间，才进入待生成账单统计。
 	pendingBillGenerationRoomCount := 0
 	for _, room := range rentedRooms {
 		if room == nil || !completeByRoomID[room.ID] {
@@ -246,7 +250,6 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *dom
 	if unpaidBillCount > 0 {
 		result.rentCollection = newHomeTodo(unit.Name, fmt.Sprintf("还有 %d 笔租金待收", unpaidBillCount), todoTagRentCollection)
 	}
-	// 最终由外层 todoBuckets 负责按类型聚合和限制首页展示数量。
 	return result, nil
 }
 
@@ -368,7 +371,48 @@ func (b *homeTodoBuckets) todos(limit int) []Todo {
 
 // currentAndPreviousMonth 返回当前月份和上一月份的 YYYY-MM 表示。
 func (s *Service) currentAndPreviousMonth() (string, string) {
-	now := time.Now()
+	return currentAndPreviousMonth(s.currentTime())
+}
+
+func currentAndPreviousMonth(now time.Time) (string, string) {
 	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	return monthStart.Format("2006-01"), monthStart.AddDate(0, -1, 0).Format("2006-01")
+}
+
+func unitTodoPeriodMonth(unit *domainunit.Unit, now time.Time) string {
+	meterReadingDay := domainunit.DefaultMeterReadingDay
+	if unit != nil && unit.Config.MeterReadingDay != 0 {
+		meterReadingDay = unit.Config.MeterReadingDay
+	}
+	return todoPeriodMonthByMeterReadingDay(now, meterReadingDay)
+}
+
+func (s *Service) currentTime() time.Time {
+	if s.now != nil {
+		return s.now()
+	}
+	return time.Now()
+}
+
+func todoPeriodMonthByMeterReadingDay(now time.Time, meterReadingDay int) string {
+	if meterReadingDay < domainunit.MinMeterReadingDay || meterReadingDay > domainunit.MaxMeterReadingDay {
+		meterReadingDay = domainunit.DefaultMeterReadingDay
+	}
+	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	currentDueDate := meterReadingDueDate(monthStart, meterReadingDay)
+
+	offsetMonths := -2
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	if !today.Before(currentDueDate) {
+		offsetMonths = -1
+	}
+	return monthStart.AddDate(0, offsetMonths, 0).Format("2006-01")
+}
+
+func meterReadingDueDate(monthStart time.Time, meterReadingDay int) time.Time {
+	lastDay := monthStart.AddDate(0, 1, -1).Day()
+	if meterReadingDay > lastDay {
+		meterReadingDay = lastDay
+	}
+	return time.Date(monthStart.Year(), monthStart.Month(), meterReadingDay, 0, 0, 0, 0, monthStart.Location())
 }

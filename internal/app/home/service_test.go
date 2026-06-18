@@ -14,8 +14,10 @@ import (
 	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
 )
 
+var fixedHomeNow = time.Date(2026, time.June, 20, 9, 0, 0, 0, time.UTC)
+
 func TestGetHomeSummaryBuildsDynamicTodos(t *testing.T) {
-	periodMonth := time.Now().Format("2006-01")
+	periodMonth := "2026-05"
 	unit := &domainunit.Unit{ID: 1, AccountID: 10, Name: "幸福小区 · 3栋"}
 	water := &domainmeteritem.MeterItem{ID: 1}
 	rooms := []*domainroom.Room{
@@ -28,7 +30,7 @@ func TestGetHomeSummaryBuildsDynamicTodos(t *testing.T) {
 		{ID: 17, UnitID: 1, IsActive: true, MeterItems: []*domainmeteritem.MeterItem{water}},
 	}
 	usage := 1.0
-	paidAt := time.Now()
+	paidAt := fixedHomeNow
 	service := newHomeTestService(
 		[]*domainunit.Unit{unit},
 		rooms,
@@ -68,7 +70,7 @@ func TestGetHomeSummaryBuildsDynamicTodos(t *testing.T) {
 }
 
 func TestGetHomeSummaryFiltersTodosByPermission(t *testing.T) {
-	periodMonth := time.Now().Format("2006-01")
+	periodMonth := "2026-05"
 	unit := &domainunit.Unit{ID: 1, AccountID: 20, Name: "阳光公寓 · 1栋"}
 	water := &domainmeteritem.MeterItem{ID: 1}
 	rooms := []*domainroom.Room{
@@ -119,6 +121,159 @@ func TestGetHomeSummaryFiltersTodosByPermission(t *testing.T) {
 	})
 }
 
+func TestTodoPeriodMonthByMeterReadingDay(t *testing.T) {
+	tests := []struct {
+		name            string
+		now             time.Time
+		meterReadingDay int
+		want            string
+	}{
+		{
+			name:            "before configured day uses previous due cycle",
+			now:             time.Date(2026, time.June, 18, 9, 0, 0, 0, time.UTC),
+			meterReadingDay: 20,
+			want:            "2026-04",
+		},
+		{
+			name:            "on configured day uses previous month",
+			now:             time.Date(2026, time.June, 20, 9, 0, 0, 0, time.UTC),
+			meterReadingDay: 20,
+			want:            "2026-05",
+		},
+		{
+			name:            "after configured day uses previous month",
+			now:             time.Date(2026, time.June, 21, 9, 0, 0, 0, time.UTC),
+			meterReadingDay: 20,
+			want:            "2026-05",
+		},
+		{
+			name:            "short month clamps day 31 to month end",
+			now:             time.Date(2026, time.April, 30, 9, 0, 0, 0, time.UTC),
+			meterReadingDay: 31,
+			want:            "2026-03",
+		},
+		{
+			name:            "before short month end uses previous due cycle",
+			now:             time.Date(2026, time.April, 29, 9, 0, 0, 0, time.UTC),
+			meterReadingDay: 31,
+			want:            "2026-02",
+		},
+		{
+			name:            "zero day falls back to default day",
+			now:             time.Date(2026, time.June, 18, 9, 0, 0, 0, time.UTC),
+			meterReadingDay: 0,
+			want:            "2026-05",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := todoPeriodMonthByMeterReadingDay(tt.now, tt.meterReadingDay)
+			if got != tt.want {
+				t.Fatalf("todoPeriodMonthByMeterReadingDay() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetHomeSummaryUsesLastDueTodoPeriodBeforeMeterReadingDay(t *testing.T) {
+	now := time.Date(2026, time.June, 18, 9, 0, 0, 0, time.UTC)
+	unit := &domainunit.Unit{
+		ID:        1,
+		AccountID: 10,
+		Name:      "幸福小区 · 3栋",
+		Config:    domainunit.UnitConfig{MeterReadingDay: 20},
+	}
+	water := &domainmeteritem.MeterItem{ID: 1}
+	room := &domainroom.Room{ID: 11, UnitID: 1, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}}
+	usage := 1.0
+	service := newHomeTestServiceAt(
+		now,
+		[]*domainunit.Unit{unit},
+		[]*domainroom.Room{room},
+		[]*domainmeterreading.MeterReading{
+			{RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-05", UsageAmount: &usage},
+		},
+		[]*domainrentbill.RentBill{
+			{ID: 1, RoomID: 11, PeriodMonth: "2026-05", Status: domainrentbill.StatusUnpaid, TotalAmount: 1000},
+		},
+		&fakeHomeRbacService{},
+	)
+	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+
+	summary, err := service.GetHomeSummary(ctx)
+	if err != nil {
+		t.Fatalf("GetHomeSummary() error = %v", err)
+	}
+	assertHomeTodos(t, summary.Todos, []Todo{
+		{Title: unit.Name, Description: "还有 1 间房未抄表", Tag: todoTagMeterReading},
+	})
+}
+
+func TestGetHomeSummaryUsesPreviousMonthOnMeterReadingDay(t *testing.T) {
+	unit := &domainunit.Unit{
+		ID:        1,
+		AccountID: 10,
+		Name:      "幸福小区 · 3栋",
+		Config:    domainunit.UnitConfig{MeterReadingDay: 20},
+	}
+	water := &domainmeteritem.MeterItem{ID: 1}
+	room := &domainroom.Room{ID: 11, UnitID: 1, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}}
+	usage := 1.0
+	service := newHomeTestService(
+		[]*domainunit.Unit{unit},
+		[]*domainroom.Room{room},
+		[]*domainmeterreading.MeterReading{
+			{RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-05", UsageAmount: &usage},
+		},
+		nil,
+		&fakeHomeRbacService{},
+	)
+	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+
+	summary, err := service.GetHomeSummary(ctx)
+	if err != nil {
+		t.Fatalf("GetHomeSummary() error = %v", err)
+	}
+	assertHomeTodos(t, summary.Todos, []Todo{
+		{Title: unit.Name, Description: "还有 1 间房待生成账单", Tag: todoTagBillGeneration},
+	})
+}
+
+func TestGetHomeSummaryRentCollectionUsesTodoPeriodMonth(t *testing.T) {
+	unit := &domainunit.Unit{
+		ID:        1,
+		AccountID: 10,
+		Name:      "幸福小区 · 3栋",
+		Config:    domainunit.UnitConfig{MeterReadingDay: 20},
+	}
+	rooms := []*domainroom.Room{
+		{ID: 11, UnitID: 1, IsActive: false},
+		{ID: 12, UnitID: 1, IsActive: false},
+	}
+	service := newHomeTestService(
+		[]*domainunit.Unit{unit},
+		rooms,
+		nil,
+		[]*domainrentbill.RentBill{
+			{ID: 1, RoomID: 11, PeriodMonth: "2026-05", Status: domainrentbill.StatusUnpaid, TotalAmount: 1000},
+			{ID: 2, RoomID: 12, PeriodMonth: "2026-05", Status: domainrentbill.StatusPaid, PaidAt: &fixedHomeNow, TotalAmount: 1000},
+			{ID: 3, RoomID: 11, PeriodMonth: "2026-06", Status: domainrentbill.StatusUnpaid, TotalAmount: 1000},
+			{ID: 4, RoomID: 12, PeriodMonth: "2026-06", Status: domainrentbill.StatusUnpaid, TotalAmount: 1000},
+		},
+		&fakeHomeRbacService{},
+	)
+	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+
+	summary, err := service.GetHomeSummary(ctx)
+	if err != nil {
+		t.Fatalf("GetHomeSummary() error = %v", err)
+	}
+	assertHomeTodos(t, summary.Todos, []Todo{
+		{Title: unit.Name, Description: "还有 1 笔租金待收", Tag: todoTagRentCollection},
+	})
+}
+
 func TestHomeTodoBucketsLimitAndOrder(t *testing.T) {
 	buckets := &homeTodoBuckets{}
 	for i := 0; i < 5; i++ {
@@ -156,6 +311,10 @@ func assertHomeTodos(t *testing.T, got []Todo, want []Todo) {
 }
 
 func newHomeTestService(units []*domainunit.Unit, rooms []*domainroom.Room, readings []*domainmeterreading.MeterReading, bills []*domainrentbill.RentBill, rbac domainrbac.IRbacService) *Service {
+	return newHomeTestServiceAt(fixedHomeNow, units, rooms, readings, bills, rbac)
+}
+
+func newHomeTestServiceAt(now time.Time, units []*domainunit.Unit, rooms []*domainroom.Room, readings []*domainmeterreading.MeterReading, bills []*domainrentbill.RentBill, rbac domainrbac.IRbacService) *Service {
 	roomUnitIDs := make(map[int]int, len(rooms))
 	for _, room := range rooms {
 		if room == nil {
@@ -169,6 +328,9 @@ func newHomeTestService(units []*domainunit.Unit, rooms []*domainroom.Room, read
 		rentBillRepo:     &fakeHomeRentBillRepo{bills: bills, roomUnitIDs: roomUnitIDs},
 		meterReadingRepo: &fakeHomeMeterReadingRepo{readings: readings, roomUnitIDs: roomUnitIDs},
 		rbacService:      rbac,
+		now: func() time.Time {
+			return now
+		},
 	}
 }
 
