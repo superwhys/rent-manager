@@ -96,6 +96,20 @@ func (_c *UnitCreate) SetProvince(v string) *UnitCreate {
 	return _c
 }
 
+// SetJSONExtend sets the "json_extend" field.
+func (_c *UnitCreate) SetJSONExtend(v string) *UnitCreate {
+	_c.mutation.SetJSONExtend(v)
+	return _c
+}
+
+// SetNillableJSONExtend sets the "json_extend" field if the given value is not nil.
+func (_c *UnitCreate) SetNillableJSONExtend(v *string) *UnitCreate {
+	if v != nil {
+		_c.SetJSONExtend(*v)
+	}
+	return _c
+}
+
 // SetAccount sets the "account" edge to the Account entity.
 func (_c *UnitCreate) SetAccount(v *Account) *UnitCreate {
 	return _c.SetAccountID(v.ID)
@@ -189,6 +203,10 @@ func (_c *UnitCreate) defaults() {
 		v := unit.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.JSONExtend(); !ok {
+		v := unit.DefaultJSONExtend
+		_c.mutation.SetJSONExtend(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -232,6 +250,14 @@ func (_c *UnitCreate) check() error {
 	if v, ok := _c.mutation.Province(); ok {
 		if err := unit.ProvinceValidator(v); err != nil {
 			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Unit.province": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.JSONExtend(); !ok {
+		return &ValidationError{Name: "json_extend", err: errors.New(`ent: missing required field "Unit.json_extend"`)}
+	}
+	if v, ok := _c.mutation.JSONExtend(); ok {
+		if err := unit.JSONExtendValidator(v); err != nil {
+			return &ValidationError{Name: "json_extend", err: fmt.Errorf(`ent: validator failed for field "Unit.json_extend": %w`, err)}
 		}
 	}
 	if len(_c.mutation.AccountIDs()) == 0 {
@@ -290,6 +316,10 @@ func (_c *UnitCreate) createSpec() (*Unit, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Province(); ok {
 		_spec.SetField(unit.FieldProvince, field.TypeString, value)
 		_node.Province = value
+	}
+	if value, ok := _c.mutation.JSONExtend(); ok {
+		_spec.SetField(unit.FieldJSONExtend, field.TypeString, value)
+		_node.JSONExtend = value
 	}
 	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

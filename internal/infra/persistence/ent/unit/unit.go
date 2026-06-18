@@ -30,6 +30,8 @@ const (
 	FieldCity = "city"
 	// FieldProvince holds the string denoting the province field in the database.
 	FieldProvince = "province"
+	// FieldJSONExtend holds the string denoting the json_extend field in the database.
+	FieldJSONExtend = "json_extend"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
 	// EdgeRooms holds the string denoting the rooms edge name in mutations.
@@ -79,6 +81,7 @@ var Columns = []string{
 	FieldAddress,
 	FieldCity,
 	FieldProvince,
+	FieldJSONExtend,
 }
 
 var (
@@ -112,6 +115,10 @@ var (
 	CityValidator func(string) error
 	// ProvinceValidator is a validator for the "province" field. It is called by the builders before save.
 	ProvinceValidator func(string) error
+	// DefaultJSONExtend holds the default value on creation for the "json_extend" field.
+	DefaultJSONExtend string
+	// JSONExtendValidator is a validator for the "json_extend" field. It is called by the builders before save.
+	JSONExtendValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the Unit queries.
@@ -160,6 +167,11 @@ func ByCity(opts ...sql.OrderTermOption) OrderOption {
 // ByProvince orders the results by the province field.
 func ByProvince(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProvince, opts...).ToFunc()
+}
+
+// ByJSONExtend orders the results by the json_extend field.
+func ByJSONExtend(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldJSONExtend, opts...).ToFunc()
 }
 
 // ByAccountField orders the results by account field.

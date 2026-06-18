@@ -34,6 +34,8 @@ type Unit struct {
 	City string `json:"city,omitempty"`
 	// 单元省份
 	Province string `json:"province,omitempty"`
+	// 单元扩展 JSON 配置
+	JSONExtend string `json:"json_extend,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UnitQuery when eager-loading is set.
 	Edges        UnitEdges `json:"edges"`
@@ -100,7 +102,7 @@ func (*Unit) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case unit.FieldID, unit.FieldAccountID:
 			values[i] = new(sql.NullInt64)
-		case unit.FieldName, unit.FieldAddress, unit.FieldCity, unit.FieldProvince:
+		case unit.FieldName, unit.FieldAddress, unit.FieldCity, unit.FieldProvince, unit.FieldJSONExtend:
 			values[i] = new(sql.NullString)
 		case unit.FieldCreatedAt, unit.FieldUpdatedAt, unit.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -173,6 +175,12 @@ func (_m *Unit) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field province", values[i])
 			} else if value.Valid {
 				_m.Province = value.String
+			}
+		case unit.FieldJSONExtend:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field json_extend", values[i])
+			} else if value.Valid {
+				_m.JSONExtend = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -255,6 +263,9 @@ func (_m *Unit) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("province=")
 	builder.WriteString(_m.Province)
+	builder.WriteString(", ")
+	builder.WriteString("json_extend=")
+	builder.WriteString(_m.JSONExtend)
 	builder.WriteByte(')')
 	return builder.String()
 }

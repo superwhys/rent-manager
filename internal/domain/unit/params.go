@@ -16,6 +16,7 @@ type CreateParams struct {
 	City                string
 	Province            string
 	DefaultMeterItemIDs []int
+	Config              *UnitConfig
 }
 
 type UpdateParams struct {
@@ -26,6 +27,7 @@ type UpdateParams struct {
 	City                string
 	Province            string
 	DefaultMeterItemIDs []int
+	Config              *UnitConfig
 }
 
 type ListQuery struct {

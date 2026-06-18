@@ -5,57 +5,63 @@ import (
 	"testing"
 )
 
-func TestNewAccountSettingAcceptsMeterReadingDay(t *testing.T) {
+func TestNewAccountSettingAcceptsAnyKeyValue(t *testing.T) {
 	setting, err := NewAccountSetting(CreateParams{
 		AccountID: 10,
-		Key:       KeyMeterReadingDay,
-		Value:     "20",
+		Key:       "theme",
+		Value:     "dark",
 	})
 	if err != nil {
 		t.Fatalf("NewAccountSetting() error = %v", err)
 	}
-	if setting.AccountID != 10 || setting.Key != KeyMeterReadingDay || setting.Value != "20" {
-		t.Fatalf("setting = %#v, want account=10 key=%q value=20", setting, KeyMeterReadingDay)
+	if setting.AccountID != 10 || setting.Key != "theme" || setting.Value != "dark" {
+		t.Fatalf("setting = %#v, want account=10 key=theme value=dark", setting)
 	}
 }
 
-func TestNewAccountSettingRejectsUnsupportedKey(t *testing.T) {
-	_, err := NewAccountSetting(CreateParams{
+func TestNewAccountSettingTrimsKeyValue(t *testing.T) {
+	setting, err := NewAccountSetting(CreateParams{
 		AccountID: 10,
-		Key:       "unknown",
-		Value:     "1",
+		Key:       " theme ",
+		Value:     " dark ",
 	})
-	if !errors.Is(err, ErrUnsupportedKey) {
-		t.Fatalf("error = %v, want ErrUnsupportedKey", err)
+	if err != nil {
+		t.Fatalf("NewAccountSetting() error = %v", err)
+	}
+	if setting.Key != "theme" || setting.Value != "dark" {
+		t.Fatalf("setting = %#v, want trimmed key/value", setting)
 	}
 }
 
-func TestNewAccountSettingRejectsInvalidMeterReadingDay(t *testing.T) {
-	for _, value := range []string{"0", "32", "abc"} {
-		t.Run(value, func(t *testing.T) {
-			_, err := NewAccountSetting(CreateParams{
-				AccountID: 10,
-				Key:       KeyMeterReadingDay,
-				Value:     value,
-			})
-			if !errors.Is(err, ErrInvalidMeterReadingDay) {
-				t.Fatalf("error = %v, want ErrInvalidMeterReadingDay", err)
+func TestNewAccountSettingRejectsMissingFields(t *testing.T) {
+	tests := []struct {
+		name   string
+		params CreateParams
+		want   error
+	}{
+		{
+			name:   "account required",
+			params: CreateParams{Key: "theme", Value: "dark"},
+			want:   ErrAccountRequired,
+		},
+		{
+			name:   "key required",
+			params: CreateParams{AccountID: 10, Value: "dark"},
+			want:   ErrKeyRequired,
+		},
+		{
+			name:   "value required",
+			params: CreateParams{AccountID: 10, Key: "theme"},
+			want:   ErrValueRequired,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewAccountSetting(tt.params)
+			if !errors.Is(err, tt.want) {
+				t.Fatalf("error = %v, want %v", err, tt.want)
 			}
 		})
-	}
-}
-
-func TestMeterReadingDayValue(t *testing.T) {
-	value, err := MeterReadingDayValue(15)
-	if err != nil {
-		t.Fatalf("MeterReadingDayValue() error = %v", err)
-	}
-	if value != "15" {
-		t.Fatalf("value = %q, want 15", value)
-	}
-
-	_, err = MeterReadingDayValue(32)
-	if !errors.Is(err, ErrInvalidMeterReadingDay) {
-		t.Fatalf("error = %v, want ErrInvalidMeterReadingDay", err)
 	}
 }

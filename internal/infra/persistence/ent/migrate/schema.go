@@ -353,6 +353,7 @@ var (
 		{Name: "address", Type: field.TypeString, Size: 255},
 		{Name: "city", Type: field.TypeString, Size: 255},
 		{Name: "province", Type: field.TypeString, Size: 255},
+		{Name: "json_extend", Type: field.TypeString, Size: 2048, Default: "{\"meter_reading_day\":1}"},
 		{Name: "account_id", Type: field.TypeInt},
 	}
 	// UnitsTable holds the schema information for the "units" table.
@@ -363,7 +364,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "units_accounts_units",
-				Columns:    []*schema.Column{UnitsColumns[8]},
+				Columns:    []*schema.Column{UnitsColumns[9]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -372,7 +373,7 @@ var (
 			{
 				Name:    "unit_account_id_name",
 				Unique:  true,
-				Columns: []*schema.Column{UnitsColumns[8], UnitsColumns[4]},
+				Columns: []*schema.Column{UnitsColumns[9], UnitsColumns[4]},
 			},
 		},
 	}

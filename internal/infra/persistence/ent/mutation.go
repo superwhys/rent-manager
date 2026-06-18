@@ -10224,6 +10224,7 @@ type UnitMutation struct {
 	address                   *string
 	city                      *string
 	province                  *string
+	json_extend               *string
 	clearedFields             map[string]struct{}
 	account                   *int
 	clearedaccount            bool
@@ -10640,6 +10641,42 @@ func (m *UnitMutation) ResetProvince() {
 	m.province = nil
 }
 
+// SetJSONExtend sets the "json_extend" field.
+func (m *UnitMutation) SetJSONExtend(s string) {
+	m.json_extend = &s
+}
+
+// JSONExtend returns the value of the "json_extend" field in the mutation.
+func (m *UnitMutation) JSONExtend() (r string, exists bool) {
+	v := m.json_extend
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJSONExtend returns the old "json_extend" field's value of the Unit entity.
+// If the Unit object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UnitMutation) OldJSONExtend(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJSONExtend is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJSONExtend requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJSONExtend: %w", err)
+	}
+	return oldValue.JSONExtend, nil
+}
+
+// ResetJSONExtend resets all changes to the "json_extend" field.
+func (m *UnitMutation) ResetJSONExtend() {
+	m.json_extend = nil
+}
+
 // ClearAccount clears the "account" edge to the Account entity.
 func (m *UnitMutation) ClearAccount() {
 	m.clearedaccount = true
@@ -10863,7 +10900,7 @@ func (m *UnitMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UnitMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.created_at != nil {
 		fields = append(fields, unit.FieldCreatedAt)
 	}
@@ -10887,6 +10924,9 @@ func (m *UnitMutation) Fields() []string {
 	}
 	if m.province != nil {
 		fields = append(fields, unit.FieldProvince)
+	}
+	if m.json_extend != nil {
+		fields = append(fields, unit.FieldJSONExtend)
 	}
 	return fields
 }
@@ -10912,6 +10952,8 @@ func (m *UnitMutation) Field(name string) (ent.Value, bool) {
 		return m.City()
 	case unit.FieldProvince:
 		return m.Province()
+	case unit.FieldJSONExtend:
+		return m.JSONExtend()
 	}
 	return nil, false
 }
@@ -10937,6 +10979,8 @@ func (m *UnitMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldCity(ctx)
 	case unit.FieldProvince:
 		return m.OldProvince(ctx)
+	case unit.FieldJSONExtend:
+		return m.OldJSONExtend(ctx)
 	}
 	return nil, fmt.Errorf("unknown Unit field %s", name)
 }
@@ -11001,6 +11045,13 @@ func (m *UnitMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProvince(v)
+		return nil
+	case unit.FieldJSONExtend:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJSONExtend(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Unit field %s", name)
@@ -11086,6 +11137,9 @@ func (m *UnitMutation) ResetField(name string) error {
 		return nil
 	case unit.FieldProvince:
 		m.ResetProvince()
+		return nil
+	case unit.FieldJSONExtend:
+		m.ResetJSONExtend()
 		return nil
 	}
 	return fmt.Errorf("unknown Unit field %s", name)

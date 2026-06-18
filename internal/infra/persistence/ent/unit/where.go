@@ -95,6 +95,11 @@ func Province(v string) predicate.Unit {
 	return predicate.Unit(sql.FieldEQ(FieldProvince, v))
 }
 
+// JSONExtend applies equality check predicate on the "json_extend" field. It's identical to JSONExtendEQ.
+func JSONExtend(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldEQ(FieldJSONExtend, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Unit {
 	return predicate.Unit(sql.FieldEQ(FieldCreatedAt, v))
@@ -503,6 +508,71 @@ func ProvinceEqualFold(v string) predicate.Unit {
 // ProvinceContainsFold applies the ContainsFold predicate on the "province" field.
 func ProvinceContainsFold(v string) predicate.Unit {
 	return predicate.Unit(sql.FieldContainsFold(FieldProvince, v))
+}
+
+// JSONExtendEQ applies the EQ predicate on the "json_extend" field.
+func JSONExtendEQ(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldEQ(FieldJSONExtend, v))
+}
+
+// JSONExtendNEQ applies the NEQ predicate on the "json_extend" field.
+func JSONExtendNEQ(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldNEQ(FieldJSONExtend, v))
+}
+
+// JSONExtendIn applies the In predicate on the "json_extend" field.
+func JSONExtendIn(vs ...string) predicate.Unit {
+	return predicate.Unit(sql.FieldIn(FieldJSONExtend, vs...))
+}
+
+// JSONExtendNotIn applies the NotIn predicate on the "json_extend" field.
+func JSONExtendNotIn(vs ...string) predicate.Unit {
+	return predicate.Unit(sql.FieldNotIn(FieldJSONExtend, vs...))
+}
+
+// JSONExtendGT applies the GT predicate on the "json_extend" field.
+func JSONExtendGT(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldGT(FieldJSONExtend, v))
+}
+
+// JSONExtendGTE applies the GTE predicate on the "json_extend" field.
+func JSONExtendGTE(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldGTE(FieldJSONExtend, v))
+}
+
+// JSONExtendLT applies the LT predicate on the "json_extend" field.
+func JSONExtendLT(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldLT(FieldJSONExtend, v))
+}
+
+// JSONExtendLTE applies the LTE predicate on the "json_extend" field.
+func JSONExtendLTE(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldLTE(FieldJSONExtend, v))
+}
+
+// JSONExtendContains applies the Contains predicate on the "json_extend" field.
+func JSONExtendContains(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldContains(FieldJSONExtend, v))
+}
+
+// JSONExtendHasPrefix applies the HasPrefix predicate on the "json_extend" field.
+func JSONExtendHasPrefix(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldHasPrefix(FieldJSONExtend, v))
+}
+
+// JSONExtendHasSuffix applies the HasSuffix predicate on the "json_extend" field.
+func JSONExtendHasSuffix(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldHasSuffix(FieldJSONExtend, v))
+}
+
+// JSONExtendEqualFold applies the EqualFold predicate on the "json_extend" field.
+func JSONExtendEqualFold(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldEqualFold(FieldJSONExtend, v))
+}
+
+// JSONExtendContainsFold applies the ContainsFold predicate on the "json_extend" field.
+func JSONExtendContainsFold(v string) predicate.Unit {
+	return predicate.Unit(sql.FieldContainsFold(FieldJSONExtend, v))
 }
 
 // HasAccount applies the HasEdge predicate on the "account" edge.

@@ -2022,22 +2022,24 @@ const docTemplate = `{
         },
         "accountsetting.SettingsResponse": {
             "type": "object",
-            "properties": {
-                "meter_reading_day": {
-                    "type": "integer"
-                }
+            "additionalProperties": {
+                "type": "string"
             }
         },
         "accountsetting.UpdateSettingsCommand": {
             "type": "object",
             "required": [
-                "meter_reading_day"
+                "key",
+                "value"
             ],
             "properties": {
-                "meter_reading_day": {
-                    "type": "integer",
-                    "maximum": 31,
-                    "minimum": 1
+                "key": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "value": {
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },
@@ -3307,6 +3309,9 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "json_extend": {
+                    "$ref": "#/definitions/unit.UnitConfigCommand"
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255
@@ -3314,6 +3319,24 @@ const docTemplate = `{
                 "province": {
                     "type": "string",
                     "maxLength": 255
+                }
+            }
+        },
+        "unit.UnitConfigCommand": {
+            "type": "object",
+            "properties": {
+                "meter_reading_day": {
+                    "type": "integer",
+                    "maximum": 31,
+                    "minimum": 1
+                }
+            }
+        },
+        "unit.UnitConfigResponse": {
+            "type": "object",
+            "properties": {
+                "meter_reading_day": {
+                    "type": "integer"
                 }
             }
         },
@@ -3370,6 +3393,9 @@ const docTemplate = `{
                 "is_owner": {
                     "type": "boolean"
                 },
+                "json_extend": {
+                    "$ref": "#/definitions/unit.UnitConfigResponse"
+                },
                 "monthly_rent_amount": {
                     "type": "string"
                 },
@@ -3413,6 +3439,9 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "json_extend": {
+                    "$ref": "#/definitions/unit.UnitConfigCommand"
                 },
                 "name": {
                     "type": "string",

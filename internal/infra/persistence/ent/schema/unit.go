@@ -43,6 +43,11 @@ func (Unit) Fields() []ent.Field {
 			NotEmpty().
 			MaxLen(255).
 			Comment("单元省份"),
+
+		field.String("json_extend").
+			Default("{\"meter_reading_day\":1}").
+			MaxLen(2048).
+			Comment("单元扩展 JSON 配置"),
 	}
 }
 

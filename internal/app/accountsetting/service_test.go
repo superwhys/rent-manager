@@ -8,72 +8,73 @@ import (
 	domainaccountsetting "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/accountsetting"
 )
 
-func TestGetSettingsReturnsDefault(t *testing.T) {
-	service := NewService(newFakeAccountSettingRepo())
+func TestGetSettingsReturnsAccountSettingsMap(t *testing.T) {
+	repo := newFakeAccountSettingRepo()
+	repo.seed(
+		&domainaccountsetting.AccountSetting{AccountID: 10, Key: "theme", Value: "dark"},
+		&domainaccountsetting.AccountSetting{AccountID: 10, Key: "locale", Value: "zh-CN"},
+		&domainaccountsetting.AccountSetting{AccountID: 20, Key: "theme", Value: "light"},
+	)
+	service := NewService(repo)
 	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
 
 	settings, err := service.GetSettings(ctx)
 	if err != nil {
 		t.Fatalf("GetSettings() error = %v", err)
 	}
-	if settings.MeterReadingDay != domainaccountsetting.DefaultMeterReadingDay {
-		t.Fatalf("meter reading day = %d, want %d", settings.MeterReadingDay, domainaccountsetting.DefaultMeterReadingDay)
+	if len(*settings) != 2 {
+		t.Fatalf("settings count = %d, want 2", len(*settings))
+	}
+	if (*settings)["theme"] != "dark" || (*settings)["locale"] != "zh-CN" {
+		t.Fatalf("settings = %#v, want account 10 settings", *settings)
 	}
 }
 
-func TestUpdateSettingsStoresMeterReadingDay(t *testing.T) {
+func TestUpdateSettingsStoresKeyValue(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
 	service := NewService(repo)
 	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
 
-	settings, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{MeterReadingDay: 20})
+	settings, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"})
 	if err != nil {
 		t.Fatalf("UpdateSettings() error = %v", err)
 	}
-	if settings.MeterReadingDay != 20 {
-		t.Fatalf("meter reading day = %d, want 20", settings.MeterReadingDay)
+	if (*settings)["theme"] != "dark" {
+		t.Fatalf("settings = %#v, want theme=dark", *settings)
 	}
-	stored := repo.settings[10][domainaccountsetting.KeyMeterReadingDay]
+	stored := repo.settings[10]["theme"]
 	if stored == nil {
 		t.Fatalf("stored setting is nil")
 	}
-	if stored.AccountID != 10 || stored.Value != "20" {
-		t.Fatalf("stored = %#v, want account=10 value=20", stored)
+	if stored.AccountID != 10 || stored.Value != "dark" {
+		t.Fatalf("stored = %#v, want account=10 value=dark", stored)
 	}
 }
 
 func TestUpdateSettingsOverwritesExistingValue(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
-	repo.seed(&domainaccountsetting.AccountSetting{
-		AccountID: 10,
-		Key:       domainaccountsetting.KeyMeterReadingDay,
-		Value:     "15",
-	})
+	repo.seed(&domainaccountsetting.AccountSetting{AccountID: 10, Key: "theme", Value: "light"})
 	service := NewService(repo)
 	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
 
-	settings, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{MeterReadingDay: 25})
+	settings, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"})
 	if err != nil {
 		t.Fatalf("UpdateSettings() error = %v", err)
 	}
-	if settings.MeterReadingDay != 25 {
-		t.Fatalf("meter reading day = %d, want 25", settings.MeterReadingDay)
+	if (*settings)["theme"] != "dark" {
+		t.Fatalf("settings = %#v, want theme=dark", *settings)
 	}
 	if len(repo.settings[10]) != 1 {
 		t.Fatalf("settings count = %d, want 1", len(repo.settings[10]))
 	}
-	if repo.settings[10][domainaccountsetting.KeyMeterReadingDay].Value != "25" {
-		t.Fatalf("stored value = %q, want 25", repo.settings[10][domainaccountsetting.KeyMeterReadingDay].Value)
+	if repo.settings[10]["theme"].Value != "dark" {
+		t.Fatalf("stored value = %q, want dark", repo.settings[10]["theme"].Value)
 	}
 }
 
 func TestSettingsAreScopedByAccount(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
-	repo.seed(&domainaccountsetting.AccountSetting{
-		AccountID: 20,
-		Key:       domainaccountsetting.KeyMeterReadingDay,
-		Value:     "22",
-	})
+	repo.seed(&domainaccountsetting.AccountSetting{AccountID: 20, Key: "theme", Value: "light"})
 	service := NewService(repo)
 	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
 
@@ -81,17 +82,17 @@ func TestSettingsAreScopedByAccount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetSettings() error = %v", err)
 	}
-	if settings.MeterReadingDay != domainaccountsetting.DefaultMeterReadingDay {
-		t.Fatalf("meter reading day = %d, want default %d", settings.MeterReadingDay, domainaccountsetting.DefaultMeterReadingDay)
+	if len(*settings) != 0 {
+		t.Fatalf("settings = %#v, want empty", *settings)
 	}
-	if _, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{MeterReadingDay: 18}); err != nil {
+	if _, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"}); err != nil {
 		t.Fatalf("UpdateSettings() error = %v", err)
 	}
-	if repo.settings[20][domainaccountsetting.KeyMeterReadingDay].Value != "22" {
-		t.Fatalf("account 20 value = %q, want 22", repo.settings[20][domainaccountsetting.KeyMeterReadingDay].Value)
+	if repo.settings[20]["theme"].Value != "light" {
+		t.Fatalf("account 20 value = %q, want light", repo.settings[20]["theme"].Value)
 	}
-	if repo.settings[10][domainaccountsetting.KeyMeterReadingDay].Value != "18" {
-		t.Fatalf("account 10 value = %q, want 18", repo.settings[10][domainaccountsetting.KeyMeterReadingDay].Value)
+	if repo.settings[10]["theme"].Value != "dark" {
+		t.Fatalf("account 10 value = %q, want dark", repo.settings[10]["theme"].Value)
 	}
 }
 

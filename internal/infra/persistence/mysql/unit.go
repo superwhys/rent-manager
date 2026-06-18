@@ -27,12 +27,17 @@ func (r *UnitRepository) Create(ctx context.Context, unit *domainunit.Unit) (*do
 	if err := r.ensureMeterItemsInAccount(ctx, unit.AccountID, unit.DefaultMeterItemIDs); err != nil {
 		return nil, err
 	}
+	jsonExtend, err := unit.Config.JSONString()
+	if err != nil {
+		return nil, err
+	}
 	record, err := r.client.Unit.Create().
 		SetAccountID(unit.AccountID).
 		SetName(unit.Name).
 		SetAddress(unit.Address).
 		SetCity(unit.City).
 		SetProvince(unit.Province).
+		SetJSONExtend(jsonExtend).
 		AddMeterItemIDs(unit.DefaultMeterItemIDs...).
 		Save(ctx)
 	if err != nil {
@@ -55,7 +60,7 @@ func (r *UnitRepository) Get(ctx context.Context, accountID int, id int) (*domai
 		}
 		return nil, err
 	}
-	return toDomainUnitForAccount(record, accountID), nil
+	return toDomainUnitForAccount(record, accountID)
 }
 
 func (r *UnitRepository) GetByID(ctx context.Context, id int) (*domainunit.Unit, error) {
@@ -69,7 +74,7 @@ func (r *UnitRepository) GetByID(ctx context.Context, id int) (*domainunit.Unit,
 		}
 		return nil, err
 	}
-	return toDomainUnit(record), nil
+	return toDomainUnit(record)
 }
 
 func (r *UnitRepository) List(ctx context.Context, query domainunit.ListQuery) ([]*domainunit.Unit, error) {
@@ -93,7 +98,7 @@ func (r *UnitRepository) List(ctx context.Context, query domainunit.ListQuery) (
 	if err != nil {
 		return nil, err
 	}
-	return toDomainUnitsForAccount(records, query.AccountID), nil
+	return toDomainUnitsForAccount(records, query.AccountID)
 }
 
 func (r *UnitRepository) grantedUnitPredicate(accountID int) predicate.Unit {
@@ -112,12 +117,17 @@ func (r *UnitRepository) Update(ctx context.Context, unit *domainunit.Unit) (*do
 	if err := r.ensureMeterItemsInAccount(ctx, unit.AccountID, unit.DefaultMeterItemIDs); err != nil {
 		return nil, err
 	}
+	jsonExtend, err := unit.Config.JSONString()
+	if err != nil {
+		return nil, err
+	}
 	affected, err := r.client.Unit.Update().
 		Where(entunit.ID(unit.ID), entunit.AccountID(unit.AccountID), entunit.DeletedAtIsNil()).
 		SetName(unit.Name).
 		SetAddress(unit.Address).
 		SetCity(unit.City).
 		SetProvince(unit.Province).
+		SetJSONExtend(jsonExtend).
 		ClearMeterItems().
 		AddMeterItemIDs(unit.DefaultMeterItemIDs...).
 		Save(ctx)
@@ -172,9 +182,13 @@ func (r *UnitRepository) ensureMeterItemsInAccount(ctx context.Context, accountI
 	return nil
 }
 
-func toDomainUnit(record *entclient.Unit) *domainunit.Unit {
+func toDomainUnit(record *entclient.Unit) (*domainunit.Unit, error) {
 	if record == nil {
-		return nil
+		return nil, nil
+	}
+	config, err := domainunit.ParseUnitConfigJSON(record.JSONExtend)
+	if err != nil {
+		return nil, err
 	}
 	unit := &domainunit.Unit{
 		ID:        record.ID,
@@ -183,6 +197,7 @@ func toDomainUnit(record *entclient.Unit) *domainunit.Unit {
 		Address:   record.Address,
 		City:      record.City,
 		Province:  record.Province,
+		Config:    config,
 		CreatedAt: record.CreatedAt,
 		UpdatedAt: record.UpdatedAt,
 	}
@@ -202,34 +217,33 @@ func toDomainUnit(record *entclient.Unit) *domainunit.Unit {
 			})
 		}
 	}
-	return unit
+	return unit, nil
 }
 
-func toDomainUnitForAccount(record *entclient.Unit, accountID int) *domainunit.Unit {
-	unit := toDomainUnit(record)
+func toDomainUnitForAccount(record *entclient.Unit, accountID int) (*domainunit.Unit, error) {
+	unit, err := toDomainUnit(record)
+	if err != nil {
+		return nil, err
+	}
 	if unit == nil {
-		return nil
+		return nil, nil
 	}
 	if unit.AccountID == accountID {
 		unit.AccessType = domainunit.AccessTypeOwned
 	} else {
 		unit.AccessType = domainunit.AccessTypeGranted
 	}
-	return unit
+	return unit, nil
 }
 
-func toDomainUnitsForAccount(records []*entclient.Unit, accountID int) []*domainunit.Unit {
+func toDomainUnitsForAccount(records []*entclient.Unit, accountID int) ([]*domainunit.Unit, error) {
 	units := make([]*domainunit.Unit, 0, len(records))
 	for _, record := range records {
-		units = append(units, toDomainUnitForAccount(record, accountID))
+		unit, err := toDomainUnitForAccount(record, accountID)
+		if err != nil {
+			return nil, err
+		}
+		units = append(units, unit)
 	}
-	return units
-}
-
-func toDomainUnits(records []*entclient.Unit) []*domainunit.Unit {
-	units := make([]*domainunit.Unit, 0, len(records))
-	for _, record := range records {
-		units = append(units, toDomainUnit(record))
-	}
-	return units
+	return units, nil
 }

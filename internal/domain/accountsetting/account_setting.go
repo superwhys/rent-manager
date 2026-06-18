@@ -1,7 +1,6 @@
 package accountsetting
 
 import (
-	"strconv"
 	"strings"
 	"time"
 )
@@ -46,37 +45,7 @@ func (s *AccountSetting) Validate() error {
 	if s.Value == "" {
 		return ErrValueRequired
 	}
-	switch s.Key {
-	case KeyMeterReadingDay:
-		return validateMeterReadingDayValue(s.Value)
-	default:
-		return ErrUnsupportedKey
-	}
-}
-
-func MeterReadingDayValue(day int) (string, error) {
-	value := strconv.Itoa(day)
-	if err := validateMeterReadingDayValue(value); err != nil {
-		return "", err
-	}
-	return value, nil
-}
-
-func ParseMeterReadingDay(value string) (int, error) {
-	value = strings.TrimSpace(value)
-	day, err := strconv.Atoi(value)
-	if err != nil {
-		return 0, ErrInvalidMeterReadingDay
-	}
-	if day < MinMeterReadingDay || day > MaxMeterReadingDay {
-		return 0, ErrInvalidMeterReadingDay
-	}
-	return day, nil
-}
-
-func validateMeterReadingDayValue(value string) error {
-	_, err := ParseMeterReadingDay(value)
-	return err
+	return nil
 }
 
 func normalizeKey(key string) string {

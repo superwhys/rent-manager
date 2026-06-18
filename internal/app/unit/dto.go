@@ -4,21 +4,23 @@ import domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/d
 
 // CreateUnitCommand 是创建单元的请求体。
 type CreateUnitCommand struct {
-	Name                string `json:"name" validate:"required,max=255"`
-	Address             string `json:"address" validate:"required,max=255"`
-	City                string `json:"city" validate:"required,max=255"`
-	Province            string `json:"province" validate:"required,max=255"`
-	DefaultMeterItemIDs []int  `json:"default_meter_item_ids" validate:"omitempty,dive,min=1"`
+	Name                string             `json:"name" validate:"required,max=255"`
+	Address             string             `json:"address" validate:"required,max=255"`
+	City                string             `json:"city" validate:"required,max=255"`
+	Province            string             `json:"province" validate:"required,max=255"`
+	DefaultMeterItemIDs []int              `json:"default_meter_item_ids" validate:"omitempty,dive,min=1"`
+	JsonExtend          *UnitConfigCommand `json:"json_extend"`
 }
 
 // UpdateUnitCommand 是更新单元的请求体。
 type UpdateUnitCommand struct {
-	UnitID              int    `uri:"unit_id" validate:"required,min=1"`
-	Name                string `json:"name" validate:"required,max=255"`
-	Address             string `json:"address" validate:"required,max=255"`
-	City                string `json:"city" validate:"required,max=255"`
-	Province            string `json:"province" validate:"required,max=255"`
-	DefaultMeterItemIDs []int  `json:"default_meter_item_ids" validate:"omitempty,dive,min=1"`
+	UnitID              int                `uri:"unit_id" validate:"required,min=1"`
+	Name                string             `json:"name" validate:"required,max=255"`
+	Address             string             `json:"address" validate:"required,max=255"`
+	City                string             `json:"city" validate:"required,max=255"`
+	Province            string             `json:"province" validate:"required,max=255"`
+	DefaultMeterItemIDs []int              `json:"default_meter_item_ids" validate:"omitempty,dive,min=1"`
+	JsonExtend          *UnitConfigCommand `json:"json_extend"`
 }
 
 // ListUnitsQuery 是单元列表查询参数。
@@ -42,6 +44,16 @@ type UnitMeterItemResponse struct {
 	Remark    *string `json:"remark,omitempty"`
 }
 
+// UnitConfigCommand 是单元扩展配置请求体。
+type UnitConfigCommand struct {
+	MeterReadingDay *int `json:"meter_reading_day" validate:"omitempty,min=1,max=31"`
+}
+
+// UnitConfigResponse 是单元扩展配置响应。
+type UnitConfigResponse struct {
+	MeterReadingDay int `json:"meter_reading_day"`
+}
+
 // UnitResponse 是单元响应。
 type UnitResponse struct {
 	ID                int                     `json:"id"`
@@ -53,6 +65,7 @@ type UnitResponse struct {
 	AccessType        string                  `json:"access_type"`
 	IsOwner           bool                    `json:"is_owner"`
 	DefaultMeterItems []UnitMeterItemResponse `json:"default_meter_items"`
+	JsonExtend        UnitConfigResponse      `json:"json_extend"`
 	RoomCount         int                     `json:"room_count"`
 	RentedCount       int                     `json:"rented_count"`
 	MonthlyRentAmount string                  `json:"monthly_rent_amount"`
@@ -74,6 +87,7 @@ func ToUnitResponse(unit *domainunit.Unit) UnitResponse {
 		AccessType:        unit.AccessType,
 		IsOwner:           unit.AccessType == domainunit.AccessTypeOwned,
 		DefaultMeterItems: toUnitMeterItemResponses(unit.DefaultMeterItems),
+		JsonExtend:        toUnitConfigResponse(unit.Config),
 	}
 }
 
@@ -88,6 +102,26 @@ func ToUnitSummaryResponse(summary *domainunit.Summary) UnitResponse {
 	response.MonthlyRentAmount = summary.MonthlyRentAmount
 	response.OccupancyStatus = summary.OccupancyStatus
 	return response
+}
+
+func toDomainUnitConfig(cmd *UnitConfigCommand) (*domainunit.UnitConfig, error) {
+	if cmd == nil || cmd.MeterReadingDay == nil {
+		return nil, nil
+	}
+	config, err := domainunit.NewUnitConfig(*cmd.MeterReadingDay)
+	if err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
+
+func toUnitConfigResponse(config domainunit.UnitConfig) UnitConfigResponse {
+	if config.MeterReadingDay == 0 {
+		config = domainunit.DefaultUnitConfig()
+	}
+	return UnitConfigResponse{
+		MeterReadingDay: config.MeterReadingDay,
+	}
 }
 
 // ToUnitListResponse 将单元统计列表转换为响应列表。

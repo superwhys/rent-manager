@@ -2,25 +2,24 @@ package accountsetting
 
 // UpdateSettingsCommand 是更新当前账号配置的请求体。
 type UpdateSettingsCommand struct {
-	MeterReadingDay int `json:"meter_reading_day" validate:"required,min=1,max=31"`
+	Key   string `json:"key" validate:"required,max=64"`
+	Value string `json:"value" validate:"required,max=255"`
 }
 
 // Settings 表示当前账号配置视图。
-type Settings struct {
-	MeterReadingDay int
-}
+type Settings map[string]string
 
 // SettingsResponse 是当前账号配置响应。
-type SettingsResponse struct {
-	MeterReadingDay int `json:"meter_reading_day"`
-}
+type SettingsResponse map[string]string
 
 // ToSettingsResponse 将账号配置视图转换为响应。
 func ToSettingsResponse(settings *Settings) SettingsResponse {
 	if settings == nil {
 		return SettingsResponse{}
 	}
-	return SettingsResponse{
-		MeterReadingDay: settings.MeterReadingDay,
+	response := make(SettingsResponse, len(*settings))
+	for key, value := range *settings {
+		response[key] = value
 	}
+	return response
 }

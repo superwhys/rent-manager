@@ -128,6 +128,20 @@ func (_u *UnitUpdate) SetNillableProvince(v *string) *UnitUpdate {
 	return _u
 }
 
+// SetJSONExtend sets the "json_extend" field.
+func (_u *UnitUpdate) SetJSONExtend(v string) *UnitUpdate {
+	_u.mutation.SetJSONExtend(v)
+	return _u
+}
+
+// SetNillableJSONExtend sets the "json_extend" field if the given value is not nil.
+func (_u *UnitUpdate) SetNillableJSONExtend(v *string) *UnitUpdate {
+	if v != nil {
+		_u.SetJSONExtend(*v)
+	}
+	return _u
+}
+
 // SetAccount sets the "account" edge to the Account entity.
 func (_u *UnitUpdate) SetAccount(v *Account) *UnitUpdate {
 	return _u.SetAccountID(v.ID)
@@ -310,6 +324,11 @@ func (_u *UnitUpdate) check() error {
 			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Unit.province": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.JSONExtend(); ok {
+		if err := unit.JSONExtendValidator(v); err != nil {
+			return &ValidationError{Name: "json_extend", err: fmt.Errorf(`ent: validator failed for field "Unit.json_extend": %w`, err)}
+		}
+	}
 	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Unit.account"`)
 	}
@@ -348,6 +367,9 @@ func (_u *UnitUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Province(); ok {
 		_spec.SetField(unit.FieldProvince, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.JSONExtend(); ok {
+		_spec.SetField(unit.FieldJSONExtend, field.TypeString, value)
 	}
 	if _u.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -629,6 +651,20 @@ func (_u *UnitUpdateOne) SetNillableProvince(v *string) *UnitUpdateOne {
 	return _u
 }
 
+// SetJSONExtend sets the "json_extend" field.
+func (_u *UnitUpdateOne) SetJSONExtend(v string) *UnitUpdateOne {
+	_u.mutation.SetJSONExtend(v)
+	return _u
+}
+
+// SetNillableJSONExtend sets the "json_extend" field if the given value is not nil.
+func (_u *UnitUpdateOne) SetNillableJSONExtend(v *string) *UnitUpdateOne {
+	if v != nil {
+		_u.SetJSONExtend(*v)
+	}
+	return _u
+}
+
 // SetAccount sets the "account" edge to the Account entity.
 func (_u *UnitUpdateOne) SetAccount(v *Account) *UnitUpdateOne {
 	return _u.SetAccountID(v.ID)
@@ -824,6 +860,11 @@ func (_u *UnitUpdateOne) check() error {
 			return &ValidationError{Name: "province", err: fmt.Errorf(`ent: validator failed for field "Unit.province": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.JSONExtend(); ok {
+		if err := unit.JSONExtendValidator(v); err != nil {
+			return &ValidationError{Name: "json_extend", err: fmt.Errorf(`ent: validator failed for field "Unit.json_extend": %w`, err)}
+		}
+	}
 	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Unit.account"`)
 	}
@@ -879,6 +920,9 @@ func (_u *UnitUpdateOne) sqlSave(ctx context.Context) (_node *Unit, err error) {
 	}
 	if value, ok := _u.mutation.Province(); ok {
 		_spec.SetField(unit.FieldProvince, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.JSONExtend(); ok {
+		_spec.SetField(unit.FieldJSONExtend, field.TypeString, value)
 	}
 	if _u.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{

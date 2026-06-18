@@ -563,6 +563,12 @@ func init() {
 			return nil
 		}
 	}()
+	// unitDescJSONExtend is the schema descriptor for json_extend field.
+	unitDescJSONExtend := unitFields[4].Descriptor()
+	// unit.DefaultJSONExtend holds the default value on creation for the json_extend field.
+	unit.DefaultJSONExtend = unitDescJSONExtend.Default.(string)
+	// unit.JSONExtendValidator is a validator for the "json_extend" field. It is called by the builders before save.
+	unit.JSONExtendValidator = unitDescJSONExtend.Validators[0].(func(string) error)
 	unitaccountroleMixin := schema.UnitAccountRole{}.Mixin()
 	unitaccountroleMixinFields0 := unitaccountroleMixin[0].Fields()
 	_ = unitaccountroleMixinFields0

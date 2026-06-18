@@ -37,6 +37,10 @@ func (s *Service) CreateUnit(ctx context.Context, cmd *CreateUnitCommand) (*doma
 	if err != nil {
 		return nil, err
 	}
+	config, err := toDomainUnitConfig(cmd.JsonExtend)
+	if err != nil {
+		return nil, err
+	}
 
 	unit, err := domainunit.NewUnit(domainunit.CreateParams{
 		AccountID:           accountID,
@@ -45,6 +49,7 @@ func (s *Service) CreateUnit(ctx context.Context, cmd *CreateUnitCommand) (*doma
 		City:                cmd.City,
 		Province:            cmd.Province,
 		DefaultMeterItemIDs: cmd.DefaultMeterItemIDs,
+		Config:              config,
 	})
 	if err != nil {
 		return nil, err
@@ -113,6 +118,10 @@ func (s *Service) UpdateUnit(ctx context.Context, cmd *UpdateUnitCommand) (*doma
 	if err != nil {
 		return nil, err
 	}
+	config, err := toDomainUnitConfig(cmd.JsonExtend)
+	if err != nil {
+		return nil, err
+	}
 
 	unit := &domainunit.Unit{}
 	if err := unit.Update(domainunit.UpdateParams{
@@ -123,6 +132,7 @@ func (s *Service) UpdateUnit(ctx context.Context, cmd *UpdateUnitCommand) (*doma
 		City:                cmd.City,
 		Province:            cmd.Province,
 		DefaultMeterItemIDs: cmd.DefaultMeterItemIDs,
+		Config:              config,
 	}); err != nil {
 		return nil, err
 	}

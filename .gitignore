@@ -4,3 +4,4 @@ content/
 .cursor/
 rent-manager-server
 scripts/
+.codegraph

@@ -15,6 +15,7 @@ type Unit struct {
 	AccessType          string
 	DefaultMeterItemIDs []int
 	DefaultMeterItems   []*MeterItem
+	Config              UnitConfig
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 }
@@ -38,6 +39,10 @@ type MeterItem struct {
 }
 
 func NewUnit(params CreateParams) (*Unit, error) {
+	config := DefaultUnitConfig()
+	if params.Config != nil {
+		config = *params.Config
+	}
 	unit := &Unit{
 		AccountID:           params.AccountID,
 		Name:                strings.TrimSpace(params.Name),
@@ -45,6 +50,7 @@ func NewUnit(params CreateParams) (*Unit, error) {
 		City:                strings.TrimSpace(params.City),
 		Province:            strings.TrimSpace(params.Province),
 		DefaultMeterItemIDs: normalizeMeterItemIDs(params.DefaultMeterItemIDs),
+		Config:              config,
 	}
 	if err := unit.Validate(); err != nil {
 		return nil, err
@@ -53,6 +59,10 @@ func NewUnit(params CreateParams) (*Unit, error) {
 }
 
 func (u *Unit) Update(params UpdateParams) error {
+	config := DefaultUnitConfig()
+	if params.Config != nil {
+		config = *params.Config
+	}
 	u.ID = params.ID
 	u.AccountID = params.AccountID
 	u.Name = strings.TrimSpace(params.Name)
@@ -60,6 +70,7 @@ func (u *Unit) Update(params UpdateParams) error {
 	u.City = strings.TrimSpace(params.City)
 	u.Province = strings.TrimSpace(params.Province)
 	u.DefaultMeterItemIDs = normalizeMeterItemIDs(params.DefaultMeterItemIDs)
+	u.Config = config
 	return u.Validate()
 }
 
@@ -83,6 +94,9 @@ func (u *Unit) Validate() error {
 		if id <= 0 {
 			return ErrInvalidMeterItemID
 		}
+	}
+	if err := u.Config.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
