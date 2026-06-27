@@ -2473,7 +2473,7 @@
                     "maxLength": 255
                 },
                 "unit_price": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 }
             }
@@ -2503,7 +2503,7 @@
                     "type": "string"
                 },
                 "unit_price": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
@@ -2538,7 +2538,7 @@
                     "maxLength": 255
                 },
                 "unit_price": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 }
             }
@@ -2568,7 +2568,7 @@
                     "type": "string"
                 },
                 "unit_price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "usage_amount": {
                     "type": "number"
@@ -3355,7 +3355,7 @@
                     "type": "string"
                 },
                 "unit_price": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },

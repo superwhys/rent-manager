@@ -85,13 +85,13 @@ func (_c *MeterItemCreate) SetUnit(v string) *MeterItemCreate {
 }
 
 // SetUnitPrice sets the "unit_price" field.
-func (_c *MeterItemCreate) SetUnitPrice(v int) *MeterItemCreate {
+func (_c *MeterItemCreate) SetUnitPrice(v float64) *MeterItemCreate {
 	_c.mutation.SetUnitPrice(v)
 	return _c
 }
 
 // SetNillableUnitPrice sets the "unit_price" field if the given value is not nil.
-func (_c *MeterItemCreate) SetNillableUnitPrice(v *int) *MeterItemCreate {
+func (_c *MeterItemCreate) SetNillableUnitPrice(v *float64) *MeterItemCreate {
 	if v != nil {
 		_c.SetUnitPrice(*v)
 	}
@@ -344,7 +344,7 @@ func (_c *MeterItemCreate) createSpec() (*MeterItem, *sqlgraph.CreateSpec) {
 		_node.Unit = value
 	}
 	if value, ok := _c.mutation.UnitPrice(); ok {
-		_spec.SetField(meteritem.FieldUnitPrice, field.TypeInt, value)
+		_spec.SetField(meteritem.FieldUnitPrice, field.TypeFloat64, value)
 		_node.UnitPrice = value
 	}
 	if value, ok := _c.mutation.IsSystem(); ok {

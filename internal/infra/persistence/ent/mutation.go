@@ -2052,8 +2052,8 @@ type MeterItemMutation struct {
 	deleted_at            *time.Time
 	code                  *string
 	unit                  *string
-	unit_price            *int
-	addunit_price         *int
+	unit_price            *float64
+	addunit_price         *float64
 	is_system             *bool
 	calc_type             *meteritem.CalcType
 	remark                *string
@@ -2402,13 +2402,13 @@ func (m *MeterItemMutation) ResetUnit() {
 }
 
 // SetUnitPrice sets the "unit_price" field.
-func (m *MeterItemMutation) SetUnitPrice(i int) {
-	m.unit_price = &i
+func (m *MeterItemMutation) SetUnitPrice(f float64) {
+	m.unit_price = &f
 	m.addunit_price = nil
 }
 
 // UnitPrice returns the value of the "unit_price" field in the mutation.
-func (m *MeterItemMutation) UnitPrice() (r int, exists bool) {
+func (m *MeterItemMutation) UnitPrice() (r float64, exists bool) {
 	v := m.unit_price
 	if v == nil {
 		return
@@ -2419,7 +2419,7 @@ func (m *MeterItemMutation) UnitPrice() (r int, exists bool) {
 // OldUnitPrice returns the old "unit_price" field's value of the MeterItem entity.
 // If the MeterItem object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *MeterItemMutation) OldUnitPrice(ctx context.Context) (v int, err error) {
+func (m *MeterItemMutation) OldUnitPrice(ctx context.Context) (v float64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldUnitPrice is only allowed on UpdateOne operations")
 	}
@@ -2433,17 +2433,17 @@ func (m *MeterItemMutation) OldUnitPrice(ctx context.Context) (v int, err error)
 	return oldValue.UnitPrice, nil
 }
 
-// AddUnitPrice adds i to the "unit_price" field.
-func (m *MeterItemMutation) AddUnitPrice(i int) {
+// AddUnitPrice adds f to the "unit_price" field.
+func (m *MeterItemMutation) AddUnitPrice(f float64) {
 	if m.addunit_price != nil {
-		*m.addunit_price += i
+		*m.addunit_price += f
 	} else {
-		m.addunit_price = &i
+		m.addunit_price = &f
 	}
 }
 
 // AddedUnitPrice returns the value that was added to the "unit_price" field in this mutation.
-func (m *MeterItemMutation) AddedUnitPrice() (r int, exists bool) {
+func (m *MeterItemMutation) AddedUnitPrice() (r float64, exists bool) {
 	v := m.addunit_price
 	if v == nil {
 		return
@@ -2954,7 +2954,7 @@ func (m *MeterItemMutation) SetField(name string, value ent.Value) error {
 		m.SetUnit(v)
 		return nil
 	case meteritem.FieldUnitPrice:
-		v, ok := value.(int)
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -3012,7 +3012,7 @@ func (m *MeterItemMutation) AddedField(name string) (ent.Value, bool) {
 func (m *MeterItemMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case meteritem.FieldUnitPrice:
-		v, ok := value.(int)
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

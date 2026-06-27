@@ -72,7 +72,7 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "code", Type: field.TypeString},
 		{Name: "unit", Type: field.TypeString},
-		{Name: "unit_price", Type: field.TypeInt, Default: 0},
+		{Name: "unit_price", Type: field.TypeFloat64, Default: 0},
 		{Name: "is_system", Type: field.TypeBool, Default: false},
 		{Name: "calc_type", Type: field.TypeEnum, Enums: []string{"DIFFERENCE", "DIRECT"}, Default: "DIFFERENCE"},
 		{Name: "remark", Type: field.TypeString, Nullable: true},

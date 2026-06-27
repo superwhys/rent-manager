@@ -32,7 +32,7 @@ type MeterItem struct {
 	ID        int
 	Code      string
 	Unit      string
-	UnitPrice int
+	UnitPrice float64
 	IsSystem  bool
 	CalcType  string
 	Remark    *string

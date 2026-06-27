@@ -10,7 +10,7 @@ type MeterItem struct {
 	AccountID int
 	Code      string
 	Unit      string
-	UnitPrice int
+	UnitPrice float64
 	IsSystem  bool
 	CalcType  string
 	Remark    *string

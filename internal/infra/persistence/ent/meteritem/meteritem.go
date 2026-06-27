@@ -117,7 +117,7 @@ var (
 	// UnitValidator is a validator for the "unit" field. It is called by the builders before save.
 	UnitValidator func(string) error
 	// DefaultUnitPrice holds the default value on creation for the "unit_price" field.
-	DefaultUnitPrice int
+	DefaultUnitPrice float64
 	// DefaultIsSystem holds the default value on creation for the "is_system" field.
 	DefaultIsSystem bool
 )

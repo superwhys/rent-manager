@@ -38,7 +38,7 @@ type UnitMeterItemResponse struct {
 	ID        int     `json:"id"`
 	Code      string  `json:"code"`
 	Unit      string  `json:"unit"`
-	UnitPrice int     `json:"unit_price"`
+	UnitPrice float64 `json:"unit_price"`
 	IsSystem  bool    `json:"is_system"`
 	CalcType  string  `json:"calc_type"`
 	Remark    *string `json:"remark,omitempty"`

@@ -86,7 +86,7 @@ func Unit(v string) predicate.MeterItem {
 }
 
 // UnitPrice applies equality check predicate on the "unit_price" field. It's identical to UnitPriceEQ.
-func UnitPrice(v int) predicate.MeterItem {
+func UnitPrice(v float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldEQ(FieldUnitPrice, v))
 }
 
@@ -381,42 +381,42 @@ func UnitContainsFold(v string) predicate.MeterItem {
 }
 
 // UnitPriceEQ applies the EQ predicate on the "unit_price" field.
-func UnitPriceEQ(v int) predicate.MeterItem {
+func UnitPriceEQ(v float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldEQ(FieldUnitPrice, v))
 }
 
 // UnitPriceNEQ applies the NEQ predicate on the "unit_price" field.
-func UnitPriceNEQ(v int) predicate.MeterItem {
+func UnitPriceNEQ(v float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldNEQ(FieldUnitPrice, v))
 }
 
 // UnitPriceIn applies the In predicate on the "unit_price" field.
-func UnitPriceIn(vs ...int) predicate.MeterItem {
+func UnitPriceIn(vs ...float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldIn(FieldUnitPrice, vs...))
 }
 
 // UnitPriceNotIn applies the NotIn predicate on the "unit_price" field.
-func UnitPriceNotIn(vs ...int) predicate.MeterItem {
+func UnitPriceNotIn(vs ...float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldNotIn(FieldUnitPrice, vs...))
 }
 
 // UnitPriceGT applies the GT predicate on the "unit_price" field.
-func UnitPriceGT(v int) predicate.MeterItem {
+func UnitPriceGT(v float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldGT(FieldUnitPrice, v))
 }
 
 // UnitPriceGTE applies the GTE predicate on the "unit_price" field.
-func UnitPriceGTE(v int) predicate.MeterItem {
+func UnitPriceGTE(v float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldGTE(FieldUnitPrice, v))
 }
 
 // UnitPriceLT applies the LT predicate on the "unit_price" field.
-func UnitPriceLT(v int) predicate.MeterItem {
+func UnitPriceLT(v float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldLT(FieldUnitPrice, v))
 }
 
 // UnitPriceLTE applies the LTE predicate on the "unit_price" field.
-func UnitPriceLTE(v int) predicate.MeterItem {
+func UnitPriceLTE(v float64) predicate.MeterItem {
 	return predicate.MeterItem(sql.FieldLTE(FieldUnitPrice, v))
 }
 

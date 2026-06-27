@@ -43,7 +43,7 @@ func (MeterItem) Fields() []ent.Field {
 			Comment("单位，如 m³/kWh").
 			NotEmpty(),
 
-		field.Int("unit_price").
+		field.Float("unit_price").
 			Comment("单价，单位：分/计量单位").
 			Default(0),
 

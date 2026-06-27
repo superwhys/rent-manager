@@ -101,14 +101,14 @@ func (_u *MeterItemUpdate) SetNillableUnit(v *string) *MeterItemUpdate {
 }
 
 // SetUnitPrice sets the "unit_price" field.
-func (_u *MeterItemUpdate) SetUnitPrice(v int) *MeterItemUpdate {
+func (_u *MeterItemUpdate) SetUnitPrice(v float64) *MeterItemUpdate {
 	_u.mutation.ResetUnitPrice()
 	_u.mutation.SetUnitPrice(v)
 	return _u
 }
 
 // SetNillableUnitPrice sets the "unit_price" field if the given value is not nil.
-func (_u *MeterItemUpdate) SetNillableUnitPrice(v *int) *MeterItemUpdate {
+func (_u *MeterItemUpdate) SetNillableUnitPrice(v *float64) *MeterItemUpdate {
 	if v != nil {
 		_u.SetUnitPrice(*v)
 	}
@@ -116,7 +116,7 @@ func (_u *MeterItemUpdate) SetNillableUnitPrice(v *int) *MeterItemUpdate {
 }
 
 // AddUnitPrice adds value to the "unit_price" field.
-func (_u *MeterItemUpdate) AddUnitPrice(v int) *MeterItemUpdate {
+func (_u *MeterItemUpdate) AddUnitPrice(v float64) *MeterItemUpdate {
 	_u.mutation.AddUnitPrice(v)
 	return _u
 }
@@ -386,10 +386,10 @@ func (_u *MeterItemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		_spec.SetField(meteritem.FieldUnit, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.UnitPrice(); ok {
-		_spec.SetField(meteritem.FieldUnitPrice, field.TypeInt, value)
+		_spec.SetField(meteritem.FieldUnitPrice, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.AddedUnitPrice(); ok {
-		_spec.AddField(meteritem.FieldUnitPrice, field.TypeInt, value)
+		_spec.AddField(meteritem.FieldUnitPrice, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.IsSystem(); ok {
 		_spec.SetField(meteritem.FieldIsSystem, field.TypeBool, value)
@@ -656,14 +656,14 @@ func (_u *MeterItemUpdateOne) SetNillableUnit(v *string) *MeterItemUpdateOne {
 }
 
 // SetUnitPrice sets the "unit_price" field.
-func (_u *MeterItemUpdateOne) SetUnitPrice(v int) *MeterItemUpdateOne {
+func (_u *MeterItemUpdateOne) SetUnitPrice(v float64) *MeterItemUpdateOne {
 	_u.mutation.ResetUnitPrice()
 	_u.mutation.SetUnitPrice(v)
 	return _u
 }
 
 // SetNillableUnitPrice sets the "unit_price" field if the given value is not nil.
-func (_u *MeterItemUpdateOne) SetNillableUnitPrice(v *int) *MeterItemUpdateOne {
+func (_u *MeterItemUpdateOne) SetNillableUnitPrice(v *float64) *MeterItemUpdateOne {
 	if v != nil {
 		_u.SetUnitPrice(*v)
 	}
@@ -671,7 +671,7 @@ func (_u *MeterItemUpdateOne) SetNillableUnitPrice(v *int) *MeterItemUpdateOne {
 }
 
 // AddUnitPrice adds value to the "unit_price" field.
-func (_u *MeterItemUpdateOne) AddUnitPrice(v int) *MeterItemUpdateOne {
+func (_u *MeterItemUpdateOne) AddUnitPrice(v float64) *MeterItemUpdateOne {
 	_u.mutation.AddUnitPrice(v)
 	return _u
 }
@@ -971,10 +971,10 @@ func (_u *MeterItemUpdateOne) sqlSave(ctx context.Context) (_node *MeterItem, er
 		_spec.SetField(meteritem.FieldUnit, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.UnitPrice(); ok {
-		_spec.SetField(meteritem.FieldUnitPrice, field.TypeInt, value)
+		_spec.SetField(meteritem.FieldUnitPrice, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.AddedUnitPrice(); ok {
-		_spec.AddField(meteritem.FieldUnitPrice, field.TypeInt, value)
+		_spec.AddField(meteritem.FieldUnitPrice, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.IsSystem(); ok {
 		_spec.SetField(meteritem.FieldIsSystem, field.TypeBool, value)

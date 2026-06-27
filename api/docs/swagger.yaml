@@ -322,7 +322,7 @@ definitions:
         type: string
       unit_price:
         minimum: 0
-        type: integer
+        type: number
     required:
     - code
     - unit
@@ -344,7 +344,7 @@ definitions:
       unit:
         type: string
       unit_price:
-        type: integer
+        type: number
     type: object
   meteritem.UpdateMeterItemCommand:
     properties:
@@ -366,7 +366,7 @@ definitions:
         type: string
       unit_price:
         minimum: 0
-        type: integer
+        type: number
     required:
     - code
     - meterItemID
@@ -389,7 +389,7 @@ definitions:
       unit:
         type: string
       unit_price:
-        type: integer
+        type: number
       usage_amount:
         type: number
     type: object
@@ -921,7 +921,7 @@ definitions:
       unit:
         type: string
       unit_price:
-        type: integer
+        type: number
     type: object
   unit.UnitResponse:
     properties:

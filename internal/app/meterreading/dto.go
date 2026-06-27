@@ -110,7 +110,7 @@ type MeterItemSummaryResponse struct {
 	Code        string  `json:"code"`
 	Unit        string  `json:"unit"`
 	CalcType    string  `json:"calc_type"`
-	UnitPrice   int     `json:"unit_price"`
+	UnitPrice   float64 `json:"unit_price"`
 	UsageAmount float64 `json:"usage_amount"`
 	Fee         int     `json:"fee"`
 	Recorded    int     `json:"recorded"`

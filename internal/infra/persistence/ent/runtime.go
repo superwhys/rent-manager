@@ -192,7 +192,7 @@ func init() {
 	// meteritemDescUnitPrice is the schema descriptor for unit_price field.
 	meteritemDescUnitPrice := meteritemFields[2].Descriptor()
 	// meteritem.DefaultUnitPrice holds the default value on creation for the unit_price field.
-	meteritem.DefaultUnitPrice = meteritemDescUnitPrice.Default.(int)
+	meteritem.DefaultUnitPrice = meteritemDescUnitPrice.Default.(float64)
 	// meteritemDescIsSystem is the schema descriptor for is_system field.
 	meteritemDescIsSystem := meteritemFields[3].Descriptor()
 	// meteritem.DefaultIsSystem holds the default value on creation for the is_system field.

@@ -2480,7 +2480,7 @@ const docTemplate = `{
                     "maxLength": 255
                 },
                 "unit_price": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 }
             }
@@ -2510,7 +2510,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "unit_price": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
@@ -2545,7 +2545,7 @@ const docTemplate = `{
                     "maxLength": 255
                 },
                 "unit_price": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 }
             }
@@ -2575,7 +2575,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "unit_price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "usage_amount": {
                     "type": "number"
@@ -3362,7 +3362,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "unit_price": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },

@@ -112,14 +112,14 @@ func (r *MeterReading) CalculateUsage(calcType string) error {
 	}
 }
 
-func (r *MeterReading) CalculateFee(unitPrice int) (int, error) {
+func (r *MeterReading) CalculateFee(unitPrice float64) (int, error) {
 	if unitPrice < 0 {
 		return 0, ErrInvalidUnitPrice
 	}
 	if r.UsageAmount == nil {
 		return 0, ErrInvalidUsageAmount
 	}
-	return int(math.Round(*r.UsageAmount * float64(unitPrice))), nil
+	return int(math.Round(*r.UsageAmount * unitPrice)), nil
 }
 
 func isValidPeriodMonth(periodMonth string) bool {

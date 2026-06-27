@@ -31,7 +31,7 @@ type MeterItem struct {
 	// 单位，如 m³/kWh
 	Unit string `json:"unit,omitempty"`
 	// 单价，单位：分/计量单位
-	UnitPrice int `json:"unit_price,omitempty"`
+	UnitPrice float64 `json:"unit_price,omitempty"`
 	// 是否系统内置
 	IsSystem bool `json:"is_system,omitempty"`
 	// 计算方式：DIFFERENCE-差值型，DIRECT-直接录入型
@@ -104,7 +104,9 @@ func (*MeterItem) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case meteritem.FieldIsSystem:
 			values[i] = new(sql.NullBool)
-		case meteritem.FieldID, meteritem.FieldAccountID, meteritem.FieldUnitPrice:
+		case meteritem.FieldUnitPrice:
+			values[i] = new(sql.NullFloat64)
+		case meteritem.FieldID, meteritem.FieldAccountID:
 			values[i] = new(sql.NullInt64)
 		case meteritem.FieldCode, meteritem.FieldUnit, meteritem.FieldCalcType, meteritem.FieldRemark:
 			values[i] = new(sql.NullString)
@@ -169,10 +171,10 @@ func (_m *MeterItem) assignValues(columns []string, values []any) error {
 				_m.Unit = value.String
 			}
 		case meteritem.FieldUnitPrice:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field unit_price", values[i])
 			} else if value.Valid {
-				_m.UnitPrice = int(value.Int64)
+				_m.UnitPrice = value.Float64
 			}
 		case meteritem.FieldIsSystem:
 			if value, ok := values[i].(*sql.NullBool); !ok {

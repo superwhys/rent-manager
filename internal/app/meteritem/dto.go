@@ -9,7 +9,7 @@ import (
 type CreateMeterItemCommand struct {
 	Code      string  `json:"code" validate:"required,max=255"`
 	Unit      string  `json:"unit" validate:"required,max=255"`
-	UnitPrice int     `json:"unit_price" validate:"min=0"`
+	UnitPrice float64 `json:"unit_price" validate:"min=0"`
 	CalcType  string  `json:"calc_type" validate:"omitempty,oneof=DIFFERENCE DIRECT"`
 	Remark    *string `json:"remark"`
 }
@@ -19,7 +19,7 @@ type UpdateMeterItemCommand struct {
 	MeterItemID int     `uri:"meter_item_id" validate:"required,min=1"`
 	Code        string  `json:"code" validate:"required,max=255"`
 	Unit        string  `json:"unit" validate:"required,max=255"`
-	UnitPrice   int     `json:"unit_price" validate:"min=0"`
+	UnitPrice   float64 `json:"unit_price" validate:"min=0"`
 	CalcType    string  `json:"calc_type" validate:"omitempty,oneof=DIFFERENCE DIRECT"`
 	Remark      *string `json:"remark"`
 }
@@ -44,7 +44,7 @@ type MeterItemResponse struct {
 	AccountID int     `json:"account_id"`
 	Code      string  `json:"code"`
 	Unit      string  `json:"unit"`
-	UnitPrice int     `json:"unit_price"`
+	UnitPrice float64 `json:"unit_price"`
 	IsSystem  bool    `json:"is_system"`
 	CalcType  string  `json:"calc_type"`
 	Remark    *string `json:"remark,omitempty"`
