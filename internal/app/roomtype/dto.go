@@ -31,7 +31,7 @@ type RoomTypeIDQuery struct {
 // RoomTypeResponse 是房型响应。
 type RoomTypeResponse struct {
 	ID        int    `json:"id"`
-	AccountID int    `json:"account_id"`
+	AccountID string `json:"account_id"`
 	Name      string `json:"name"`
 }
 

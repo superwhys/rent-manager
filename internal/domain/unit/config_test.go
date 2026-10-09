@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+const (
+	testAccountID1 = "0000000000000000000000000000000000000000000000000000000000000001"
+)
+
 func TestDefaultUnitConfig(t *testing.T) {
 	config := DefaultUnitConfig()
 	if config.MeterReadingDay != DefaultMeterReadingDay {
@@ -75,7 +79,7 @@ func TestParseUnitConfigJSONRejectsInvalidValue(t *testing.T) {
 
 func TestNewUnitUsesDefaultConfig(t *testing.T) {
 	unit, err := NewUnit(CreateParams{
-		AccountID: 1,
+		AccountID: testAccountID1,
 		Name:      "1栋",
 		Address:   "地址",
 		City:      "城市",

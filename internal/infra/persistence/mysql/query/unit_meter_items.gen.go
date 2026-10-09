@@ -33,23 +33,10 @@ func newUnitMeterItem(db *gorm.DB, opts ...gen.DOOption) unitMeterItem {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Unit", "models.Unit"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Unit.Account", "models.Account"),
-		},
 		MeterItems: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}{
 			RelationField: field.NewRelation("Unit.MeterItems", "models.MeterItem"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Unit.MeterItems.Account", "models.Account"),
-			},
 		},
 	}
 
@@ -57,11 +44,6 @@ func newUnitMeterItem(db *gorm.DB, opts ...gen.DOOption) unitMeterItem {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("MeterItem", "models.MeterItem"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("MeterItem.Account", "models.Account"),
-		},
 	}
 
 	_unitMeterItem.fillFieldMap()
@@ -151,14 +133,8 @@ type unitMeterItemBelongsToUnit struct {
 
 	field.RelationField
 
-	Account struct {
-		field.RelationField
-	}
 	MeterItems struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 	}
 }
 
@@ -241,10 +217,6 @@ type unitMeterItemBelongsToMeterItem struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	Account struct {
-		field.RelationField
-	}
 }
 
 func (a unitMeterItemBelongsToMeterItem) Where(conds ...field.Expr) *unitMeterItemBelongsToMeterItem {

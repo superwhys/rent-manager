@@ -10,14 +10,18 @@ import (
 	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
 
+const (
+	testAccountID10 = "000000000000000000000000000000000000000000000000000000000000000a"
+)
+
 func TestCreateRoomInUnitBindsUnitDefaultMeterItems(t *testing.T) {
 	service := newRoomTestService(
 		[]*domainunit.Unit{
-			{ID: 7, AccountID: 10, Name: "1栋", DefaultMeterItemIDs: []int{1, 2}},
+			{ID: 7, AccountID: testAccountID10, Name: "1栋", DefaultMeterItemIDs: []int{1, 2}},
 		},
 		nil,
 	)
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	room, err := service.CreateRoomInUnit(ctx, &CreateRoomInUnitCommand{
 		UnitID:     7,
@@ -38,11 +42,11 @@ func TestCreateRoomInUnitBindsUnitDefaultMeterItems(t *testing.T) {
 func TestCreateRoomInUnitMergesDefaultAndRequestMeterItems(t *testing.T) {
 	service := newRoomTestService(
 		[]*domainunit.Unit{
-			{ID: 7, AccountID: 10, Name: "1栋", DefaultMeterItemIDs: []int{1, 2}},
+			{ID: 7, AccountID: testAccountID10, Name: "1栋", DefaultMeterItemIDs: []int{1, 2}},
 		},
 		nil,
 	)
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	room, err := service.CreateRoomInUnit(ctx, &CreateRoomInUnitCommand{
 		UnitID:       7,
@@ -64,7 +68,7 @@ func TestCreateRoomInUnitMergesDefaultAndRequestMeterItems(t *testing.T) {
 func TestUpdateRoomCanClearDefaultMeterItems(t *testing.T) {
 	service := newRoomTestService(
 		[]*domainunit.Unit{
-			{ID: 7, AccountID: 10, Name: "1栋", DefaultMeterItemIDs: []int{1, 2}},
+			{ID: 7, AccountID: testAccountID10, Name: "1栋", DefaultMeterItemIDs: []int{1, 2}},
 		},
 		[]*domainroom.Room{
 			{
@@ -80,7 +84,7 @@ func TestUpdateRoomCanClearDefaultMeterItems(t *testing.T) {
 			},
 		},
 	)
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	room, err := service.UpdateRoom(ctx, &UpdateRoomCommand{
 		RoomID:       11,
@@ -120,7 +124,7 @@ type fakeRoomServiceRoomRepo struct {
 	nextID int
 }
 
-func (r *fakeRoomServiceRoomRepo) Create(ctx context.Context, accountID int, room *domainroom.Room) (*domainroom.Room, error) {
+func (r *fakeRoomServiceRoomRepo) Create(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
 	if r.byID == nil {
 		r.byID = make(map[int]*domainroom.Room)
 	}
@@ -133,7 +137,7 @@ func (r *fakeRoomServiceRoomRepo) Create(ctx context.Context, accountID int, roo
 	return cloneRoom(created), nil
 }
 
-func (r *fakeRoomServiceRoomRepo) Get(ctx context.Context, accountID int, id int) (*domainroom.Room, error) {
+func (r *fakeRoomServiceRoomRepo) Get(ctx context.Context, accountID string, id int) (*domainroom.Room, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -145,7 +149,7 @@ func (r *fakeRoomServiceRoomRepo) GetByID(ctx context.Context, id int) (*domainr
 	return cloneRoom(room), nil
 }
 
-func (r *fakeRoomServiceRoomRepo) List(ctx context.Context, accountID int, query domainroom.ListQuery) ([]*domainroom.Room, error) {
+func (r *fakeRoomServiceRoomRepo) List(ctx context.Context, accountID string, query domainroom.ListQuery) ([]*domainroom.Room, error) {
 	rooms := make([]*domainroom.Room, 0, len(r.byID))
 	for _, room := range r.byID {
 		if room == nil || room.UnitID != query.UnitID {
@@ -156,12 +160,12 @@ func (r *fakeRoomServiceRoomRepo) List(ctx context.Context, accountID int, query
 	return rooms, nil
 }
 
-func (r *fakeRoomServiceRoomRepo) Count(ctx context.Context, accountID int, query domainroom.ListQuery) (int, error) {
+func (r *fakeRoomServiceRoomRepo) Count(ctx context.Context, accountID string, query domainroom.ListQuery) (int, error) {
 	rooms, err := r.List(ctx, accountID, query)
 	return len(rooms), err
 }
 
-func (r *fakeRoomServiceRoomRepo) Update(ctx context.Context, accountID int, room *domainroom.Room) (*domainroom.Room, error) {
+func (r *fakeRoomServiceRoomRepo) Update(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
 	if r.byID == nil || r.byID[room.ID] == nil {
 		return nil, domainroom.ErrNotFound
 	}
@@ -170,7 +174,7 @@ func (r *fakeRoomServiceRoomRepo) Update(ctx context.Context, accountID int, roo
 	return cloneRoom(updated), nil
 }
 
-func (r *fakeRoomServiceRoomRepo) Delete(ctx context.Context, accountID int, id int) error {
+func (r *fakeRoomServiceRoomRepo) Delete(ctx context.Context, accountID string, id int) error {
 	delete(r.byID, id)
 	return nil
 }
@@ -183,7 +187,7 @@ func (r *fakeRoomServiceUnitRepo) Create(ctx context.Context, unit *domainunit.U
 	return unit, nil
 }
 
-func (r *fakeRoomServiceUnitRepo) Get(ctx context.Context, accountID int, id int) (*domainunit.Unit, error) {
+func (r *fakeRoomServiceUnitRepo) Get(ctx context.Context, accountID string, id int) (*domainunit.Unit, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -207,7 +211,7 @@ func (r *fakeRoomServiceUnitRepo) Update(ctx context.Context, unit *domainunit.U
 	return unit, nil
 }
 
-func (r *fakeRoomServiceUnitRepo) Delete(ctx context.Context, accountID int, id int) error {
+func (r *fakeRoomServiceUnitRepo) Delete(ctx context.Context, accountID string, id int) error {
 	delete(r.byID, id)
 	return nil
 }

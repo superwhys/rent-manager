@@ -12,7 +12,7 @@ type MeterReading struct {
 	CurrentReading  float64    `gorm:"column:current_reading;type:double;not null"`
 	UsageAmount     *float64   `gorm:"column:usage_amount;type:double"`
 	ReadingTime     time.Time  `gorm:"column:reading_time;type:timestamp;not null"`
-	ReaderID        *int64     `gorm:"column:reader_id;type:bigint"`
+	ReaderID        *string    `gorm:"column:reader_id;type:varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin"`
 	Source          string     `gorm:"column:source;type:enum('MANUAL','IMPORT','AUTO');not null;default:MANUAL"`
 	Remark          *string    `gorm:"column:remark;type:varchar(255)"`
 	MeterItemID     int        `gorm:"column:meter_item_id;type:bigint;not null;uniqueIndex:meterreading_room_id_meter_item_id_period_month,priority:2;index:meterreading_meter_item_id"`

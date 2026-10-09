@@ -36,7 +36,7 @@ func (r *RoomTypeRepository) Create(ctx context.Context, roomType *domainroomtyp
 	return toDomainRoomType(record), nil
 }
 
-func (r *RoomTypeRepository) Get(ctx context.Context, accountID int, id int) (*domainroomtype.RoomType, error) {
+func (r *RoomTypeRepository) Get(ctx context.Context, accountID string, id int) (*domainroomtype.RoomType, error) {
 	record, err := r.q.RoomType.WithContext(ctx).
 		Where(r.q.RoomType.ID.Eq(id), r.q.RoomType.AccountID.Eq(accountID), r.q.RoomType.DeletedAt.IsNull()).
 		Take()
@@ -87,7 +87,7 @@ func (r *RoomTypeRepository) Update(ctx context.Context, roomType *domainroomtyp
 	return r.Get(ctx, roomType.AccountID, roomType.ID)
 }
 
-func (r *RoomTypeRepository) Delete(ctx context.Context, accountID int, id int) error {
+func (r *RoomTypeRepository) Delete(ctx context.Context, accountID string, id int) error {
 	roomCount, err := r.q.Room.WithContext(ctx).
 		Where(r.q.Room.RoomTypeID.Eq(id), r.q.Room.DeletedAt.IsNull()).
 		Count()

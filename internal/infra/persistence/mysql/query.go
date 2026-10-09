@@ -10,7 +10,7 @@ import (
 	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
 )
 
-func accountRooms(ctx context.Context, q *query.Query, accountID int) query.IRoomDo {
+func accountRooms(ctx context.Context, q *query.Query, accountID string) query.IRoomDo {
 	u := q.Unit
 	r := q.Room
 	return r.WithContext(ctx).Where(

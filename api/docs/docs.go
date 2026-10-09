@@ -15,30 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/accout/self": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accout"
-                ],
-                "summary": "获取个人信息",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-account_AccountResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/admin/permission-groups": {
             "get": {
                 "security": [
@@ -251,10 +227,12 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/refresh-token": {
-            "post": {
-                "consumes": [
-                    "application/json"
+        "/auth/session": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
                 ],
                 "produces": [
                     "application/json"
@@ -262,23 +240,34 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "刷新访问令牌",
-                "parameters": [
-                    {
-                        "description": "刷新令牌参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/auth.RefreshTokenReq"
-                        }
-                    }
-                ],
+                "summary": "获取当前 authkit 账号与会话有效期",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-auth_TokenResponse"
+                            "$ref": "#/definitions/ginutils.Ret-routers_SessionResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "撤销当前 authkit 会话",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
                         }
                     }
                 }
@@ -295,7 +284,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "微信登录",
+                "summary": "微信登录并创建 authkit 会话",
                 "parameters": [
                     {
                         "description": "微信登录参数",
@@ -303,7 +292,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.WechatLoginReq"
+                            "$ref": "#/definitions/routers.WechatLoginRequest"
                         }
                     }
                 ],
@@ -311,7 +300,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-auth_TokenResponse"
+                            "$ref": "#/definitions/ginutils.Ret-routers_LoginResponse"
                         }
                     }
                 }
@@ -1629,7 +1618,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "被授权账号ID",
                         "name": "account_id",
                         "in": "path",
@@ -1679,7 +1668,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "被授权账号ID",
                         "name": "account_id",
                         "in": "path",
@@ -1728,7 +1717,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "被授权账号ID",
                         "name": "account_id",
                         "in": "query"
@@ -1994,32 +1983,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "account.AccountResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "wechat_openid": {
-                    "type": "string"
-                }
-            }
-        },
         "accountsetting.SettingsResponse": {
             "type": "object",
             "additionalProperties": {
@@ -2043,49 +2006,18 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.RefreshTokenReq": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.TokenResponse": {
+        "authkit.Account": {
             "type": "object",
             "properties": {
-                "access_token": {
+                "Email": {
                     "type": "string"
                 },
-                "refresh_token": {
+                "ID": {
+                    "type": "string"
+                },
+                "Username": {
                     "type": "string"
                 }
-            }
-        },
-        "auth.WechatLoginReq": {
-            "type": "object",
-            "required": [
-                "code"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                }
-            }
-        },
-        "ginutils.Ret-account_AccountResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "$ref": "#/definitions/account.AccountResponse"
-                },
-                "message": {}
             }
         },
         "ginutils.Ret-accountsetting_SettingsResponse": {
@@ -2245,18 +2177,6 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "ginutils.Ret-auth_TokenResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {
-                    "$ref": "#/definitions/auth.TokenResponse"
-                },
-                "message": {}
-            }
-        },
         "ginutils.Ret-home_Response": {
             "type": "object",
             "properties": {
@@ -2361,6 +2281,30 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/roomtype.RoomTypeResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-routers_LoginResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/routers.LoginResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-routers_SessionResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/routers.SessionResponse"
                 },
                 "message": {}
             }
@@ -2489,7 +2433,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "account_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "calc_type": {
                     "type": "string"
@@ -2517,11 +2461,15 @@ const docTemplate = `{
         "meteritem.UpdateMeterItemCommand": {
             "type": "object",
             "required": [
+                "MeterItemID",
                 "code",
-                "meterItemID",
                 "unit"
             ],
             "properties": {
+                "MeterItemID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "calc_type": {
                     "type": "string",
                     "enum": [
@@ -2532,10 +2480,6 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "meterItemID": {
-                    "type": "integer",
-                    "minimum": 1
                 },
                 "remark": {
                     "type": "string"
@@ -2633,7 +2577,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "reader_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "reading_time": {
                     "type": "string"
@@ -2684,11 +2628,15 @@ const docTemplate = `{
         "meterreading.SaveRoomMonthCommand": {
             "type": "object",
             "required": [
+                "RoomID",
                 "period_month",
-                "readings",
-                "roomID"
+                "readings"
             ],
             "properties": {
+                "RoomID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "period_month": {
                     "type": "string"
                 },
@@ -2698,10 +2646,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/meterreading.MeterReadingInput"
                     }
-                },
-                "roomID": {
-                    "type": "integer",
-                    "minimum": 1
                 }
             }
         },
@@ -2832,11 +2776,11 @@ const docTemplate = `{
         "rbac.PermissionGroupPermissionsCommand": {
             "type": "object",
             "required": [
-                "permissionGroupID",
+                "PermissionGroupID",
                 "permission_ids"
             ],
             "properties": {
-                "permissionGroupID": {
+                "PermissionGroupID": {
                     "type": "integer",
                     "minimum": 1
                 },
@@ -2892,20 +2836,20 @@ const docTemplate = `{
         "rbac.RolePermissionGroupsCommand": {
             "type": "object",
             "required": [
-                "permission_group_ids",
-                "roleID"
+                "RoleID",
+                "permission_group_ids"
             ],
             "properties": {
+                "RoleID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "permission_group_ids": {
                     "type": "array",
                     "minItems": 1,
                     "items": {
                         "type": "integer"
                     }
-                },
-                "roleID": {
-                    "type": "integer",
-                    "minimum": 1
                 }
             }
         },
@@ -2913,7 +2857,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "account_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -2932,12 +2876,15 @@ const docTemplate = `{
         "rbac.UnitAccountRolesCommand": {
             "type": "object",
             "required": [
-                "accountID",
-                "role_ids",
-                "unitID"
+                "AccountID",
+                "UnitID",
+                "role_ids"
             ],
             "properties": {
-                "accountID": {
+                "AccountID": {
+                    "type": "string"
+                },
+                "UnitID": {
                     "type": "integer",
                     "minimum": 1
                 },
@@ -2947,10 +2894,6 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
-                },
-                "unitID": {
-                    "type": "integer",
-                    "minimum": 1
                 }
             }
         },
@@ -2958,10 +2901,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "account_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "granted_by_account_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -2983,10 +2926,14 @@ const docTemplate = `{
         "rbac.UpdateRoleCommand": {
             "type": "object",
             "required": [
-                "name",
-                "roleID"
+                "RoleID",
+                "name"
             ],
             "properties": {
+                "RoleID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "is_active": {
                     "type": "boolean"
                 },
@@ -2995,63 +2942,59 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "roleID": {
-                    "type": "integer",
-                    "minimum": 1
                 }
             }
         },
         "rentbill.CancelRentBillCommand": {
             "type": "object",
             "required": [
-                "rentBillID"
+                "RentBillID"
             ],
             "properties": {
-                "remark": {
-                    "type": "string"
-                },
-                "rentBillID": {
+                "RentBillID": {
                     "type": "integer",
                     "minimum": 1
+                },
+                "remark": {
+                    "type": "string"
                 }
             }
         },
         "rentbill.GenerateRoomRentBillCommand": {
             "type": "object",
             "required": [
-                "period_month",
-                "roomID"
+                "RoomID",
+                "period_month"
             ],
             "properties": {
+                "RoomID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "period_month": {
                     "type": "string"
                 },
                 "remark": {
                     "type": "string"
-                },
-                "roomID": {
-                    "type": "integer",
-                    "minimum": 1
                 }
             }
         },
         "rentbill.GenerateUnitRentBillsCommand": {
             "type": "object",
             "required": [
-                "period_month",
-                "unitID"
+                "UnitID",
+                "period_month"
             ],
             "properties": {
+                "UnitID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "period_month": {
                     "type": "string"
                 },
                 "remark": {
                     "type": "string"
-                },
-                "unitID": {
-                    "type": "integer",
-                    "minimum": 1
                 }
             }
         },
@@ -3075,15 +3018,15 @@ const docTemplate = `{
         "rentbill.MarkRentBillPaidCommand": {
             "type": "object",
             "required": [
-                "rentBillID"
+                "RentBillID"
             ],
             "properties": {
-                "paid_at": {
-                    "type": "string"
-                },
-                "rentBillID": {
+                "RentBillID": {
                     "type": "integer",
                     "minimum": 1
+                },
+                "paid_at": {
+                    "type": "string"
                 }
             }
         },
@@ -3128,12 +3071,16 @@ const docTemplate = `{
         "room.CreateRoomInUnitCommand": {
             "type": "object",
             "required": [
+                "UnitID",
                 "price",
                 "room_no",
-                "room_type_id",
-                "unitID"
+                "room_type_id"
             ],
             "properties": {
+                "UnitID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "floor": {
                     "type": "integer"
                 },
@@ -3155,10 +3102,6 @@ const docTemplate = `{
                     "minimum": 1
                 },
                 "size": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "unitID": {
                     "type": "integer",
                     "minimum": 1
                 }
@@ -3202,9 +3145,13 @@ const docTemplate = `{
         "room.UpdateRoomCommand": {
             "type": "object",
             "required": [
-                "roomID"
+                "RoomID"
             ],
             "properties": {
+                "RoomID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "floor": {
                     "type": "integer",
                     "minimum": 0
@@ -3221,10 +3168,6 @@ const docTemplate = `{
                 "price": {
                     "type": "integer",
                     "minimum": 0
-                },
-                "roomID": {
-                    "type": "integer",
-                    "minimum": 1
                 },
                 "room_no": {
                     "type": "string"
@@ -3259,7 +3202,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "account_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -3272,17 +3215,56 @@ const docTemplate = `{
         "roomtype.UpdateRoomTypeCommand": {
             "type": "object",
             "required": [
-                "name",
-                "roomTypeID"
+                "RoomTypeID",
+                "name"
             ],
             "properties": {
+                "RoomTypeID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 12
+                }
+            }
+        },
+        "routers.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
                 },
-                "roomTypeID": {
-                    "type": "integer",
-                    "minimum": 1
+                "account": {
+                    "$ref": "#/definitions/authkit.Account"
+                },
+                "created": {
+                    "type": "boolean"
+                },
+                "expires_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "routers.SessionResponse": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "$ref": "#/definitions/authkit.Account"
+                },
+                "expires_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "routers.WechatLoginRequest": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
                 }
             }
         },
@@ -3373,7 +3355,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "account_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "address": {
                     "type": "string"
@@ -3419,13 +3401,17 @@ const docTemplate = `{
         "unit.UpdateUnitCommand": {
             "type": "object",
             "required": [
+                "UnitID",
                 "address",
                 "city",
                 "name",
-                "province",
-                "unitID"
+                "province"
             ],
             "properties": {
+                "UnitID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "address": {
                     "type": "string",
                     "maxLength": 255
@@ -3450,10 +3436,6 @@ const docTemplate = `{
                 "province": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "unitID": {
-                    "type": "integer",
-                    "minimum": 1
                 }
             }
         }

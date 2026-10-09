@@ -2,26 +2,43 @@ package rbac
 
 import (
 	"context"
+	"errors"
+
+	"github.com/miebyte/authkit"
 
 	"github.com/superwhys/rent-manager/config"
 
 	appcore "github.com/superwhys/rent-manager/internal/app"
 	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
+	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
 
 // Service 提供角色、权限和单元授权用例。
 type Service struct {
 	repo        domainrbac.Repository
+	accounts    AccountLookup
+	units       UnitLookup
 	adminConfig *config.AdminConfig
 }
 
+// AccountLookup 直接查询 authkit 的账号，不维护本地账号或 ID 映射。
+type AccountLookup interface {
+	GetByID(context.Context, string) (*authkit.Account, error)
+}
+
+type UnitLookup interface {
+	Get(context.Context, string, int) (*domainunit.Unit, error)
+}
+
 // NewService 创建 RBAC 服务。
-func NewService(repo domainrbac.Repository, adminConfig *config.AdminConfig) *Service {
+func NewService(repo domainrbac.Repository, accounts AccountLookup, units UnitLookup, adminConfig *config.AdminConfig) *Service {
 	if adminConfig == nil {
 		adminConfig = &config.AdminConfig{}
 	}
 	return &Service{
 		repo:        repo,
+		accounts:    accounts,
+		units:       units,
 		adminConfig: adminConfig,
 	}
 }
@@ -269,6 +286,22 @@ func (s *Service) GrantUnitRoles(ctx context.Context, cmd *UnitAccountRolesComma
 	roleIDs := normalizeIDs(cmd.RoleIDs)
 	if len(roleIDs) == 0 {
 		return nil, domainrbac.ErrRoleIDsRequired
+	}
+	if cmd.AccountID == "" {
+		return nil, domainrbac.ErrTargetAccountRequired
+	}
+	// 先确认单元归属，避免向无权操作的调用者泄露目标账号是否存在。
+	if _, err := s.units.Get(ctx, accountID, cmd.UnitID); err != nil {
+		if errors.Is(err, domainunit.ErrNotFound) {
+			return nil, domainrbac.ErrUnitNotInAccount
+		}
+		return nil, err
+	}
+	if _, err := s.accounts.GetByID(ctx, cmd.AccountID); err != nil {
+		if errors.Is(err, authkit.ErrNotFound) {
+			return nil, domainrbac.ErrAccountNotFound
+		}
+		return nil, err
 	}
 
 	grants, err := s.repo.GrantUnitRoles(ctx, domainrbac.UnitAccountRolesParams{

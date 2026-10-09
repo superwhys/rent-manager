@@ -9,8 +9,7 @@ type AccountSetting struct {
 	DeletedAt *time.Time `gorm:"column:deleted_at;type:timestamp"`
 	Key       string     `gorm:"column:key;type:varchar(64);not null;uniqueIndex:accountsetting_account_id_key,priority:2"`
 	Value     string     `gorm:"column:value;type:varchar(255);not null"`
-	AccountID int        `gorm:"column:account_id;type:bigint;not null;uniqueIndex:accountsetting_account_id_key,priority:1"`
-	Account   *Account   `gorm:"foreignKey:AccountID;constraint:account_settings_accounts_account_settings,OnDelete:NO ACTION"`
+	AccountID string     `gorm:"column:account_id;type:varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;not null;uniqueIndex:accountsetting_account_id_key,priority:1"`
 }
 
 func (AccountSetting) TableName() string {

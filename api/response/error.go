@@ -16,11 +16,6 @@ func HandleRouterError(ctx *gin.Context, err error, logMsg string, fallback xerr
 		return false
 	}
 
-	if xerr.IsAuthExpired(err) {
-		ctx.JSON(http.StatusUnauthorized, ginutils.ErrorRet(err))
-		return true
-	}
-
 	if ec, ok := xerr.AsErrcode(err); ok {
 		ctx.JSON(http.StatusOK, ginutils.ErrorRet(ec))
 		return true

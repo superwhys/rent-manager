@@ -37,12 +37,7 @@ func newMeterItem(db *gorm.DB, opts ...gen.DOOption) meterItem {
 	_meterItem.IsSystem = field.NewBool(tableName, "is_system")
 	_meterItem.CalcType = field.NewString(tableName, "calc_type")
 	_meterItem.Remark = field.NewString(tableName, "remark")
-	_meterItem.AccountID = field.NewInt(tableName, "account_id")
-	_meterItem.Account = meterItemBelongsToAccount{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Account", "models.Account"),
-	}
+	_meterItem.AccountID = field.NewString(tableName, "account_id")
 
 	_meterItem.fillFieldMap()
 
@@ -63,8 +58,7 @@ type meterItem struct {
 	IsSystem  field.Bool
 	CalcType  field.String
 	Remark    field.String
-	AccountID field.Int
-	Account   meterItemBelongsToAccount
+	AccountID field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -91,7 +85,7 @@ func (m *meterItem) updateTableName(table string) *meterItem {
 	m.IsSystem = field.NewBool(table, "is_system")
 	m.CalcType = field.NewString(table, "calc_type")
 	m.Remark = field.NewString(table, "remark")
-	m.AccountID = field.NewInt(table, "account_id")
+	m.AccountID = field.NewString(table, "account_id")
 
 	m.fillFieldMap()
 
@@ -118,7 +112,7 @@ func (m *meterItem) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *meterItem) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 12)
+	m.fieldMap = make(map[string]field.Expr, 11)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["created_at"] = m.CreatedAt
 	m.fieldMap["updated_at"] = m.UpdatedAt
@@ -130,101 +124,16 @@ func (m *meterItem) fillFieldMap() {
 	m.fieldMap["calc_type"] = m.CalcType
 	m.fieldMap["remark"] = m.Remark
 	m.fieldMap["account_id"] = m.AccountID
-
 }
 
 func (m meterItem) clone(db *gorm.DB) meterItem {
 	m.meterItemDo.ReplaceConnPool(db.Statement.ConnPool)
-	m.Account.db = db.Session(&gorm.Session{Initialized: true})
-	m.Account.db.Statement.ConnPool = db.Statement.ConnPool
 	return m
 }
 
 func (m meterItem) replaceDB(db *gorm.DB) meterItem {
 	m.meterItemDo.ReplaceDB(db)
-	m.Account.db = db.Session(&gorm.Session{})
 	return m
-}
-
-type meterItemBelongsToAccount struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a meterItemBelongsToAccount) Where(conds ...field.Expr) *meterItemBelongsToAccount {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a meterItemBelongsToAccount) WithContext(ctx context.Context) *meterItemBelongsToAccount {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a meterItemBelongsToAccount) Session(session *gorm.Session) *meterItemBelongsToAccount {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a meterItemBelongsToAccount) Model(m *models.MeterItem) *meterItemBelongsToAccountTx {
-	return &meterItemBelongsToAccountTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a meterItemBelongsToAccount) Unscoped() *meterItemBelongsToAccount {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type meterItemBelongsToAccountTx struct{ tx *gorm.Association }
-
-func (a meterItemBelongsToAccountTx) Find() (result *models.Account, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a meterItemBelongsToAccountTx) Append(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a meterItemBelongsToAccountTx) Replace(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a meterItemBelongsToAccountTx) Delete(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a meterItemBelongsToAccountTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a meterItemBelongsToAccountTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a meterItemBelongsToAccountTx) Unscoped() *meterItemBelongsToAccountTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type meterItemDo struct{ gen.DO }

@@ -10,8 +10,7 @@ type Role struct {
 	Name             string             `gorm:"column:name;type:varchar(255);not null;uniqueIndex:role_account_id_name,priority:2"`
 	IsDefaultOwner   bool               `gorm:"column:is_default_owner;type:boolean;not null;default:false"`
 	IsActive         *bool              `gorm:"column:is_active;type:boolean;not null;default:true"`
-	AccountID        int                `gorm:"column:account_id;type:bigint;not null;uniqueIndex:role_account_id_name,priority:1"`
-	Account          *Account           `gorm:"foreignKey:AccountID;constraint:roles_accounts_roles,OnDelete:NO ACTION"`
+	AccountID        string             `gorm:"column:account_id;type:varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;not null;uniqueIndex:role_account_id_name,priority:1"`
 	PermissionGroups []*PermissionGroup `gorm:"many2many:role_permission_groups;joinForeignKey:RoleID;joinReferences:PermissionGroupID;-:migration"`
 }
 

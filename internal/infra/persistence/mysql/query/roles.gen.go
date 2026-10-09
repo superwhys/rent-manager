@@ -34,13 +34,7 @@ func newRole(db *gorm.DB, opts ...gen.DOOption) role {
 	_role.Name = field.NewString(tableName, "name")
 	_role.IsDefaultOwner = field.NewBool(tableName, "is_default_owner")
 	_role.IsActive = field.NewBool(tableName, "is_active")
-	_role.AccountID = field.NewInt(tableName, "account_id")
-	_role.Account = roleBelongsToAccount{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Account", "models.Account"),
-	}
-
+	_role.AccountID = field.NewString(tableName, "account_id")
 	_role.PermissionGroups = roleManyToManyPermissionGroups{
 		db: db.Session(&gorm.Session{}),
 
@@ -60,17 +54,15 @@ func newRole(db *gorm.DB, opts ...gen.DOOption) role {
 type role struct {
 	roleDo roleDo
 
-	ALL            field.Asterisk
-	ID             field.Int
-	CreatedAt      field.Time
-	UpdatedAt      field.Time
-	DeletedAt      field.Time
-	Name           field.String
-	IsDefaultOwner field.Bool
-	IsActive       field.Bool
-	AccountID      field.Int
-	Account        roleBelongsToAccount
-
+	ALL              field.Asterisk
+	ID               field.Int
+	CreatedAt        field.Time
+	UpdatedAt        field.Time
+	DeletedAt        field.Time
+	Name             field.String
+	IsDefaultOwner   field.Bool
+	IsActive         field.Bool
+	AccountID        field.String
 	PermissionGroups roleManyToManyPermissionGroups
 
 	fieldMap map[string]field.Expr
@@ -95,7 +87,7 @@ func (r *role) updateTableName(table string) *role {
 	r.Name = field.NewString(table, "name")
 	r.IsDefaultOwner = field.NewBool(table, "is_default_owner")
 	r.IsActive = field.NewBool(table, "is_active")
-	r.AccountID = field.NewInt(table, "account_id")
+	r.AccountID = field.NewString(table, "account_id")
 
 	r.fillFieldMap()
 
@@ -120,7 +112,7 @@ func (r *role) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *role) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 10)
+	r.fieldMap = make(map[string]field.Expr, 9)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["created_at"] = r.CreatedAt
 	r.fieldMap["updated_at"] = r.UpdatedAt
@@ -134,8 +126,6 @@ func (r *role) fillFieldMap() {
 
 func (r role) clone(db *gorm.DB) role {
 	r.roleDo.ReplaceConnPool(db.Statement.ConnPool)
-	r.Account.db = db.Session(&gorm.Session{Initialized: true})
-	r.Account.db.Statement.ConnPool = db.Statement.ConnPool
 	r.PermissionGroups.db = db.Session(&gorm.Session{Initialized: true})
 	r.PermissionGroups.db.Statement.ConnPool = db.Statement.ConnPool
 	return r
@@ -143,90 +133,8 @@ func (r role) clone(db *gorm.DB) role {
 
 func (r role) replaceDB(db *gorm.DB) role {
 	r.roleDo.ReplaceDB(db)
-	r.Account.db = db.Session(&gorm.Session{})
 	r.PermissionGroups.db = db.Session(&gorm.Session{})
 	return r
-}
-
-type roleBelongsToAccount struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a roleBelongsToAccount) Where(conds ...field.Expr) *roleBelongsToAccount {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a roleBelongsToAccount) WithContext(ctx context.Context) *roleBelongsToAccount {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a roleBelongsToAccount) Session(session *gorm.Session) *roleBelongsToAccount {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a roleBelongsToAccount) Model(m *models.Role) *roleBelongsToAccountTx {
-	return &roleBelongsToAccountTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a roleBelongsToAccount) Unscoped() *roleBelongsToAccount {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type roleBelongsToAccountTx struct{ tx *gorm.Association }
-
-func (a roleBelongsToAccountTx) Find() (result *models.Account, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a roleBelongsToAccountTx) Append(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a roleBelongsToAccountTx) Replace(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a roleBelongsToAccountTx) Delete(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a roleBelongsToAccountTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a roleBelongsToAccountTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a roleBelongsToAccountTx) Unscoped() *roleBelongsToAccountTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type roleManyToManyPermissionGroups struct {

@@ -33,7 +33,7 @@ func newDryRunDB(t *testing.T) *gorm.DB {
 
 func TestCreatePreservesExplicitInactiveAndDefaultsActive(t *testing.T) {
 	db := newDryRunDB(t)
-	for _, model := range []any{&Account{}, &Room{}, &Role{}, &Permission{}, &PermissionGroup{}} {
+	for _, model := range []any{&Room{}, &Role{}, &Permission{}, &PermissionGroup{}} {
 		t.Run(reflect.TypeOf(model).Elem().Name(), func(t *testing.T) {
 			active := reflect.ValueOf(model).Elem().FieldByName("IsActive")
 			inactive := false
@@ -61,20 +61,20 @@ func TestTimestampsPreserveCreationAndRefreshUpdate(t *testing.T) {
 	createdAt := time.Date(2026, time.October, 1, 12, 0, 0, 0, time.UTC)
 	updatedAt := createdAt.Add(time.Hour)
 	db.NowFunc = func() time.Time { return createdAt }
-	account := &Account{ID: 1}
-	if err := db.Create(account).Error; err != nil {
+	role := &Role{ID: 1}
+	if err := db.Create(role).Error; err != nil {
 		t.Fatal(err)
 	}
-	if !account.CreatedAt.Equal(createdAt) || !account.UpdatedAt.Equal(createdAt) {
+	if !role.CreatedAt.Equal(createdAt) || !role.UpdatedAt.Equal(createdAt) {
 		t.Fatal("创建时应自动设置两个时间字段")
 	}
 
 	db.NowFunc = func() time.Time { return updatedAt }
-	result := db.Model(account).Updates(map[string]any{"name": "updated", "created_at": updatedAt})
+	result := db.Model(role).Updates(map[string]any{"name": "updated", "created_at": updatedAt})
 	if result.Error != nil {
 		t.Fatal(result.Error)
 	}
-	if strings.Contains(result.Statement.SQL.String(), "`created_at`") || !account.UpdatedAt.Equal(updatedAt) {
+	if strings.Contains(result.Statement.SQL.String(), "`created_at`") || !role.UpdatedAt.Equal(updatedAt) {
 		t.Fatalf("更新时间语义变化: %s", result.Statement.SQL.String())
 	}
 }
@@ -89,7 +89,7 @@ func TestNullableValuesAndExplicitSoftDeletion(t *testing.T) {
 		t.Fatal("可空字段不应被默认值替换")
 	}
 
-	result := db.Where("id = ?", 1).Find(&Account{})
+	result := db.Where("id = ?", 1).Find(&Role{})
 	if result.Error != nil {
 		t.Fatal(result.Error)
 	}

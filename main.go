@@ -9,8 +9,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"time"
 
+	"github.com/miebyte/authkit"
+	authmysql "github.com/miebyte/authkit/mysql"
+	"github.com/miebyte/authkit/wechat"
 	"github.com/miebyte/goutils/cores"
 	"github.com/miebyte/goutils/flags"
 	"github.com/miebyte/goutils/logging"
@@ -23,10 +28,8 @@ import (
 	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql"
 	"github.com/superwhys/rent-manager/internal/infra/ratelimit"
 
-	appaccount "github.com/superwhys/rent-manager/internal/app/account"
 	appaccountsetting "github.com/superwhys/rent-manager/internal/app/accountsetting"
 	appadmin "github.com/superwhys/rent-manager/internal/app/admin"
-	appauth "github.com/superwhys/rent-manager/internal/app/auth"
 	apphome "github.com/superwhys/rent-manager/internal/app/home"
 	appmeteritem "github.com/superwhys/rent-manager/internal/app/meteritem"
 	appmeterreading "github.com/superwhys/rent-manager/internal/app/meterreading"
@@ -35,27 +38,21 @@ import (
 	approom "github.com/superwhys/rent-manager/internal/app/room"
 	approomtype "github.com/superwhys/rent-manager/internal/app/roomtype"
 	appunit "github.com/superwhys/rent-manager/internal/app/unit"
-	infraauthjwt "github.com/superwhys/rent-manager/internal/infra/auth/jwt"
 )
 
 var (
-	wechatConfigFlag = flags.Struct("wechat", (*config.WechatConfig)(nil), "wechat config")
-	jwtConfigFlag    = flags.Struct("jwt", (*config.JwtConfig)(nil), "jwt config")
-	adminConfigFlag  = flags.Struct("admin", (*config.AdminConfig)(nil), "admin config")
-	mysqlConfFlag    = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
-	redisConfFlag    = flags.Struct("redis", (*redisutils.RedisConfig)(nil), "redis config")
+	authConfigFlag  = flags.Struct("auth", (*config.AuthConfig)(nil), "authkit config")
+	adminConfigFlag = flags.Struct("admin", (*config.AdminConfig)(nil), "admin config")
+	mysqlConfFlag   = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
+	redisConfFlag   = flags.Struct("redis", (*redisutils.RedisConfig)(nil), "redis config")
 )
 
 func main() {
 	flags.Parse()
 
-	wechatConfig := new(config.WechatConfig)
-	logging.PanicError(wechatConfigFlag(wechatConfig))
-	logging.PanicError(wechatConfig.Validate())
-
-	jwtConfig := new(config.JwtConfig)
-	logging.PanicError(jwtConfigFlag(jwtConfig))
-	logging.PanicError(jwtConfig.Validate())
+	authConfig := new(config.AuthConfig)
+	logging.PanicError(authConfigFlag(authConfig))
+	logging.PanicError(authConfig.Validate())
 
 	adminConfig := new(config.AdminConfig)
 	logging.PanicError(adminConfigFlag(adminConfig))
@@ -75,6 +72,10 @@ func main() {
 	logging.PanicError(err)
 	defer sqlDB.Close()
 
+	if client.Migrator().HasTable("accounts") {
+		logging.PanicError(errors.New("检测到旧 accounts 表，请使用全新数据库，或先按 migrations/20261009_authkit_accounts.sql 处理旧表；旧账号 ID 无法自动转换为 authkit ID"))
+	}
+	logging.PanicError(client.AutoMigrate(authmysql.Models()...))
 	logging.PanicError(client.AutoMigrate(models.AllModels()...))
 
 	httpLimiter, err := ratelimit.NewRedisLimiter(10, time.Second*10, redisClient, "rent_manager")
@@ -82,11 +83,20 @@ func main() {
 
 	repos := mysql.NewRepositoryFactory(client).Repositories()
 
-	tokenManager := infraauthjwt.NewManager(jwtConfig)
-	authService := appauth.NewService(wechatConfig, repos.Account, tokenManager)
-	rbacService := apprbac.NewService(repos.RBAC, adminConfig)
+	authStore, err := authmysql.NewStore(client)
+	logging.PanicError(err)
+	wechatClient, err := wechat.New(authConfig.Wechat)
+	logging.PanicError(err)
+	// 延续首次微信登录自动注册，账号及凭证均由 authkit 创建。
+	registration := authkit.RegistrationPolicyFunc(func(context.Context, authkit.Registration) error {
+		return nil
+	})
+	authService, err := authkit.NewService(authStore, nil, wechatClient, registration, authkit.Config{
+		SessionTTL: authConfig.SessionTTL,
+	})
+	logging.PanicError(err)
+	rbacService := apprbac.NewService(repos.RBAC, authStore.Accounts(), repos.Unit, adminConfig)
 	adminServices := &appadmin.Services{
-		Account:        appaccount.NewService(repos.Account),
 		AccountSetting: appaccountsetting.NewService(repos.AccountSetting),
 		Home:           apphome.NewService(repos.Unit, repos.Room, repos.RentBill, repos.MeterReading, repos.RBAC),
 		RBAC:           rbacService,
@@ -97,7 +107,7 @@ func main() {
 		MeterReading:   appmeterreading.NewService(repos.MeterReading, repos.Room, repos.Unit, repos.RBAC),
 		RentBill:       apprentbill.NewService(repos.RentBill, repos.Room, repos.Unit, repos.MeterReading, repos.RBAC),
 	}
-	router := api.SetupRouter(httpLimiter, tokenManager, authService, adminServices)
+	router := api.SetupRouter(httpLimiter, authService, adminServices)
 
 	srv := cores.NewCores(
 		cores.WithHttpHandler("/api", router),

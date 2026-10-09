@@ -1,22 +1,5 @@
 basePath: /api
 definitions:
-  account.AccountResponse:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      name:
-        type: string
-      updated_at:
-        type: string
-      wechat_openid:
-        type: string
-    type: object
   accountsetting.SettingsResponse:
     additionalProperties:
       type: string
@@ -33,34 +16,14 @@ definitions:
     - key
     - value
     type: object
-  auth.RefreshTokenReq:
+  authkit.Account:
     properties:
-      refresh_token:
+      Email:
         type: string
-    required:
-    - refresh_token
-    type: object
-  auth.TokenResponse:
-    properties:
-      access_token:
+      ID:
         type: string
-      refresh_token:
+      Username:
         type: string
-    type: object
-  auth.WechatLoginReq:
-    properties:
-      code:
-        type: string
-    required:
-    - code
-    type: object
-  ginutils.Ret-account_AccountResponse:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/account.AccountResponse'
-      message: {}
     type: object
   ginutils.Ret-accountsetting_SettingsResponse:
     properties:
@@ -167,14 +130,6 @@ definitions:
         type: array
       message: {}
     type: object
-  ginutils.Ret-auth_TokenResponse:
-    properties:
-      code:
-        type: integer
-      data:
-        $ref: '#/definitions/auth.TokenResponse'
-      message: {}
-    type: object
   ginutils.Ret-home_Response:
     properties:
       code:
@@ -245,6 +200,22 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/roomtype.RoomTypeResponse'
+      message: {}
+    type: object
+  ginutils.Ret-routers_LoginResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/routers.LoginResponse'
+      message: {}
+    type: object
+  ginutils.Ret-routers_SessionResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/routers.SessionResponse'
       message: {}
     type: object
   ginutils.Ret-unit_UnitResponse:
@@ -330,7 +301,7 @@ definitions:
   meteritem.MeterItemResponse:
     properties:
       account_id:
-        type: integer
+        type: string
       calc_type:
         type: string
       code:
@@ -348,6 +319,9 @@ definitions:
     type: object
   meteritem.UpdateMeterItemCommand:
     properties:
+      MeterItemID:
+        minimum: 1
+        type: integer
       calc_type:
         enum:
         - DIFFERENCE
@@ -356,9 +330,6 @@ definitions:
       code:
         maxLength: 255
         type: string
-      meterItemID:
-        minimum: 1
-        type: integer
       remark:
         type: string
       unit:
@@ -368,8 +339,8 @@ definitions:
         minimum: 0
         type: number
     required:
+    - MeterItemID
     - code
-    - meterItemID
     - unit
     type: object
   meterreading.MeterItemSummaryResponse:
@@ -428,7 +399,7 @@ definitions:
       previous_reading:
         type: number
       reader_id:
-        type: integer
+        type: string
       reading_time:
         type: string
       remark:
@@ -461,6 +432,9 @@ definitions:
     type: object
   meterreading.SaveRoomMonthCommand:
     properties:
+      RoomID:
+        minimum: 1
+        type: integer
       period_month:
         type: string
       readings:
@@ -468,13 +442,10 @@ definitions:
           $ref: '#/definitions/meterreading.MeterReadingInput'
         minItems: 1
         type: array
-      roomID:
-        minimum: 1
-        type: integer
     required:
+    - RoomID
     - period_month
     - readings
-    - roomID
     type: object
   meterreading.UnitMonthReadingsResponse:
     properties:
@@ -560,16 +531,16 @@ definitions:
     type: object
   rbac.PermissionGroupPermissionsCommand:
     properties:
+      PermissionGroupID:
+        minimum: 1
+        type: integer
       permission_ids:
         items:
           type: integer
         minItems: 1
         type: array
-      permissionGroupID:
-        minimum: 1
-        type: integer
     required:
-    - permissionGroupID
+    - PermissionGroupID
     - permission_ids
     type: object
   rbac.PermissionGroupResponse:
@@ -600,22 +571,22 @@ definitions:
     type: object
   rbac.RolePermissionGroupsCommand:
     properties:
+      RoleID:
+        minimum: 1
+        type: integer
       permission_group_ids:
         items:
           type: integer
         minItems: 1
         type: array
-      roleID:
-        minimum: 1
-        type: integer
     required:
+    - RoleID
     - permission_group_ids
-    - roleID
     type: object
   rbac.RoleResponse:
     properties:
       account_id:
-        type: integer
+        type: string
       id:
         type: integer
       is_active:
@@ -627,7 +598,9 @@ definitions:
     type: object
   rbac.UnitAccountRolesCommand:
     properties:
-      accountID:
+      AccountID:
+        type: string
+      UnitID:
         minimum: 1
         type: integer
       role_ids:
@@ -635,20 +608,17 @@ definitions:
           type: integer
         minItems: 1
         type: array
-      unitID:
-        minimum: 1
-        type: integer
     required:
-    - accountID
+    - AccountID
+    - UnitID
     - role_ids
-    - unitID
     type: object
   rbac.UnitGrantResponse:
     properties:
       account_id:
-        type: integer
+        type: string
       granted_by_account_id:
-        type: integer
+        type: string
       id:
         type: integer
       role:
@@ -662,54 +632,54 @@ definitions:
     type: object
   rbac.UpdateRoleCommand:
     properties:
+      RoleID:
+        minimum: 1
+        type: integer
       is_active:
         type: boolean
       is_default_owner:
         type: boolean
       name:
         type: string
-      roleID:
-        minimum: 1
-        type: integer
     required:
+    - RoleID
     - name
-    - roleID
     type: object
   rentbill.CancelRentBillCommand:
     properties:
-      remark:
-        type: string
-      rentBillID:
+      RentBillID:
         minimum: 1
         type: integer
+      remark:
+        type: string
     required:
-    - rentBillID
+    - RentBillID
     type: object
   rentbill.GenerateRoomRentBillCommand:
     properties:
+      RoomID:
+        minimum: 1
+        type: integer
       period_month:
         type: string
       remark:
         type: string
-      roomID:
-        minimum: 1
-        type: integer
     required:
+    - RoomID
     - period_month
-    - roomID
     type: object
   rentbill.GenerateUnitRentBillsCommand:
     properties:
+      UnitID:
+        minimum: 1
+        type: integer
       period_month:
         type: string
       remark:
         type: string
-      unitID:
-        minimum: 1
-        type: integer
     required:
+    - UnitID
     - period_month
-    - unitID
     type: object
   rentbill.GeneratedRentBillsResponse:
     properties:
@@ -724,13 +694,13 @@ definitions:
     type: object
   rentbill.MarkRentBillPaidCommand:
     properties:
-      paid_at:
-        type: string
-      rentBillID:
+      RentBillID:
         minimum: 1
         type: integer
+      paid_at:
+        type: string
     required:
-    - rentBillID
+    - RentBillID
     type: object
   rentbill.RentBillResponse:
     properties:
@@ -759,6 +729,9 @@ definitions:
     type: object
   room.CreateRoomInUnitCommand:
     properties:
+      UnitID:
+        minimum: 1
+        type: integer
       floor:
         type: integer
       meter_item_ids:
@@ -776,14 +749,11 @@ definitions:
       size:
         minimum: 1
         type: integer
-      unitID:
-        minimum: 1
-        type: integer
     required:
+    - UnitID
     - price
     - room_no
     - room_type_id
-    - unitID
     type: object
   room.RoomResponse:
     properties:
@@ -810,6 +780,9 @@ definitions:
     type: object
   room.UpdateRoomCommand:
     properties:
+      RoomID:
+        minimum: 1
+        type: integer
       floor:
         minimum: 0
         type: integer
@@ -827,9 +800,6 @@ definitions:
       room_type_id:
         minimum: 1
         type: integer
-      roomID:
-        minimum: 1
-        type: integer
       size:
         minimum: 1
         type: integer
@@ -837,7 +807,7 @@ definitions:
         minimum: 1
         type: integer
     required:
-    - roomID
+    - RoomID
     type: object
   roomtype.CreateRoomTypeCommand:
     properties:
@@ -850,7 +820,7 @@ definitions:
   roomtype.RoomTypeResponse:
     properties:
       account_id:
-        type: integer
+        type: string
       id:
         type: integer
       name:
@@ -858,15 +828,40 @@ definitions:
     type: object
   roomtype.UpdateRoomTypeCommand:
     properties:
+      RoomTypeID:
+        minimum: 1
+        type: integer
       name:
         maxLength: 12
         type: string
-      roomTypeID:
-        minimum: 1
-        type: integer
     required:
+    - RoomTypeID
     - name
-    - roomTypeID
+    type: object
+  routers.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      account:
+        $ref: '#/definitions/authkit.Account'
+      created:
+        type: boolean
+      expires_at:
+        type: string
+    type: object
+  routers.SessionResponse:
+    properties:
+      account:
+        $ref: '#/definitions/authkit.Account'
+      expires_at:
+        type: string
+    type: object
+  routers.WechatLoginRequest:
+    properties:
+      code:
+        type: string
+    required:
+    - code
     type: object
   unit.CreateUnitCommand:
     properties:
@@ -928,7 +923,7 @@ definitions:
       access_type:
         type: string
       account_id:
-        type: integer
+        type: string
       address:
         type: string
       city:
@@ -958,6 +953,9 @@ definitions:
     type: object
   unit.UpdateUnitCommand:
     properties:
+      UnitID:
+        minimum: 1
+        type: integer
       address:
         maxLength: 255
         type: string
@@ -976,15 +974,12 @@ definitions:
       province:
         maxLength: 255
         type: string
-      unitID:
-        minimum: 1
-        type: integer
     required:
+    - UnitID
     - address
     - city
     - name
     - province
-    - unitID
     type: object
 info:
   contact: {}
@@ -992,20 +987,6 @@ info:
   title: Rent Manager Server API
   version: "1.0"
 paths:
-  /accout/self:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ginutils.Ret-account_AccountResponse'
-      security:
-      - BearerAuth: []
-      summary: 获取个人信息
-      tags:
-      - accout
   /admin/permission-groups:
     get:
       produces:
@@ -1135,25 +1116,31 @@ paths:
       summary: 批量创建权限
       tags:
       - admin
-  /auth/refresh-token:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: 刷新令牌参数
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/auth.RefreshTokenReq'
+  /auth/session:
+    delete:
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-auth_TokenResponse'
-      summary: 刷新访问令牌
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 撤销当前 authkit 会话
+      tags:
+      - auth
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-routers_SessionResponse'
+      security:
+      - BearerAuth: []
+      summary: 获取当前 authkit 账号与会话有效期
       tags:
       - auth
   /auth/wechat-login:
@@ -1166,15 +1153,15 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/auth.WechatLoginReq'
+          $ref: '#/definitions/routers.WechatLoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-auth_TokenResponse'
-      summary: 微信登录
+            $ref: '#/definitions/ginutils.Ret-routers_LoginResponse'
+      summary: 微信登录并创建 authkit 会话
       tags:
       - auth
   /home:
@@ -1983,7 +1970,7 @@ paths:
         in: path
         name: account_id
         required: true
-        type: integer
+        type: string
       - description: 角色ID列表
         in: body
         name: request
@@ -2015,7 +2002,7 @@ paths:
         in: path
         name: account_id
         required: true
-        type: integer
+        type: string
       - description: 角色ID列表
         in: body
         name: request
@@ -2045,7 +2032,7 @@ paths:
       - description: 被授权账号ID
         in: query
         name: account_id
-        type: integer
+        type: string
       - description: 授权状态
         in: query
         name: status

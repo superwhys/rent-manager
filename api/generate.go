@@ -1,3 +1,3 @@
 package api
 
-//go:generate swag init --dir ./ --generalInfo api.go --parseDependency --parseInternal --parseGoList true
+//go:generate swag init --dir ./ --generalInfo api.go --parseDependency --parseInternal --parseGoList=true --propertyStrategy=pascalcase

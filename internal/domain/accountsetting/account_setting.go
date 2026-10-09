@@ -7,7 +7,7 @@ import (
 
 type AccountSetting struct {
 	ID        int
-	AccountID int
+	AccountID string
 	Key       string
 	Value     string
 	CreatedAt time.Time
@@ -36,7 +36,7 @@ func (s *AccountSetting) Update(params UpdateParams) error {
 }
 
 func (s *AccountSetting) Validate() error {
-	if s.AccountID <= 0 {
+	if strings.TrimSpace(s.AccountID) == "" {
 		return ErrAccountRequired
 	}
 	if s.Key == "" {

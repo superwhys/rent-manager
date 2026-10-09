@@ -86,7 +86,7 @@ type MeterReadingLineResponse struct {
 	CurrentReading  *float64                       `json:"current_reading,omitempty"`
 	UsageAmount     *float64                       `json:"usage_amount,omitempty"`
 	ReadingTime     *time.Time                     `json:"reading_time,omitempty"`
-	ReaderID        *int64                         `json:"reader_id,omitempty"`
+	ReaderID        *string                        `json:"reader_id,omitempty"`
 	Source          string                         `json:"source,omitempty"`
 	Remark          *string                        `json:"remark,omitempty"`
 	Fee             int                            `json:"fee"`

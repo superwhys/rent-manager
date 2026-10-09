@@ -17,7 +17,7 @@ type MeterReading struct {
 	CurrentReading  float64
 	UsageAmount     *float64
 	ReadingTime     time.Time
-	ReaderID        *int64
+	ReaderID        *string
 	Source          string
 	Remark          *string
 	CreatedAt       time.Time

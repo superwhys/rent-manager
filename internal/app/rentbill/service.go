@@ -216,7 +216,7 @@ func (s *Service) CancelRentBill(ctx context.Context, cmd *CancelRentBillCommand
 	return s.repo.Update(ctx, unit.AccountID, &next)
 }
 
-func (s *Service) buildGeneratedBill(ctx context.Context, accountID int, room *domainroom.Room, periodMonth string, remark *string) (*domainrentbill.RentBill, error) {
+func (s *Service) buildGeneratedBill(ctx context.Context, accountID string, room *domainroom.Room, periodMonth string, remark *string) (*domainrentbill.RentBill, error) {
 	meterFee, err := s.calculateRoomMeterFee(ctx, accountID, room, periodMonth)
 	if err != nil {
 		return nil, err
@@ -230,7 +230,7 @@ func (s *Service) buildGeneratedBill(ctx context.Context, accountID int, room *d
 	})
 }
 
-func (s *Service) calculateRoomMeterFee(ctx context.Context, accountID int, room *domainroom.Room, periodMonth string) (int, error) {
+func (s *Service) calculateRoomMeterFee(ctx context.Context, accountID string, room *domainroom.Room, periodMonth string) (int, error) {
 	if len(room.MeterItems) == 0 {
 		return 0, nil
 	}
@@ -266,7 +266,7 @@ func (s *Service) calculateRoomMeterFee(ctx context.Context, accountID int, room
 	return total, nil
 }
 
-func (s *Service) saveGeneratedBills(ctx context.Context, accountID int, bills []*domainrentbill.RentBill) (*GeneratedRentBills, error) {
+func (s *Service) saveGeneratedBills(ctx context.Context, accountID string, bills []*domainrentbill.RentBill) (*GeneratedRentBills, error) {
 	if len(bills) == 0 {
 		return &GeneratedRentBills{}, nil
 	}
@@ -280,7 +280,7 @@ func (s *Service) saveGeneratedBills(ctx context.Context, accountID int, bills [
 	}, nil
 }
 
-func (s *Service) skippableExistingBill(ctx context.Context, accountID int, roomID int, periodMonth string) (*domainrentbill.RentBill, bool, error) {
+func (s *Service) skippableExistingBill(ctx context.Context, accountID string, roomID int, periodMonth string) (*domainrentbill.RentBill, bool, error) {
 	bill, err := s.repo.GetByRoomPeriod(ctx, accountID, roomID, periodMonth)
 	if err != nil {
 		if errors.Is(err, domainrentbill.ErrNotFound) {
@@ -291,7 +291,7 @@ func (s *Service) skippableExistingBill(ctx context.Context, accountID int, room
 	return bill, bill.Status != domainrentbill.StatusUnpaid, nil
 }
 
-func (s *Service) requireBillPermission(ctx context.Context, accountID int, billID int, permissionCode string) (*domainrentbill.RentBill, *domainunit.Unit, error) {
+func (s *Service) requireBillPermission(ctx context.Context, accountID string, billID int, permissionCode string) (*domainrentbill.RentBill, *domainunit.Unit, error) {
 	bill, err := s.repo.GetByID(ctx, billID)
 	if err != nil {
 		return nil, nil, err
@@ -304,7 +304,7 @@ func (s *Service) requireBillPermission(ctx context.Context, accountID int, bill
 	return bill, unit, nil
 }
 
-func (s *Service) requireRoomPermission(ctx context.Context, accountID int, roomID int, permissionCode string) (*domainroom.Room, *domainunit.Unit, error) {
+func (s *Service) requireRoomPermission(ctx context.Context, accountID string, roomID int, permissionCode string) (*domainroom.Room, *domainunit.Unit, error) {
 	room, err := s.roomRepo.GetByID(ctx, roomID)
 	if err != nil {
 		return nil, nil, err
@@ -316,7 +316,7 @@ func (s *Service) requireRoomPermission(ctx context.Context, accountID int, room
 	return room, unit, nil
 }
 
-func (s *Service) requireUnitPermission(ctx context.Context, accountID int, unitID int, permissionCode string) (*domainunit.Unit, error) {
+func (s *Service) requireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (*domainunit.Unit, error) {
 	unit, err := s.unitRepo.GetByID(ctx, unitID)
 	if err != nil {
 		return nil, err

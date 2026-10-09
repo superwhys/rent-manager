@@ -1,49 +1,68 @@
 package middlewares
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/miebyte/authkit"
 	"github.com/miebyte/goutils/logging"
 
 	"github.com/superwhys/rent-manager/api/response"
 	appcore "github.com/superwhys/rent-manager/internal/app"
-	appauth "github.com/superwhys/rent-manager/internal/app/auth"
 	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
-// TokenVerifyMiddleware 校验访问令牌并写入当前账号上下文。
-func TokenVerifyMiddleware(tokenManager appauth.TokenManager) gin.HandlerFunc {
+type SessionAuthenticator interface {
+	AuthenticateSession(context.Context, string) (*authkit.AuthenticatedSession, error)
+}
+
+const sessionContextKey = "authkit.session"
+
+// BearerToken 提取 Authorization 中的会话令牌。
+func BearerToken(ctx *gin.Context) string {
+	parts := strings.Fields(ctx.GetHeader("Authorization"))
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		return ""
+	}
+	return parts[1]
+}
+
+// AuthenticatedSessionFromContext 返回中间件已验证的 authkit 会话。
+func AuthenticatedSessionFromContext(ctx *gin.Context) *authkit.AuthenticatedSession {
+	value, _ := ctx.Get(sessionContextKey)
+	session, _ := value.(*authkit.AuthenticatedSession)
+	return session
+}
+
+// TokenVerifyMiddleware 使用 authkit 校验会话并写入当前账号上下文。
+func TokenVerifyMiddleware(authService SessionAuthenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		authHeader := ctx.GetHeader("Authorization")
-		if authHeader == "" {
-			ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrUnauthorized))
-			ctx.Abort()
+		token := BearerToken(ctx)
+		if token == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrUnauthorized))
 			return
 		}
-
-		// Support "Bearer <token>" format
-		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-		tokenStr = strings.TrimSpace(tokenStr)
-
-		claims, err := tokenManager.ParseToken(tokenStr)
+		session, err := authService.AuthenticateSession(ctx.Request.Context(), token)
 		if err != nil {
-			logging.Errorw(ctx.Request.Context(), "verify token failed", logging.Err(err))
-
-			if ec, ok := xerr.AsErrcode(err); ok {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(ec))
+			if errors.Is(err, authkit.ErrUnauthorized) || errors.Is(err, authkit.ErrBlacklisted) {
+				ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrInvalidToken))
 			} else {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrInvalidToken))
+				logging.Errorw(ctx.Request.Context(), "authenticate session failed", logging.Err(err))
+				ctx.AbortWithStatusJSON(http.StatusInternalServerError, response.ErrorResponseWithCode(xerr.ErrSysInternal))
 			}
-			ctx.Abort()
 			return
 		}
-
-		logging.Debugw(ctx.Request.Context(), "token claims", logging.Any("claims", claims))
-
-		reqCtx := appcore.SetAccountIDToContext(ctx.Request.Context(), claims.UserID)
-		reqCtx = logging.With(reqCtx, "UserID", claims.UserID)
+		// 本项目未提供代登录授权，不能把代登录会话当作目标账号的普通会话。
+		if session == nil || session.Account.ID == "" || session.Actor != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrInvalidToken))
+			return
+		}
+		ctx.Set(sessionContextKey, session)
+		reqCtx := appcore.SetAccountIDToContext(ctx.Request.Context(), session.Account.ID)
+		reqCtx = logging.With(reqCtx, "AccountID", session.Account.ID)
 		ctx.Request = ctx.Request.WithContext(reqCtx)
 	}
 }

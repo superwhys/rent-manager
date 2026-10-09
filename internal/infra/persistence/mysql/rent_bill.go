@@ -25,7 +25,7 @@ func NewRentBillRepository(client *gorm.DB) *RentBillRepository {
 }
 
 // Create 创建账号名下房间的租金账单。
-func (r *RentBillRepository) Create(ctx context.Context, accountID int, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) Create(ctx context.Context, accountID string, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
 	if err := r.ensureRentBillRoomInAccount(ctx, accountID, bill.RoomID); err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (r *RentBillRepository) Create(ctx context.Context, accountID int, bill *do
 }
 
 // Get 获取账号名下指定租金账单。
-func (r *RentBillRepository) Get(ctx context.Context, accountID int, id int) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) Get(ctx context.Context, accountID string, id int) (*domainrentbill.RentBill, error) {
 	record, err := r.q.RentBill.WithContext(ctx).
 		Where(
 			r.q.RentBill.ID.Eq(id),
@@ -72,7 +72,7 @@ func (r *RentBillRepository) GetByID(ctx context.Context, id int) (*domainrentbi
 }
 
 // GetByRoomPeriod 获取账号名下房间指定月份的租金账单。
-func (r *RentBillRepository) GetByRoomPeriod(ctx context.Context, accountID int, roomID int, periodMonth string) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) GetByRoomPeriod(ctx context.Context, accountID string, roomID int, periodMonth string) (*domainrentbill.RentBill, error) {
 	record, err := r.q.RentBill.WithContext(ctx).
 		Where(
 			r.q.RentBill.RoomID.Eq(roomID),
@@ -91,7 +91,7 @@ func (r *RentBillRepository) GetByRoomPeriod(ctx context.Context, accountID int,
 }
 
 // List 查询账号名下的租金账单列表。
-func (r *RentBillRepository) List(ctx context.Context, accountID int, query domainrentbill.ListQuery) ([]*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) List(ctx context.Context, accountID string, query domainrentbill.ListQuery) ([]*domainrentbill.RentBill, error) {
 	q := r.queryRentBills(ctx, accountID, query)
 	if query.Limit > 0 {
 		q = q.Limit(query.Limit)
@@ -107,7 +107,7 @@ func (r *RentBillRepository) List(ctx context.Context, accountID int, query doma
 }
 
 // SaveGeneratedBills 事务性保存生成的账单：新增、刷新待付账单、跳过已支付或已取消账单。
-func (r *RentBillRepository) SaveGeneratedBills(ctx context.Context, accountID int, bills []*domainrentbill.RentBill) (*domainrentbill.SaveGeneratedBillsResult, error) {
+func (r *RentBillRepository) SaveGeneratedBills(ctx context.Context, accountID string, bills []*domainrentbill.RentBill) (*domainrentbill.SaveGeneratedBillsResult, error) {
 	if len(bills) == 0 {
 		return nil, domainrentbill.ErrBillsRequired
 	}
@@ -174,7 +174,7 @@ func (r *RentBillRepository) SaveGeneratedBills(ctx context.Context, accountID i
 }
 
 // Update 更新账号名下指定租金账单。
-func (r *RentBillRepository) Update(ctx context.Context, accountID int, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) Update(ctx context.Context, accountID string, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
 	if err := r.ensureRentBillRoomInAccount(ctx, accountID, bill.RoomID); err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (r *RentBillRepository) Update(ctx context.Context, accountID int, bill *do
 }
 
 // Delete 软删除账号名下指定租金账单。
-func (r *RentBillRepository) Delete(ctx context.Context, accountID int, id int) error {
+func (r *RentBillRepository) Delete(ctx context.Context, accountID string, id int) error {
 	result, err := r.q.RentBill.WithContext(ctx).
 		Where(
 			r.q.RentBill.ID.Eq(id),
@@ -257,7 +257,7 @@ func toModelRentBill(bill *domainrentbill.RentBill) *models.RentBill {
 }
 
 // queryRentBills 构建带账号归属约束的租金账单查询。
-func (r *RentBillRepository) queryRentBills(ctx context.Context, accountID int, params domainrentbill.ListQuery) query.IRentBillDo {
+func (r *RentBillRepository) queryRentBills(ctx context.Context, accountID string, params domainrentbill.ListQuery) query.IRentBillDo {
 	rooms := accountRooms(ctx, r.q, accountID)
 	if params.UnitID > 0 {
 		rooms = rooms.Where(r.q.Room.UnitID.Eq(params.UnitID))
@@ -286,7 +286,7 @@ func (r *RentBillRepository) queryRentBills(ctx context.Context, accountID int, 
 }
 
 // ensureRentBillRoomInAccount 确认账单房间属于当前账号。
-func (r *RentBillRepository) ensureRentBillRoomInAccount(ctx context.Context, accountID int, roomID int) error {
+func (r *RentBillRepository) ensureRentBillRoomInAccount(ctx context.Context, accountID string, roomID int) error {
 	count, err := accountRooms(ctx, r.q, accountID).Where(r.q.Room.ID.Eq(roomID)).Count()
 	if err != nil {
 		return err

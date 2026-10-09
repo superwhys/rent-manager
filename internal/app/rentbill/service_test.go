@@ -16,11 +16,16 @@ import (
 	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
 
+const (
+	testAccountID20 = "0000000000000000000000000000000000000000000000000000000000000014"
+	testAccountID30 = "000000000000000000000000000000000000000000000000000000000000001e"
+)
+
 func TestGenerateRoomRentBillUsesRoomRentAndMeterFee(t *testing.T) {
 	water := &domainmeteritem.MeterItem{ID: 1, Code: "水", Unit: "m3", UnitPrice: 200}
 	power := &domainmeteritem.MeterItem{ID: 2, Code: "电", Unit: "kWh", UnitPrice: 150}
 	room := &domainroom.Room{ID: 11, UnitID: 7, Price: 100000, MeterItems: []*domainmeteritem.MeterItem{water, power}}
-	unit := &domainunit.Unit{ID: 7, AccountID: 20}
+	unit := &domainunit.Unit{ID: 7, AccountID: testAccountID20}
 	waterUsage := 3.0
 	powerUsage := 4.0
 	rentBillRepo := &fakeRentBillRepo{}
@@ -30,7 +35,7 @@ func TestGenerateRoomRentBillUsesRoomRentAndMeterFee(t *testing.T) {
 			{RoomID: 11, MeterItemID: 2, PeriodMonth: "2026-06", UsageAmount: &powerUsage},
 		},
 	}, &fakeRbacService{})
-	ctx := appcore.SetAccountIDToContext(context.Background(), 20)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID20)
 
 	result, err := service.GenerateRoomRentBill(ctx, &GenerateRoomRentBillCommand{RoomID: 11, PeriodMonth: "2026-06"})
 	if err != nil {
@@ -57,10 +62,10 @@ func TestGenerateRoomRentBillUsesRoomRentAndMeterFee(t *testing.T) {
 func TestGenerateRoomRentBillRejectsMissingMeterReading(t *testing.T) {
 	water := &domainmeteritem.MeterItem{ID: 1, Code: "水", Unit: "m3", UnitPrice: 200}
 	room := &domainroom.Room{ID: 11, UnitID: 7, Price: 100000, MeterItems: []*domainmeteritem.MeterItem{water}}
-	unit := &domainunit.Unit{ID: 7, AccountID: 20}
+	unit := &domainunit.Unit{ID: 7, AccountID: testAccountID20}
 	rentBillRepo := &fakeRentBillRepo{}
 	service := newTestService(rentBillRepo, []*domainroom.Room{room}, []*domainunit.Unit{unit}, nil, &fakeRbacService{})
-	ctx := appcore.SetAccountIDToContext(context.Background(), 20)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID20)
 
 	_, err := service.GenerateRoomRentBill(ctx, &GenerateRoomRentBillCommand{RoomID: 11, PeriodMonth: "2026-06"})
 	if !errors.Is(err, domainrentbill.ErrMeterReadingMissing) {
@@ -74,12 +79,12 @@ func TestGenerateRoomRentBillRejectsMissingMeterReading(t *testing.T) {
 func TestGenerateUnitRentBillsSkipsPaidExistingBill(t *testing.T) {
 	water := &domainmeteritem.MeterItem{ID: 1, Code: "水", Unit: "m3", UnitPrice: 200}
 	room := &domainroom.Room{ID: 11, UnitID: 7, Price: 100000, IsActive: false, MeterItems: []*domainmeteritem.MeterItem{water}}
-	unit := &domainunit.Unit{ID: 7, AccountID: 20}
+	unit := &domainunit.Unit{ID: 7, AccountID: testAccountID20}
 	paidAt := time.Now()
 	existing := &domainrentbill.RentBill{ID: 99, RoomID: 11, PeriodMonth: "2026-06", Status: domainrentbill.StatusPaid, PaidAt: &paidAt}
 	rentBillRepo := &fakeRentBillRepo{byRoomPeriod: map[string]*domainrentbill.RentBill{rentBillKey(11, "2026-06"): existing}}
 	service := newTestService(rentBillRepo, []*domainroom.Room{room}, []*domainunit.Unit{unit}, nil, &fakeRbacService{})
-	ctx := appcore.SetAccountIDToContext(context.Background(), 20)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID20)
 
 	result, err := service.GenerateUnitRentBills(ctx, &GenerateUnitRentBillsCommand{UnitID: 7, PeriodMonth: "2026-06"})
 	if err != nil {
@@ -98,10 +103,10 @@ func TestGenerateUnitRentBillsSkipsPaidExistingBill(t *testing.T) {
 
 func TestGenerateUnitRentBillsSkipsAvailableRooms(t *testing.T) {
 	room := &domainroom.Room{ID: 11, UnitID: 7, Price: 100000, IsActive: true}
-	unit := &domainunit.Unit{ID: 7, AccountID: 20}
+	unit := &domainunit.Unit{ID: 7, AccountID: testAccountID20}
 	rentBillRepo := &fakeRentBillRepo{}
 	service := newTestService(rentBillRepo, []*domainroom.Room{room}, []*domainunit.Unit{unit}, nil, &fakeRbacService{})
-	ctx := appcore.SetAccountIDToContext(context.Background(), 20)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID20)
 
 	result, err := service.GenerateUnitRentBills(ctx, &GenerateUnitRentBillsCommand{UnitID: 7, PeriodMonth: "2026-06"})
 	if err != nil {
@@ -120,10 +125,10 @@ func TestGenerateUnitRentBillsSkipsAvailableRooms(t *testing.T) {
 
 func TestGenerateRoomRentBillChecksGrantedPermission(t *testing.T) {
 	room := &domainroom.Room{ID: 11, UnitID: 7, Price: 100000}
-	unit := &domainunit.Unit{ID: 7, AccountID: 20}
+	unit := &domainunit.Unit{ID: 7, AccountID: testAccountID20}
 	rbac := &fakeRbacService{}
 	service := newTestService(&fakeRentBillRepo{}, []*domainroom.Room{room}, []*domainunit.Unit{unit}, nil, rbac)
-	ctx := appcore.SetAccountIDToContext(context.Background(), 30)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID30)
 
 	_, err := service.GenerateRoomRentBill(ctx, &GenerateRoomRentBillCommand{RoomID: 11, PeriodMonth: "2026-06"})
 	if err != nil {
@@ -132,8 +137,8 @@ func TestGenerateRoomRentBillChecksGrantedPermission(t *testing.T) {
 	if rbac.permissionCode != domainrbac.PermissionRentBillManage {
 		t.Fatalf("permission = %q, want %q", rbac.permissionCode, domainrbac.PermissionRentBillManage)
 	}
-	if rbac.accountID != 30 || rbac.unitID != 7 {
-		t.Fatalf("rbac got account=%d unit=%d, want account=30 unit=7", rbac.accountID, rbac.unitID)
+	if rbac.accountID != testAccountID30 || rbac.unitID != 7 {
+		t.Fatalf("rbac got account=%s unit=%d, want account=30 unit=7", rbac.accountID, rbac.unitID)
 	}
 }
 
@@ -162,11 +167,11 @@ type fakeRentBillRepo struct {
 	updated      []*domainrentbill.RentBill
 }
 
-func (r *fakeRentBillRepo) Create(ctx context.Context, accountID int, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
+func (r *fakeRentBillRepo) Create(ctx context.Context, accountID string, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
 	return bill, nil
 }
 
-func (r *fakeRentBillRepo) Get(ctx context.Context, accountID int, id int) (*domainrentbill.RentBill, error) {
+func (r *fakeRentBillRepo) Get(ctx context.Context, accountID string, id int) (*domainrentbill.RentBill, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -177,18 +182,18 @@ func (r *fakeRentBillRepo) GetByID(ctx context.Context, id int) (*domainrentbill
 	return nil, domainrentbill.ErrNotFound
 }
 
-func (r *fakeRentBillRepo) GetByRoomPeriod(ctx context.Context, accountID int, roomID int, periodMonth string) (*domainrentbill.RentBill, error) {
+func (r *fakeRentBillRepo) GetByRoomPeriod(ctx context.Context, accountID string, roomID int, periodMonth string) (*domainrentbill.RentBill, error) {
 	if r.byRoomPeriod != nil && r.byRoomPeriod[rentBillKey(roomID, periodMonth)] != nil {
 		return r.byRoomPeriod[rentBillKey(roomID, periodMonth)], nil
 	}
 	return nil, domainrentbill.ErrNotFound
 }
 
-func (r *fakeRentBillRepo) List(ctx context.Context, accountID int, query domainrentbill.ListQuery) ([]*domainrentbill.RentBill, error) {
+func (r *fakeRentBillRepo) List(ctx context.Context, accountID string, query domainrentbill.ListQuery) ([]*domainrentbill.RentBill, error) {
 	return nil, nil
 }
 
-func (r *fakeRentBillRepo) SaveGeneratedBills(ctx context.Context, accountID int, bills []*domainrentbill.RentBill) (*domainrentbill.SaveGeneratedBillsResult, error) {
+func (r *fakeRentBillRepo) SaveGeneratedBills(ctx context.Context, accountID string, bills []*domainrentbill.RentBill) (*domainrentbill.SaveGeneratedBillsResult, error) {
 	r.saved = append([]*domainrentbill.RentBill(nil), bills...)
 	result := &domainrentbill.SaveGeneratedBillsResult{Saved: make([]*domainrentbill.RentBill, 0, len(bills))}
 	for index, bill := range bills {
@@ -200,12 +205,12 @@ func (r *fakeRentBillRepo) SaveGeneratedBills(ctx context.Context, accountID int
 	return result, nil
 }
 
-func (r *fakeRentBillRepo) Update(ctx context.Context, accountID int, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
+func (r *fakeRentBillRepo) Update(ctx context.Context, accountID string, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
 	r.updated = append(r.updated, bill)
 	return bill, nil
 }
 
-func (r *fakeRentBillRepo) Delete(ctx context.Context, accountID int, id int) error {
+func (r *fakeRentBillRepo) Delete(ctx context.Context, accountID string, id int) error {
 	return nil
 }
 
@@ -213,35 +218,35 @@ type fakeMeterReadingRepo struct {
 	listByRoomPeriod map[string][]*domainmeterreading.MeterReading
 }
 
-func (r *fakeMeterReadingRepo) Create(ctx context.Context, accountID int, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) Create(ctx context.Context, accountID string, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
 	return reading, nil
 }
 
-func (r *fakeMeterReadingRepo) Get(ctx context.Context, accountID int, id int) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) Get(ctx context.Context, accountID string, id int) (*domainmeterreading.MeterReading, error) {
 	return nil, domainmeterreading.ErrNotFound
 }
 
-func (r *fakeMeterReadingRepo) GetByRoomMeterItemPeriod(ctx context.Context, accountID int, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) GetByRoomMeterItemPeriod(ctx context.Context, accountID string, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
 	return nil, domainmeterreading.ErrNotFound
 }
 
-func (r *fakeMeterReadingRepo) GetLatestBeforePeriod(ctx context.Context, accountID int, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) GetLatestBeforePeriod(ctx context.Context, accountID string, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
 	return nil, domainmeterreading.ErrNotFound
 }
 
-func (r *fakeMeterReadingRepo) List(ctx context.Context, accountID int, query domainmeterreading.ListQuery) ([]*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) List(ctx context.Context, accountID string, query domainmeterreading.ListQuery) ([]*domainmeterreading.MeterReading, error) {
 	return r.listByRoomPeriod[meterReadingKey(query.RoomID, query.PeriodMonth)], nil
 }
 
-func (r *fakeMeterReadingRepo) SaveRoomMonth(ctx context.Context, accountID int, readings []*domainmeterreading.MeterReading) ([]*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) SaveRoomMonth(ctx context.Context, accountID string, readings []*domainmeterreading.MeterReading) ([]*domainmeterreading.MeterReading, error) {
 	return readings, nil
 }
 
-func (r *fakeMeterReadingRepo) Update(ctx context.Context, accountID int, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) Update(ctx context.Context, accountID string, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
 	return reading, nil
 }
 
-func (r *fakeMeterReadingRepo) Delete(ctx context.Context, accountID int, id int) error {
+func (r *fakeMeterReadingRepo) Delete(ctx context.Context, accountID string, id int) error {
 	return nil
 }
 
@@ -249,11 +254,11 @@ type fakeRoomRepo struct {
 	byID map[int]*domainroom.Room
 }
 
-func (r *fakeRoomRepo) Create(ctx context.Context, accountID int, room *domainroom.Room) (*domainroom.Room, error) {
+func (r *fakeRoomRepo) Create(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
 	return room, nil
 }
 
-func (r *fakeRoomRepo) Get(ctx context.Context, accountID int, id int) (*domainroom.Room, error) {
+func (r *fakeRoomRepo) Get(ctx context.Context, accountID string, id int) (*domainroom.Room, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -265,7 +270,7 @@ func (r *fakeRoomRepo) GetByID(ctx context.Context, id int) (*domainroom.Room, e
 	return room, nil
 }
 
-func (r *fakeRoomRepo) List(ctx context.Context, accountID int, query domainroom.ListQuery) ([]*domainroom.Room, error) {
+func (r *fakeRoomRepo) List(ctx context.Context, accountID string, query domainroom.ListQuery) ([]*domainroom.Room, error) {
 	rooms := make([]*domainroom.Room, 0, len(r.byID))
 	for _, room := range r.byID {
 		if room.UnitID != query.UnitID {
@@ -279,16 +284,16 @@ func (r *fakeRoomRepo) List(ctx context.Context, accountID int, query domainroom
 	return rooms, nil
 }
 
-func (r *fakeRoomRepo) Count(ctx context.Context, accountID int, query domainroom.ListQuery) (int, error) {
+func (r *fakeRoomRepo) Count(ctx context.Context, accountID string, query domainroom.ListQuery) (int, error) {
 	rooms, err := r.List(ctx, accountID, query)
 	return len(rooms), err
 }
 
-func (r *fakeRoomRepo) Update(ctx context.Context, accountID int, room *domainroom.Room) (*domainroom.Room, error) {
+func (r *fakeRoomRepo) Update(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
 	return room, nil
 }
 
-func (r *fakeRoomRepo) Delete(ctx context.Context, accountID int, id int) error {
+func (r *fakeRoomRepo) Delete(ctx context.Context, accountID string, id int) error {
 	return nil
 }
 
@@ -300,7 +305,7 @@ func (r *fakeUnitRepo) Create(ctx context.Context, unit *domainunit.Unit) (*doma
 	return unit, nil
 }
 
-func (r *fakeUnitRepo) Get(ctx context.Context, accountID int, id int) (*domainunit.Unit, error) {
+func (r *fakeUnitRepo) Get(ctx context.Context, accountID string, id int) (*domainunit.Unit, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -320,18 +325,18 @@ func (r *fakeUnitRepo) Update(ctx context.Context, unit *domainunit.Unit) (*doma
 	return unit, nil
 }
 
-func (r *fakeUnitRepo) Delete(ctx context.Context, accountID int, id int) error {
+func (r *fakeUnitRepo) Delete(ctx context.Context, accountID string, id int) error {
 	return nil
 }
 
 type fakeRbacService struct {
-	accountID      int
+	accountID      string
 	unitID         int
 	permissionCode string
 	err            error
 }
 
-func (s *fakeRbacService) RequireUnitPermission(ctx context.Context, accountID int, unitID int, permissionCode string) error {
+func (s *fakeRbacService) RequireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) error {
 	s.accountID = accountID
 	s.unitID = unitID
 	s.permissionCode = permissionCode

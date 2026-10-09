@@ -5,7 +5,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/superwhys/rent-manager/internal/domain/account"
 	"github.com/superwhys/rent-manager/internal/domain/accountsetting"
 	"github.com/superwhys/rent-manager/internal/domain/meteritem"
 	"github.com/superwhys/rent-manager/internal/domain/meterreading"
@@ -18,7 +17,6 @@ import (
 
 // Repositories groups repositories bound to the same database connection.
 type Repositories struct {
-	Account        account.Repository
 	AccountSetting accountsetting.Repository
 	RBAC           rbac.Repository
 	Unit           unit.Repository
@@ -39,7 +37,6 @@ func NewRepositoryFactory(db *gorm.DB) *RepositoryFactory {
 
 func (f *RepositoryFactory) Repositories() Repositories {
 	return Repositories{
-		Account:        NewAccountRepository(f.db),
 		AccountSetting: NewAccountSettingRepository(f.db),
 		RBAC:           NewRBACRepository(f.db),
 		Unit:           NewUnitRepository(f.db),

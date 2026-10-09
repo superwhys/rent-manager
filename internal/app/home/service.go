@@ -168,7 +168,7 @@ func (s *Service) sumRentBills(ctx context.Context, unit *domainunit.Unit, perio
 	return totalAmount, count, nil
 }
 
-func (s *Service) collectUnitTodos(ctx context.Context, accountID int, unit *domainunit.Unit, rentedRooms []*domainroom.Room, periodMonth string) (*unitTodoResult, error) {
+func (s *Service) collectUnitTodos(ctx context.Context, accountID string, unit *domainunit.Unit, rentedRooms []*domainroom.Room, periodMonth string) (*unitTodoResult, error) {
 	result := &unitTodoResult{}
 	// 首页待办只针对已出租房间；可用空房不需要抄表、出账或收租。
 	if len(rentedRooms) == 0 {
@@ -279,7 +279,7 @@ func (s *Service) listUnitReadingsByRoom(ctx context.Context, unit *domainunit.U
 	return readingsByRoom, nil
 }
 
-func (s *Service) canViewUnit(ctx context.Context, accountID int, unitID int, permissionCode string) (bool, error) {
+func (s *Service) canViewUnit(ctx context.Context, accountID string, unitID int, permissionCode string) (bool, error) {
 	if s.rbacService == nil {
 		return true, nil
 	}

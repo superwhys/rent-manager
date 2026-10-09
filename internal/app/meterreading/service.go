@@ -70,7 +70,6 @@ func (s *Service) SaveRoomMonthReadings(ctx context.Context, cmd *SaveRoomMonthC
 	}
 	itemByID := roomMeterItemMap(room)
 	now := time.Now()
-	readerID := int64(accountID)
 	seen := make(map[int]struct{}, len(cmd.Readings))
 	readings := make([]*domainmeterreading.MeterReading, 0, len(cmd.Readings))
 
@@ -101,7 +100,7 @@ func (s *Service) SaveRoomMonthReadings(ctx context.Context, cmd *SaveRoomMonthC
 			PreviousReading: previousReading,
 			CurrentReading:  input.CurrentReading,
 			ReadingTime:     readingTime,
-			ReaderID:        &readerID,
+			ReaderID:        &accountID,
 			Source:          domainmeterreading.SourceManual,
 			Remark:          input.Remark,
 		})
@@ -161,7 +160,7 @@ func (s *Service) GetUnitMonthReadings(ctx context.Context, query *UnitMeterRead
 }
 
 // buildRoomMonthReadings 构建房间某个月所有当前绑定抄表项的录入状态。
-func (s *Service) buildRoomMonthReadings(ctx context.Context, accountID int, room *domainroom.Room, periodMonth string) (*RoomMonthReadings, error) {
+func (s *Service) buildRoomMonthReadings(ctx context.Context, accountID string, room *domainroom.Room, periodMonth string) (*RoomMonthReadings, error) {
 	readings, err := s.repo.List(ctx, accountID, domainmeterreading.ListQuery{
 		RoomID:      room.ID,
 		PeriodMonth: periodMonth,
@@ -199,7 +198,7 @@ func (s *Service) buildRoomMonthReadings(ctx context.Context, accountID int, roo
 	return roomMonth, nil
 }
 
-func (s *Service) buildMeterReadingLine(ctx context.Context, accountID int, roomID int, item *domainmeteritem.MeterItem, periodMonth string, reading *domainmeterreading.MeterReading) (*MeterReadingLine, error) {
+func (s *Service) buildMeterReadingLine(ctx context.Context, accountID string, roomID int, item *domainmeteritem.MeterItem, periodMonth string, reading *domainmeterreading.MeterReading) (*MeterReadingLine, error) {
 	line := &MeterReadingLine{
 		RoomID:      roomID,
 		PeriodMonth: periodMonth,
@@ -231,7 +230,7 @@ func (s *Service) buildMeterReadingLine(ctx context.Context, accountID int, room
 	return line, nil
 }
 
-func (s *Service) resolvePreviousReading(ctx context.Context, accountID int, roomID int, item *domainmeteritem.MeterItem, periodMonth string, inputPreviousReading *float64) (*float64, error) {
+func (s *Service) resolvePreviousReading(ctx context.Context, accountID string, roomID int, item *domainmeteritem.MeterItem, periodMonth string, inputPreviousReading *float64) (*float64, error) {
 	if item.CalcType != domainmeteritem.CalcTypeDifference {
 		return nil, nil
 	}
@@ -249,7 +248,7 @@ func (s *Service) resolvePreviousReading(ctx context.Context, accountID int, roo
 	return inputPreviousReading, nil
 }
 
-func (s *Service) requireRoomPermission(ctx context.Context, accountID int, roomID int, permissionCode string) (*domainroom.Room, *domainunit.Unit, error) {
+func (s *Service) requireRoomPermission(ctx context.Context, accountID string, roomID int, permissionCode string) (*domainroom.Room, *domainunit.Unit, error) {
 	room, err := s.roomRepo.GetByID(ctx, roomID)
 	if err != nil {
 		return nil, nil, err
@@ -261,7 +260,7 @@ func (s *Service) requireRoomPermission(ctx context.Context, accountID int, room
 	return room, unit, nil
 }
 
-func (s *Service) requireUnitPermission(ctx context.Context, accountID int, unitID int, permissionCode string) (*domainunit.Unit, error) {
+func (s *Service) requireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (*domainunit.Unit, error) {
 	unit, err := s.unitRepo.GetByID(ctx, unitID)
 	if err != nil {
 		return nil, err

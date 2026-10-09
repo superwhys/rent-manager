@@ -8,15 +8,20 @@ import (
 	domainaccountsetting "github.com/superwhys/rent-manager/internal/domain/accountsetting"
 )
 
+const (
+	testAccountID10 = "000000000000000000000000000000000000000000000000000000000000000a"
+	testAccountID20 = "0000000000000000000000000000000000000000000000000000000000000014"
+)
+
 func TestGetSettingsReturnsAccountSettingsMap(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
 	repo.seed(
-		&domainaccountsetting.AccountSetting{AccountID: 10, Key: "theme", Value: "dark"},
-		&domainaccountsetting.AccountSetting{AccountID: 10, Key: "locale", Value: "zh-CN"},
-		&domainaccountsetting.AccountSetting{AccountID: 20, Key: "theme", Value: "light"},
+		&domainaccountsetting.AccountSetting{AccountID: testAccountID10, Key: "theme", Value: "dark"},
+		&domainaccountsetting.AccountSetting{AccountID: testAccountID10, Key: "locale", Value: "zh-CN"},
+		&domainaccountsetting.AccountSetting{AccountID: testAccountID20, Key: "theme", Value: "light"},
 	)
 	service := NewService(repo)
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	settings, err := service.GetSettings(ctx)
 	if err != nil {
@@ -33,7 +38,7 @@ func TestGetSettingsReturnsAccountSettingsMap(t *testing.T) {
 func TestUpdateSettingsStoresKeyValue(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
 	service := NewService(repo)
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	settings, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"})
 	if err != nil {
@@ -42,20 +47,20 @@ func TestUpdateSettingsStoresKeyValue(t *testing.T) {
 	if (*settings)["theme"] != "dark" {
 		t.Fatalf("settings = %#v, want theme=dark", *settings)
 	}
-	stored := repo.settings[10]["theme"]
+	stored := repo.settings[testAccountID10]["theme"]
 	if stored == nil {
 		t.Fatalf("stored setting is nil")
 	}
-	if stored.AccountID != 10 || stored.Value != "dark" {
+	if stored.AccountID != testAccountID10 || stored.Value != "dark" {
 		t.Fatalf("stored = %#v, want account=10 value=dark", stored)
 	}
 }
 
 func TestUpdateSettingsOverwritesExistingValue(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
-	repo.seed(&domainaccountsetting.AccountSetting{AccountID: 10, Key: "theme", Value: "light"})
+	repo.seed(&domainaccountsetting.AccountSetting{AccountID: testAccountID10, Key: "theme", Value: "light"})
 	service := NewService(repo)
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	settings, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"})
 	if err != nil {
@@ -64,19 +69,19 @@ func TestUpdateSettingsOverwritesExistingValue(t *testing.T) {
 	if (*settings)["theme"] != "dark" {
 		t.Fatalf("settings = %#v, want theme=dark", *settings)
 	}
-	if len(repo.settings[10]) != 1 {
-		t.Fatalf("settings count = %d, want 1", len(repo.settings[10]))
+	if len(repo.settings[testAccountID10]) != 1 {
+		t.Fatalf("settings count = %d, want 1", len(repo.settings[testAccountID10]))
 	}
-	if repo.settings[10]["theme"].Value != "dark" {
-		t.Fatalf("stored value = %q, want dark", repo.settings[10]["theme"].Value)
+	if repo.settings[testAccountID10]["theme"].Value != "dark" {
+		t.Fatalf("stored value = %q, want dark", repo.settings[testAccountID10]["theme"].Value)
 	}
 }
 
 func TestSettingsAreScopedByAccount(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
-	repo.seed(&domainaccountsetting.AccountSetting{AccountID: 20, Key: "theme", Value: "light"})
+	repo.seed(&domainaccountsetting.AccountSetting{AccountID: testAccountID20, Key: "theme", Value: "light"})
 	service := NewService(repo)
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	settings, err := service.GetSettings(ctx)
 	if err != nil {
@@ -88,20 +93,20 @@ func TestSettingsAreScopedByAccount(t *testing.T) {
 	if _, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"}); err != nil {
 		t.Fatalf("UpdateSettings() error = %v", err)
 	}
-	if repo.settings[20]["theme"].Value != "light" {
-		t.Fatalf("account 20 value = %q, want light", repo.settings[20]["theme"].Value)
+	if repo.settings[testAccountID20]["theme"].Value != "light" {
+		t.Fatalf("account 20 value = %q, want light", repo.settings[testAccountID20]["theme"].Value)
 	}
-	if repo.settings[10]["theme"].Value != "dark" {
-		t.Fatalf("account 10 value = %q, want dark", repo.settings[10]["theme"].Value)
+	if repo.settings[testAccountID10]["theme"].Value != "dark" {
+		t.Fatalf("account 10 value = %q, want dark", repo.settings[testAccountID10]["theme"].Value)
 	}
 }
 
 type fakeAccountSettingRepo struct {
-	settings map[int]map[string]*domainaccountsetting.AccountSetting
+	settings map[string]map[string]*domainaccountsetting.AccountSetting
 }
 
 func newFakeAccountSettingRepo() *fakeAccountSettingRepo {
-	return &fakeAccountSettingRepo{settings: make(map[int]map[string]*domainaccountsetting.AccountSetting)}
+	return &fakeAccountSettingRepo{settings: make(map[string]map[string]*domainaccountsetting.AccountSetting)}
 }
 
 func (r *fakeAccountSettingRepo) seed(settings ...*domainaccountsetting.AccountSetting) {
@@ -110,7 +115,7 @@ func (r *fakeAccountSettingRepo) seed(settings ...*domainaccountsetting.AccountS
 	}
 }
 
-func (r *fakeAccountSettingRepo) GetByKey(ctx context.Context, accountID int, key string) (*domainaccountsetting.AccountSetting, error) {
+func (r *fakeAccountSettingRepo) GetByKey(ctx context.Context, accountID string, key string) (*domainaccountsetting.AccountSetting, error) {
 	if r.settings[accountID] == nil || r.settings[accountID][key] == nil {
 		return nil, domainaccountsetting.ErrNotFound
 	}

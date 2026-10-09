@@ -33,12 +33,7 @@ func newAccountSetting(db *gorm.DB, opts ...gen.DOOption) accountSetting {
 	_accountSetting.DeletedAt = field.NewTime(tableName, "deleted_at")
 	_accountSetting.Key = field.NewString(tableName, "key")
 	_accountSetting.Value = field.NewString(tableName, "value")
-	_accountSetting.AccountID = field.NewInt(tableName, "account_id")
-	_accountSetting.Account = accountSettingBelongsToAccount{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Account", "models.Account"),
-	}
+	_accountSetting.AccountID = field.NewString(tableName, "account_id")
 
 	_accountSetting.fillFieldMap()
 
@@ -55,8 +50,7 @@ type accountSetting struct {
 	DeletedAt field.Time
 	Key       field.String
 	Value     field.String
-	AccountID field.Int
-	Account   accountSettingBelongsToAccount
+	AccountID field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -79,7 +73,7 @@ func (a *accountSetting) updateTableName(table string) *accountSetting {
 	a.DeletedAt = field.NewTime(table, "deleted_at")
 	a.Key = field.NewString(table, "key")
 	a.Value = field.NewString(table, "value")
-	a.AccountID = field.NewInt(table, "account_id")
+	a.AccountID = field.NewString(table, "account_id")
 
 	a.fillFieldMap()
 
@@ -108,7 +102,7 @@ func (a *accountSetting) GetFieldByName(fieldName string) (field.OrderExpr, bool
 }
 
 func (a *accountSetting) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 8)
+	a.fieldMap = make(map[string]field.Expr, 7)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["created_at"] = a.CreatedAt
 	a.fieldMap["updated_at"] = a.UpdatedAt
@@ -116,101 +110,16 @@ func (a *accountSetting) fillFieldMap() {
 	a.fieldMap["key"] = a.Key
 	a.fieldMap["value"] = a.Value
 	a.fieldMap["account_id"] = a.AccountID
-
 }
 
 func (a accountSetting) clone(db *gorm.DB) accountSetting {
 	a.accountSettingDo.ReplaceConnPool(db.Statement.ConnPool)
-	a.Account.db = db.Session(&gorm.Session{Initialized: true})
-	a.Account.db.Statement.ConnPool = db.Statement.ConnPool
 	return a
 }
 
 func (a accountSetting) replaceDB(db *gorm.DB) accountSetting {
 	a.accountSettingDo.ReplaceDB(db)
-	a.Account.db = db.Session(&gorm.Session{})
 	return a
-}
-
-type accountSettingBelongsToAccount struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a accountSettingBelongsToAccount) Where(conds ...field.Expr) *accountSettingBelongsToAccount {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a accountSettingBelongsToAccount) WithContext(ctx context.Context) *accountSettingBelongsToAccount {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a accountSettingBelongsToAccount) Session(session *gorm.Session) *accountSettingBelongsToAccount {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a accountSettingBelongsToAccount) Model(m *models.AccountSetting) *accountSettingBelongsToAccountTx {
-	return &accountSettingBelongsToAccountTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a accountSettingBelongsToAccount) Unscoped() *accountSettingBelongsToAccount {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type accountSettingBelongsToAccountTx struct{ tx *gorm.Association }
-
-func (a accountSettingBelongsToAccountTx) Find() (result *models.Account, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a accountSettingBelongsToAccountTx) Append(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a accountSettingBelongsToAccountTx) Replace(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a accountSettingBelongsToAccountTx) Delete(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a accountSettingBelongsToAccountTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a accountSettingBelongsToAccountTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a accountSettingBelongsToAccountTx) Unscoped() *accountSettingBelongsToAccountTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type accountSettingDo struct{ gen.DO }

@@ -5,23 +5,27 @@ import (
 	"testing"
 )
 
+const (
+	testAccountID10 = "000000000000000000000000000000000000000000000000000000000000000a"
+)
+
 func TestNewAccountSettingAcceptsAnyKeyValue(t *testing.T) {
 	setting, err := NewAccountSetting(CreateParams{
-		AccountID: 10,
+		AccountID: testAccountID10,
 		Key:       "theme",
 		Value:     "dark",
 	})
 	if err != nil {
 		t.Fatalf("NewAccountSetting() error = %v", err)
 	}
-	if setting.AccountID != 10 || setting.Key != "theme" || setting.Value != "dark" {
+	if setting.AccountID != testAccountID10 || setting.Key != "theme" || setting.Value != "dark" {
 		t.Fatalf("setting = %#v, want account=10 key=theme value=dark", setting)
 	}
 }
 
 func TestNewAccountSettingTrimsKeyValue(t *testing.T) {
 	setting, err := NewAccountSetting(CreateParams{
-		AccountID: 10,
+		AccountID: testAccountID10,
 		Key:       " theme ",
 		Value:     " dark ",
 	})
@@ -46,12 +50,12 @@ func TestNewAccountSettingRejectsMissingFields(t *testing.T) {
 		},
 		{
 			name:   "key required",
-			params: CreateParams{AccountID: 10, Value: "dark"},
+			params: CreateParams{AccountID: testAccountID10, Value: "dark"},
 			want:   ErrKeyRequired,
 		},
 		{
 			name:   "value required",
-			params: CreateParams{AccountID: 10, Key: "theme"},
+			params: CreateParams{AccountID: testAccountID10, Key: "theme"},
 			want:   ErrValueRequired,
 		},
 	}

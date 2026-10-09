@@ -43,7 +43,7 @@ func (r *RBACRepository) CreateRoles(ctx context.Context, roles []*domainrbac.Ro
 	return toDomainRoles(records), nil
 }
 
-func (r *RBACRepository) GetRole(ctx context.Context, accountID int, roleID int) (*domainrbac.Role, error) {
+func (r *RBACRepository) GetRole(ctx context.Context, accountID string, roleID int) (*domainrbac.Role, error) {
 	role := r.q.Role
 	record, err := role.WithContext(ctx).
 		Where(role.ID.Eq(roleID), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).
@@ -101,7 +101,7 @@ func (r *RBACRepository) UpdateRole(ctx context.Context, role *domainrbac.Role) 
 	return r.GetRole(ctx, role.AccountID, role.ID)
 }
 
-func (r *RBACRepository) DeleteRole(ctx context.Context, accountID int, roleID int) error {
+func (r *RBACRepository) DeleteRole(ctx context.Context, accountID string, roleID int) error {
 	role := r.q.Role
 	result, err := role.WithContext(ctx).
 		Where(role.ID.Eq(roleID), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).
@@ -119,7 +119,7 @@ func (r *RBACRepository) DeleteRole(ctx context.Context, accountID int, roleID i
 	return err
 }
 
-func (r *RBACRepository) AddPermissionGroupsToRole(ctx context.Context, accountID int, roleID int, groupIDs []int) error {
+func (r *RBACRepository) AddPermissionGroupsToRole(ctx context.Context, accountID string, roleID int, groupIDs []int) error {
 	if err := r.ensureRoleInAccount(ctx, accountID, roleID); err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (r *RBACRepository) AddPermissionGroupsToRole(ctx context.Context, accountI
 	})
 }
 
-func (r *RBACRepository) RemovePermissionGroupsFromRole(ctx context.Context, accountID int, roleID int, groupIDs []int) error {
+func (r *RBACRepository) RemovePermissionGroupsFromRole(ctx context.Context, accountID string, roleID int, groupIDs []int) error {
 	if err := r.ensureRoleInAccount(ctx, accountID, roleID); err != nil {
 		return err
 	}
@@ -270,9 +270,6 @@ func (r *RBACRepository) GrantUnitRoles(ctx context.Context, params domainrbac.U
 	if err := r.ensureUnitOwnedByAccount(ctx, params.OwnerAccountID, params.UnitID); err != nil {
 		return nil, err
 	}
-	if err := r.ensureAccountExists(ctx, params.TargetAccountID); err != nil {
-		return nil, err
-	}
 	if err := r.ensureRolesInAccount(ctx, params.OwnerAccountID, params.RoleIDs); err != nil {
 		return nil, err
 	}
@@ -354,7 +351,7 @@ func (r *RBACRepository) ListUnitGrants(ctx context.Context, query domainrbac.Li
 	q := grant.WithContext(ctx).
 		Where(grant.UnitID.Eq(query.UnitID), grant.GrantedByAccountID.Eq(query.OwnerAccountID), grant.DeletedAt.IsNull()).
 		Preload(grant.Role)
-	if query.TargetAccountID > 0 {
+	if query.TargetAccountID != "" {
 		q = q.Where(grant.AccountID.Eq(query.TargetAccountID))
 	}
 	if query.Status != "" {
@@ -373,7 +370,7 @@ func (r *RBACRepository) ListUnitGrants(ctx context.Context, query domainrbac.Li
 	return toDomainUnitAccountRoles(records), nil
 }
 
-func (r *RBACRepository) HasUnitPermission(ctx context.Context, accountID int, unitID int, permissionCode string) (bool, error) {
+func (r *RBACRepository) HasUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (bool, error) {
 	unit := r.q.Unit
 	unitRecord, err := unit.WithContext(ctx).Where(unit.ID.Eq(unitID), unit.DeletedAt.IsNull()).Take()
 	if err != nil {
@@ -410,7 +407,7 @@ func (r *RBACRepository) HasUnitPermission(ctx context.Context, accountID int, u
 	return count > 0, err
 }
 
-func (r *RBACRepository) ensureRoleInAccount(ctx context.Context, accountID int, roleID int) error {
+func (r *RBACRepository) ensureRoleInAccount(ctx context.Context, accountID string, roleID int) error {
 	role := r.q.Role
 	count, err := role.WithContext(ctx).Where(role.ID.Eq(roleID), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).Count()
 	if err != nil {
@@ -422,7 +419,7 @@ func (r *RBACRepository) ensureRoleInAccount(ctx context.Context, accountID int,
 	return nil
 }
 
-func (r *RBACRepository) ensureRolesInAccount(ctx context.Context, accountID int, roleIDs []int) error {
+func (r *RBACRepository) ensureRolesInAccount(ctx context.Context, accountID string, roleIDs []int) error {
 	role := r.q.Role
 	count, err := role.WithContext(ctx).Where(role.ID.In(roleIDs...), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).Count()
 	if err != nil {
@@ -434,7 +431,7 @@ func (r *RBACRepository) ensureRolesInAccount(ctx context.Context, accountID int
 	return nil
 }
 
-func (r *RBACRepository) ensureUnitOwnedByAccount(ctx context.Context, accountID int, unitID int) error {
+func (r *RBACRepository) ensureUnitOwnedByAccount(ctx context.Context, accountID string, unitID int) error {
 	unit := r.q.Unit
 	count, err := unit.WithContext(ctx).Where(unit.ID.Eq(unitID), unit.AccountID.Eq(accountID), unit.DeletedAt.IsNull()).Count()
 	if err != nil {
@@ -442,18 +439,6 @@ func (r *RBACRepository) ensureUnitOwnedByAccount(ctx context.Context, accountID
 	}
 	if count == 0 {
 		return domainrbac.ErrUnitNotInAccount
-	}
-	return nil
-}
-
-func (r *RBACRepository) ensureAccountExists(ctx context.Context, accountID int) error {
-	account := r.q.Account
-	count, err := account.WithContext(ctx).Where(account.ID.Eq(accountID), account.DeletedAt.IsNull()).Count()
-	if err != nil {
-		return err
-	}
-	if count == 0 {
-		return domainrbac.ErrAccountNotFound
 	}
 	return nil
 }

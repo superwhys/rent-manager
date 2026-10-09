@@ -157,7 +157,7 @@ func (s *Service) DeleteUnit(ctx context.Context, id int) error {
 }
 
 // requireUnitPermission 校验当前账号对单元的权限并标记访问类型。
-func (s *Service) requireUnitPermission(ctx context.Context, accountID int, unitID int, permissionCode string) (*domainunit.Unit, error) {
+func (s *Service) requireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (*domainunit.Unit, error) {
 	err := s.rbacService.RequireUnitPermission(ctx, accountID, unitID, permissionCode)
 	if err != nil {
 		return nil, err
@@ -214,7 +214,7 @@ func (s *Service) buildUnitSummaries(ctx context.Context, units []*domainunit.Un
 }
 
 // setUnitAccessType 根据账号与单元归属设置访问类型。
-func setUnitAccessType(unit *domainunit.Unit, accountID int) {
+func setUnitAccessType(unit *domainunit.Unit, accountID string) {
 	if unit == nil {
 		return
 	}

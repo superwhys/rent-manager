@@ -33,11 +33,6 @@ func newRolePermissionGroup(db *gorm.DB, opts ...gen.DOOption) rolePermissionGro
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Role", "models.Role"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Role.Account", "models.Account"),
-		},
 		PermissionGroups: struct {
 			field.RelationField
 			Permissions struct {
@@ -151,9 +146,6 @@ type rolePermissionGroupBelongsToRole struct {
 
 	field.RelationField
 
-	Account struct {
-		field.RelationField
-	}
 	PermissionGroups struct {
 		field.RelationField
 		Permissions struct {

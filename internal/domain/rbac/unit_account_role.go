@@ -1,6 +1,9 @@
 package rbac
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 const (
 	UnitGrantStatusActive   = "active"
@@ -10,9 +13,9 @@ const (
 type UnitAccountRole struct {
 	ID                 int
 	UnitID             int
-	AccountID          int
+	AccountID          string
 	RoleID             int
-	GrantedByAccountID int
+	GrantedByAccountID string
 	Status             string
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
@@ -35,13 +38,13 @@ func NewUnitAccountRole(params UnitAccountRolesParams, roleID int) (*UnitAccount
 }
 
 func (g *UnitAccountRole) Validate() error {
-	if g.GrantedByAccountID <= 0 {
+	if strings.TrimSpace(g.GrantedByAccountID) == "" {
 		return ErrRoleAccountRequired
 	}
 	if g.UnitID <= 0 {
 		return ErrUnitRequired
 	}
-	if g.AccountID <= 0 {
+	if strings.TrimSpace(g.AccountID) == "" {
 		return ErrTargetAccountRequired
 	}
 	if g.AccountID == g.GrantedByAccountID {

@@ -2,53 +2,36 @@ package config
 
 import (
 	"errors"
+	"strings"
 	"time"
+
+	"github.com/miebyte/authkit/wechat"
 )
 
-type JwtConfig struct {
-	JwtSecret         string
-	JwtTimeout        time.Duration
-	JwtRefreshTimeout time.Duration
+type AuthConfig struct {
+	Wechat     wechat.Config `json:"wechat"`
+	SessionTTL time.Duration `json:"session_ttl"`
 }
 
-func (c *JwtConfig) Validate() error {
-	if c.JwtSecret == "" {
-		return errors.New("JWT 密钥不能为空")
+func (c *AuthConfig) Validate() error {
+	if err := c.Wechat.Validate(); err != nil {
+		return errors.New("微信 app_id 与 secret 必须同时配置且不能包含首尾空白")
 	}
-	if c.JwtTimeout <= 0 {
-		return errors.New("JWT 过期时间不能为空")
+	if !c.Wechat.Enabled() {
+		return errors.New("微信 app_id 与 secret 不能为空")
 	}
-	if c.JwtRefreshTimeout <= 0 {
-		c.JwtRefreshTimeout = c.JwtTimeout * 24
-	}
-	return nil
-}
-
-type WechatConfig struct {
-	AppID             string
-	SecretID          string
-	Jscode2SessionApi string
-}
-
-func (c *WechatConfig) Validate() error {
-	if c.AppID == "" {
-		return errors.New("微信 appid 不能为空")
-	}
-	if c.SecretID == "" {
-		return errors.New("微信 secretid 不能为空")
-	}
-	if c.Jscode2SessionApi == "" {
-		return errors.New("微信 jscode2sessionapi 不能为空")
+	if c.SessionTTL < 0 {
+		return errors.New("会话有效期不能为负数")
 	}
 	return nil
 }
 
 type AdminConfig struct {
-	SuperAdminAccountIDs []int
+	SuperAdminAccountIDs []string
 }
 
-func (c *AdminConfig) IsSuperAdmin(accountID int) bool {
-	if accountID <= 0 {
+func (c *AdminConfig) IsSuperAdmin(accountID string) bool {
+	if strings.TrimSpace(accountID) == "" {
 		return false
 	}
 	for _, id := range c.SuperAdminAccountIDs {

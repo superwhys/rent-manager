@@ -36,22 +36,11 @@ func newUnit(db *gorm.DB, opts ...gen.DOOption) unit {
 	_unit.City = field.NewString(tableName, "city")
 	_unit.Province = field.NewString(tableName, "province")
 	_unit.JSONExtend = field.NewString(tableName, "json_extend")
-	_unit.AccountID = field.NewInt(tableName, "account_id")
-	_unit.Account = unitBelongsToAccount{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Account", "models.Account"),
-	}
-
+	_unit.AccountID = field.NewString(tableName, "account_id")
 	_unit.MeterItems = unitManyToManyMeterItems{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("MeterItems", "models.MeterItem"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("MeterItems.Account", "models.Account"),
-		},
 	}
 
 	_unit.fillFieldMap()
@@ -72,9 +61,7 @@ type unit struct {
 	City       field.String
 	Province   field.String
 	JSONExtend field.String
-	AccountID  field.Int
-	Account    unitBelongsToAccount
-
+	AccountID  field.String
 	MeterItems unitManyToManyMeterItems
 
 	fieldMap map[string]field.Expr
@@ -101,7 +88,7 @@ func (u *unit) updateTableName(table string) *unit {
 	u.City = field.NewString(table, "city")
 	u.Province = field.NewString(table, "province")
 	u.JSONExtend = field.NewString(table, "json_extend")
-	u.AccountID = field.NewInt(table, "account_id")
+	u.AccountID = field.NewString(table, "account_id")
 
 	u.fillFieldMap()
 
@@ -126,7 +113,7 @@ func (u *unit) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *unit) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 12)
+	u.fieldMap = make(map[string]field.Expr, 11)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
@@ -142,8 +129,6 @@ func (u *unit) fillFieldMap() {
 
 func (u unit) clone(db *gorm.DB) unit {
 	u.unitDo.ReplaceConnPool(db.Statement.ConnPool)
-	u.Account.db = db.Session(&gorm.Session{Initialized: true})
-	u.Account.db.Statement.ConnPool = db.Statement.ConnPool
 	u.MeterItems.db = db.Session(&gorm.Session{Initialized: true})
 	u.MeterItems.db.Statement.ConnPool = db.Statement.ConnPool
 	return u
@@ -151,100 +136,14 @@ func (u unit) clone(db *gorm.DB) unit {
 
 func (u unit) replaceDB(db *gorm.DB) unit {
 	u.unitDo.ReplaceDB(db)
-	u.Account.db = db.Session(&gorm.Session{})
 	u.MeterItems.db = db.Session(&gorm.Session{})
 	return u
-}
-
-type unitBelongsToAccount struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a unitBelongsToAccount) Where(conds ...field.Expr) *unitBelongsToAccount {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a unitBelongsToAccount) WithContext(ctx context.Context) *unitBelongsToAccount {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a unitBelongsToAccount) Session(session *gorm.Session) *unitBelongsToAccount {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a unitBelongsToAccount) Model(m *models.Unit) *unitBelongsToAccountTx {
-	return &unitBelongsToAccountTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a unitBelongsToAccount) Unscoped() *unitBelongsToAccount {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type unitBelongsToAccountTx struct{ tx *gorm.Association }
-
-func (a unitBelongsToAccountTx) Find() (result *models.Account, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a unitBelongsToAccountTx) Append(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a unitBelongsToAccountTx) Replace(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a unitBelongsToAccountTx) Delete(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a unitBelongsToAccountTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a unitBelongsToAccountTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a unitBelongsToAccountTx) Unscoped() *unitBelongsToAccountTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type unitManyToManyMeterItems struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	Account struct {
-		field.RelationField
-	}
 }
 
 func (a unitManyToManyMeterItems) Where(conds ...field.Expr) *unitManyToManyMeterItems {

@@ -32,12 +32,7 @@ func newRoomType(db *gorm.DB, opts ...gen.DOOption) roomType {
 	_roomType.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_roomType.DeletedAt = field.NewTime(tableName, "deleted_at")
 	_roomType.Name = field.NewString(tableName, "name")
-	_roomType.AccountID = field.NewInt(tableName, "account_id")
-	_roomType.Account = roomTypeBelongsToAccount{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Account", "models.Account"),
-	}
+	_roomType.AccountID = field.NewString(tableName, "account_id")
 
 	_roomType.fillFieldMap()
 
@@ -53,8 +48,7 @@ type roomType struct {
 	UpdatedAt field.Time
 	DeletedAt field.Time
 	Name      field.String
-	AccountID field.Int
-	Account   roomTypeBelongsToAccount
+	AccountID field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -76,7 +70,7 @@ func (r *roomType) updateTableName(table string) *roomType {
 	r.UpdatedAt = field.NewTime(table, "updated_at")
 	r.DeletedAt = field.NewTime(table, "deleted_at")
 	r.Name = field.NewString(table, "name")
-	r.AccountID = field.NewInt(table, "account_id")
+	r.AccountID = field.NewString(table, "account_id")
 
 	r.fillFieldMap()
 
@@ -101,108 +95,23 @@ func (r *roomType) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *roomType) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 7)
+	r.fieldMap = make(map[string]field.Expr, 6)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["created_at"] = r.CreatedAt
 	r.fieldMap["updated_at"] = r.UpdatedAt
 	r.fieldMap["deleted_at"] = r.DeletedAt
 	r.fieldMap["name"] = r.Name
 	r.fieldMap["account_id"] = r.AccountID
-
 }
 
 func (r roomType) clone(db *gorm.DB) roomType {
 	r.roomTypeDo.ReplaceConnPool(db.Statement.ConnPool)
-	r.Account.db = db.Session(&gorm.Session{Initialized: true})
-	r.Account.db.Statement.ConnPool = db.Statement.ConnPool
 	return r
 }
 
 func (r roomType) replaceDB(db *gorm.DB) roomType {
 	r.roomTypeDo.ReplaceDB(db)
-	r.Account.db = db.Session(&gorm.Session{})
 	return r
-}
-
-type roomTypeBelongsToAccount struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a roomTypeBelongsToAccount) Where(conds ...field.Expr) *roomTypeBelongsToAccount {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a roomTypeBelongsToAccount) WithContext(ctx context.Context) *roomTypeBelongsToAccount {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a roomTypeBelongsToAccount) Session(session *gorm.Session) *roomTypeBelongsToAccount {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a roomTypeBelongsToAccount) Model(m *models.RoomType) *roomTypeBelongsToAccountTx {
-	return &roomTypeBelongsToAccountTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a roomTypeBelongsToAccount) Unscoped() *roomTypeBelongsToAccount {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type roomTypeBelongsToAccountTx struct{ tx *gorm.Association }
-
-func (a roomTypeBelongsToAccountTx) Find() (result *models.Account, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a roomTypeBelongsToAccountTx) Append(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a roomTypeBelongsToAccountTx) Replace(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a roomTypeBelongsToAccountTx) Delete(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a roomTypeBelongsToAccountTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a roomTypeBelongsToAccountTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a roomTypeBelongsToAccountTx) Unscoped() *roomTypeBelongsToAccountTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type roomTypeDo struct{ gen.DO }

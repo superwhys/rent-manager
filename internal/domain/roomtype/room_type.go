@@ -9,7 +9,7 @@ const maxNameLength = 12
 
 type RoomType struct {
 	ID        int
-	AccountID int
+	AccountID string
 	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -35,7 +35,7 @@ func (r *RoomType) Update(params UpdateParams) error {
 }
 
 func (r *RoomType) Validate() error {
-	if r.AccountID <= 0 {
+	if strings.TrimSpace(r.AccountID) == "" {
 		return ErrAccountRequired
 	}
 	if r.Name == "" {

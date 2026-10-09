@@ -32,31 +32,14 @@ func newUnitAccountRole(db *gorm.DB, opts ...gen.DOOption) unitAccountRole {
 	_unitAccountRole.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_unitAccountRole.DeletedAt = field.NewTime(tableName, "deleted_at")
 	_unitAccountRole.Status = field.NewString(tableName, "status")
-	_unitAccountRole.AccountID = field.NewInt(tableName, "account_id")
-	_unitAccountRole.GrantedByAccountID = field.NewInt(tableName, "granted_by_account_id")
+	_unitAccountRole.AccountID = field.NewString(tableName, "account_id")
+	_unitAccountRole.GrantedByAccountID = field.NewString(tableName, "granted_by_account_id")
 	_unitAccountRole.RoleID = field.NewInt(tableName, "role_id")
 	_unitAccountRole.UnitID = field.NewInt(tableName, "unit_id")
-	_unitAccountRole.Account = unitAccountRoleBelongsToAccount{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Account", "models.Account"),
-	}
-
-	_unitAccountRole.GrantedByAccount = unitAccountRoleBelongsToGrantedByAccount{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("GrantedByAccount", "models.Account"),
-	}
-
 	_unitAccountRole.Role = unitAccountRoleBelongsToRole{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Role", "models.Role"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Role.Account", "models.Account"),
-		},
 		PermissionGroups: struct {
 			field.RelationField
 			Permissions struct {
@@ -76,23 +59,10 @@ func newUnitAccountRole(db *gorm.DB, opts ...gen.DOOption) unitAccountRole {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Unit", "models.Unit"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Unit.Account", "models.Account"),
-		},
 		MeterItems: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}{
 			RelationField: field.NewRelation("Unit.MeterItems", "models.MeterItem"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Unit.MeterItems.Account", "models.Account"),
-			},
 		},
 	}
 
@@ -110,15 +80,11 @@ type unitAccountRole struct {
 	UpdatedAt          field.Time
 	DeletedAt          field.Time
 	Status             field.String
-	AccountID          field.Int
-	GrantedByAccountID field.Int
+	AccountID          field.String
+	GrantedByAccountID field.String
 	RoleID             field.Int
 	UnitID             field.Int
-	Account            unitAccountRoleBelongsToAccount
-
-	GrantedByAccount unitAccountRoleBelongsToGrantedByAccount
-
-	Role unitAccountRoleBelongsToRole
+	Role               unitAccountRoleBelongsToRole
 
 	Unit unitAccountRoleBelongsToUnit
 
@@ -142,8 +108,8 @@ func (u *unitAccountRole) updateTableName(table string) *unitAccountRole {
 	u.UpdatedAt = field.NewTime(table, "updated_at")
 	u.DeletedAt = field.NewTime(table, "deleted_at")
 	u.Status = field.NewString(table, "status")
-	u.AccountID = field.NewInt(table, "account_id")
-	u.GrantedByAccountID = field.NewInt(table, "granted_by_account_id")
+	u.AccountID = field.NewString(table, "account_id")
+	u.GrantedByAccountID = field.NewString(table, "granted_by_account_id")
 	u.RoleID = field.NewInt(table, "role_id")
 	u.UnitID = field.NewInt(table, "unit_id")
 
@@ -174,7 +140,7 @@ func (u *unitAccountRole) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (u *unitAccountRole) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 13)
+	u.fieldMap = make(map[string]field.Expr, 11)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
@@ -189,10 +155,6 @@ func (u *unitAccountRole) fillFieldMap() {
 
 func (u unitAccountRole) clone(db *gorm.DB) unitAccountRole {
 	u.unitAccountRoleDo.ReplaceConnPool(db.Statement.ConnPool)
-	u.Account.db = db.Session(&gorm.Session{Initialized: true})
-	u.Account.db.Statement.ConnPool = db.Statement.ConnPool
-	u.GrantedByAccount.db = db.Session(&gorm.Session{Initialized: true})
-	u.GrantedByAccount.db.Statement.ConnPool = db.Statement.ConnPool
 	u.Role.db = db.Session(&gorm.Session{Initialized: true})
 	u.Role.db.Statement.ConnPool = db.Statement.ConnPool
 	u.Unit.db = db.Session(&gorm.Session{Initialized: true})
@@ -202,173 +164,9 @@ func (u unitAccountRole) clone(db *gorm.DB) unitAccountRole {
 
 func (u unitAccountRole) replaceDB(db *gorm.DB) unitAccountRole {
 	u.unitAccountRoleDo.ReplaceDB(db)
-	u.Account.db = db.Session(&gorm.Session{})
-	u.GrantedByAccount.db = db.Session(&gorm.Session{})
 	u.Role.db = db.Session(&gorm.Session{})
 	u.Unit.db = db.Session(&gorm.Session{})
 	return u
-}
-
-type unitAccountRoleBelongsToAccount struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a unitAccountRoleBelongsToAccount) Where(conds ...field.Expr) *unitAccountRoleBelongsToAccount {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a unitAccountRoleBelongsToAccount) WithContext(ctx context.Context) *unitAccountRoleBelongsToAccount {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a unitAccountRoleBelongsToAccount) Session(session *gorm.Session) *unitAccountRoleBelongsToAccount {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a unitAccountRoleBelongsToAccount) Model(m *models.UnitAccountRole) *unitAccountRoleBelongsToAccountTx {
-	return &unitAccountRoleBelongsToAccountTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a unitAccountRoleBelongsToAccount) Unscoped() *unitAccountRoleBelongsToAccount {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type unitAccountRoleBelongsToAccountTx struct{ tx *gorm.Association }
-
-func (a unitAccountRoleBelongsToAccountTx) Find() (result *models.Account, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a unitAccountRoleBelongsToAccountTx) Append(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a unitAccountRoleBelongsToAccountTx) Replace(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a unitAccountRoleBelongsToAccountTx) Delete(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a unitAccountRoleBelongsToAccountTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a unitAccountRoleBelongsToAccountTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a unitAccountRoleBelongsToAccountTx) Unscoped() *unitAccountRoleBelongsToAccountTx {
-	a.tx = a.tx.Unscoped()
-	return &a
-}
-
-type unitAccountRoleBelongsToGrantedByAccount struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccount) Where(conds ...field.Expr) *unitAccountRoleBelongsToGrantedByAccount {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccount) WithContext(ctx context.Context) *unitAccountRoleBelongsToGrantedByAccount {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccount) Session(session *gorm.Session) *unitAccountRoleBelongsToGrantedByAccount {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccount) Model(m *models.UnitAccountRole) *unitAccountRoleBelongsToGrantedByAccountTx {
-	return &unitAccountRoleBelongsToGrantedByAccountTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccount) Unscoped() *unitAccountRoleBelongsToGrantedByAccount {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type unitAccountRoleBelongsToGrantedByAccountTx struct{ tx *gorm.Association }
-
-func (a unitAccountRoleBelongsToGrantedByAccountTx) Find() (result *models.Account, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccountTx) Append(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccountTx) Replace(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccountTx) Delete(values ...*models.Account) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccountTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccountTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a unitAccountRoleBelongsToGrantedByAccountTx) Unscoped() *unitAccountRoleBelongsToGrantedByAccountTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type unitAccountRoleBelongsToRole struct {
@@ -376,9 +174,6 @@ type unitAccountRoleBelongsToRole struct {
 
 	field.RelationField
 
-	Account struct {
-		field.RelationField
-	}
 	PermissionGroups struct {
 		field.RelationField
 		Permissions struct {
@@ -467,14 +262,8 @@ type unitAccountRoleBelongsToUnit struct {
 
 	field.RelationField
 
-	Account struct {
-		field.RelationField
-	}
 	MeterItems struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 	}
 }
 

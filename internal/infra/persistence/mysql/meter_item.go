@@ -41,7 +41,7 @@ func (r *MeterItemRepository) Create(ctx context.Context, item *domainmeteritem.
 	return toDomainMeterItem(record), nil
 }
 
-func (r *MeterItemRepository) Get(ctx context.Context, accountID int, id int) (*domainmeteritem.MeterItem, error) {
+func (r *MeterItemRepository) Get(ctx context.Context, accountID string, id int) (*domainmeteritem.MeterItem, error) {
 	record, err := r.q.MeterItem.WithContext(ctx).
 		Where(r.q.MeterItem.ID.Eq(id), r.q.MeterItem.AccountID.Eq(accountID), r.q.MeterItem.DeletedAt.IsNull()).
 		Take()

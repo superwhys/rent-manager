@@ -1,7 +1,7 @@
 package meteritem
 
 type CreateParams struct {
-	AccountID int
+	AccountID string
 	Code      string
 	Unit      string
 	UnitPrice float64
@@ -11,7 +11,7 @@ type CreateParams struct {
 
 type UpdateParams struct {
 	ID        int
-	AccountID int
+	AccountID string
 	Code      string
 	Unit      string
 	UnitPrice float64
@@ -20,7 +20,7 @@ type UpdateParams struct {
 }
 
 type ListQuery struct {
-	AccountID int
+	AccountID string
 	Code      string
 	IsSystem  *bool
 	CalcType  string

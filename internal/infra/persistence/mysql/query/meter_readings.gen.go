@@ -36,7 +36,7 @@ func newMeterReading(db *gorm.DB, opts ...gen.DOOption) meterReading {
 	_meterReading.CurrentReading = field.NewFloat64(tableName, "current_reading")
 	_meterReading.UsageAmount = field.NewFloat64(tableName, "usage_amount")
 	_meterReading.ReadingTime = field.NewTime(tableName, "reading_time")
-	_meterReading.ReaderID = field.NewInt64(tableName, "reader_id")
+	_meterReading.ReaderID = field.NewString(tableName, "reader_id")
 	_meterReading.Source = field.NewString(tableName, "source")
 	_meterReading.Remark = field.NewString(tableName, "remark")
 	_meterReading.MeterItemID = field.NewInt(tableName, "meter_item_id")
@@ -45,11 +45,6 @@ func newMeterReading(db *gorm.DB, opts ...gen.DOOption) meterReading {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("MeterItem", "models.MeterItem"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("MeterItem.Account", "models.Account"),
-		},
 	}
 
 	_meterReading.Room = meterReadingBelongsToRoom{
@@ -58,61 +53,26 @@ func newMeterReading(db *gorm.DB, opts ...gen.DOOption) meterReading {
 		RelationField: field.NewRelation("Room", "models.Room"),
 		RoomType: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}{
 			RelationField: field.NewRelation("Room.RoomType", "models.RoomType"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Room.RoomType.Account", "models.Account"),
-			},
 		},
 		Unit: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 			MeterItems struct {
 				field.RelationField
-				Account struct {
-					field.RelationField
-				}
 			}
 		}{
 			RelationField: field.NewRelation("Room.Unit", "models.Unit"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Room.Unit.Account", "models.Account"),
-			},
 			MeterItems: struct {
 				field.RelationField
-				Account struct {
-					field.RelationField
-				}
 			}{
 				RelationField: field.NewRelation("Room.Unit.MeterItems", "models.MeterItem"),
-				Account: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("Room.Unit.MeterItems.Account", "models.Account"),
-				},
 			},
 		},
 		MeterItems: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}{
 			RelationField: field.NewRelation("Room.MeterItems", "models.MeterItem"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Room.MeterItems.Account", "models.Account"),
-			},
 		},
 	}
 
@@ -134,7 +94,7 @@ type meterReading struct {
 	CurrentReading  field.Float64
 	UsageAmount     field.Float64
 	ReadingTime     field.Time
-	ReaderID        field.Int64
+	ReaderID        field.String
 	Source          field.String
 	Remark          field.String
 	MeterItemID     field.Int
@@ -167,7 +127,7 @@ func (m *meterReading) updateTableName(table string) *meterReading {
 	m.CurrentReading = field.NewFloat64(table, "current_reading")
 	m.UsageAmount = field.NewFloat64(table, "usage_amount")
 	m.ReadingTime = field.NewTime(table, "reading_time")
-	m.ReaderID = field.NewInt64(table, "reader_id")
+	m.ReaderID = field.NewString(table, "reader_id")
 	m.Source = field.NewString(table, "source")
 	m.Remark = field.NewString(table, "remark")
 	m.MeterItemID = field.NewInt(table, "meter_item_id")
@@ -238,10 +198,6 @@ type meterReadingBelongsToMeterItem struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	Account struct {
-		field.RelationField
-	}
 }
 
 func (a meterReadingBelongsToMeterItem) Where(conds ...field.Expr) *meterReadingBelongsToMeterItem {
@@ -326,27 +282,15 @@ type meterReadingBelongsToRoom struct {
 
 	RoomType struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 	}
 	Unit struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 		MeterItems struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}
 	}
 	MeterItems struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 	}
 }
 

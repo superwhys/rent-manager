@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"crypto/sha256"
 	"database/sql"
 	"fmt"
 	"os"
@@ -36,6 +37,9 @@ func (d sqliteTestDialector) Migrator(db *gorm.DB) gorm.Migrator {
 func (d sqliteTestDialector) DataTypeOf(field *schema.Field) string {
 	if strings.HasPrefix(string(field.DataType), "enum(") {
 		return "text"
+	}
+	if strings.Contains(string(field.DataType), "CHARACTER SET") {
+		return "text COLLATE BINARY"
 	}
 	if field.DataType == "bigint" {
 		return "integer"
@@ -90,4 +94,15 @@ func newMysqlTestDialector(t *testing.T, dsn string) gorm.Dialector {
 	conf.DBName = name
 	conf.ParseTime = true
 	return mysqldriver.Open(conf.FormatDSN())
+}
+
+func testAccountID(name string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(name)))
+}
+
+func TestBusinessSchemaDoesNotCreateAccounts(t *testing.T) {
+	db := newTestDB(t)
+	if db.Migrator().HasTable("accounts") {
+		t.Fatal("业务模型不应创建本地 accounts 表")
+	}
 }

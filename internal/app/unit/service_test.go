@@ -10,9 +10,13 @@ import (
 	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
 
+const (
+	testAccountID10 = "000000000000000000000000000000000000000000000000000000000000000a"
+)
+
 func TestCreateUnitUsesDefaultConfig(t *testing.T) {
 	service := newUnitTestService()
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	unit, err := service.CreateUnit(ctx, &CreateUnitCommand{
 		Name:     "1栋",
@@ -30,7 +34,7 @@ func TestCreateUnitUsesDefaultConfig(t *testing.T) {
 
 func TestCreateUnitStoresConfigFromJsonExtend(t *testing.T) {
 	service := newUnitTestService()
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 	day := 20
 
 	unit, err := service.CreateUnit(ctx, &CreateUnitCommand{
@@ -53,14 +57,14 @@ func TestUpdateUnitDefaultsConfigWhenJsonExtendOmitted(t *testing.T) {
 	repo := service.repo.(*fakeUnitRepo)
 	repo.seed(&domainunit.Unit{
 		ID:        1,
-		AccountID: 10,
+		AccountID: testAccountID10,
 		Name:      "1栋",
 		Address:   "地址",
 		City:      "城市",
 		Province:  "省份",
 		Config:    domainunit.UnitConfig{MeterReadingDay: 20},
 	})
-	ctx := appcore.SetAccountIDToContext(context.Background(), 10)
+	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
 	unit, err := service.UpdateUnit(ctx, &UpdateUnitCommand{
 		UnitID:   1,
@@ -80,7 +84,7 @@ func TestUpdateUnitDefaultsConfigWhenJsonExtendOmitted(t *testing.T) {
 func TestUnitResponseReturnsJsonExtendOnly(t *testing.T) {
 	unit := &domainunit.Unit{
 		ID:        1,
-		AccountID: 10,
+		AccountID: testAccountID10,
 		Name:      "1栋",
 		Address:   "地址",
 		City:      "城市",
@@ -145,7 +149,7 @@ func (r *fakeUnitRepo) Create(ctx context.Context, unit *domainunit.Unit) (*doma
 	return cloneUnit(next), nil
 }
 
-func (r *fakeUnitRepo) Get(ctx context.Context, accountID int, id int) (*domainunit.Unit, error) {
+func (r *fakeUnitRepo) Get(ctx context.Context, accountID string, id int) (*domainunit.Unit, error) {
 	unit := r.units[id]
 	if unit == nil || unit.AccountID != accountID {
 		return nil, domainunit.ErrNotFound
@@ -179,7 +183,7 @@ func (r *fakeUnitRepo) Update(ctx context.Context, unit *domainunit.Unit) (*doma
 	return cloneUnit(unit), nil
 }
 
-func (r *fakeUnitRepo) Delete(ctx context.Context, accountID int, id int) error {
+func (r *fakeUnitRepo) Delete(ctx context.Context, accountID string, id int) error {
 	delete(r.units, id)
 	return nil
 }
@@ -195,7 +199,7 @@ func cloneUnit(unit *domainunit.Unit) *domainunit.Unit {
 
 type fakeUnitRbacService struct{}
 
-func (s *fakeUnitRbacService) RequireUnitPermission(ctx context.Context, accountID int, unitID int, permissionCode string) error {
+func (s *fakeUnitRbacService) RequireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) error {
 	return nil
 }
 

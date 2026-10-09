@@ -13,8 +13,7 @@ type MeterItem struct {
 	IsSystem  bool       `gorm:"column:is_system;type:boolean;not null;default:false"`
 	CalcType  string     `gorm:"column:calc_type;type:enum('DIFFERENCE','DIRECT');not null;default:DIFFERENCE"`
 	Remark    *string    `gorm:"column:remark;type:varchar(255)"`
-	AccountID int        `gorm:"column:account_id;type:bigint;not null;uniqueIndex:meteritem_account_id_code,priority:1"`
-	Account   *Account   `gorm:"foreignKey:AccountID;constraint:meter_items_accounts_meter_items,OnDelete:NO ACTION"`
+	AccountID string     `gorm:"column:account_id;type:varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;not null;uniqueIndex:meteritem_account_id_code,priority:1"`
 }
 
 func (MeterItem) TableName() string {

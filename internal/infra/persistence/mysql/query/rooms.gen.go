@@ -42,34 +42,16 @@ func newRoom(db *gorm.DB, opts ...gen.DOOption) room {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("RoomType", "models.RoomType"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("RoomType.Account", "models.Account"),
-		},
 	}
 
 	_room.Unit = roomBelongsToUnit{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Unit", "models.Unit"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("Unit.Account", "models.Account"),
-		},
 		MeterItems: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}{
 			RelationField: field.NewRelation("Unit.MeterItems", "models.MeterItem"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Unit.MeterItems.Account", "models.Account"),
-			},
 		},
 	}
 
@@ -77,11 +59,6 @@ func newRoom(db *gorm.DB, opts ...gen.DOOption) room {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("MeterItems", "models.MeterItem"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("MeterItems.Account", "models.Account"),
-		},
 	}
 
 	_room.fillFieldMap()
@@ -198,10 +175,6 @@ type roomBelongsToRoomType struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	Account struct {
-		field.RelationField
-	}
 }
 
 func (a roomBelongsToRoomType) Where(conds ...field.Expr) *roomBelongsToRoomType {
@@ -284,14 +257,8 @@ type roomBelongsToUnit struct {
 
 	field.RelationField
 
-	Account struct {
-		field.RelationField
-	}
 	MeterItems struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 	}
 }
 
@@ -374,10 +341,6 @@ type roomManyToManyMeterItems struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	Account struct {
-		field.RelationField
-	}
 }
 
 func (a roomManyToManyMeterItems) Where(conds ...field.Expr) *roomManyToManyMeterItems {

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"strings"
 
 	"github.com/superwhys/rent-manager/internal/xerr"
 )
@@ -18,15 +19,15 @@ type Pagination struct {
 }
 
 // AccountIDFromContext 从上下文中的令牌声明获取当前账号 ID。
-func AccountIDFromContext(ctx context.Context) (int, error) {
-	accountID, ok := ctx.Value(accountIDContextKey{}).(int)
-	if !ok || accountID <= 0 {
-		return 0, xerr.ErrUnauthorized
+func AccountIDFromContext(ctx context.Context) (string, error) {
+	accountID, ok := ctx.Value(accountIDContextKey{}).(string)
+	if !ok || strings.TrimSpace(accountID) == "" {
+		return "", xerr.ErrUnauthorized
 	}
 	return accountID, nil
 }
 
 // SetAccountIDToContext 将当前账号 ID 写入上下文。
-func SetAccountIDToContext(ctx context.Context, accountID int) context.Context {
+func SetAccountIDToContext(ctx context.Context, accountID string) context.Context {
 	return context.WithValue(ctx, accountIDContextKey{}, accountID)
 }

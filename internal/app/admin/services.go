@@ -1,7 +1,6 @@
 package admin
 
 import (
-	appaccount "github.com/superwhys/rent-manager/internal/app/account"
 	appaccountsetting "github.com/superwhys/rent-manager/internal/app/accountsetting"
 	apphome "github.com/superwhys/rent-manager/internal/app/home"
 	appmeteritem "github.com/superwhys/rent-manager/internal/app/meteritem"
@@ -15,7 +14,6 @@ import (
 
 // Services 聚合后台路由需要的应用服务。
 type Services struct {
-	Account        *appaccount.Service
 	AccountSetting *appaccountsetting.Service
 	Home           *apphome.Service
 	RBAC           *apprbac.Service

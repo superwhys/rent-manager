@@ -8,8 +8,8 @@
 
 | 模块 | 当前能力 |
 | --- | --- |
-| 认证 | 微信 `code` 登录，首次登录创建账号，签发 JWT，刷新访问令牌 |
-| 账号与设置 | 获取当前账号信息，读取和更新账号配置 |
+| 认证 | 通过 authkit 使用微信 `code` 登录，首次登录创建 authkit 账号，查询与撤销会话 |
+| 账号与设置 | 通过会话获取 authkit 账号，读取和更新本项目的账号配置 |
 | 房源单元（Unit） | 创建、查询、更新、删除楼栋/单元，区分自有与被授权房源，配置默认抄表项和抄表日 |
 | 房间 | 单元下创建与查询房间，维护房间信息、租金和出租状态 |
 | 房型 | 当前账号下的房型增删改查 |
@@ -31,7 +31,7 @@
 | goutils | `v1.3.1`，配置解析、服务启动、请求处理、日志和基础设施配置 |
 | MySQL | 业务数据持久化 |
 | Redis | 接口限流，使用 `go-redis/v9` 与 `ulule/limiter/v3` |
-| JWT | `golang-jwt/jwt/v5`，使用 HS256 签名 |
+| authkit | `github.com/miebyte/authkit v1.9.0`，账号、微信登录与可撤销的会话令牌 |
 | Swagger | `swag v1.16.6` 生成接口文档 |
 
 ## 本地启动
@@ -48,23 +48,22 @@ CREATE DATABASE rent_manager
   COLLATE utf8mb4_unicode_ci;
 ```
 
-服务启动时会执行 GORM AutoMigrate，创建或更新表结构；数据库账号需要相应权限。启动过程不负责创建数据库，也不自动初始化权限、权限组或角色。
+服务启动时先迁移 authkit 的认证表，再通过 GORM AutoMigrate 创建或更新业务表；数据库账号需要相应权限。启动过程不负责创建数据库，也不自动初始化权限、权限组或角色。
+
+新部署可使用空数据库。对于旧数据库，启动检查一旦发现原 `accounts` 表就会停止，避免把整型账号引用自动转换成无效的 authkit 身份。[账号迁移 SQL](migrations/20261009_authkit_accounts.sql) 仅适用于旧账号及相关业务表均为空的情况，会拒绝非空数据；请先检查脚本再按需手动执行。需要保留历史数据时，必须另行制定数据迁移方案，本项目不建立账号映射。
 
 ### 2. 配置服务
 
-在项目根目录创建 `config.local`，内容为 JSON。该文件名匹配现有 `.gitignore` 中的 `*.local`，适合保存本地配置。替换示例中的微信配置、密钥和数据库账号后使用：
+在项目根目录创建 `config.local`，内容为 JSON。该文件名匹配现有 `.gitignore` 中的 `*.local`，适合保存本地配置。可复制 [config.example.json](config.example.json)，替换微信配置和数据库账号后使用：
 
 ```json
 {
-  "wechat": {
-    "AppID": "your-wechat-app-id",
-    "SecretID": "your-wechat-app-secret",
-    "Jscode2SessionApi": "https://api.weixin.qq.com/sns/jscode2session"
-  },
-  "jwt": {
-    "JwtSecret": "replace-with-your-jwt-secret",
-    "JwtTimeout": "2h",
-    "JwtRefreshTimeout": "168h"
+  "auth": {
+    "wechat": {
+      "app_id": "your-wechat-app-id",
+      "secret": "your-wechat-app-secret"
+    },
+    "session_ttl": "720h"
   },
   "admin": {
     "SuperAdminAccountIDs": []
@@ -91,10 +90,9 @@ CREATE DATABASE rent_manager
 
 | 配置 | 说明 |
 | --- | --- |
-| `wechat` | `AppID`、`SecretID`、`Jscode2SessionApi` 均不能为空 |
-| `jwt` | 密钥不能为空，`JwtTimeout` 必须大于零；时长支持 `2h` 等字符串 |
-| `jwt.JwtRefreshTimeout` | 未设置或不大于零时，默认为 `JwtTimeout × 24` |
-| `admin.SuperAdminAccountIDs` | 允许写入全局权限和权限组的账号 ID；空列表表示无人拥有该管理权限 |
+| `auth.wechat` | `app_id`、`secret` 均不能为空，不能包含首尾空白 |
+| `auth.session_ttl` | 会话有效时长，支持 `720h` 等字符串；零值默认 30 天，不允许负值 |
+| `admin.SuperAdminAccountIDs` | 允许写入全局权限和权限组的 authkit 账号 ID 字符串列表，ID 为 64 位小写十六进制；空列表表示无人拥有该管理权限 |
 | `mysql.instance` | MySQL 的 `host:port`；`pool_size` 控制连接池大小 |
 | `redis.server` | Redis 的 `host:port`；`poolsize` 为连接池大小 |
 
@@ -131,9 +129,9 @@ curl http://localhost:8080/health_check
 
 ## 接口调用
 
-### 登录与刷新
+### 登录与会话
 
-微信登录无需 JWT。将客户端获取的微信 `code` 发送到：
+微信登录无需令牌。将客户端获取的微信 `code` 发送到：
 
 ```bash
 curl -X POST http://localhost:8080/api/auth/wechat-login \
@@ -141,44 +139,51 @@ curl -X POST http://localhost:8080/api/auth/wechat-login \
   -d '{"code":"your-wechat-login-code"}'
 ```
 
-成功响应：
+成功响应示例：
 
 ```json
 {
   "code": 0,
   "data": {
+    "account": {
+      "ID": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "Username": "",
+      "Email": ""
+    },
     "access_token": "...",
-    "refresh_token": "..."
+    "expires_at": "2026-11-08T00:00:00Z",
+    "created": true
   },
   "message": "success"
 }
 ```
 
-访问业务接口时携带 `Authorization: Bearer <access_token>`：
+`account` 直接返回 authkit 的账号对象，字段名为 `ID`、`Username`、`Email`；`created` 表示本次登录是否创建了账号。`access_token` 是 authkit 签发的会话令牌，客户端应原样保存并以 `Authorization: Bearer <access_token>` 传入。会话过期后重新进行微信登录。
+
+查询当前会话，响应 `data` 包含 `account` 和 `expires_at`：
 
 ```bash
-curl http://localhost:8080/api/accout/self \
+curl http://localhost:8080/api/auth/session \
   -H 'Authorization: Bearer your-access-token'
 ```
 
-注意：当前账号路由实际拼写为 `/accout/self`。
-
-刷新接口使用 `refresh_token` 获取新的访问令牌，返回原刷新令牌，刷新令牌到期后需要重新登录：
+退出登录并撤销当前会话：
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/refresh-token \
-  -H 'Content-Type: application/json' \
-  -d '{"refresh_token":"your-refresh-token"}'
+curl -X DELETE http://localhost:8080/api/auth/session \
+  -H 'Authorization: Bearer your-access-token'
 ```
+
+旧的 `/auth/refresh-token` 和 `/accout/self` 接口已移除。账号由 authkit 统一管理，本项目不保留独立账号模型或账号映射。
 
 ### 接口概览
 
-下表路径均以 `/api` 为前缀。除 `/auth/*` 外，业务接口均经过 JWT 校验。`:id` 等表示路径参数，详细请求和响应字段见 Swagger 及 `internal/app/<业务>/dto.go`。
+下表路径均以 `/api` 为前缀。`POST /auth/wechat-login` 公开，其余接口均校验 authkit 会话令牌。`:id` 等表示路径参数，详细请求和响应字段见 Swagger 及 `internal/app/<业务>/dto.go`。
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
-| POST | `/auth/wechat-login`、`/auth/refresh-token` | 微信登录、刷新令牌 |
-| GET | `/accout/self` | 当前账号信息 |
+| POST | `/auth/wechat-login` | 微信登录 |
+| GET / DELETE | `/auth/session` | 查询当前账号与会话有效期、撤销当前会话 |
 | GET / PUT | `/settings` | 读取、更新账号设置 |
 | GET | `/home` | 首页聚合数据 |
 | GET / POST | `/units` | 单元列表、创建单元 |
@@ -224,7 +229,7 @@ curl -X POST http://localhost:8080/api/auth/refresh-token \
 
 ## 权限与数据归属
 
-资源以账号为归属边界。单元、角色、房型、抄表项和账号设置归属账号，房间归属单元，抄表记录和账单归属房间。
+资源以 authkit 账号为归属边界。所有 `account_id`、`granted_by_account_id` 和可空的 `reader_id` 都直接使用 authkit 账号 ID（64 位小写十六进制字符串），单元、角色、房间等业务资源 ID 仍为整数。单元、角色、房型、抄表项和账号设置归属账号，房间归属单元，抄表记录和账单归属房间。
 
 - 账号可以管理自己拥有的资源；删除单元及管理单元授权仅限所有者。
 - 访问他人单元的业务数据时，服务检查该单元下的授权角色和权限代码。
@@ -237,38 +242,36 @@ curl -X POST http://localhost:8080/api/auth/refresh-token \
 被授权账号 → UnitAccountRole → 房源所有者的 Role → PermissionGroup → Permission
 ```
 
-共享房源时，先创建权限与权限组，所有者创建角色并绑定权限组，再将该角色授予目标账号在指定单元使用。权限代码在 [internal/domain/rbac/permissions.go](internal/domain/rbac/permissions.go) 定义，例如 `unit.view`、`room.manage`、`meter_reading.manage`、`rent_bill.manage`。资源权限校验位于业务服务中，按代码匹配。
+授予单元角色前，应用服务通过 authkit 的账号仓储校验目标账号是否存在。共享房源时，先创建权限与权限组，所有者创建角色并绑定权限组，再将该角色授予目标账号在指定单元使用。权限代码在 [internal/domain/rbac/permissions.go](internal/domain/rbac/permissions.go) 定义，例如 `unit.view`、`room.manage`、`meter_reading.manage`、`rent_bill.manage`。资源权限校验位于业务服务中，按代码匹配。
 
 ## 项目结构
 
 ```text
 .
 ├── main.go                         # 配置解析、依赖组装、迁移与服务启动
-├── config/                         # 微信、JWT、管理员配置
+├── config/                         # authkit 微信登录、会话与管理员配置
 ├── api/
 │   ├── api.go                      # 路由与 Swagger 入口
 │   ├── routers/                    # HTTP Handler 与 Swagger 注解
-│   ├── middlewares/                # JWT 校验、Redis 限流
+│   ├── middlewares/                # authkit 会话校验、Redis 限流
 │   ├── response/                   # 统一响应与错误处理
 │   └── docs/                       # 生成的 Swagger 文档
 ├── internal/
 │   ├── app/                        # 按业务拆分的用例服务、DTO 与测试
 │   ├── domain/                     # 领域模型、业务规则与仓储接口
 │   ├── infra/
-│   │   ├── auth/jwt/               # JWT 签发与解析
 │   │   ├── persistence/
-│   │   │   ├── mysql/              # GORM + Gen 仓储实现
-│   │   │   ├── models/             # 持久化模型与 AllModels 迁移清单
-│   │   │   ├── query/              # Gen 生成的类型安全查询
-│   │   │   └── generate/           # 从模型生成 Query 的入口
+│   │   │   ├── mysql/              # GORM + Gen 仓储实现，query/ 保存生成查询
+│   │   │   └── models/             # 业务持久化模型与 AllModels 迁移清单
 │   │   ├── cache/                  # 缓存辅助代码
 │   │   └── ratelimit/              # Redis 限流器
 │   └── xerr/                       # 业务错误与错误码
+├── cmd/generate/                   # 从业务模型生成 Gen Query
 ├── Makefile                        # Gen 与 Swagger 生成入口
 └── web/                            # 独立前端项目
 ```
 
-HTTP Handler 调用应用服务，应用服务编排领域规则与仓储，MySQL 仓储负责持久化。`main.go` 组装这些依赖。
+认证 Handler 直接接入 authkit；业务 HTTP Handler 调用应用服务，应用服务编排领域规则与仓储，MySQL 仓储负责业务持久化。`main.go` 组装这些依赖。
 
 ## 开发与验证
 
@@ -285,12 +288,12 @@ go test ./internal/app/... ./internal/domain/...
 go build ./...
 ```
 
-修改 Go 文件后执行 `gofmt -w <files>`。领域与应用测试使用内存仓储替身；仓储测试默认使用纯 Go SQLite，覆盖账号隔离、软删除、关联和事务。MySQL 兼容性测试使用临时数据库验证旧 Ent 表结构升级、数据保留及新建表结构；Redis 和微信登录仍需单独集成验证。
+修改 Go 文件后执行 `gofmt -w <files>`。领域与应用测试使用内存仓储替身；仓储测试默认使用纯 Go SQLite，覆盖账号隔离、软删除、关联和事务。MySQL 仓储测试可使用临时数据库验证实际数据库行为；Redis 和微信登录仍需单独集成验证。
 
 修改 `internal/infra/persistence/models/` 后重新生成 Query（无需连接数据库）：
 
 ```bash
-go generate ./internal/infra/persistence
+go generate ./cmd/generate
 ```
 
 修改 HTTP 接口或 Swagger 注解后生成文档。先安装当前版本的 `swag`，并确保 Go 的二进制安装目录在 `PATH` 中：
@@ -300,13 +303,12 @@ go install github.com/swaggo/swag/cmd/swag@v1.16.6
 go generate ./api
 ```
 
-`make generate` 会依次生成 Gen Query 和 Swagger。生成结果位于 `internal/infra/persistence/query/` 和 `api/docs/`，不要手工编辑生成文件。数据库模型保留原 Ent 表名、列类型、索引和外键，仓储保留原 `MaxLen` 字节上限（例如房型名称最多 12 字节）；启动时通过 `models.AllModels()` 迁移，删除列或表等破坏性改动需单独提供版本化 SQL。
+`make generate` 会依次生成 Gen Query 和 Swagger。生成结果位于 `internal/infra/persistence/mysql/query/` 和 `api/docs/`，不要手工编辑生成文件。业务模型的账号引用使用 `varchar(64)` 和二进制排序规则，抄表人的 `reader_id` 可空；不再关联本项目原 `accounts` 表。authkit 的表由 `authmysql.Models()` 提供，业务表由 `models.AllModels()` 提供。旧整型账号及其业务引用不能通过简单修改列类型变为 authkit 身份；已有数据库需要另行处理历史数据，删除表等破坏性改动需单独提供版本化 SQL。
 
-仓储与迁移的 MySQL 集成测试可显式提供 DSN。测试账号需要创建和删除数据库的权限，每个测试会创建独立临时库并在结束时删除，不修改 DSN 中的现有数据库：
+仓储的 MySQL 集成测试可显式提供 DSN。测试账号需要创建和删除数据库的权限，每个测试会创建独立临时库并在结束时删除，不修改 DSN 中的现有数据库：
 
 ```bash
 RENT_MANAGER_TEST_MYSQL_DSN='root@tcp(127.0.0.1:3306)/?parseTime=true' go test ./internal/infra/persistence/mysql
-RENT_MANAGER_MYSQL_MIGRATION_DSN='root@tcp(127.0.0.1:3306)/?parseTime=true' go test ./internal/infra/persistence/models -run TestMigrateEntSchema
 ```
 
 ## 当前限制
@@ -314,5 +316,4 @@ RENT_MANAGER_MYSQL_MIGRATION_DSN='root@tcp(127.0.0.1:3306)/?parseTime=true' go t
 - 单元列表的 `monthly_rent_amount` 目前来自占位计算，单元详情的预估月收入、房间数和在租数仍有待补充。首页收入按账单月份汇总已收款账单，`monthly_growth` 表示金额差。
 - 当前抄表接口为手工录入；存在导入和自动来源枚举，但尚无对应导入或自动抄表接口。
 - 账单收款接口用于标记状态，尚未接入在线支付。当前没有独立的租客、合同管理接口。
-- 当前 JWT 中间件校验令牌签名和有效期并提取账号 ID，但尚未限制业务接口只接受 `access` 类型令牌。调用方应使用 `access_token` 访问业务接口。
 - `SuperAdmin` 和 `SYSTEM_ALLOW_ALL` 是已有常量；当前全局管理权限以配置中的账号 ID 为准，资源权限按具体代码检查。

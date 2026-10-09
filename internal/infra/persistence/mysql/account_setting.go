@@ -23,7 +23,7 @@ func NewAccountSettingRepository(client *gorm.DB) *AccountSettingRepository {
 }
 
 // GetByKey 获取当前账号指定配置。
-func (r *AccountSettingRepository) GetByKey(ctx context.Context, accountID int, key string) (*domainaccountsetting.AccountSetting, error) {
+func (r *AccountSettingRepository) GetByKey(ctx context.Context, accountID string, key string) (*domainaccountsetting.AccountSetting, error) {
 	a := r.q.AccountSetting
 	record, err := a.WithContext(ctx).
 		Where(a.AccountID.Eq(accountID), a.Key.Eq(key), a.DeletedAt.IsNull()).

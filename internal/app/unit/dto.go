@@ -57,7 +57,7 @@ type UnitConfigResponse struct {
 // UnitResponse 是单元响应。
 type UnitResponse struct {
 	ID                int                     `json:"id"`
-	AccountID         int                     `json:"account_id"`
+	AccountID         string                  `json:"account_id"`
 	Name              string                  `json:"name"`
 	Address           string                  `json:"address"`
 	City              string                  `json:"city"`

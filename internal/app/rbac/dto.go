@@ -64,15 +64,15 @@ type UpdateRoleCommand struct {
 
 // UnitAccountRolesCommand 表示单元账号角色授权命令。
 type UnitAccountRolesCommand struct {
-	UnitID    int   `uri:"unit_id" validate:"required,min=1"`
-	AccountID int   `uri:"account_id" validate:"required,min=1"`
-	RoleIDs   []int `json:"role_ids" validate:"required,min=1,dive,min=1"`
+	UnitID    int    `uri:"unit_id" validate:"required,min=1"`
+	AccountID string `uri:"account_id" validate:"required,len=64,hexadecimal,lowercase"`
+	RoleIDs   []int  `json:"role_ids" validate:"required,min=1,dive,min=1"`
 }
 
 // UnitGrantsQuery 表示单元授权列表查询参数。
 type UnitGrantsQuery struct {
 	UnitID    int    `uri:"unit_id" validate:"required,min=1"`
-	AccountID int    `form:"account_id"`
+	AccountID string `form:"account_id" validate:"omitempty,len=64,hexadecimal,lowercase"`
 	Status    string `form:"status"`
 	Limit     int    `form:"limit"`
 	Offset    int    `form:"offset"`
@@ -81,7 +81,7 @@ type UnitGrantsQuery struct {
 // RoleResponse 是角色响应。
 type RoleResponse struct {
 	ID             int    `json:"id"`
-	AccountID      int    `json:"account_id"`
+	AccountID      string `json:"account_id"`
 	Name           string `json:"name"`
 	IsDefaultOwner bool   `json:"is_default_owner"`
 	IsActive       bool   `json:"is_active"`
@@ -109,9 +109,9 @@ type PermissionResponse struct {
 type UnitGrantResponse struct {
 	ID                 int           `json:"id"`
 	UnitID             int           `json:"unit_id"`
-	AccountID          int           `json:"account_id"`
+	AccountID          string        `json:"account_id"`
 	RoleID             int           `json:"role_id"`
-	GrantedByAccountID int           `json:"granted_by_account_id"`
+	GrantedByAccountID string        `json:"granted_by_account_id"`
 	Status             string        `json:"status"`
 	Role               *RoleResponse `json:"role,omitempty"`
 }

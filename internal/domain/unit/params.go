@@ -10,7 +10,7 @@ const (
 )
 
 type CreateParams struct {
-	AccountID           int
+	AccountID           string
 	Name                string
 	Address             string
 	City                string
@@ -21,7 +21,7 @@ type CreateParams struct {
 
 type UpdateParams struct {
 	ID                  int
-	AccountID           int
+	AccountID           string
 	Name                string
 	Address             string
 	City                string
@@ -31,6 +31,6 @@ type UpdateParams struct {
 }
 
 type ListQuery struct {
-	AccountID int
+	AccountID string
 	Scope     string
 }

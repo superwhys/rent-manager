@@ -7,7 +7,7 @@ import (
 
 type Unit struct {
 	ID                  int
-	AccountID           int
+	AccountID           string
 	Name                string
 	Address             string
 	City                string
@@ -75,7 +75,7 @@ func (u *Unit) Update(params UpdateParams) error {
 }
 
 func (u *Unit) Validate() error {
-	if u.AccountID <= 0 {
+	if strings.TrimSpace(u.AccountID) == "" {
 		return ErrAccountRequired
 	}
 	if u.Name == "" {

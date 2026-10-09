@@ -12,8 +12,7 @@ type Unit struct {
 	City       string       `gorm:"column:city;type:varchar(255);not null"`
 	Province   string       `gorm:"column:province;type:varchar(255);not null"`
 	JSONExtend string       `gorm:"column:json_extend;type:varchar(2048);not null;default:'{\"meter_reading_day\":1}'"`
-	AccountID  int          `gorm:"column:account_id;type:bigint;not null;uniqueIndex:unit_account_id_name,priority:1"`
-	Account    *Account     `gorm:"foreignKey:AccountID;constraint:units_accounts_units,OnDelete:NO ACTION"`
+	AccountID  string       `gorm:"column:account_id;type:varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;not null;uniqueIndex:unit_account_id_name,priority:1"`
 	MeterItems []*MeterItem `gorm:"many2many:unit_meter_items;joinForeignKey:UnitID;joinReferences:MeterItemID;-:migration"`
 }
 

@@ -186,7 +186,7 @@ func (s *Service) DeleteRoom(ctx context.Context, roomID int) error {
 }
 
 // requireUnitPermission 校验当前账号对单元的权限。
-func (s *Service) requireUnitPermission(ctx context.Context, accountID int, unitID int, permissionCode string) (*domainunit.Unit, error) {
+func (s *Service) requireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (*domainunit.Unit, error) {
 	unit, err := s.unitRepo.GetByID(ctx, unitID)
 	if err != nil {
 		return nil, err

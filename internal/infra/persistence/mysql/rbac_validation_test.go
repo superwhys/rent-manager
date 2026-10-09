@@ -14,7 +14,7 @@ func TestRBACRepositoryBulkByteLengthValidation(t *testing.T) {
 		t.Run(field, func(t *testing.T) {
 			ctx := context.Background()
 			db := newTestDB(t)
-			owner, _, _ := seedRBACAccounts(t, db)
+			owner, _, _ := seedRBACUnit(t, db)
 			repo := NewRBACRepository(db)
 			var model interface{}
 			create := func(value string) error {
@@ -22,8 +22,8 @@ func TestRBACRepositoryBulkByteLengthValidation(t *testing.T) {
 				case "角色名称":
 					model = &models.Role{}
 					_, err := repo.CreateRoles(ctx, []*domainrbac.Role{
-						{AccountID: owner.ID, Name: "有效角色", IsActive: true},
-						{AccountID: owner.ID, Name: value, IsActive: true},
+						{AccountID: owner, Name: "有效角色", IsActive: true},
+						{AccountID: owner, Name: value, IsActive: true},
 					})
 					return err
 				case "权限组编码", "权限组名称", "权限组描述":
@@ -71,9 +71,9 @@ func TestRBACRepositoryBulkByteLengthValidation(t *testing.T) {
 func TestRBACRepositoryUpdateRoleByteLengthValidation(t *testing.T) {
 	ctx := context.Background()
 	db := newTestDB(t)
-	owner, _, _ := seedRBACAccounts(t, db)
+	owner, _, _ := seedRBACUnit(t, db)
 	repo := NewRBACRepository(db)
-	roles, err := repo.CreateRoles(ctx, []*domainrbac.Role{{AccountID: owner.ID, Name: "原始名称", IsActive: true}})
+	roles, err := repo.CreateRoles(ctx, []*domainrbac.Role{{AccountID: owner, Name: "原始名称", IsActive: true}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func TestRBACRepositoryUpdateRoleByteLengthValidation(t *testing.T) {
 	if _, err := repo.UpdateRole(ctx, role); err == nil {
 		t.Fatal("角色更新未拒绝超过 255 字节的中文名称")
 	}
-	unchanged, err := repo.GetRole(ctx, owner.ID, role.ID)
+	unchanged, err := repo.GetRole(ctx, owner, role.ID)
 	if err != nil || unchanged.Name != "原始名称" {
 		t.Fatalf("失败更新修改了角色: %+v, %v", unchanged, err)
 	}

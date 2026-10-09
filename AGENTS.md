@@ -5,12 +5,12 @@ This file provides guidance to Codex and other coding agents when working in thi
 ## Commands
 
 - `go test ./...` - run all tests and compile all packages.
-- `go test ./internal/app/services` - run tests for one package.
-- `go test ./internal/app/services -run TestName` - run a single Go test by name.
+- `go test ./internal/app/rbac` - run tests for one package.
+- `go test ./internal/app/rbac -run TestName` - run a single Go test by name.
 - `go build ./...` - compile all packages.
-- `go run .` - run the server on `0.0.0.0:8080`; it currently requires WeChat, JWT, MySQL, and Redis flags parsed by `github.com/miebyte/goutils/flags`.
+- `go run .` - run the server on `0.0.0.0:8080`; it requires authkit WeChat/session, MySQL, and Redis configuration parsed by `github.com/miebyte/goutils/flags`.
 - `gofmt -w <files>` - format changed Go files before finishing code changes.
-- `make generate` or `go generate ./internal/infra/persistence` - regenerate Gen queries after changing models under `internal/infra/persistence/models`.
+- `make generate` or `go generate ./cmd/generate` - regenerate Gen queries after changing models under `internal/infra/persistence/models`.
 - `go generate ./api` - regenerate Swagger docs from annotations in `api/`.
 
 ## Code Style
@@ -21,16 +21,16 @@ This file provides guidance to Codex and other coding agents when working in thi
 - Add comments only where they clarify exported identifiers, business rules, non-obvious control flow, or integration boundaries.
 - Do not edit generated Gen queries directly; update persistence models and regenerate instead.
 - User-facing error messages should be written in Chinese. Keep error variables stable for `errors.Is`, but make their `Error()` text Chinese.
-- Application services should return domain/repository errors directly. Do not add `mapXError` helpers in `internal/app/services` that translate domain errors into HTTP/errcode errors; HTTP response mapping belongs at the interface layer.
+- Application services should return domain/repository errors directly. Do not add `mapXError` helpers in `internal/app/<business>` that translate domain errors into HTTP/errcode errors; HTTP response mapping belongs at the interface layer.
 
 ## Architecture
 
-This is a Go 1.26.2 Gin API server for a rent-management backend. The current codebase is being rebuilt from a reduced skeleton. `main.go` wires WeChat/JWT auth config, MySQL/GORM, Redis rate limiting, `services.AuthService`, `services.RBACService`, creates the HTTP router, and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
+This is a Go 1.27.1 Gin API server for a rent-management backend. `main.go` wires `github.com/miebyte/authkit v1.9.0`, its WeChat login and MySQL persistence, business repositories/services, and Redis rate limiting. It creates the HTTP router and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
 
 The repository follows a DDD-style architecture:
 
 - Interface layer: `api/` contains HTTP router registration, handlers, middleware, and generated Swagger docs.
-- Application layer: `internal/app/` contains use-case services, currently WeChat/JWT `AuthService` and scoped RBAC `RBACService`.
+- Application layer: `internal/app/<business>/` contains business use-case services and DTOs, including account-scoped RBAC. Authentication and account lifecycle are delegated directly to authkit; there is no local account or auth application/domain package.
 - Domain layer: `internal/domain/` contains domain models, params, repository interfaces, and domain errors.
 - Infrastructure layer: `internal/infra/` contains supporting infrastructure packages and GORM + Gen repositories under `internal/infra/persistence/mysql`.
 
@@ -38,35 +38,39 @@ Routing is centralized in `api/api.go`. Route groups live in `api/routers` and a
 
 Current route surface:
 
-- `/api/auth/wechat-login` and `/api/auth/refresh-token` call `AuthService`.
-- `/api/admin/roles/*`, `/api/admin/permission-groups/*`, `/api/admin/permissions/*`, and `/api/admin/units/:unit_id/*` call the RBAC service and GORM repository.
+- `POST /api/auth/wechat-login` calls authkit for WeChat login and automatic registration.
+- `GET /api/auth/session` returns the current authkit account and session expiry; `DELETE /api/auth/session` revokes that session.
+- `/api/roles/*`, `/api/admin/permission-groups/*`, `/api/admin/permissions/*`, and `/api/units/:unit_id/grants` or `/api/units/:unit_id/accounts/:account_id/roles` call the RBAC service and GORM repository.
+- The former `/api/auth/refresh-token` and `/api/accout/self` routes are removed.
 
-Global Redis-backed rate limiting is wired in `api/api.go` via `RateLimitMiddleware`. `/auth` is public. `/admin` is protected by `TokenVerifyMiddleware`; resource-level permission checks are performed in application services, not route middleware.
+Global Redis-backed rate limiting is wired in `api/api.go` via `RateLimitMiddleware`. Only WeChat login is public. Session and business routes require a valid authkit Bearer session token; resource-level permission checks are performed in application services, not route middleware.
 
 Handlers should follow the existing flow:
 
-- Define request DTOs in `internal/models/requests`.
+- Define business request DTOs in `internal/app/<business>/dto.go`.
 - Use `ginutils.RequestHandler` for binding and validation.
-- Call an app service from `internal/app/services`.
-- Return response DTOs from `internal/models/response`.
-- Use `response.HandleRouterError` for business/application errors once business services are reintroduced.
+- Call an app service from `internal/app/<business>`.
+- Return business response DTOs from `internal/app/<business>/dto.go`; auth endpoints expose `authkit.Account` directly without an account mapping.
+- Use `response.HandleRouterError` for business/application errors.
 
 ## Persistence
 
-Persistence uses GORM with MySQL and type-safe queries generated by `gorm.io/gen`. `main.go` opens the MySQL client, calls `AutoMigrate(models.AllModels()...)`, and wires repositories through `mysql.RepositoryFactory`. `WithTransaction` supplies repositories bound to the same transaction.
+Persistence uses GORM with MySQL and type-safe queries generated by `gorm.io/gen`. `main.go` opens the MySQL client, migrates `authmysql.Models()` from authkit before business `models.AllModels()`, and wires business repositories through `mysql.RepositoryFactory`. `WithTransaction` supplies repositories bound to the same transaction. Startup refuses an existing legacy `accounts` table before AutoMigrate. [The authkit migration SQL](migrations/20261009_authkit_accounts.sql) is only for empty legacy account-owned tables and refuses nonempty data; preserving historical data needs a separate explicit migration plan.
 
 Important locations:
 
 - `internal/infra/persistence/models` - independent persistence models and migration list.
-- `internal/infra/persistence/query` - generated Gen queries; do not edit manually.
-- `internal/infra/persistence/generate` - reproducible model-to-query generator.
+- `internal/infra/persistence/mysql/query` - generated Gen queries; do not edit manually.
+- `cmd/generate` - reproducible model-to-query generator.
 - `internal/infra/persistence/mysql` - concrete repositories, conversion and transaction handling.
 
-Keep table names, column types, nullability, indexes and foreign keys compatible with existing data. Models use `*time.Time` for explicit soft-delete filtering and `*bool` for default-true fields so explicit false values survive creation. Business CRUD must use generated queries. Preserve zero values, NULL updates and request contexts; destructive schema changes require separate versioned SQL.
+Keep business table names, nullability, indexes and resource relationships compatible with existing data. Account references now use `varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin` and point directly to authkit IDs; business models do not define foreign keys or associations to the removed local `accounts` model. `reader_id` is a nullable string. Existing integer account references require an explicit historical-data migration decision; do not invent an account mapping or treat a numeric-to-string cast as identity migration. Models use `*time.Time` for explicit soft-delete filtering and `*bool` for default-true fields so explicit false values survive creation. Business CRUD must use generated queries. Preserve zero values, NULL updates and request contexts; destructive schema changes require separate versioned SQL.
 
 ## Authentication And RBAC
 
-Authentication uses WeChat `jscode2session` in `AuthService` and JWT utilities in `internal/jwtutils`. `TokenVerifyMiddleware` is wired on the `/admin` group.
+Authentication, accounts, credentials and sessions are owned by `github.com/miebyte/authkit`. Configure `auth.wechat.app_id`, `auth.wechat.secret` and `auth.session_ttl` (for example `720h`). Zero session TTL uses authkit's 30-day default. Authkit verifies WeChat credentials and creates an account on first login. The Bearer token is an opaque, revocable session token, not a JWT, and expired sessions require a new login.
+
+Use authkit account IDs directly throughout business code as `string` (64 lowercase hexadecimal characters), with no local account model or ID mapping. `internal/app.AccountIDFromContext` and `SetAccountIDToContext` carry that string. Auth responses retain authkit's `Account` JSON fields `ID`, `Username`, `Email`; the outer login fields are `account`, `access_token`, `expires_at`, `created`. Business resource IDs remain `int`.
 
 RBAC and business resources are currently account-scoped, not organization-scoped. There is no `organization_id` field or organization model in the current persistence models.
 
@@ -74,7 +78,7 @@ Current RBAC model:
 
 - Accounts have full access to their own resources by default.
 - Resource-level permission checks are only needed when an account accesses resources under another account's unit.
-- `Account` owns roles through `roles.account_id`.
+- Authkit accounts own roles through `roles.account_id`.
 - `Role` belongs to one account and can bind many global permission groups.
 - `PermissionGroup` is global and can bind many permissions.
 - `Permission` is global and has unique `code`; it does not store `api_path`.
@@ -84,15 +88,16 @@ Effective authorization follows:
 
 `target account -> unit_account_role -> owner role -> permission_group -> permission`
 
-The RBAC API covers global permission/permission-group management, account-private role management, role permission-group binding, and unit role grants. Global permission and permission-group write APIs require `AdminConfig.SuperAdminAccountIDs`; normal accounts can list global permissions/groups, manage their own roles, and grant roles only on units they own.
+The RBAC API covers global permission/permission-group management, account-private role management, role permission-group binding, and unit role grants. Global permission and permission-group write APIs require `AdminConfig.SuperAdminAccountIDs` (`[]string` containing exact authkit account IDs); normal accounts can list global permissions/groups, manage their own roles, and grant roles only on units they own.
 
-Define permission checks by code constants in `internal/domain/rbac/permissions.go` and call `RBACService.RequireUnitPermission` from business application services. Do not maintain a route-to-permission map unless route-level authorization is intentionally introduced later.
+Before granting unit roles, the RBAC application service checks the target account directly through authkit's `GetByID` account repository method. Define permission checks by code constants in `internal/domain/rbac/permissions.go` and call `domain/rbac.RbacService.RequireUnitPermission` from business application services. Do not maintain a route-to-permission map unless route-level authorization is intentionally introduced later.
 
 ## Resource Ownership
 
 The persistence models model business resources as account-scoped:
 
-- `Unit`, `Role`, and `MeterItem` use `account_id`.
+- `Unit`, `Role`, `RoomType`, `MeterItem`, and `AccountSetting` use authkit `account_id` strings.
+- `UnitAccountRole.AccountID`, `GrantedByAccountID`, and optional `MeterReading.ReaderID` use the same authkit identity. Account settings remain business data.
 - `Room` is scoped through its owning unit.
 - Future repository queries should enforce account ownership and filter soft-deleted records.
 

@@ -41,7 +41,7 @@ type MeterItemIDQuery struct {
 // MeterItemResponse 是抄表项响应。
 type MeterItemResponse struct {
 	ID        int     `json:"id"`
-	AccountID int     `json:"account_id"`
+	AccountID string  `json:"account_id"`
 	Code      string  `json:"code"`
 	Unit      string  `json:"unit"`
 	UnitPrice float64 `json:"unit_price"`

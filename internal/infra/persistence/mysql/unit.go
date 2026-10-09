@@ -59,7 +59,7 @@ func (r *UnitRepository) Create(ctx context.Context, unit *domainunit.Unit) (*do
 	return r.Get(ctx, unit.AccountID, record.ID)
 }
 
-func (r *UnitRepository) Get(ctx context.Context, accountID int, id int) (*domainunit.Unit, error) {
+func (r *UnitRepository) Get(ctx context.Context, accountID string, id int) (*domainunit.Unit, error) {
 	u := r.q.Unit
 	record, err := u.WithContext(ctx).
 		Where(u.ID.Eq(id), u.AccountID.Eq(accountID), u.DeletedAt.IsNull()).
@@ -111,7 +111,7 @@ func (r *UnitRepository) List(ctx context.Context, params domainunit.ListQuery) 
 	return toDomainUnitsForAccount(records, params.AccountID)
 }
 
-func (r *UnitRepository) grantedUnitPredicate(ctx context.Context, accountID int) gen.Condition {
+func (r *UnitRepository) grantedUnitPredicate(ctx context.Context, accountID string) gen.Condition {
 	grant := r.q.UnitAccountRole
 	role := r.q.Role
 	return gen.Exists(grant.WithContext(ctx).Where(
@@ -174,7 +174,7 @@ func (r *UnitRepository) Update(ctx context.Context, unit *domainunit.Unit) (*do
 	return r.Get(ctx, unit.AccountID, unit.ID)
 }
 
-func (r *UnitRepository) Delete(ctx context.Context, accountID int, id int) error {
+func (r *UnitRepository) Delete(ctx context.Context, accountID string, id int) error {
 	room := r.q.Room
 	count, err := room.WithContext(ctx).
 		Where(room.UnitID.Eq(id), room.DeletedAt.IsNull()).
@@ -198,7 +198,7 @@ func (r *UnitRepository) Delete(ctx context.Context, accountID int, id int) erro
 	return nil
 }
 
-func (r *UnitRepository) ensureMeterItemsInAccount(ctx context.Context, accountID int, ids []int) error {
+func (r *UnitRepository) ensureMeterItemsInAccount(ctx context.Context, accountID string, ids []int) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -268,7 +268,7 @@ func toDomainUnit(record *models.Unit) (*domainunit.Unit, error) {
 	return unit, nil
 }
 
-func toDomainUnitForAccount(record *models.Unit, accountID int) (*domainunit.Unit, error) {
+func toDomainUnitForAccount(record *models.Unit, accountID string) (*domainunit.Unit, error) {
 	unit, err := toDomainUnit(record)
 	if err != nil {
 		return nil, err
@@ -284,7 +284,7 @@ func toDomainUnitForAccount(record *models.Unit, accountID int) (*domainunit.Uni
 	return unit, nil
 }
 
-func toDomainUnitsForAccount(records []*models.Unit, accountID int) ([]*domainunit.Unit, error) {
+func toDomainUnitsForAccount(records []*models.Unit, accountID string) ([]*domainunit.Unit, error) {
 	units := make([]*domainunit.Unit, 0, len(records))
 	for _, record := range records {
 		unit, err := toDomainUnitForAccount(record, accountID)

@@ -25,7 +25,7 @@ func NewMeterReadingRepository(client *gorm.DB) *MeterReadingRepository {
 }
 
 // Create 创建账号名下房间的抄表记录。
-func (r *MeterReadingRepository) Create(ctx context.Context, accountID int, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
+func (r *MeterReadingRepository) Create(ctx context.Context, accountID string, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
 	if err := r.ensureMeterReadingRelationsInAccount(ctx, r.q, accountID, reading.RoomID, reading.MeterItemID); err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (r *MeterReadingRepository) Create(ctx context.Context, accountID int, read
 }
 
 // Get 获取账号名下指定抄表记录。
-func (r *MeterReadingRepository) Get(ctx context.Context, accountID int, id int) (*domainmeterreading.MeterReading, error) {
+func (r *MeterReadingRepository) Get(ctx context.Context, accountID string, id int) (*domainmeterreading.MeterReading, error) {
 	record, err := r.q.MeterReading.WithContext(ctx).
 		Where(
 			r.q.MeterReading.ID.Eq(id),
@@ -58,7 +58,7 @@ func (r *MeterReadingRepository) Get(ctx context.Context, accountID int, id int)
 }
 
 // GetByRoomMeterItemPeriod 获取账号名下房间指定月份的抄表记录。
-func (r *MeterReadingRepository) GetByRoomMeterItemPeriod(ctx context.Context, accountID int, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
+func (r *MeterReadingRepository) GetByRoomMeterItemPeriod(ctx context.Context, accountID string, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
 	record, err := r.q.MeterReading.WithContext(ctx).
 		Where(
 			r.q.MeterReading.RoomID.Eq(roomID),
@@ -78,7 +78,7 @@ func (r *MeterReadingRepository) GetByRoomMeterItemPeriod(ctx context.Context, a
 }
 
 // GetLatestBeforePeriod 获取账号名下房间指定抄表项在目标月份之前的最近读数。
-func (r *MeterReadingRepository) GetLatestBeforePeriod(ctx context.Context, accountID int, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
+func (r *MeterReadingRepository) GetLatestBeforePeriod(ctx context.Context, accountID string, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
 	record, err := r.q.MeterReading.WithContext(ctx).
 		Where(
 			r.q.MeterReading.RoomID.Eq(roomID),
@@ -99,7 +99,7 @@ func (r *MeterReadingRepository) GetLatestBeforePeriod(ctx context.Context, acco
 }
 
 // List 查询账号名下的抄表记录列表。
-func (r *MeterReadingRepository) List(ctx context.Context, accountID int, query domainmeterreading.ListQuery) ([]*domainmeterreading.MeterReading, error) {
+func (r *MeterReadingRepository) List(ctx context.Context, accountID string, query domainmeterreading.ListQuery) ([]*domainmeterreading.MeterReading, error) {
 	q := r.queryMeterReadings(ctx, accountID, query)
 	if query.Limit > 0 {
 		q = q.Limit(query.Limit)
@@ -115,7 +115,7 @@ func (r *MeterReadingRepository) List(ctx context.Context, accountID int, query 
 }
 
 // SaveRoomMonth 事务性保存同一房间同一月份的一组抄表记录。
-func (r *MeterReadingRepository) SaveRoomMonth(ctx context.Context, accountID int, readings []*domainmeterreading.MeterReading) ([]*domainmeterreading.MeterReading, error) {
+func (r *MeterReadingRepository) SaveRoomMonth(ctx context.Context, accountID string, readings []*domainmeterreading.MeterReading) ([]*domainmeterreading.MeterReading, error) {
 	if len(readings) == 0 {
 		return nil, domainmeterreading.ErrReadingsRequired
 	}
@@ -175,7 +175,7 @@ func (r *MeterReadingRepository) SaveRoomMonth(ctx context.Context, accountID in
 }
 
 // Update 更新账号名下指定抄表记录。
-func (r *MeterReadingRepository) Update(ctx context.Context, accountID int, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
+func (r *MeterReadingRepository) Update(ctx context.Context, accountID string, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
 	if err := r.ensureMeterReadingRelationsInAccount(ctx, r.q, accountID, reading.RoomID, reading.MeterItemID); err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (r *MeterReadingRepository) Update(ctx context.Context, accountID int, read
 }
 
 // Delete 软删除账号名下指定抄表记录。
-func (r *MeterReadingRepository) Delete(ctx context.Context, accountID int, id int) error {
+func (r *MeterReadingRepository) Delete(ctx context.Context, accountID string, id int) error {
 	result, err := r.q.MeterReading.WithContext(ctx).
 		Where(
 			r.q.MeterReading.ID.Eq(id),
@@ -207,7 +207,7 @@ func (r *MeterReadingRepository) Delete(ctx context.Context, accountID int, id i
 }
 
 // queryMeterReadings 构建带账号归属约束的抄表记录查询。
-func (r *MeterReadingRepository) queryMeterReadings(ctx context.Context, accountID int, params domainmeterreading.ListQuery) query.IMeterReadingDo {
+func (r *MeterReadingRepository) queryMeterReadings(ctx context.Context, accountID string, params domainmeterreading.ListQuery) query.IMeterReadingDo {
 	rooms := accountRooms(ctx, r.q, accountID)
 	if params.UnitID > 0 {
 		rooms = rooms.Where(r.q.Room.UnitID.Eq(params.UnitID))
@@ -296,7 +296,7 @@ func toModelMeterReading(reading *domainmeterreading.MeterReading) *models.Meter
 }
 
 // ensureMeterReadingRelationsInAccount 确认房间属于当前账号且房间已绑定抄表项。
-func (r *MeterReadingRepository) ensureMeterReadingRelationsInAccount(ctx context.Context, client *query.Query, accountID int, roomID int, meterItemID int) error {
+func (r *MeterReadingRepository) ensureMeterReadingRelationsInAccount(ctx context.Context, client *query.Query, accountID string, roomID int, meterItemID int) error {
 	count, err := accountRooms(ctx, client, accountID).Where(client.Room.ID.Eq(roomID)).Count()
 	if err != nil {
 		return err

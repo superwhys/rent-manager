@@ -132,7 +132,7 @@ func DeleteUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 // @Tags unit
 // @Produce json
 // @Param unit_id path int true "单元ID"
-// @Param account_id query int false "被授权账号ID"
+// @Param account_id query string false "被授权账号ID"
 // @Param status query string false "授权状态"
 // @Success 200 {object} ginutils.Ret[[]rbac.UnitGrantResponse]
 // @Security BearerAuth
@@ -153,7 +153,7 @@ func ListUnitGrantsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param unit_id path int true "单元ID"
-// @Param account_id path int true "被授权账号ID"
+// @Param account_id path string true "被授权账号ID"
 // @Param request body rbac.UnitAccountRolesCommand true "角色ID列表"
 // @Success 200 {object} ginutils.Ret[[]rbac.UnitGrantResponse]
 // @Security BearerAuth
@@ -174,7 +174,7 @@ func GrantUnitRolesHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param unit_id path int true "单元ID"
-// @Param account_id path int true "被授权账号ID"
+// @Param account_id path string true "被授权账号ID"
 // @Param request body rbac.UnitAccountRolesCommand true "角色ID列表"
 // @Success 200 {object} ginutils.Ret[any]
 // @Security BearerAuth

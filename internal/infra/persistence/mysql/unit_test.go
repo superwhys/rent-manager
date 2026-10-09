@@ -18,14 +18,14 @@ func TestUnitRepositoryOwnershipAndMeterItems(t *testing.T) {
 	ctx := context.Background()
 	db := newTestDB(t)
 	q := query.Use(db)
-	owner := createUnitTestAccount(t, q, "owner")
-	other := createUnitTestAccount(t, q, "other")
-	water := createUnitTestMeterItem(t, q, owner.ID, "water")
-	power := createUnitTestMeterItem(t, q, owner.ID, "power")
-	foreign := createUnitTestMeterItem(t, q, other.ID, "water")
+	owner := testAccountID("owner")
+	other := testAccountID("other")
+	water := createUnitTestMeterItem(t, q, owner, "water")
+	power := createUnitTestMeterItem(t, q, owner, "power")
+	foreign := createUnitTestMeterItem(t, q, other, "water")
 	repo := NewUnitRepository(db)
 	unit, err := repo.Create(ctx, &domainunit.Unit{
-		AccountID: owner.ID, Name: "A", Address: "address", City: "city", Province: "province",
+		AccountID: owner, Name: "A", Address: "address", City: "city", Province: "province",
 		Config: domainunit.UnitConfig{MeterReadingDay: 15}, DefaultMeterItemIDs: []int{water.ID},
 	})
 	if err != nil {
@@ -34,7 +34,7 @@ func TestUnitRepositoryOwnershipAndMeterItems(t *testing.T) {
 	if unit.AccessType != domainunit.AccessTypeOwned || unit.Config.MeterReadingDay != 15 || !reflect.DeepEqual(unit.DefaultMeterItemIDs, []int{water.ID}) {
 		t.Fatalf("unexpected unit: %+v", unit)
 	}
-	if _, err := repo.Get(ctx, other.ID, unit.ID); !errors.Is(err, domainunit.ErrNotFound) {
+	if _, err := repo.Get(ctx, other, unit.ID); !errors.Is(err, domainunit.ErrNotFound) {
 		t.Fatalf("foreign Get error = %v", err)
 	}
 	if _, err := repo.Create(ctx, unit); !errors.Is(err, domainunit.ErrNameAlreadyExists) {
@@ -58,19 +58,19 @@ func TestUnitRepositoryOwnershipAndMeterItems(t *testing.T) {
 		t.Fatalf("foreign meter item error = %v", err)
 	}
 	unit.DefaultMeterItemIDs = nil
-	unit.AccountID = other.ID
+	unit.AccountID = other
 	if _, err := repo.Update(ctx, unit); !errors.Is(err, domainunit.ErrNotFound) {
 		t.Fatalf("foreign Update error = %v", err)
 	}
-	if err := repo.Delete(ctx, other.ID, unit.ID); !errors.Is(err, domainunit.ErrNotFound) {
+	if err := repo.Delete(ctx, other, unit.ID); !errors.Is(err, domainunit.ErrNotFound) {
 		t.Fatalf("foreign Delete error = %v", err)
 	}
-	unit.AccountID = owner.ID
+	unit.AccountID = owner
 	unit, err = repo.Update(ctx, unit)
 	if err != nil || len(unit.DefaultMeterItemIDs) != 0 {
 		t.Fatalf("clear meter items = %+v, %v", unit, err)
 	}
-	if err := repo.Delete(ctx, owner.ID, unit.ID); err != nil {
+	if err := repo.Delete(ctx, owner, unit.ID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := repo.GetByID(ctx, unit.ID); !errors.Is(err, domainunit.ErrNotFound) {
@@ -82,12 +82,12 @@ func TestUnitRepositoryMeterItemTransactionRollback(t *testing.T) {
 	ctx := context.Background()
 	db := newTestDB(t)
 	q := query.Use(db)
-	owner := createUnitTestAccount(t, q, "owner")
-	water := createUnitTestMeterItem(t, q, owner.ID, "water")
-	power := createUnitTestMeterItem(t, q, owner.ID, "power")
+	owner := testAccountID("owner")
+	water := createUnitTestMeterItem(t, q, owner, "water")
+	power := createUnitTestMeterItem(t, q, owner, "power")
 	repo := NewUnitRepository(db)
 	unit, err := repo.Create(ctx, &domainunit.Unit{
-		AccountID: owner.ID, Name: "before", Address: "address", City: "city", Province: "province",
+		AccountID: owner, Name: "before", Address: "address", City: "city", Province: "province",
 		Config: domainunit.DefaultUnitConfig(), DefaultMeterItemIDs: []int{water.ID},
 	})
 	if err != nil {
@@ -108,7 +108,7 @@ func TestUnitRepositoryMeterItemTransactionRollback(t *testing.T) {
 	if _, err := repo.Update(ctx, unit); !errors.Is(err, writeErr) {
 		t.Fatalf("Update error = %v", err)
 	}
-	stored, err := repo.Get(ctx, owner.ID, unit.ID)
+	stored, err := repo.Get(ctx, owner, unit.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,20 +128,20 @@ func TestUnitRepositoryListScopes(t *testing.T) {
 	ctx := context.Background()
 	db := newTestDB(t)
 	q := query.Use(db)
-	owner := createUnitTestAccount(t, q, "owner")
-	viewer := createUnitTestAccount(t, q, "viewer")
-	owned := createUnitTestUnit(t, q, viewer.ID, "owned")
+	owner := testAccountID("owner")
+	viewer := testAccountID("viewer")
+	owned := createUnitTestUnit(t, q, viewer, "owned")
 	active := true
 	inactive := false
 	now := time.Now()
-	role := &models.Role{AccountID: owner.ID, Name: "active", IsActive: &active}
-	secondRole := &models.Role{AccountID: owner.ID, Name: "second", IsActive: &active}
-	inactiveRole := &models.Role{AccountID: owner.ID, Name: "inactive", IsActive: &inactive}
-	deletedRole := &models.Role{AccountID: owner.ID, Name: "deleted", IsActive: &active, DeletedAt: &now}
+	role := &models.Role{AccountID: owner, Name: "active", IsActive: &active}
+	secondRole := &models.Role{AccountID: owner, Name: "second", IsActive: &active}
+	inactiveRole := &models.Role{AccountID: owner, Name: "inactive", IsActive: &inactive}
+	deletedRole := &models.Role{AccountID: owner, Name: "deleted", IsActive: &active, DeletedAt: &now}
 	if err := q.Role.WithContext(ctx).Create(role, secondRole, inactiveRole, deletedRole); err != nil {
 		t.Fatal(err)
 	}
-	granted := createUnitTestUnit(t, q, owner.ID, "granted")
+	granted := createUnitTestUnit(t, q, owner, "granted")
 	fixtures := []struct {
 		name      string
 		roleID    int
@@ -154,9 +154,9 @@ func TestUnitRepositoryListScopes(t *testing.T) {
 		{"deleted role", deletedRole.ID, "active", nil},
 	}
 	for _, fixture := range fixtures {
-		unit := createUnitTestUnit(t, q, owner.ID, fixture.name)
+		unit := createUnitTestUnit(t, q, owner, fixture.name)
 		if err := q.UnitAccountRole.WithContext(ctx).Create(&models.UnitAccountRole{
-			UnitID: unit.ID, AccountID: viewer.ID, RoleID: fixture.roleID, GrantedByAccountID: owner.ID,
+			UnitID: unit.ID, AccountID: viewer, RoleID: fixture.roleID, GrantedByAccountID: owner,
 			Status: fixture.status, DeletedAt: fixture.deletedAt,
 		}); err != nil {
 			t.Fatal(err)
@@ -164,7 +164,7 @@ func TestUnitRepositoryListScopes(t *testing.T) {
 	}
 	for _, roleID := range []int{role.ID, secondRole.ID} {
 		if err := q.UnitAccountRole.WithContext(ctx).Create(&models.UnitAccountRole{
-			UnitID: granted.ID, AccountID: viewer.ID, RoleID: roleID, GrantedByAccountID: owner.ID, Status: "active",
+			UnitID: granted.ID, AccountID: viewer, RoleID: roleID, GrantedByAccountID: owner, Status: "active",
 		}); err != nil {
 			t.Fatal(err)
 		}
@@ -180,7 +180,7 @@ func TestUnitRepositoryListScopes(t *testing.T) {
 		{"", []int{granted.ID, owned.ID}},
 	} {
 		t.Run(test.scope, func(t *testing.T) {
-			units, err := repo.List(ctx, domainunit.ListQuery{AccountID: viewer.ID, Scope: test.scope})
+			units, err := repo.List(ctx, domainunit.ListQuery{AccountID: viewer, Scope: test.scope})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -196,28 +196,19 @@ func TestUnitRepositoryListScopes(t *testing.T) {
 			}
 		})
 	}
-	if _, err := repo.List(ctx, domainunit.ListQuery{AccountID: viewer.ID, Scope: "invalid"}); !errors.Is(err, domainunit.ErrInvalidListScope) {
+	if _, err := repo.List(ctx, domainunit.ListQuery{AccountID: viewer, Scope: "invalid"}); !errors.Is(err, domainunit.ErrInvalidListScope) {
 		t.Fatalf("invalid scope error = %v", err)
 	}
-	if err := repo.Delete(ctx, owner.ID, granted.ID); err != nil {
+	if err := repo.Delete(ctx, owner, granted.ID); err != nil {
 		t.Fatal(err)
 	}
-	units, err := repo.List(ctx, domainunit.ListQuery{AccountID: viewer.ID, Scope: domainunit.ListScopeGranted})
+	units, err := repo.List(ctx, domainunit.ListQuery{AccountID: viewer, Scope: domainunit.ListScopeGranted})
 	if err != nil || len(units) != 0 {
 		t.Fatalf("deleted granted units = %+v, %v", units, err)
 	}
 }
 
-func createUnitTestAccount(t *testing.T, q *query.Query, name string) *models.Account {
-	t.Helper()
-	account := &models.Account{Name: name, Email: name + "@example.com", Password: "password", WechatOpenid: name}
-	if err := q.Account.WithContext(context.Background()).Create(account); err != nil {
-		t.Fatal(err)
-	}
-	return account
-}
-
-func createUnitTestMeterItem(t *testing.T, q *query.Query, accountID int, code string) *models.MeterItem {
+func createUnitTestMeterItem(t *testing.T, q *query.Query, accountID string, code string) *models.MeterItem {
 	t.Helper()
 	item := &models.MeterItem{AccountID: accountID, Code: code, Unit: "unit", UnitPrice: 3, CalcType: "DIFFERENCE"}
 	if err := q.MeterItem.WithContext(context.Background()).Create(item); err != nil {
@@ -226,7 +217,7 @@ func createUnitTestMeterItem(t *testing.T, q *query.Query, accountID int, code s
 	return item
 }
 
-func createUnitTestUnit(t *testing.T, q *query.Query, accountID int, name string) *models.Unit {
+func createUnitTestUnit(t *testing.T, q *query.Query, accountID string, name string) *models.Unit {
 	t.Helper()
 	unit := &models.Unit{AccountID: accountID, Name: name, Address: "address", City: "city", Province: "province", JSONExtend: `{"meter_reading_day":1}`}
 	if err := q.Unit.WithContext(context.Background()).Create(unit); err != nil {

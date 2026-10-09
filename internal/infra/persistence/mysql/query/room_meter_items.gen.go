@@ -35,61 +35,26 @@ func newRoomMeterItem(db *gorm.DB, opts ...gen.DOOption) roomMeterItem {
 		RelationField: field.NewRelation("Room", "models.Room"),
 		RoomType: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}{
 			RelationField: field.NewRelation("Room.RoomType", "models.RoomType"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Room.RoomType.Account", "models.Account"),
-			},
 		},
 		Unit: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 			MeterItems struct {
 				field.RelationField
-				Account struct {
-					field.RelationField
-				}
 			}
 		}{
 			RelationField: field.NewRelation("Room.Unit", "models.Unit"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Room.Unit.Account", "models.Account"),
-			},
 			MeterItems: struct {
 				field.RelationField
-				Account struct {
-					field.RelationField
-				}
 			}{
 				RelationField: field.NewRelation("Room.Unit.MeterItems", "models.MeterItem"),
-				Account: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("Room.Unit.MeterItems.Account", "models.Account"),
-				},
 			},
 		},
 		MeterItems: struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}{
 			RelationField: field.NewRelation("Room.MeterItems", "models.MeterItem"),
-			Account: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Room.MeterItems.Account", "models.Account"),
-			},
 		},
 	}
 
@@ -97,11 +62,6 @@ func newRoomMeterItem(db *gorm.DB, opts ...gen.DOOption) roomMeterItem {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("MeterItem", "models.MeterItem"),
-		Account: struct {
-			field.RelationField
-		}{
-			RelationField: field.NewRelation("MeterItem.Account", "models.Account"),
-		},
 	}
 
 	_roomMeterItem.fillFieldMap()
@@ -193,27 +153,15 @@ type roomMeterItemBelongsToRoom struct {
 
 	RoomType struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 	}
 	Unit struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 		MeterItems struct {
 			field.RelationField
-			Account struct {
-				field.RelationField
-			}
 		}
 	}
 	MeterItems struct {
 		field.RelationField
-		Account struct {
-			field.RelationField
-		}
 	}
 }
 
@@ -296,10 +244,6 @@ type roomMeterItemBelongsToMeterItem struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	Account struct {
-		field.RelationField
-	}
 }
 
 func (a roomMeterItemBelongsToMeterItem) Where(conds ...field.Expr) *roomMeterItemBelongsToMeterItem {

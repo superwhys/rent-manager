@@ -7,7 +7,7 @@ import (
 
 type MeterItem struct {
 	ID        int
-	AccountID int
+	AccountID string
 	Code      string
 	Unit      string
 	UnitPrice float64
@@ -45,7 +45,7 @@ func (i *MeterItem) Update(params UpdateParams) error {
 }
 
 func (i *MeterItem) Validate() error {
-	if i.AccountID <= 0 {
+	if strings.TrimSpace(i.AccountID) == "" {
 		return ErrAccountRequired
 	}
 	if i.Code == "" {

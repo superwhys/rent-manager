@@ -1,21 +1,21 @@
 package rbac
 
 type CreateRoleParams struct {
-	AccountID      int
+	AccountID      string
 	Name           string
 	IsDefaultOwner bool
 }
 
 type UpdateRoleParams struct {
 	ID             int
-	AccountID      int
+	AccountID      string
 	Name           string
 	IsDefaultOwner bool
 	IsActive       bool
 }
 
 type ListRolesQuery struct {
-	AccountID int
+	AccountID string
 	IsActive  *bool
 	Limit     int
 	Offset    int
@@ -39,22 +39,22 @@ type PermissionGroupPermissionsParams struct {
 }
 
 type RolePermissionGroupsParams struct {
-	AccountID          int
+	AccountID          string
 	RoleID             int
 	PermissionGroupIDs []int
 }
 
 type UnitAccountRolesParams struct {
-	OwnerAccountID  int
+	OwnerAccountID  string
 	UnitID          int
-	TargetAccountID int
+	TargetAccountID string
 	RoleIDs         []int
 }
 
 type ListUnitGrantsQuery struct {
-	OwnerAccountID  int
+	OwnerAccountID  string
 	UnitID          int
-	TargetAccountID int
+	TargetAccountID string
 	Status          string
 	Limit           int
 	Offset          int

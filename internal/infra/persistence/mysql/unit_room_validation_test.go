@@ -18,12 +18,12 @@ func TestUnitRepositoryByteLengthValidation(t *testing.T) {
 			ctx := context.Background()
 			db := newTestDB(t)
 			q := query.Use(db)
-			owner := createUnitTestAccount(t, q, "owner")
-			water := createUnitTestMeterItem(t, q, owner.ID, "water")
-			power := createUnitTestMeterItem(t, q, owner.ID, "power")
+			owner := testAccountID("owner")
+			water := createUnitTestMeterItem(t, q, owner, "water")
+			power := createUnitTestMeterItem(t, q, owner, "power")
 			repo := NewUnitRepository(db)
 			unit := &domainunit.Unit{
-				AccountID: owner.ID, Name: "name", Address: "address", City: "city", Province: "province",
+				AccountID: owner, Name: "name", Address: "address", City: "city", Province: "province",
 				Config: domainunit.DefaultUnitConfig(), DefaultMeterItemIDs: []int{water.ID},
 			}
 			setField := func(unit *domainunit.Unit, value string) {
@@ -64,7 +64,7 @@ func TestUnitRepositoryByteLengthValidation(t *testing.T) {
 			if err != nil || count != 1 {
 				t.Fatalf("invalid Create wrote a unit: count=%d, err=%v", count, err)
 			}
-			after, err := repo.Get(ctx, owner.ID, stored.ID)
+			after, err := repo.Get(ctx, owner, stored.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -83,34 +83,34 @@ func TestRoomRepositoryByteLengthValidation(t *testing.T) {
 	ctx := context.Background()
 	db := newTestDB(t)
 	q := query.Use(db)
-	owner := createUnitTestAccount(t, q, "owner")
-	water := createUnitTestMeterItem(t, q, owner.ID, "water")
-	power := createUnitTestMeterItem(t, q, owner.ID, "power")
-	room := createBillingTestRoom(t, db, q, owner.ID, "owned", []int{water.ID})
+	owner := testAccountID("owner")
+	water := createUnitTestMeterItem(t, q, owner, "water")
+	power := createUnitTestMeterItem(t, q, owner, "power")
+	room := createBillingTestRoom(t, db, q, owner, "owned", []int{water.ID})
 	repo := NewRoomRepository(db)
 	room.RoomNo = strings.Repeat("房", 85)
-	stored, err := repo.Update(ctx, owner.ID, room)
+	stored, err := repo.Update(ctx, owner, room)
 	if err != nil {
 		t.Fatalf("255-byte Update: %v", err)
 	}
-	if _, err := repo.Create(ctx, owner.ID, room); err != nil {
+	if _, err := repo.Create(ctx, owner, room); err != nil {
 		t.Fatalf("255-byte Create: %v", err)
 	}
 	invalid := *stored
 	invalid.RoomNo += "a"
 	invalid.Price = 999
 	invalid.MeterItemIDs = []int{power.ID}
-	if _, err := repo.Create(ctx, owner.ID, &invalid); err == nil {
+	if _, err := repo.Create(ctx, owner, &invalid); err == nil {
 		t.Fatal("256-byte Create succeeded")
 	}
-	if _, err := repo.Update(ctx, owner.ID, &invalid); err == nil {
+	if _, err := repo.Update(ctx, owner, &invalid); err == nil {
 		t.Fatal("256-byte Update succeeded")
 	}
 	count, err := q.Room.WithContext(ctx).Count()
 	if err != nil || count != 2 {
 		t.Fatalf("invalid Create wrote a room: count=%d, err=%v", count, err)
 	}
-	after, err := repo.Get(ctx, owner.ID, stored.ID)
+	after, err := repo.Get(ctx, owner, stored.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +118,7 @@ func TestRoomRepositoryByteLengthValidation(t *testing.T) {
 		t.Fatalf("invalid Update changed the room: %+v", after)
 	}
 	invalid.UnitID++
-	if _, err := repo.Create(ctx, owner.ID, &invalid); !errors.Is(err, domainroom.ErrUnitRequired) {
+	if _, err := repo.Create(ctx, owner, &invalid); !errors.Is(err, domainroom.ErrUnitRequired) {
 		t.Fatalf("relation validation precedence: %v", err)
 	}
 }

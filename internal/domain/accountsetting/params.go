@@ -1,18 +1,18 @@
 package accountsetting
 
 type CreateParams struct {
-	AccountID int
+	AccountID string
 	Key       string
 	Value     string
 }
 
 type UpdateParams struct {
 	ID        int
-	AccountID int
+	AccountID string
 	Key       string
 	Value     string
 }
 
 type ListQuery struct {
-	AccountID int
+	AccountID string
 }
