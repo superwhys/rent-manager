@@ -1,6 +1,6 @@
 # Rent Manager
 
-租赁管理系统后端，基于 Go、Gin 和 Ent，使用 MySQL 存储业务数据、Redis 执行接口限流。当前提供微信登录、房源与房间管理、月度抄表、租金账单、首页统计以及按房源授权的 RBAC 接口。
+租赁管理系统后端，基于 Go、Gin 和 GORM + Gen，使用 MySQL 存储业务数据、Redis 执行接口限流。当前提供微信登录、房源与房间管理、月度抄表、租金账单、首页统计以及按房源授权的 RBAC 接口。
 
 本文说明根目录的 Go 后端。`web/` 为独立的 Vue 前端项目，说明见 [web/README.md](web/README.md)。
 
@@ -27,7 +27,7 @@
 | --- | --- |
 | Go | `go.mod` 声明 `1.27.1` |
 | Gin | `v1.12.0`，HTTP 路由与中间件 |
-| Ent | `v0.14.6`，模型、查询代码与数据库迁移 |
+| GORM / Gen | `v1.31.2` / `v0.3.29`，独立持久化模型、类型安全查询与数据库迁移 |
 | goutils | `v1.3.1`，配置解析、服务启动、请求处理、日志和基础设施配置 |
 | MySQL | 业务数据持久化 |
 | Redis | 接口限流，使用 `go-redis/v9` 与 `ulule/limiter/v3` |
@@ -48,7 +48,7 @@ CREATE DATABASE rent_manager
   COLLATE utf8mb4_unicode_ci;
 ```
 
-服务启动时会执行 Ent Schema 迁移，创建或更新表结构；数据库账号需要相应权限。启动过程不负责创建数据库，也不自动初始化权限、权限组或角色。
+服务启动时会执行 GORM AutoMigrate，创建或更新表结构；数据库账号需要相应权限。启动过程不负责创建数据库，也不自动初始化权限、权限组或角色。
 
 ### 2. 配置服务
 
@@ -257,12 +257,14 @@ curl -X POST http://localhost:8080/api/auth/refresh-token \
 │   ├── infra/
 │   │   ├── auth/jwt/               # JWT 签发与解析
 │   │   ├── persistence/
-│   │   │   ├── mysql/              # Ent 仓储实现与迁移入口
-│   │   │   └── ent/                # 生成代码；schema/ 为模型定义
+│   │   │   ├── mysql/              # GORM + Gen 仓储实现
+│   │   │   ├── models/             # 持久化模型与 AllModels 迁移清单
+│   │   │   ├── query/              # Gen 生成的类型安全查询
+│   │   │   └── generate/           # 从模型生成 Query 的入口
 │   │   ├── cache/                  # 缓存辅助代码
 │   │   └── ratelimit/              # Redis 限流器
 │   └── xerr/                       # 业务错误与错误码
-├── Makefile                        # Ent 与 Swagger 生成入口
+├── Makefile                        # Gen 与 Swagger 生成入口
 └── web/                            # 独立前端项目
 ```
 
@@ -283,12 +285,12 @@ go test ./internal/app/... ./internal/domain/...
 go build ./...
 ```
 
-修改 Go 文件后执行 `gofmt -w <files>`。测试主要覆盖账号设置、单元、房间、月度抄表、账单和首页的领域/应用逻辑，使用内存仓储替身；不等同于 MySQL、Redis 和微信登录的集成验证。
+修改 Go 文件后执行 `gofmt -w <files>`。领域与应用测试使用内存仓储替身；仓储测试默认使用纯 Go SQLite，覆盖账号隔离、软删除、关联和事务。MySQL 兼容性测试使用临时数据库验证旧 Ent 表结构升级、数据保留及新建表结构；Redis 和微信登录仍需单独集成验证。
 
-修改 Ent Schema 后重新生成代码：
+修改 `internal/infra/persistence/models/` 后重新生成 Query（无需连接数据库）：
 
 ```bash
-go generate ./internal/infra/persistence/ent
+go generate ./internal/infra/persistence
 ```
 
 修改 HTTP 接口或 Swagger 注解后生成文档。先安装当前版本的 `swag`，并确保 Go 的二进制安装目录在 `PATH` 中：
@@ -298,7 +300,14 @@ go install github.com/swaggo/swag/cmd/swag@v1.16.6
 go generate ./api
 ```
 
-`make generate` 会依次生成 Ent 和 Swagger。生成结果位于 `internal/infra/persistence/ent/` 和 `api/docs/`，应修改 Schema 或注解后重新生成。
+`make generate` 会依次生成 Gen Query 和 Swagger。生成结果位于 `internal/infra/persistence/query/` 和 `api/docs/`，不要手工编辑生成文件。数据库模型保留原 Ent 表名、列类型、索引和外键，仓储保留原 `MaxLen` 字节上限（例如房型名称最多 12 字节）；启动时通过 `models.AllModels()` 迁移，删除列或表等破坏性改动需单独提供版本化 SQL。
+
+仓储与迁移的 MySQL 集成测试可显式提供 DSN。测试账号需要创建和删除数据库的权限，每个测试会创建独立临时库并在结束时删除，不修改 DSN 中的现有数据库：
+
+```bash
+RENT_MANAGER_TEST_MYSQL_DSN='root@tcp(127.0.0.1:3306)/?parseTime=true' go test ./internal/infra/persistence/mysql
+RENT_MANAGER_MYSQL_MIGRATION_DSN='root@tcp(127.0.0.1:3306)/?parseTime=true' go test ./internal/infra/persistence/models -run TestMigrateEntSchema
+```
 
 ## 当前限制
 

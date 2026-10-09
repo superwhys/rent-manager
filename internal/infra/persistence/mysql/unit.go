@@ -2,25 +2,24 @@ package mysql
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/predicate"
+	"gorm.io/gen"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
-	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
-	entmeteritem "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
-	entrole "github.com/superwhys/rent-manager/internal/infra/persistence/ent/role"
-	entroom "github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
-	entunit "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
-	entunitaccountrole "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unitaccountrole"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
 )
 
 type UnitRepository struct {
-	client *entclient.Client
+	q *query.Query
 }
 
-func NewUnitRepository(client *entclient.Client) *UnitRepository {
-	return &UnitRepository{client: client}
+func NewUnitRepository(db *gorm.DB) *UnitRepository {
+	return &UnitRepository{q: query.Use(db)}
 }
 
 func (r *UnitRepository) Create(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
@@ -31,17 +30,28 @@ func (r *UnitRepository) Create(ctx context.Context, unit *domainunit.Unit) (*do
 	if err != nil {
 		return nil, err
 	}
-	record, err := r.client.Unit.Create().
-		SetAccountID(unit.AccountID).
-		SetName(unit.Name).
-		SetAddress(unit.Address).
-		SetCity(unit.City).
-		SetProvince(unit.Province).
-		SetJSONExtend(jsonExtend).
-		AddMeterItemIDs(unit.DefaultMeterItemIDs...).
-		Save(ctx)
+	if err := validateByteLength(255, unit.Name, unit.Address, unit.City, unit.Province); err != nil {
+		return nil, err
+	}
+	if err := validateByteLength(2048, jsonExtend); err != nil {
+		return nil, err
+	}
+	record := &models.Unit{
+		AccountID:  unit.AccountID,
+		Name:       unit.Name,
+		Address:    unit.Address,
+		City:       unit.City,
+		Province:   unit.Province,
+		JSONExtend: jsonExtend,
+	}
+	err = query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
+		if err := tx.Unit.WithContext(ctx).Create(record); err != nil {
+			return err
+		}
+		return replaceUnitMeterItems(ctx, tx, record.ID, unit.DefaultMeterItemIDs)
+	})
 	if err != nil {
-		if entclient.IsConstraintError(err) {
+		if isConstraintError(err) {
 			return nil, domainunit.ErrNameAlreadyExists
 		}
 		return nil, err
@@ -50,12 +60,13 @@ func (r *UnitRepository) Create(ctx context.Context, unit *domainunit.Unit) (*do
 }
 
 func (r *UnitRepository) Get(ctx context.Context, accountID int, id int) (*domainunit.Unit, error) {
-	record, err := r.client.Unit.Query().
-		Where(entunit.ID(id), entunit.AccountID(accountID), entunit.DeletedAtIsNil()).
-		WithMeterItems().
-		Only(ctx)
+	u := r.q.Unit
+	record, err := u.WithContext(ctx).
+		Where(u.ID.Eq(id), u.AccountID.Eq(accountID), u.DeletedAt.IsNull()).
+		Preload(u.MeterItems).
+		Take()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainunit.ErrNotFound
 		}
 		return nil, err
@@ -64,12 +75,13 @@ func (r *UnitRepository) Get(ctx context.Context, accountID int, id int) (*domai
 }
 
 func (r *UnitRepository) GetByID(ctx context.Context, id int) (*domainunit.Unit, error) {
-	record, err := r.client.Unit.Query().
-		Where(entunit.ID(id), entunit.DeletedAtIsNil()).
-		WithMeterItems().
-		Only(ctx)
+	u := r.q.Unit
+	record, err := u.WithContext(ctx).
+		Where(u.ID.Eq(id), u.DeletedAt.IsNull()).
+		Preload(u.MeterItems).
+		Take()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainunit.ErrNotFound
 		}
 		return nil, err
@@ -77,40 +89,42 @@ func (r *UnitRepository) GetByID(ctx context.Context, id int) (*domainunit.Unit,
 	return toDomainUnit(record)
 }
 
-func (r *UnitRepository) List(ctx context.Context, query domainunit.ListQuery) ([]*domainunit.Unit, error) {
-	q := r.client.Unit.Query().
-		Where(entunit.DeletedAtIsNil()).
-		WithMeterItems()
-	switch query.Scope {
+func (r *UnitRepository) List(ctx context.Context, params domainunit.ListQuery) ([]*domainunit.Unit, error) {
+	u := r.q.Unit
+	q := u.WithContext(ctx).
+		Where(u.DeletedAt.IsNull()).
+		Preload(u.MeterItems)
+	switch params.Scope {
 	case domainunit.ListScopeOwned:
-		q = q.Where(entunit.AccountID(query.AccountID))
+		q = q.Where(u.AccountID.Eq(params.AccountID))
 	case domainunit.ListScopeGranted:
-		q = q.Where(r.grantedUnitPredicate(query.AccountID))
+		q = q.Where(r.grantedUnitPredicate(ctx, params.AccountID))
 	case domainunit.ListScopeAll, "":
-		q = q.Where(entunit.Or(
-			entunit.AccountID(query.AccountID),
-			r.grantedUnitPredicate(query.AccountID),
-		))
+		q = q.Where(u.WithContext(ctx).Where(u.AccountID.Eq(params.AccountID)).Or(r.grantedUnitPredicate(ctx, params.AccountID)))
 	default:
 		return nil, domainunit.ErrInvalidListScope
 	}
-	records, err := q.Order(entclient.Desc(entunit.FieldID)).All(ctx)
+	records, err := q.Order(u.ID.Desc()).Find()
 	if err != nil {
 		return nil, err
 	}
-	return toDomainUnitsForAccount(records, query.AccountID)
+	return toDomainUnitsForAccount(records, params.AccountID)
 }
 
-func (r *UnitRepository) grantedUnitPredicate(accountID int) predicate.Unit {
-	return entunit.HasUnitAccountRolesWith(
-		entunitaccountrole.AccountID(accountID),
-		entunitaccountrole.StatusEQ(entunitaccountrole.StatusActive),
-		entunitaccountrole.DeletedAtIsNil(),
-		entunitaccountrole.HasRoleWith(
-			entrole.IsActive(true),
-			entrole.DeletedAtIsNil(),
-		),
-	)
+func (r *UnitRepository) grantedUnitPredicate(ctx context.Context, accountID int) gen.Condition {
+	grant := r.q.UnitAccountRole
+	role := r.q.Role
+	return gen.Exists(grant.WithContext(ctx).Where(
+		grant.UnitID.EqCol(r.q.Unit.ID),
+		grant.AccountID.Eq(accountID),
+		grant.Status.Eq("active"),
+		grant.DeletedAt.IsNull(),
+		gen.Exists(role.WithContext(ctx).Where(
+			role.ID.EqCol(grant.RoleID),
+			role.IsActive.Is(true),
+			role.DeletedAt.IsNull(),
+		)),
+	))
 }
 
 func (r *UnitRepository) Update(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
@@ -121,46 +135,64 @@ func (r *UnitRepository) Update(ctx context.Context, unit *domainunit.Unit) (*do
 	if err != nil {
 		return nil, err
 	}
-	affected, err := r.client.Unit.Update().
-		Where(entunit.ID(unit.ID), entunit.AccountID(unit.AccountID), entunit.DeletedAtIsNil()).
-		SetName(unit.Name).
-		SetAddress(unit.Address).
-		SetCity(unit.City).
-		SetProvince(unit.Province).
-		SetJSONExtend(jsonExtend).
-		ClearMeterItems().
-		AddMeterItemIDs(unit.DefaultMeterItemIDs...).
-		Save(ctx)
+	if err := validateByteLength(255, unit.Name, unit.Address, unit.City, unit.Province); err != nil {
+		return nil, err
+	}
+	if err := validateByteLength(2048, jsonExtend); err != nil {
+		return nil, err
+	}
+	err = query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
+		u := tx.Unit
+		target := u.WithContext(ctx).
+			Where(u.ID.Eq(unit.ID), u.AccountID.Eq(unit.AccountID), u.DeletedAt.IsNull())
+		if _, err := target.Select(u.ID).Clauses(clause.Locking{Strength: "UPDATE"}).Take(); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return domainunit.ErrNotFound
+			}
+			return err
+		}
+		_, err := u.WithContext(ctx).
+			Where(u.ID.Eq(unit.ID), u.AccountID.Eq(unit.AccountID), u.DeletedAt.IsNull()).
+			UpdateSimple(
+				u.Name.Value(unit.Name),
+				u.Address.Value(unit.Address),
+				u.City.Value(unit.City),
+				u.Province.Value(unit.Province),
+				u.JSONExtend.Value(jsonExtend),
+			)
+		if err != nil {
+			return err
+		}
+		return replaceUnitMeterItems(ctx, tx, unit.ID, unit.DefaultMeterItemIDs)
+	})
 	if err != nil {
-		if entclient.IsConstraintError(err) {
+		if isConstraintError(err) {
 			return nil, domainunit.ErrNameAlreadyExists
 		}
 		return nil, err
-	}
-	if affected == 0 {
-		return nil, domainunit.ErrNotFound
 	}
 	return r.Get(ctx, unit.AccountID, unit.ID)
 }
 
 func (r *UnitRepository) Delete(ctx context.Context, accountID int, id int) error {
-	hasRooms, err := r.client.Room.Query().
-		Where(entroom.UnitID(id), entroom.DeletedAtIsNil()).
-		Exist(ctx)
+	room := r.q.Room
+	count, err := room.WithContext(ctx).
+		Where(room.UnitID.Eq(id), room.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
-	if hasRooms {
+	if count > 0 {
 		return domainunit.ErrUnitHasRooms
 	}
-	affected, err := r.client.Unit.Update().
-		Where(entunit.ID(id), entunit.AccountID(accountID), entunit.DeletedAtIsNil()).
-		SetDeletedAt(time.Now()).
-		Save(ctx)
+	u := r.q.Unit
+	result, err := u.WithContext(ctx).
+		Where(u.ID.Eq(id), u.AccountID.Eq(accountID), u.DeletedAt.IsNull()).
+		UpdateSimple(u.DeletedAt.Value(time.Now()))
 	if err != nil {
 		return err
 	}
-	if affected == 0 {
+	if result.RowsAffected == 0 {
 		return domainunit.ErrNotFound
 	}
 	return nil
@@ -170,19 +202,35 @@ func (r *UnitRepository) ensureMeterItemsInAccount(ctx context.Context, accountI
 	if len(ids) == 0 {
 		return nil
 	}
-	count, err := r.client.MeterItem.Query().
-		Where(entmeteritem.IDIn(ids...), entmeteritem.AccountID(accountID), entmeteritem.DeletedAtIsNil()).
-		Count(ctx)
+	item := r.q.MeterItem
+	count, err := item.WithContext(ctx).
+		Where(item.ID.In(ids...), item.AccountID.Eq(accountID), item.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
-	if count != len(ids) {
+	if count != int64(len(ids)) {
 		return domainunit.ErrMeterItemNotFound
 	}
 	return nil
 }
 
-func toDomainUnit(record *entclient.Unit) (*domainunit.Unit, error) {
+func replaceUnitMeterItems(ctx context.Context, q *query.Query, unitID int, ids []int) error {
+	item := q.UnitMeterItem
+	if _, err := item.WithContext(ctx).Where(item.UnitID.Eq(unitID)).Delete(); err != nil {
+		return err
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	records := make([]*models.UnitMeterItem, 0, len(ids))
+	for _, id := range ids {
+		records = append(records, &models.UnitMeterItem{UnitID: unitID, MeterItemID: id})
+	}
+	return item.WithContext(ctx).Create(records...)
+}
+
+func toDomainUnit(record *models.Unit) (*domainunit.Unit, error) {
 	if record == nil {
 		return nil, nil
 	}
@@ -201,10 +249,10 @@ func toDomainUnit(record *entclient.Unit) (*domainunit.Unit, error) {
 		CreatedAt: record.CreatedAt,
 		UpdatedAt: record.UpdatedAt,
 	}
-	if record.Edges.MeterItems != nil {
-		unit.DefaultMeterItems = make([]*domainunit.MeterItem, 0, len(record.Edges.MeterItems))
-		unit.DefaultMeterItemIDs = make([]int, 0, len(record.Edges.MeterItems))
-		for _, item := range record.Edges.MeterItems {
+	if record.MeterItems != nil {
+		unit.DefaultMeterItems = make([]*domainunit.MeterItem, 0, len(record.MeterItems))
+		unit.DefaultMeterItemIDs = make([]int, 0, len(record.MeterItems))
+		for _, item := range record.MeterItems {
 			unit.DefaultMeterItemIDs = append(unit.DefaultMeterItemIDs, item.ID)
 			unit.DefaultMeterItems = append(unit.DefaultMeterItems, &domainunit.MeterItem{
 				ID:        item.ID,
@@ -212,7 +260,7 @@ func toDomainUnit(record *entclient.Unit) (*domainunit.Unit, error) {
 				Unit:      item.Unit,
 				UnitPrice: item.UnitPrice,
 				IsSystem:  item.IsSystem,
-				CalcType:  item.CalcType.String(),
+				CalcType:  item.CalcType,
 				Remark:    item.Remark,
 			})
 		}
@@ -220,7 +268,7 @@ func toDomainUnit(record *entclient.Unit) (*domainunit.Unit, error) {
 	return unit, nil
 }
 
-func toDomainUnitForAccount(record *entclient.Unit, accountID int) (*domainunit.Unit, error) {
+func toDomainUnitForAccount(record *models.Unit, accountID int) (*domainunit.Unit, error) {
 	unit, err := toDomainUnit(record)
 	if err != nil {
 		return nil, err
@@ -236,7 +284,7 @@ func toDomainUnitForAccount(record *entclient.Unit, accountID int) (*domainunit.
 	return unit, nil
 }
 
-func toDomainUnitsForAccount(records []*entclient.Unit, accountID int) ([]*domainunit.Unit, error) {
+func toDomainUnitsForAccount(records []*models.Unit, accountID int) ([]*domainunit.Unit, error) {
 	units := make([]*domainunit.Unit, 0, len(records))
 	for _, record := range records {
 		unit, err := toDomainUnitForAccount(record, accountID)

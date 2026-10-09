@@ -2,36 +2,36 @@ package mysql
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/predicate"
+	"gorm.io/gen"
+	"gorm.io/gorm"
+
+	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
 
 	domainmeterreading "github.com/superwhys/rent-manager/internal/domain/meterreading"
-	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
-	entmeteritem "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
-	entmeterreading "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meterreading"
-	entroom "github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
-	entunit "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
 )
 
-// MeterReadingRepository 提供房间抄表记录的 Ent 持久化实现。
+// MeterReadingRepository 提供房间抄表记录的 GORM 持久化实现。
 type MeterReadingRepository struct {
-	client *entclient.Client
+	q *query.Query
 }
 
 // NewMeterReadingRepository 创建抄表记录仓储。
-func NewMeterReadingRepository(client *entclient.Client) *MeterReadingRepository {
-	return &MeterReadingRepository{client: client}
+func NewMeterReadingRepository(client *gorm.DB) *MeterReadingRepository {
+	return &MeterReadingRepository{q: query.Use(client)}
 }
 
 // Create 创建账号名下房间的抄表记录。
 func (r *MeterReadingRepository) Create(ctx context.Context, accountID int, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
-	if err := r.ensureMeterReadingRelationsInAccount(ctx, r.client, accountID, reading.RoomID, reading.MeterItemID); err != nil {
+	if err := r.ensureMeterReadingRelationsInAccount(ctx, r.q, accountID, reading.RoomID, reading.MeterItemID); err != nil {
 		return nil, err
 	}
-	record, err := r.createMeterReading(ctx, r.client, reading)
+	record, err := r.createMeterReading(ctx, r.q, reading)
 	if err != nil {
-		if entclient.IsConstraintError(err) {
+		if isConstraintError(err) {
 			return nil, domainmeterreading.ErrAlreadyExists
 		}
 		return nil, err
@@ -41,15 +41,15 @@ func (r *MeterReadingRepository) Create(ctx context.Context, accountID int, read
 
 // Get 获取账号名下指定抄表记录。
 func (r *MeterReadingRepository) Get(ctx context.Context, accountID int, id int) (*domainmeterreading.MeterReading, error) {
-	record, err := r.client.MeterReading.Query().
+	record, err := r.q.MeterReading.WithContext(ctx).
 		Where(
-			entmeterreading.ID(id),
-			entmeterreading.DeletedAtIsNil(),
-			entmeterreading.HasRoomWith(r.accountRoomPredicates(accountID)...),
+			r.q.MeterReading.ID.Eq(id),
+			r.q.MeterReading.DeletedAt.IsNull(),
+			gen.Columns{r.q.MeterReading.RoomID}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
 		).
-		Only(ctx)
+		Take()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainmeterreading.ErrNotFound
 		}
 		return nil, err
@@ -59,17 +59,17 @@ func (r *MeterReadingRepository) Get(ctx context.Context, accountID int, id int)
 
 // GetByRoomMeterItemPeriod 获取账号名下房间指定月份的抄表记录。
 func (r *MeterReadingRepository) GetByRoomMeterItemPeriod(ctx context.Context, accountID int, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
-	record, err := r.client.MeterReading.Query().
+	record, err := r.q.MeterReading.WithContext(ctx).
 		Where(
-			entmeterreading.RoomID(roomID),
-			entmeterreading.MeterItemID(meterItemID),
-			entmeterreading.PeriodMonth(periodMonth),
-			entmeterreading.DeletedAtIsNil(),
-			entmeterreading.HasRoomWith(r.accountRoomPredicates(accountID)...),
+			r.q.MeterReading.RoomID.Eq(roomID),
+			r.q.MeterReading.MeterItemID.Eq(meterItemID),
+			r.q.MeterReading.PeriodMonth.Eq(periodMonth),
+			r.q.MeterReading.DeletedAt.IsNull(),
+			gen.Columns{r.q.MeterReading.RoomID}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
 		).
-		Only(ctx)
+		Take()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainmeterreading.ErrNotFound
 		}
 		return nil, err
@@ -79,18 +79,18 @@ func (r *MeterReadingRepository) GetByRoomMeterItemPeriod(ctx context.Context, a
 
 // GetLatestBeforePeriod 获取账号名下房间指定抄表项在目标月份之前的最近读数。
 func (r *MeterReadingRepository) GetLatestBeforePeriod(ctx context.Context, accountID int, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
-	record, err := r.client.MeterReading.Query().
+	record, err := r.q.MeterReading.WithContext(ctx).
 		Where(
-			entmeterreading.RoomID(roomID),
-			entmeterreading.MeterItemID(meterItemID),
-			entmeterreading.PeriodMonthLT(periodMonth),
-			entmeterreading.DeletedAtIsNil(),
-			entmeterreading.HasRoomWith(r.accountRoomPredicates(accountID)...),
+			r.q.MeterReading.RoomID.Eq(roomID),
+			r.q.MeterReading.MeterItemID.Eq(meterItemID),
+			r.q.MeterReading.PeriodMonth.Lt(periodMonth),
+			r.q.MeterReading.DeletedAt.IsNull(),
+			gen.Columns{r.q.MeterReading.RoomID}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
 		).
-		Order(entclient.Desc(entmeterreading.FieldPeriodMonth), entclient.Desc(entmeterreading.FieldID)).
-		First(ctx)
+		Order(r.q.MeterReading.PeriodMonth.Desc(), r.q.MeterReading.ID.Desc()).
+		First()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainmeterreading.ErrNotFound
 		}
 		return nil, err
@@ -100,14 +100,14 @@ func (r *MeterReadingRepository) GetLatestBeforePeriod(ctx context.Context, acco
 
 // List 查询账号名下的抄表记录列表。
 func (r *MeterReadingRepository) List(ctx context.Context, accountID int, query domainmeterreading.ListQuery) ([]*domainmeterreading.MeterReading, error) {
-	q := r.queryMeterReadings(accountID, query)
+	q := r.queryMeterReadings(ctx, accountID, query)
 	if query.Limit > 0 {
 		q = q.Limit(query.Limit)
 	}
 	if query.Offset > 0 {
 		q = q.Offset(query.Offset)
 	}
-	records, err := q.Order(entclient.Desc(entmeterreading.FieldPeriodMonth), entclient.Desc(entmeterreading.FieldID)).All(ctx)
+	records, err := q.Order(r.q.MeterReading.PeriodMonth.Desc(), r.q.MeterReading.ID.Desc()).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -120,267 +120,211 @@ func (r *MeterReadingRepository) SaveRoomMonth(ctx context.Context, accountID in
 		return nil, domainmeterreading.ErrReadingsRequired
 	}
 
-	tx, err := r.client.Tx(ctx)
+	saved := make([]*domainmeterreading.MeterReading, 0, len(readings))
+	err := query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(client *query.Query) error {
+		for _, reading := range readings {
+			if err := r.ensureMeterReadingRelationsInAccount(ctx, client, accountID, reading.RoomID, reading.MeterItemID); err != nil {
+				return err
+			}
+
+			record, err := client.MeterReading.WithContext(ctx).
+				Where(
+					client.MeterReading.RoomID.Eq(reading.RoomID),
+					client.MeterReading.MeterItemID.Eq(reading.MeterItemID),
+					client.MeterReading.PeriodMonth.Eq(reading.PeriodMonth),
+					client.MeterReading.DeletedAt.IsNull(),
+					gen.Columns{client.MeterReading.RoomID}.In(accountRooms(ctx, client, accountID).Select(client.Room.ID)),
+				).
+				Take()
+			if err != nil {
+				if !errors.Is(err, gorm.ErrRecordNotFound) {
+					return err
+				}
+				created, err := r.createMeterReading(ctx, client, reading)
+				if err != nil {
+					if isConstraintError(err) {
+						return domainmeterreading.ErrAlreadyExists
+					}
+					return err
+				}
+				saved = append(saved, toDomainMeterReading(created))
+				continue
+			}
+
+			err = r.updateMeterReadingRecord(client.MeterReading.WithContext(ctx).Where(client.MeterReading.ID.Eq(record.ID)), reading)
+			if err != nil {
+				if isConstraintError(err) {
+					return domainmeterreading.ErrAlreadyExists
+				}
+				return err
+			}
+			updated, err := client.MeterReading.WithContext(ctx).Where(client.MeterReading.ID.Eq(record.ID)).Take()
+			if err != nil {
+				return err
+			}
+
+			saved = append(saved, toDomainMeterReading(updated))
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	committed := false
-	defer func() {
-		if !committed {
-			_ = tx.Rollback()
-		}
-	}()
-
-	client := tx.Client()
-	saved := make([]*domainmeterreading.MeterReading, 0, len(readings))
-	for _, reading := range readings {
-		if err := r.ensureMeterReadingRelationsInAccount(ctx, client, accountID, reading.RoomID, reading.MeterItemID); err != nil {
-			return nil, err
-		}
-
-		record, err := client.MeterReading.Query().
-			Where(
-				entmeterreading.RoomID(reading.RoomID),
-				entmeterreading.MeterItemID(reading.MeterItemID),
-				entmeterreading.PeriodMonth(reading.PeriodMonth),
-				entmeterreading.DeletedAtIsNil(),
-				entmeterreading.HasRoomWith(r.accountRoomPredicates(accountID)...),
-			).
-			Only(ctx)
-		if err != nil {
-			if !entclient.IsNotFound(err) {
-				return nil, err
-			}
-			created, err := r.createMeterReading(ctx, client, reading)
-			if err != nil {
-				if entclient.IsConstraintError(err) {
-					return nil, domainmeterreading.ErrAlreadyExists
-				}
-				return nil, err
-			}
-			saved = append(saved, toDomainMeterReading(created))
-			continue
-		}
-
-		updated, err := r.updateMeterReadingRecord(ctx, client, record.ID, reading)
-		if err != nil {
-			if entclient.IsConstraintError(err) {
-				return nil, domainmeterreading.ErrAlreadyExists
-			}
-			return nil, err
-		}
-		saved = append(saved, toDomainMeterReading(updated))
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-	committed = true
 	return saved, nil
 }
 
 // Update 更新账号名下指定抄表记录。
 func (r *MeterReadingRepository) Update(ctx context.Context, accountID int, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
-	if err := r.ensureMeterReadingRelationsInAccount(ctx, r.client, accountID, reading.RoomID, reading.MeterItemID); err != nil {
+	if err := r.ensureMeterReadingRelationsInAccount(ctx, r.q, accountID, reading.RoomID, reading.MeterItemID); err != nil {
 		return nil, err
 	}
-	updater := r.client.MeterReading.Update().
-		Where(
-			entmeterreading.ID(reading.ID),
-			entmeterreading.DeletedAtIsNil(),
-			entmeterreading.HasRoomWith(r.accountRoomPredicates(accountID)...),
-		).
-		SetRoomID(reading.RoomID).
-		SetMeterItemID(reading.MeterItemID).
-		SetPeriodMonth(reading.PeriodMonth).
-		SetCurrentReading(reading.CurrentReading).
-		SetReadingTime(reading.ReadingTime).
-		SetSource(entmeterreading.Source(reading.Source))
-	if reading.PreviousReading == nil {
-		updater = updater.ClearPreviousReading()
-	} else {
-		updater = updater.SetPreviousReading(*reading.PreviousReading)
-	}
-	if reading.UsageAmount == nil {
-		updater = updater.ClearUsageAmount()
-	} else {
-		updater = updater.SetUsageAmount(*reading.UsageAmount)
-	}
-	if reading.ReaderID == nil {
-		updater = updater.ClearReaderID()
-	} else {
-		updater = updater.SetReaderID(*reading.ReaderID)
-	}
-	if reading.Remark == nil {
-		updater = updater.ClearRemark()
-	} else {
-		updater = updater.SetRemark(*reading.Remark)
-	}
-	affected, err := updater.Save(ctx)
-	if err != nil {
-		if entclient.IsConstraintError(err) {
-			return nil, domainmeterreading.ErrAlreadyExists
-		}
+	m := r.q.MeterReading
+	q := m.WithContext(ctx).Where(m.ID.Eq(reading.ID), m.DeletedAt.IsNull(),
+		gen.Columns{m.RoomID}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)))
+	if err := r.updateMeterReadingRecord(q, reading); err != nil {
 		return nil, err
-	}
-	if affected == 0 {
-		return nil, domainmeterreading.ErrNotFound
 	}
 	return r.Get(ctx, accountID, reading.ID)
 }
 
 // Delete 软删除账号名下指定抄表记录。
 func (r *MeterReadingRepository) Delete(ctx context.Context, accountID int, id int) error {
-	affected, err := r.client.MeterReading.Update().
+	result, err := r.q.MeterReading.WithContext(ctx).
 		Where(
-			entmeterreading.ID(id),
-			entmeterreading.DeletedAtIsNil(),
-			entmeterreading.HasRoomWith(r.accountRoomPredicates(accountID)...),
+			r.q.MeterReading.ID.Eq(id),
+			r.q.MeterReading.DeletedAt.IsNull(),
+			gen.Columns{r.q.MeterReading.RoomID}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
 		).
-		SetDeletedAt(time.Now()).
-		Save(ctx)
+		Update(r.q.MeterReading.DeletedAt, time.Now())
 	if err != nil {
 		return err
 	}
-	if affected == 0 {
+	if result.RowsAffected == 0 {
 		return domainmeterreading.ErrNotFound
 	}
 	return nil
 }
 
 // queryMeterReadings 构建带账号归属约束的抄表记录查询。
-func (r *MeterReadingRepository) queryMeterReadings(accountID int, query domainmeterreading.ListQuery) *entclient.MeterReadingQuery {
-	roomPredicates := r.accountRoomPredicates(accountID)
-	if query.UnitID > 0 {
-		roomPredicates = append(roomPredicates, entroom.UnitID(query.UnitID))
+func (r *MeterReadingRepository) queryMeterReadings(ctx context.Context, accountID int, params domainmeterreading.ListQuery) query.IMeterReadingDo {
+	rooms := accountRooms(ctx, r.q, accountID)
+	if params.UnitID > 0 {
+		rooms = rooms.Where(r.q.Room.UnitID.Eq(params.UnitID))
 	}
-	q := r.client.MeterReading.Query().
-		Where(
-			entmeterreading.DeletedAtIsNil(),
-			entmeterreading.HasRoomWith(roomPredicates...),
-		)
-	if query.RoomID > 0 {
-		q = q.Where(entmeterreading.RoomID(query.RoomID))
+	q := r.q.MeterReading.WithContext(ctx).Where(
+		r.q.MeterReading.DeletedAt.IsNull(),
+		gen.Columns{r.q.MeterReading.RoomID}.In(rooms.Select(r.q.Room.ID)),
+	)
+
+	if params.RoomID > 0 {
+		q = q.Where(r.q.MeterReading.RoomID.Eq(params.RoomID))
 	}
-	if query.MeterItemID > 0 {
-		q = q.Where(entmeterreading.MeterItemID(query.MeterItemID))
+	if params.MeterItemID > 0 {
+		q = q.Where(r.q.MeterReading.MeterItemID.Eq(params.MeterItemID))
 	}
-	if query.PeriodMonth != "" {
-		q = q.Where(entmeterreading.PeriodMonth(query.PeriodMonth))
+	if params.PeriodMonth != "" {
+		q = q.Where(r.q.MeterReading.PeriodMonth.Eq(params.PeriodMonth))
 	}
-	if query.PeriodMonthFrom != "" {
-		q = q.Where(entmeterreading.PeriodMonthGTE(query.PeriodMonthFrom))
+	if params.PeriodMonthFrom != "" {
+		q = q.Where(r.q.MeterReading.PeriodMonth.Gte(params.PeriodMonthFrom))
 	}
-	if query.PeriodMonthTo != "" {
-		q = q.Where(entmeterreading.PeriodMonthLTE(query.PeriodMonthTo))
+	if params.PeriodMonthTo != "" {
+		q = q.Where(r.q.MeterReading.PeriodMonth.Lte(params.PeriodMonthTo))
 	}
-	if query.Source != "" {
-		q = q.Where(entmeterreading.SourceEQ(entmeterreading.Source(query.Source)))
+	if params.Source != "" {
+		q = q.Where(r.q.MeterReading.Source.Eq(params.Source))
 	}
 	return q
 }
 
 // createMeterReading 创建抄表记录。
-func (r *MeterReadingRepository) createMeterReading(ctx context.Context, client *entclient.Client, reading *domainmeterreading.MeterReading) (*entclient.MeterReading, error) {
-	return client.MeterReading.Create().
-		SetRoomID(reading.RoomID).
-		SetMeterItemID(reading.MeterItemID).
-		SetPeriodMonth(reading.PeriodMonth).
-		SetNillablePreviousReading(reading.PreviousReading).
-		SetCurrentReading(reading.CurrentReading).
-		SetNillableUsageAmount(reading.UsageAmount).
-		SetReadingTime(reading.ReadingTime).
-		SetNillableReaderID(reading.ReaderID).
-		SetSource(entmeterreading.Source(reading.Source)).
-		SetNillableRemark(reading.Remark).
-		Save(ctx)
+func (r *MeterReadingRepository) createMeterReading(ctx context.Context, client *query.Query, reading *domainmeterreading.MeterReading) (*models.MeterReading, error) {
+	record := toModelMeterReading(reading)
+	if err := client.MeterReading.WithContext(ctx).Create(record); err != nil {
+		return nil, err
+	}
+	return record, nil
 }
 
 // updateMeterReadingRecord 更新抄表记录实体。
-func (r *MeterReadingRepository) updateMeterReadingRecord(ctx context.Context, client *entclient.Client, id int, reading *domainmeterreading.MeterReading) (*entclient.MeterReading, error) {
-	updater := client.MeterReading.UpdateOneID(id).
-		SetRoomID(reading.RoomID).
-		SetMeterItemID(reading.MeterItemID).
-		SetPeriodMonth(reading.PeriodMonth).
-		SetCurrentReading(reading.CurrentReading).
-		SetReadingTime(reading.ReadingTime).
-		SetSource(entmeterreading.Source(reading.Source))
-	if reading.PreviousReading == nil {
-		updater = updater.ClearPreviousReading()
-	} else {
-		updater = updater.SetPreviousReading(*reading.PreviousReading)
+func (r *MeterReadingRepository) updateMeterReadingRecord(q query.IMeterReadingDo, reading *domainmeterreading.MeterReading) error {
+	m := r.q.MeterReading
+	result, err := q.Select(
+		m.RoomID,
+		m.MeterItemID,
+		m.PeriodMonth,
+		m.PreviousReading,
+		m.CurrentReading,
+		m.UsageAmount,
+		m.ReadingTime,
+		m.ReaderID,
+		m.Source,
+		m.Remark,
+	).Updates(toModelMeterReading(reading))
+	if err != nil {
+		if isConstraintError(err) {
+			return domainmeterreading.ErrAlreadyExists
+		}
+		return err
 	}
-	if reading.UsageAmount == nil {
-		updater = updater.ClearUsageAmount()
-	} else {
-		updater = updater.SetUsageAmount(*reading.UsageAmount)
+	if result.RowsAffected == 0 {
+		count, err := q.Count()
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			return domainmeterreading.ErrNotFound
+		}
 	}
-	if reading.ReaderID == nil {
-		updater = updater.ClearReaderID()
-	} else {
-		updater = updater.SetReaderID(*reading.ReaderID)
-	}
-	if reading.Remark == nil {
-		updater = updater.ClearRemark()
-	} else {
-		updater = updater.SetRemark(*reading.Remark)
-	}
-	return updater.Save(ctx)
+	return nil
 }
 
-// accountRoomPredicates 返回账号名下未删除房间的查询条件。
-func (r *MeterReadingRepository) accountRoomPredicates(accountID int) []predicate.Room {
-	return []predicate.Room{
-		entroom.DeletedAtIsNil(),
-		entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
+func toModelMeterReading(reading *domainmeterreading.MeterReading) *models.MeterReading {
+	return &models.MeterReading{
+		RoomID:          reading.RoomID,
+		MeterItemID:     reading.MeterItemID,
+		PeriodMonth:     reading.PeriodMonth,
+		PreviousReading: reading.PreviousReading,
+		CurrentReading:  reading.CurrentReading,
+		UsageAmount:     reading.UsageAmount,
+		ReadingTime:     reading.ReadingTime,
+		ReaderID:        reading.ReaderID,
+		Source:          reading.Source,
+		Remark:          reading.Remark,
 	}
 }
 
 // ensureMeterReadingRelationsInAccount 确认房间属于当前账号且房间已绑定抄表项。
-func (r *MeterReadingRepository) ensureMeterReadingRelationsInAccount(ctx context.Context, client *entclient.Client, accountID int, roomID int, meterItemID int) error {
-	roomExists, err := client.Room.Query().
-		Where(
-			entroom.ID(roomID),
-			entroom.DeletedAtIsNil(),
-			entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
-		).
-		Exist(ctx)
+func (r *MeterReadingRepository) ensureMeterReadingRelationsInAccount(ctx context.Context, client *query.Query, accountID int, roomID int, meterItemID int) error {
+	count, err := accountRooms(ctx, client, accountID).Where(client.Room.ID.Eq(roomID)).Count()
 	if err != nil {
 		return err
 	}
-	if !roomExists {
+	if count == 0 {
 		return domainmeterreading.ErrRoomNotFound
 	}
-
-	meterItemExists, err := client.MeterItem.Query().
-		Where(entmeteritem.ID(meterItemID), entmeteritem.AccountID(accountID), entmeteritem.DeletedAtIsNil()).
-		Exist(ctx)
+	m := client.MeterItem
+	count, err = m.WithContext(ctx).Where(m.ID.Eq(meterItemID), m.AccountID.Eq(accountID), m.DeletedAt.IsNull()).Count()
 	if err != nil {
 		return err
 	}
-	if !meterItemExists {
+	if count == 0 {
 		return domainmeterreading.ErrMeterItemNotFound
 	}
-
-	assigned, err := client.Room.Query().
-		Where(
-			entroom.ID(roomID),
-			entroom.DeletedAtIsNil(),
-			entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
-			entroom.HasMeterItemsWith(entmeteritem.ID(meterItemID), entmeteritem.DeletedAtIsNil()),
-		).
-		Exist(ctx)
+	binding := client.RoomMeterItem
+	count, err = binding.WithContext(ctx).Where(binding.RoomID.Eq(roomID), binding.MeterItemID.Eq(meterItemID)).Count()
 	if err != nil {
 		return err
 	}
-	if !assigned {
+	if count == 0 {
 		return domainmeterreading.ErrRoomMeterItemNotAssigned
 	}
 	return nil
 }
 
-// toDomainMeterReading 将 Ent 抄表记录转换为领域对象。
-func toDomainMeterReading(record *entclient.MeterReading) *domainmeterreading.MeterReading {
+// toDomainMeterReading 将 GORM 抄表记录转换为领域对象。
+func toDomainMeterReading(record *models.MeterReading) *domainmeterreading.MeterReading {
 	if record == nil {
 		return nil
 	}
@@ -394,15 +338,15 @@ func toDomainMeterReading(record *entclient.MeterReading) *domainmeterreading.Me
 		UsageAmount:     record.UsageAmount,
 		ReadingTime:     record.ReadingTime,
 		ReaderID:        record.ReaderID,
-		Source:          record.Source.String(),
+		Source:          record.Source,
 		Remark:          record.Remark,
 		CreatedAt:       record.CreatedAt,
 		UpdatedAt:       record.UpdatedAt,
 	}
 }
 
-// toDomainMeterReadings 将 Ent 抄表记录列表转换为领域对象列表。
-func toDomainMeterReadings(records []*entclient.MeterReading) []*domainmeterreading.MeterReading {
+// toDomainMeterReadings 将 GORM 抄表记录列表转换为领域对象列表。
+func toDomainMeterReadings(records []*models.MeterReading) []*domainmeterreading.MeterReading {
 	readings := make([]*domainmeterreading.MeterReading, 0, len(records))
 	for _, record := range records {
 		readings = append(readings, toDomainMeterReading(record))

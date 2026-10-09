@@ -1,52 +1,26 @@
 package mysql
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"time"
+	"errors"
 
-	"entgo.io/ent/dialect"
 	"github.com/miebyte/goutils/mysqlutils"
+	"gorm.io/gorm"
 
-	"github.com/superwhys/rent-manager/internal/infra/persistence/ent"
-
-	entsql "entgo.io/ent/dialect/sql"
-	_ "github.com/go-sql-driver/mysql"
+	mysqldriver "github.com/go-sql-driver/mysql"
 )
 
-// OpenMysqlClient initializes an Ent client from MySQL config.
-func OpenMysqlClient(conf *mysqlutils.MysqlConfig, opts ...ent.Option) (*ent.Client, error) {
-	db, err := sql.Open(dialect.MySQL, mysqlDSN(conf))
-	if err != nil {
-		return nil, err
-	}
-
-	db.SetMaxIdleConns(conf.PoolSize)
-	db.SetMaxOpenConns(conf.PoolSize)
-	db.SetConnMaxLifetime(time.Hour)
-
-	drv := entsql.OpenDB(dialect.MySQL, db)
-	return ent.NewClient(append(opts, ent.Driver(drv))...), nil
+// OpenMysqlClient initializes a GORM client from MySQL config.
+func OpenMysqlClient(conf *mysqlutils.MysqlConfig) (*gorm.DB, error) {
+	return conf.DialMysqlGormWithConfig(&gorm.Config{
+		PrepareStmt:    true,
+		TranslateError: true,
+	})
 }
 
-// MigrateSchema runs Ent schema migration.
-func MigrateSchema(client *ent.Client) error {
-	return client.Schema.Create(context.Background())
-}
-
-func mysqlDSN(conf *mysqlutils.MysqlConfig) string {
-	charset := conf.Charset
-	if charset == "" {
-		charset = "utf8mb4"
+func isConstraintError(err error) bool {
+	if errors.Is(err, gorm.ErrDuplicatedKey) || errors.Is(err, gorm.ErrForeignKeyViolated) {
+		return true
 	}
-
-	return fmt.Sprintf(
-		"%s:%s@tcp(%s)/%s?charset=%s&parseTime=True&loc=Local",
-		conf.Username,
-		conf.Password,
-		conf.Address(),
-		conf.Database,
-		charset,
-	)
+	var mysqlErr *mysqldriver.MySQLError
+	return errors.As(err, &mysqlErr) && (mysqlErr.Number == 1062 || mysqlErr.Number == 1451 || mysqlErr.Number == 1452)
 }

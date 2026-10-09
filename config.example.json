@@ -1,0 +1,30 @@
+{
+  "wechat": {
+    "AppID": "your-wechat-app-id",
+    "SecretID": "your-wechat-app-secret",
+    "Jscode2SessionApi": "https://api.weixin.qq.com/sns/jscode2session"
+  },
+  "jwt": {
+    "JwtSecret": "replace-with-your-jwt-secret",
+    "JwtTimeout": "2h",
+    "JwtRefreshTimeout": "168h"
+  },
+  "admin": {
+    "SuperAdminAccountIDs": []
+  },
+  "mysql": {
+    "instance": "127.0.0.1:3306",
+    "database": "rent_manager",
+    "username": "rent_manager",
+    "password": "your-mysql-password",
+    "charset": "utf8mb4",
+    "pool_size": 10
+  },
+  "redis": {
+    "server": "127.0.0.1:6379",
+    "db": 0,
+    "username": "",
+    "password": "",
+    "poolsize": 20
+  }
+}

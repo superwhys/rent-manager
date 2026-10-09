@@ -2,32 +2,38 @@ package mysql
 
 import (
 	"context"
+	"errors"
+
+	"gorm.io/gen/field"
+	"gorm.io/gorm"
+
+	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
 
 	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
-	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
-	entmeteritem "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
 )
 
 type MeterItemRepository struct {
-	client *entclient.Client
+	q *query.Query
 }
 
-func NewMeterItemRepository(client *entclient.Client) *MeterItemRepository {
-	return &MeterItemRepository{client: client}
+func NewMeterItemRepository(client *gorm.DB) *MeterItemRepository {
+	return &MeterItemRepository{q: query.Use(client)}
 }
 
 func (r *MeterItemRepository) Create(ctx context.Context, item *domainmeteritem.MeterItem) (*domainmeteritem.MeterItem, error) {
-	record, err := r.client.MeterItem.Create().
-		SetAccountID(item.AccountID).
-		SetCode(item.Code).
-		SetUnit(item.Unit).
-		SetUnitPrice(item.UnitPrice).
-		SetCalcType(entmeteritem.CalcType(item.CalcType)).
-		SetNillableRemark(item.Remark).
-		SetIsSystem(item.IsSystem).
-		Save(ctx)
+	record := &models.MeterItem{
+		AccountID: item.AccountID,
+		Code:      item.Code,
+		Unit:      item.Unit,
+		UnitPrice: item.UnitPrice,
+		CalcType:  item.CalcType,
+		Remark:    item.Remark,
+		IsSystem:  item.IsSystem,
+	}
+	err := r.q.MeterItem.WithContext(ctx).Create(record)
 	if err != nil {
-		if entclient.IsConstraintError(err) {
+		if isConstraintError(err) {
 			return nil, domainmeteritem.ErrCodeAlreadyExists
 		}
 		return nil, err
@@ -36,11 +42,11 @@ func (r *MeterItemRepository) Create(ctx context.Context, item *domainmeteritem.
 }
 
 func (r *MeterItemRepository) Get(ctx context.Context, accountID int, id int) (*domainmeteritem.MeterItem, error) {
-	record, err := r.client.MeterItem.Query().
-		Where(entmeteritem.ID(id), entmeteritem.AccountID(accountID), entmeteritem.DeletedAtIsNil()).
-		Only(ctx)
+	record, err := r.q.MeterItem.WithContext(ctx).
+		Where(r.q.MeterItem.ID.Eq(id), r.q.MeterItem.AccountID.Eq(accountID), r.q.MeterItem.DeletedAt.IsNull()).
+		Take()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainmeteritem.ErrNotFound
 		}
 		return nil, err
@@ -49,16 +55,16 @@ func (r *MeterItemRepository) Get(ctx context.Context, accountID int, id int) (*
 }
 
 func (r *MeterItemRepository) List(ctx context.Context, query domainmeteritem.ListQuery) ([]*domainmeteritem.MeterItem, error) {
-	q := r.client.MeterItem.Query().
-		Where(entmeteritem.AccountID(query.AccountID), entmeteritem.DeletedAtIsNil())
+	q := r.q.MeterItem.WithContext(ctx).
+		Where(r.q.MeterItem.AccountID.Eq(query.AccountID), r.q.MeterItem.DeletedAt.IsNull())
 	if query.Code != "" {
-		q = q.Where(entmeteritem.CodeContains(query.Code))
+		q = q.Where(contains(r.q.MeterItem.Code, query.Code))
 	}
 	if query.IsSystem != nil {
-		q = q.Where(entmeteritem.IsSystem(*query.IsSystem))
+		q = q.Where(r.q.MeterItem.IsSystem.Is(*query.IsSystem))
 	}
 	if query.CalcType != "" {
-		q = q.Where(entmeteritem.CalcTypeEQ(entmeteritem.CalcType(query.CalcType)))
+		q = q.Where(r.q.MeterItem.CalcType.Eq(query.CalcType))
 	}
 	if query.Limit > 0 {
 		q = q.Limit(query.Limit)
@@ -66,7 +72,7 @@ func (r *MeterItemRepository) List(ctx context.Context, query domainmeteritem.Li
 	if query.Offset > 0 {
 		q = q.Offset(query.Offset)
 	}
-	records, err := q.Order(entclient.Desc(entmeteritem.FieldID)).All(ctx)
+	records, err := q.Order(r.q.MeterItem.ID.Desc()).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -74,27 +80,32 @@ func (r *MeterItemRepository) List(ctx context.Context, query domainmeteritem.Li
 }
 
 func (r *MeterItemRepository) Update(ctx context.Context, item *domainmeteritem.MeterItem) (*domainmeteritem.MeterItem, error) {
-	affected, err := r.client.MeterItem.Update().
-		Where(entmeteritem.ID(item.ID), entmeteritem.AccountID(item.AccountID), entmeteritem.DeletedAtIsNil()).
-		SetCode(item.Code).
-		SetUnit(item.Unit).
-		SetUnitPrice(item.UnitPrice).
-		SetCalcType(entmeteritem.CalcType(item.CalcType)).
-		SetNillableRemark(item.Remark).
-		Save(ctx)
+	m := r.q.MeterItem
+	assignments := []field.AssignExpr{
+		m.Code.Value(item.Code),
+		m.Unit.Value(item.Unit),
+		m.UnitPrice.Value(item.UnitPrice),
+		m.CalcType.Value(item.CalcType),
+	}
+	if item.Remark != nil {
+		assignments = append(assignments, m.Remark.Value(*item.Remark))
+	}
+	result, err := m.WithContext(ctx).
+		Where(m.ID.Eq(item.ID), m.AccountID.Eq(item.AccountID), m.DeletedAt.IsNull()).
+		UpdateSimple(assignments...)
 	if err != nil {
-		if entclient.IsConstraintError(err) {
+		if isConstraintError(err) {
 			return nil, domainmeteritem.ErrCodeAlreadyExists
 		}
 		return nil, err
 	}
-	if affected == 0 {
+	if result.RowsAffected == 0 {
 		return nil, domainmeteritem.ErrNotFound
 	}
 	return r.Get(ctx, item.AccountID, item.ID)
 }
 
-func toDomainMeterItem(record *entclient.MeterItem) *domainmeteritem.MeterItem {
+func toDomainMeterItem(record *models.MeterItem) *domainmeteritem.MeterItem {
 	if record == nil {
 		return nil
 	}
@@ -105,14 +116,14 @@ func toDomainMeterItem(record *entclient.MeterItem) *domainmeteritem.MeterItem {
 		Unit:      record.Unit,
 		UnitPrice: record.UnitPrice,
 		IsSystem:  record.IsSystem,
-		CalcType:  record.CalcType.String(),
+		CalcType:  record.CalcType,
 		Remark:    record.Remark,
 		CreatedAt: record.CreatedAt,
 		UpdatedAt: record.UpdatedAt,
 	}
 }
 
-func toDomainMeterItems(records []*entclient.MeterItem) []*domainmeteritem.MeterItem {
+func toDomainMeterItems(records []*models.MeterItem) []*domainmeteritem.MeterItem {
 	items := make([]*domainmeteritem.MeterItem, 0, len(records))
 	for _, record := range records {
 		items = append(items, toDomainMeterItem(record))

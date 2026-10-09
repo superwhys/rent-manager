@@ -2,39 +2,49 @@ package mysql
 
 import (
 	"context"
+	"errors"
 	"time"
+
+	"gorm.io/gen"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
 	domainroom "github.com/superwhys/rent-manager/internal/domain/room"
-	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
-	entmeteritem "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
-	entroom "github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
-	entroomtype "github.com/superwhys/rent-manager/internal/infra/persistence/ent/roomtype"
-	entunit "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
 )
 
 type RoomRepository struct {
-	client *entclient.Client
+	q *query.Query
 }
 
-func NewRoomRepository(client *entclient.Client) *RoomRepository {
-	return &RoomRepository{client: client}
+func NewRoomRepository(db *gorm.DB) *RoomRepository {
+	return &RoomRepository{q: query.Use(db)}
 }
 
 func (r *RoomRepository) Create(ctx context.Context, accountID int, room *domainroom.Room) (*domainroom.Room, error) {
 	if err := r.ensureRoomRelationsInAccount(ctx, accountID, room.UnitID, room.RoomTypeID, room.MeterItemIDs); err != nil {
 		return nil, err
 	}
-	record, err := r.client.Room.Create().
-		SetRoomNo(room.RoomNo).
-		SetFloor(room.Floor).
-		SetPrice(room.Price).
-		SetSize(room.Size).
-		SetUnitID(room.UnitID).
-		SetRoomTypeID(room.RoomTypeID).
-		SetIsActive(room.IsActive).
-		AddMeterItemIDs(room.MeterItemIDs...).
-		Save(ctx)
+	if err := validateByteLength(255, room.RoomNo); err != nil {
+		return nil, err
+	}
+	record := &models.Room{
+		RoomNo:     room.RoomNo,
+		Floor:      room.Floor,
+		Price:      room.Price,
+		Size:       room.Size,
+		UnitID:     room.UnitID,
+		RoomTypeID: room.RoomTypeID,
+		IsActive:   &room.IsActive,
+	}
+	err := query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
+		if err := tx.Room.WithContext(ctx).Create(record); err != nil {
+			return err
+		}
+		return replaceRoomMeterItems(ctx, tx, record.ID, room.MeterItemIDs)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -42,16 +52,13 @@ func (r *RoomRepository) Create(ctx context.Context, accountID int, room *domain
 }
 
 func (r *RoomRepository) Get(ctx context.Context, accountID int, id int) (*domainroom.Room, error) {
-	record, err := r.client.Room.Query().
-		Where(
-			entroom.ID(id),
-			entroom.DeletedAtIsNil(),
-			entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
-		).
-		WithMeterItems().
-		Only(ctx)
+	room := r.q.Room
+	record, err := room.WithContext(ctx).
+		Where(room.ID.Eq(id), room.DeletedAt.IsNull(), r.roomAccountPredicate(ctx, accountID)).
+		Preload(room.MeterItems).
+		Take()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainroom.ErrNotFound
 		}
 		return nil, err
@@ -60,12 +67,13 @@ func (r *RoomRepository) Get(ctx context.Context, accountID int, id int) (*domai
 }
 
 func (r *RoomRepository) GetByID(ctx context.Context, id int) (*domainroom.Room, error) {
-	record, err := r.client.Room.Query().
-		Where(entroom.ID(id), entroom.DeletedAtIsNil()).
-		WithMeterItems().
-		Only(ctx)
+	room := r.q.Room
+	record, err := room.WithContext(ctx).
+		Where(room.ID.Eq(id), room.DeletedAt.IsNull()).
+		Preload(room.MeterItems).
+		Take()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainroom.ErrNotFound
 		}
 		return nil, err
@@ -73,124 +81,156 @@ func (r *RoomRepository) GetByID(ctx context.Context, id int) (*domainroom.Room,
 	return toDomainRoom(record), nil
 }
 
-func (r *RoomRepository) List(ctx context.Context, accountID int, query domainroom.ListQuery) ([]*domainroom.Room, error) {
-	q := r.queryRooms(accountID, query).WithMeterItems()
-	if query.Limit > 0 {
-		q = q.Limit(query.Limit)
+func (r *RoomRepository) List(ctx context.Context, accountID int, params domainroom.ListQuery) ([]*domainroom.Room, error) {
+	room := r.q.Room
+	q := r.queryRooms(ctx, accountID, params).Preload(room.MeterItems)
+	if params.Limit > 0 {
+		q = q.Limit(params.Limit)
 	}
-	if query.Offset > 0 {
-		q = q.Offset(query.Offset)
+	if params.Offset > 0 {
+		q = q.Offset(params.Offset)
 	}
-	records, err := q.Order(entclient.Desc(entroom.FieldID)).All(ctx)
+	records, err := q.Order(room.ID.Desc()).Find()
 	if err != nil {
 		return nil, err
 	}
 	return toDomainRooms(records), nil
 }
 
-func (r *RoomRepository) Count(ctx context.Context, accountID int, query domainroom.ListQuery) (int, error) {
-	return r.queryRooms(accountID, query).Count(ctx)
+func (r *RoomRepository) Count(ctx context.Context, accountID int, params domainroom.ListQuery) (int, error) {
+	count, err := r.queryRooms(ctx, accountID, params).Count()
+	return int(count), err
 }
 
-func (r *RoomRepository) queryRooms(accountID int, query domainroom.ListQuery) *entclient.RoomQuery {
-	q := r.client.Room.Query().
-		Where(
-			entroom.UnitID(query.UnitID),
-			entroom.DeletedAtIsNil(),
-			entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
-		)
-	if query.RoomTypeID > 0 {
-		q = q.Where(entroom.RoomTypeID(query.RoomTypeID))
+func (r *RoomRepository) queryRooms(ctx context.Context, accountID int, params domainroom.ListQuery) query.IRoomDo {
+	room := r.q.Room
+	q := room.WithContext(ctx).
+		Where(room.UnitID.Eq(params.UnitID), room.DeletedAt.IsNull(), r.roomAccountPredicate(ctx, accountID))
+	if params.RoomTypeID > 0 {
+		q = q.Where(room.RoomTypeID.Eq(params.RoomTypeID))
 	}
-	if query.IsActive != nil {
-		q = q.Where(entroom.IsActive(*query.IsActive))
+	if params.IsActive != nil {
+		q = q.Where(room.IsActive.Is(*params.IsActive))
 	}
 	return q
+}
+
+func (r *RoomRepository) roomAccountPredicate(ctx context.Context, accountID int) gen.Condition {
+	unit := r.q.Unit
+	return gen.Exists(unit.WithContext(ctx).Where(
+		unit.ID.EqCol(r.q.Room.UnitID),
+		unit.AccountID.Eq(accountID),
+		unit.DeletedAt.IsNull(),
+	))
 }
 
 func (r *RoomRepository) Update(ctx context.Context, accountID int, room *domainroom.Room) (*domainroom.Room, error) {
 	if err := r.ensureRoomRelationsInAccount(ctx, accountID, room.UnitID, room.RoomTypeID, room.MeterItemIDs); err != nil {
 		return nil, err
 	}
-	affected, err := r.client.Room.Update().
-		Where(
-			entroom.ID(room.ID),
-			entroom.DeletedAtIsNil(),
-			entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
-		).
-		SetRoomNo(room.RoomNo).
-		SetFloor(room.Floor).
-		SetPrice(room.Price).
-		SetSize(room.Size).
-		SetUnitID(room.UnitID).
-		SetRoomTypeID(room.RoomTypeID).
-		SetIsActive(room.IsActive).
-		ClearMeterItems().
-		AddMeterItemIDs(room.MeterItemIDs...).
-		Save(ctx)
-	if err != nil {
+	if err := validateByteLength(255, room.RoomNo); err != nil {
 		return nil, err
 	}
-	if affected == 0 {
-		return nil, domainroom.ErrNotFound
+	err := query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
+		repo := &RoomRepository{q: tx}
+		r := tx.Room
+		target := r.WithContext(ctx).
+			Where(r.ID.Eq(room.ID), r.DeletedAt.IsNull(), repo.roomAccountPredicate(ctx, accountID))
+		if _, err := target.Select(r.ID).Clauses(clause.Locking{Strength: "UPDATE"}).Take(); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return domainroom.ErrNotFound
+			}
+			return err
+		}
+		_, err := r.WithContext(ctx).
+			Where(r.ID.Eq(room.ID), r.DeletedAt.IsNull(), repo.roomAccountPredicate(ctx, accountID)).
+			UpdateSimple(
+				r.RoomNo.Value(room.RoomNo),
+				r.Floor.Value(room.Floor),
+				r.Price.Value(room.Price),
+				r.Size.Value(room.Size),
+				r.UnitID.Value(room.UnitID),
+				r.RoomTypeID.Value(room.RoomTypeID),
+				r.IsActive.Value(room.IsActive),
+			)
+		if err != nil {
+			return err
+		}
+		return replaceRoomMeterItems(ctx, tx, room.ID, room.MeterItemIDs)
+	})
+	if err != nil {
+		return nil, err
 	}
 	return r.Get(ctx, accountID, room.ID)
 }
 
 func (r *RoomRepository) Delete(ctx context.Context, accountID int, id int) error {
-	affected, err := r.client.Room.Update().
-		Where(
-			entroom.ID(id),
-			entroom.DeletedAtIsNil(),
-			entroom.HasUnitWith(entunit.AccountID(accountID), entunit.DeletedAtIsNil()),
-		).
-		SetDeletedAt(time.Now()).
-		SetIsActive(false).
-		Save(ctx)
+	room := r.q.Room
+	result, err := room.WithContext(ctx).
+		Where(room.ID.Eq(id), room.DeletedAt.IsNull(), r.roomAccountPredicate(ctx, accountID)).
+		UpdateSimple(room.DeletedAt.Value(time.Now()), room.IsActive.Value(false))
 	if err != nil {
 		return err
 	}
-	if affected == 0 {
+	if result.RowsAffected == 0 {
 		return domainroom.ErrNotFound
 	}
 	return nil
 }
 
 func (r *RoomRepository) ensureRoomRelationsInAccount(ctx context.Context, accountID int, unitID int, roomTypeID int, meterItemIDs []int) error {
-	unitExists, err := r.client.Unit.Query().
-		Where(entunit.ID(unitID), entunit.AccountID(accountID), entunit.DeletedAtIsNil()).
-		Exist(ctx)
+	unit := r.q.Unit
+	count, err := unit.WithContext(ctx).
+		Where(unit.ID.Eq(unitID), unit.AccountID.Eq(accountID), unit.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
-	if !unitExists {
+	if count == 0 {
 		return domainroom.ErrUnitRequired
 	}
-	roomTypeExists, err := r.client.RoomType.Query().
-		Where(entroomtype.ID(roomTypeID), entroomtype.AccountID(accountID), entroomtype.DeletedAtIsNil()).
-		Exist(ctx)
+	roomType := r.q.RoomType
+	count, err = roomType.WithContext(ctx).
+		Where(roomType.ID.Eq(roomTypeID), roomType.AccountID.Eq(accountID), roomType.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
-	if !roomTypeExists {
+	if count == 0 {
 		return domainroom.ErrRoomTypeRequired
 	}
 	if len(meterItemIDs) == 0 {
 		return nil
 	}
-	count, err := r.client.MeterItem.Query().
-		Where(entmeteritem.IDIn(meterItemIDs...), entmeteritem.AccountID(accountID), entmeteritem.DeletedAtIsNil()).
-		Count(ctx)
+	item := r.q.MeterItem
+	count, err = item.WithContext(ctx).
+		Where(item.ID.In(meterItemIDs...), item.AccountID.Eq(accountID), item.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
-	if count != len(meterItemIDs) {
+	if count != int64(len(meterItemIDs)) {
 		return domainroom.ErrMeterItemNotFound
 	}
 	return nil
 }
 
-func toDomainRoom(record *entclient.Room) *domainroom.Room {
+func replaceRoomMeterItems(ctx context.Context, q *query.Query, roomID int, ids []int) error {
+	item := q.RoomMeterItem
+	if _, err := item.WithContext(ctx).Where(item.RoomID.Eq(roomID)).Delete(); err != nil {
+		return err
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	records := make([]*models.RoomMeterItem, 0, len(ids))
+	for _, id := range ids {
+		records = append(records, &models.RoomMeterItem{RoomID: roomID, MeterItemID: id})
+	}
+	return item.WithContext(ctx).Create(records...)
+}
+
+func toDomainRoom(record *models.Room) *domainroom.Room {
 	if record == nil {
 		return nil
 	}
@@ -202,14 +242,14 @@ func toDomainRoom(record *entclient.Room) *domainroom.Room {
 		Size:       record.Size,
 		UnitID:     record.UnitID,
 		RoomTypeID: record.RoomTypeID,
-		IsActive:   record.IsActive,
+		IsActive:   *record.IsActive,
 		CreatedAt:  record.CreatedAt,
 		UpdatedAt:  record.UpdatedAt,
 	}
-	if record.Edges.MeterItems != nil {
-		room.MeterItems = make([]*domainmeteritem.MeterItem, 0, len(record.Edges.MeterItems))
-		room.MeterItemIDs = make([]int, 0, len(record.Edges.MeterItems))
-		for _, item := range record.Edges.MeterItems {
+	if record.MeterItems != nil {
+		room.MeterItems = make([]*domainmeteritem.MeterItem, 0, len(record.MeterItems))
+		room.MeterItemIDs = make([]int, 0, len(record.MeterItems))
+		for _, item := range record.MeterItems {
 			room.MeterItemIDs = append(room.MeterItemIDs, item.ID)
 			room.MeterItems = append(room.MeterItems, toDomainMeterItem(item))
 		}
@@ -217,7 +257,7 @@ func toDomainRoom(record *entclient.Room) *domainroom.Room {
 	return room
 }
 
-func toDomainRooms(records []*entclient.Room) []*domainroom.Room {
+func toDomainRooms(records []*models.Room) []*domainroom.Room {
 	rooms := make([]*domainroom.Room, 0, len(records))
 	for _, record := range records {
 		rooms = append(rooms, toDomainRoom(record))

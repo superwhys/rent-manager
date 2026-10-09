@@ -32,3 +32,4 @@ content/
 rent-manager-server
 scripts/
 .codegraph
+config.json

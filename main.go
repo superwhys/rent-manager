@@ -19,6 +19,7 @@ import (
 
 	"github.com/superwhys/rent-manager/api"
 	"github.com/superwhys/rent-manager/config"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql"
 	"github.com/superwhys/rent-manager/internal/infra/ratelimit"
 
@@ -70,37 +71,31 @@ func main() {
 
 	client, err := mysql.OpenMysqlClient(mysqlConf)
 	logging.PanicError(err)
-	defer client.Close()
+	sqlDB, err := client.DB()
+	logging.PanicError(err)
+	defer sqlDB.Close()
 
-	logging.PanicError(mysql.MigrateSchema(client))
+	logging.PanicError(client.AutoMigrate(models.AllModels()...))
 
 	httpLimiter, err := ratelimit.NewRedisLimiter(10, time.Second*10, redisClient, "rent_manager")
 	logging.PanicError(err)
 
-	accountRepo := mysql.NewAccountRepository(client)
-	accountSettingRepo := mysql.NewAccountSettingRepository(client)
-	rbacRepo := mysql.NewRBACRepository(client)
-	unitRepo := mysql.NewUnitRepository(client)
-	roomRepo := mysql.NewRoomRepository(client)
-	roomTypeRepo := mysql.NewRoomTypeRepository(client)
-	meterItemRepo := mysql.NewMeterItemRepository(client)
-	meterReadingRepo := mysql.NewMeterReadingRepository(client)
-	rentBillRepo := mysql.NewRentBillRepository(client)
+	repos := mysql.NewRepositoryFactory(client).Repositories()
 
 	tokenManager := infraauthjwt.NewManager(jwtConfig)
-	authService := appauth.NewService(wechatConfig, accountRepo, tokenManager)
-	rbacService := apprbac.NewService(rbacRepo, adminConfig)
+	authService := appauth.NewService(wechatConfig, repos.Account, tokenManager)
+	rbacService := apprbac.NewService(repos.RBAC, adminConfig)
 	adminServices := &appadmin.Services{
-		Account:        appaccount.NewService(accountRepo),
-		AccountSetting: appaccountsetting.NewService(accountSettingRepo),
-		Home:           apphome.NewService(unitRepo, roomRepo, rentBillRepo, meterReadingRepo, rbacRepo),
+		Account:        appaccount.NewService(repos.Account),
+		AccountSetting: appaccountsetting.NewService(repos.AccountSetting),
+		Home:           apphome.NewService(repos.Unit, repos.Room, repos.RentBill, repos.MeterReading, repos.RBAC),
 		RBAC:           rbacService,
-		Unit:           appunit.NewService(unitRepo, roomRepo, rbacRepo),
-		Room:           approom.NewService(roomRepo, unitRepo, rbacRepo),
-		RoomType:       approomtype.NewService(roomTypeRepo),
-		MeterItem:      appmeteritem.NewService(meterItemRepo),
-		MeterReading:   appmeterreading.NewService(meterReadingRepo, roomRepo, unitRepo, rbacRepo),
-		RentBill:       apprentbill.NewService(rentBillRepo, roomRepo, unitRepo, meterReadingRepo, rbacRepo),
+		Unit:           appunit.NewService(repos.Unit, repos.Room, repos.RBAC),
+		Room:           approom.NewService(repos.Room, repos.Unit, repos.RBAC),
+		RoomType:       approomtype.NewService(repos.RoomType),
+		MeterItem:      appmeteritem.NewService(repos.MeterItem),
+		MeterReading:   appmeterreading.NewService(repos.MeterReading, repos.Room, repos.Unit, repos.RBAC),
+		RentBill:       apprentbill.NewService(repos.RentBill, repos.Room, repos.Unit, repos.MeterReading, repos.RBAC),
 	}
 	router := api.SetupRouter(httpLimiter, tokenManager, authService, adminServices)
 

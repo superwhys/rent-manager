@@ -2,29 +2,33 @@ package mysql
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"gorm.io/gorm"
+
+	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
+
 	domainroomtype "github.com/superwhys/rent-manager/internal/domain/roomtype"
-	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
-	entroom "github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
-	entroomtype "github.com/superwhys/rent-manager/internal/infra/persistence/ent/roomtype"
 )
 
 type RoomTypeRepository struct {
-	client *entclient.Client
+	q *query.Query
 }
 
-func NewRoomTypeRepository(client *entclient.Client) *RoomTypeRepository {
-	return &RoomTypeRepository{client: client}
+func NewRoomTypeRepository(client *gorm.DB) *RoomTypeRepository {
+	return &RoomTypeRepository{q: query.Use(client)}
 }
 
 func (r *RoomTypeRepository) Create(ctx context.Context, roomType *domainroomtype.RoomType) (*domainroomtype.RoomType, error) {
-	record, err := r.client.RoomType.Create().
-		SetAccountID(roomType.AccountID).
-		SetName(roomType.Name).
-		Save(ctx)
+	if err := validateByteLength(12, roomType.Name); err != nil {
+		return nil, err
+	}
+	record := &models.RoomType{AccountID: roomType.AccountID, Name: roomType.Name}
+	err := r.q.RoomType.WithContext(ctx).Create(record)
 	if err != nil {
-		if entclient.IsConstraintError(err) {
+		if isConstraintError(err) {
 			return nil, domainroomtype.ErrNameAlreadyExists
 		}
 		return nil, err
@@ -33,11 +37,11 @@ func (r *RoomTypeRepository) Create(ctx context.Context, roomType *domainroomtyp
 }
 
 func (r *RoomTypeRepository) Get(ctx context.Context, accountID int, id int) (*domainroomtype.RoomType, error) {
-	record, err := r.client.RoomType.Query().
-		Where(entroomtype.ID(id), entroomtype.AccountID(accountID), entroomtype.DeletedAtIsNil()).
-		Only(ctx)
+	record, err := r.q.RoomType.WithContext(ctx).
+		Where(r.q.RoomType.ID.Eq(id), r.q.RoomType.AccountID.Eq(accountID), r.q.RoomType.DeletedAt.IsNull()).
+		Take()
 	if err != nil {
-		if entclient.IsNotFound(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainroomtype.ErrNotFound
 		}
 		return nil, err
@@ -46,10 +50,10 @@ func (r *RoomTypeRepository) Get(ctx context.Context, accountID int, id int) (*d
 }
 
 func (r *RoomTypeRepository) List(ctx context.Context, query domainroomtype.ListQuery) ([]*domainroomtype.RoomType, error) {
-	q := r.client.RoomType.Query().
-		Where(entroomtype.AccountID(query.AccountID), entroomtype.DeletedAtIsNil())
+	q := r.q.RoomType.WithContext(ctx).
+		Where(r.q.RoomType.AccountID.Eq(query.AccountID), r.q.RoomType.DeletedAt.IsNull())
 	if query.Name != "" {
-		q = q.Where(entroomtype.NameContains(query.Name))
+		q = q.Where(contains(r.q.RoomType.Name, query.Name))
 	}
 	if query.Limit > 0 {
 		q = q.Limit(query.Limit)
@@ -57,7 +61,7 @@ func (r *RoomTypeRepository) List(ctx context.Context, query domainroomtype.List
 	if query.Offset > 0 {
 		q = q.Offset(query.Offset)
 	}
-	records, err := q.Order(entclient.Desc(entroomtype.FieldID)).All(ctx)
+	records, err := q.Order(r.q.RoomType.ID.Desc()).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -65,46 +69,47 @@ func (r *RoomTypeRepository) List(ctx context.Context, query domainroomtype.List
 }
 
 func (r *RoomTypeRepository) Update(ctx context.Context, roomType *domainroomtype.RoomType) (*domainroomtype.RoomType, error) {
-	affected, err := r.client.RoomType.Update().
-		Where(entroomtype.ID(roomType.ID), entroomtype.AccountID(roomType.AccountID), entroomtype.DeletedAtIsNil()).
-		SetName(roomType.Name).
-		Save(ctx)
+	if err := validateByteLength(12, roomType.Name); err != nil {
+		return nil, err
+	}
+	result, err := r.q.RoomType.WithContext(ctx).
+		Where(r.q.RoomType.ID.Eq(roomType.ID), r.q.RoomType.AccountID.Eq(roomType.AccountID), r.q.RoomType.DeletedAt.IsNull()).
+		Update(r.q.RoomType.Name, roomType.Name)
 	if err != nil {
-		if entclient.IsConstraintError(err) {
+		if isConstraintError(err) {
 			return nil, domainroomtype.ErrNameAlreadyExists
 		}
 		return nil, err
 	}
-	if affected == 0 {
+	if result.RowsAffected == 0 {
 		return nil, domainroomtype.ErrNotFound
 	}
 	return r.Get(ctx, roomType.AccountID, roomType.ID)
 }
 
 func (r *RoomTypeRepository) Delete(ctx context.Context, accountID int, id int) error {
-	hasRooms, err := r.client.Room.Query().
-		Where(entroom.RoomTypeID(id), entroom.DeletedAtIsNil()).
-		Exist(ctx)
+	roomCount, err := r.q.Room.WithContext(ctx).
+		Where(r.q.Room.RoomTypeID.Eq(id), r.q.Room.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
-	if hasRooms {
+	if roomCount > 0 {
 		return domainroomtype.ErrRoomTypeHasRooms
 	}
-	affected, err := r.client.RoomType.Update().
-		Where(entroomtype.ID(id), entroomtype.AccountID(accountID), entroomtype.DeletedAtIsNil()).
-		SetDeletedAt(time.Now()).
-		Save(ctx)
+	result, err := r.q.RoomType.WithContext(ctx).
+		Where(r.q.RoomType.ID.Eq(id), r.q.RoomType.AccountID.Eq(accountID), r.q.RoomType.DeletedAt.IsNull()).
+		Update(r.q.RoomType.DeletedAt, time.Now())
 	if err != nil {
 		return err
 	}
-	if affected == 0 {
+	if result.RowsAffected == 0 {
 		return domainroomtype.ErrNotFound
 	}
 	return nil
 }
 
-func toDomainRoomType(record *entclient.RoomType) *domainroomtype.RoomType {
+func toDomainRoomType(record *models.RoomType) *domainroomtype.RoomType {
 	if record == nil {
 		return nil
 	}
@@ -118,7 +123,7 @@ func toDomainRoomType(record *entclient.RoomType) *domainroomtype.RoomType {
 	}
 }
 
-func toDomainRoomTypes(records []*entclient.RoomType) []*domainroomtype.RoomType {
+func toDomainRoomTypes(records []*models.RoomType) []*domainroomtype.RoomType {
 	roomTypes := make([]*domainroomtype.RoomType, 0, len(records))
 	for _, record := range records {
 		roomTypes = append(roomTypes, toDomainRoomType(record))
