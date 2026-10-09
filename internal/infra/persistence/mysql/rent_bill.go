@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/predicate"
 
-	domainrentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rentbill"
-	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
-	entrentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/rentbill"
-	entroom "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
-	entunit "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unit"
+	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
+	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
+	entrentbill "github.com/superwhys/rent-manager/internal/infra/persistence/ent/rentbill"
+	entroom "github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
+	entunit "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
 )
 
 // RentBillRepository 提供租金账单的 Ent 持久化实现。

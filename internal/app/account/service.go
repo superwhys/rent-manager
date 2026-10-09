@@ -3,8 +3,8 @@ package account
 import (
 	"context"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainaccount "github.com/superwhys/rent-manager/internal/domain/account"
 )
 
 // Service 提供账号相关用例。

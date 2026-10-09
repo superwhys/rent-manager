@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 type accountIDContextKey struct{}

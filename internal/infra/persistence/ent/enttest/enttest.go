@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent"
 	// required by schema hooks.
-	_ "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/runtime"
+	_ "github.com/superwhys/rent-manager/internal/infra/persistence/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/migrate"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/migrate"
 )
 
 type (

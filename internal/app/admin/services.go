@@ -1,16 +1,16 @@
 package admin
 
 import (
-	appaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/app/account"
-	appaccountsetting "git.superwhys.top/rent-manager/rent-manager-server/internal/app/accountsetting"
-	apphome "git.superwhys.top/rent-manager/rent-manager-server/internal/app/home"
-	appmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meteritem"
-	appmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meterreading"
-	apprbac "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rbac"
-	apprentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rentbill"
-	approom "git.superwhys.top/rent-manager/rent-manager-server/internal/app/room"
-	approomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/app/roomtype"
-	appunit "git.superwhys.top/rent-manager/rent-manager-server/internal/app/unit"
+	appaccount "github.com/superwhys/rent-manager/internal/app/account"
+	appaccountsetting "github.com/superwhys/rent-manager/internal/app/accountsetting"
+	apphome "github.com/superwhys/rent-manager/internal/app/home"
+	appmeteritem "github.com/superwhys/rent-manager/internal/app/meteritem"
+	appmeterreading "github.com/superwhys/rent-manager/internal/app/meterreading"
+	apprbac "github.com/superwhys/rent-manager/internal/app/rbac"
+	apprentbill "github.com/superwhys/rent-manager/internal/app/rentbill"
+	approom "github.com/superwhys/rent-manager/internal/app/room"
+	approomtype "github.com/superwhys/rent-manager/internal/app/roomtype"
+	appunit "github.com/superwhys/rent-manager/internal/app/unit"
 )
 
 // Services 聚合后台路由需要的应用服务。

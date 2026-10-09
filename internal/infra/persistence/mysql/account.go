@@ -3,10 +3,10 @@ package mysql
 import (
 	"context"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
+	"github.com/superwhys/rent-manager/internal/domain/account"
 
-	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
-	entaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
+	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
+	entaccount "github.com/superwhys/rent-manager/internal/infra/persistence/ent/account"
 )
 
 type AccountRepository struct {

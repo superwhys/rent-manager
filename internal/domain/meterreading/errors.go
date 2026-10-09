@@ -1,6 +1,6 @@
 package meterreading
 
-import "git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+import "github.com/superwhys/rent-manager/internal/xerr"
 
 var (
 	ErrRoomRequired             = xerr.New(205001, "房间不能为空")

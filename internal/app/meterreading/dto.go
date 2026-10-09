@@ -3,10 +3,10 @@ package meterreading
 import (
 	"time"
 
-	appmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meteritem"
-	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
-	domainmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meterreading"
-	domainroom "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/room"
+	appmeteritem "github.com/superwhys/rent-manager/internal/app/meteritem"
+	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
+	domainmeterreading "github.com/superwhys/rent-manager/internal/domain/meterreading"
+	domainroom "github.com/superwhys/rent-manager/internal/domain/room"
 )
 
 // RoomMeterReadingsQuery 是房间月度抄表查询参数。

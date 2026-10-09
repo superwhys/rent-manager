@@ -3,9 +3,9 @@ package mysql
 import (
 	"context"
 
-	domainaccountsetting "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/accountsetting"
-	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
-	entaccountsetting "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
+	domainaccountsetting "github.com/superwhys/rent-manager/internal/domain/accountsetting"
+	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
+	entaccountsetting "github.com/superwhys/rent-manager/internal/infra/persistence/ent/accountsetting"
 )
 
 // AccountSettingRepository 提供账号配置的 Ent 持久化实现。

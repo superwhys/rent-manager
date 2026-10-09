@@ -1,6 +1,6 @@
 package roomtype
 
-import "git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+import "github.com/superwhys/rent-manager/internal/xerr"
 
 var (
 	ErrAccountRequired   = xerr.New(203001, "账号不能为空")

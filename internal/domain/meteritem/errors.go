@@ -1,6 +1,6 @@
 package meteritem
 
-import "git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+import "github.com/superwhys/rent-manager/internal/xerr"
 
 var (
 	ErrAccountRequired   = xerr.New(204001, "账号不能为空")

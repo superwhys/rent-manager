@@ -7,7 +7,7 @@ import (
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/miebyte/goutils/logging"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // HandleRouterError 处理业务逻辑错误响应。

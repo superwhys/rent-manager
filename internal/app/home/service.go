@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meterreading"
-	domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
-	domainrentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rentbill"
-	domainroom "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/room"
-	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainmeterreading "github.com/superwhys/rent-manager/internal/domain/meterreading"
+	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
+	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
+	domainroom "github.com/superwhys/rent-manager/internal/domain/room"
+	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
 
 const (

@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	appaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/app/account"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	appaccount "github.com/superwhys/rent-manager/internal/app/account"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // AccountRouter 注册账号相关路由。

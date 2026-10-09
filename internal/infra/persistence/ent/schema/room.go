@@ -5,7 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/schema/mixin"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/schema/mixin"
 )
 
 // Room holds the schema definition for the Room entity.

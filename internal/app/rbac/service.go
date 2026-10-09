@@ -3,10 +3,10 @@ package rbac
 import (
 	"context"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/config"
+	"github.com/superwhys/rent-manager/config"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
 )
 
 // Service 提供角色、权限和单元授权用例。

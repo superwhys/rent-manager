@@ -8,9 +8,9 @@ import (
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/config"
-	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	"github.com/superwhys/rent-manager/config"
+	appauth "github.com/superwhys/rent-manager/internal/app/auth"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // Manager 提供 JWT 签发和解析能力。

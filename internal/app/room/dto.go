@@ -1,9 +1,9 @@
 package room
 
 import (
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	appmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meteritem"
-	domainroom "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/room"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	appmeteritem "github.com/superwhys/rent-manager/internal/app/meteritem"
+	domainroom "github.com/superwhys/rent-manager/internal/domain/room"
 )
 
 // CreateRoomCommand 表示创建房间命令。

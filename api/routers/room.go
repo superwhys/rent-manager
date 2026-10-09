@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meterreading"
-	apprentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rentbill"
-	approom "git.superwhys.top/rent-manager/rent-manager-server/internal/app/room"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	appmeterreading "github.com/superwhys/rent-manager/internal/app/meterreading"
+	apprentbill "github.com/superwhys/rent-manager/internal/app/rentbill"
+	approom "github.com/superwhys/rent-manager/internal/app/room"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // RoomRouter 注册房间路由。

@@ -1,6 +1,6 @@
 package accountsetting
 
-import "git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+import "github.com/superwhys/rent-manager/internal/xerr"
 
 var (
 	ErrAccountRequired = xerr.New(208001, "账号不能为空")

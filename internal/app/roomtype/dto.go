@@ -1,8 +1,8 @@
 package roomtype
 
 import (
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainroomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/roomtype"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainroomtype "github.com/superwhys/rent-manager/internal/domain/roomtype"
 )
 
 // CreateRoomTypeCommand 表示创建房型命令。

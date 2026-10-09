@@ -1,6 +1,6 @@
 package rbac
 
-import "git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+import "github.com/superwhys/rent-manager/internal/xerr"
 
 var (
 	ErrRoleAccountRequired           = xerr.New(207001, "角色所属账号不能为空")

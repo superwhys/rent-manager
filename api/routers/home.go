@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	apphome "git.superwhys.top/rent-manager/rent-manager-server/internal/app/home"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	apphome "github.com/superwhys/rent-manager/internal/app/home"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // HomeRouter 注册首页聚合数据路由。

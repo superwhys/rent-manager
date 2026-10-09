@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meterreading"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	appmeterreading "github.com/superwhys/rent-manager/internal/app/meterreading"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // GetRoomMeterReadingsHandler godoc

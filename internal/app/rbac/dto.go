@@ -1,6 +1,6 @@
 package rbac
 
-import domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
+import domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
 
 // CreateRoleItem 表示批量创建角色中的单个角色参数。
 type CreateRoleItem struct {

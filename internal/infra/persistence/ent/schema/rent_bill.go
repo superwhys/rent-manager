@@ -6,9 +6,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/schema/mixin"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/schema/mixin"
 
-	domainrentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rentbill"
+	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
 )
 
 // RentBill records a room's monthly rent bill snapshot.

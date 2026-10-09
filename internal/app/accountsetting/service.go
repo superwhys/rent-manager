@@ -3,8 +3,8 @@ package accountsetting
 import (
 	"context"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainaccountsetting "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/accountsetting"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainaccountsetting "github.com/superwhys/rent-manager/internal/domain/accountsetting"
 )
 
 // Service 提供当前账号配置用例。

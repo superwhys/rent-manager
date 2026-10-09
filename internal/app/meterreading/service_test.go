@@ -5,12 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
-	domainmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meterreading"
-	domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
-	domainroom "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/room"
-	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
+	domainmeterreading "github.com/superwhys/rent-manager/internal/domain/meterreading"
+	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
+	domainroom "github.com/superwhys/rent-manager/internal/domain/room"
+	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
 
 func TestSaveRoomMonthReadingsUsesLatestPreviousReading(t *testing.T) {

@@ -3,8 +3,8 @@ package rentbill
 import (
 	"time"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainrentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rentbill"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
 )
 
 // RoomRentBillsQuery 是房间账单列表查询参数。

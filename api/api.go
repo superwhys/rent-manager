@@ -11,17 +11,17 @@ package api
 import (
 	"net/http"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/api/middlewares"
-	"git.superwhys.top/rent-manager/rent-manager-server/api/routers"
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
+	"github.com/superwhys/rent-manager/api/middlewares"
+	"github.com/superwhys/rent-manager/api/routers"
 	"github.com/ulule/limiter/v3"
 
-	appadmin "git.superwhys.top/rent-manager/rent-manager-server/internal/app/admin"
-	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
+	appadmin "github.com/superwhys/rent-manager/internal/app/admin"
+	appauth "github.com/superwhys/rent-manager/internal/app/auth"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
-	_ "git.superwhys.top/rent-manager/rent-manager-server/api/docs"
+	_ "github.com/superwhys/rent-manager/api/docs"
 )
 
 // SetupRouter godoc

@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
-	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
+	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
 
 func TestCreateUnitUsesDefaultConfig(t *testing.T) {

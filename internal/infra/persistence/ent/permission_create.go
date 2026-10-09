@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permission"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permissiongroup"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/permission"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/permissiongroup"
 )
 
 // PermissionCreate is the builder for creating a Permission entity.

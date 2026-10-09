@@ -1,6 +1,6 @@
 package room
 
-import "git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+import "github.com/superwhys/rent-manager/internal/xerr"
 
 var (
 	ErrRoomNoRequired     = xerr.New(202001, "房间号不能为空")

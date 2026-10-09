@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/schema/mixin"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/schema/mixin"
 )
 
 // UnitAccountRole 用于记录一个 unit 授予给一个 account的记录

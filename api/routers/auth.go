@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	appauth "github.com/superwhys/rent-manager/internal/app/auth"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // AuthRouter 注册认证路由。

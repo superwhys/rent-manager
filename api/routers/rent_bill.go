@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	apprentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rentbill"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	apprentbill "github.com/superwhys/rent-manager/internal/app/rentbill"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // RentBillRouter 注册租金账单路由。

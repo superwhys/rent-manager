@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	appauth "git.superwhys.top/rent-manager/rent-manager-server/internal/app/auth"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	"github.com/superwhys/rent-manager/api/response"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	appauth "github.com/superwhys/rent-manager/internal/app/auth"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // TokenVerifyMiddleware 校验访问令牌并写入当前账号上下文。

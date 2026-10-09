@@ -3,7 +3,7 @@ package account
 import (
 	"time"
 
-	domainaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
+	domainaccount "github.com/superwhys/rent-manager/internal/domain/account"
 )
 
 // AccountResponse 是账号信息响应。

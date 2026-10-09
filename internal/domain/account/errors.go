@@ -1,6 +1,6 @@
 package account
 
-import "git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+import "github.com/superwhys/rent-manager/internal/xerr"
 
 var (
 	ErrAccountNotFound      = xerr.New(200001, "账号不存在")

@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/meterreading"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/predicate"
 )
 
 // MeterReadingDelete is the builder for deleting a MeterReading entity.

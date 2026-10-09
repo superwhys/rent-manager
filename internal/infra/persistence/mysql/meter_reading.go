@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/predicate"
 
-	domainmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meterreading"
-	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
-	entmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
-	entmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
-	entroom "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
-	entunit "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unit"
+	domainmeterreading "github.com/superwhys/rent-manager/internal/domain/meterreading"
+	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
+	entmeteritem "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
+	entmeterreading "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meterreading"
+	entroom "github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
+	entunit "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
 )
 
 // MeterReadingRepository 提供房间抄表记录的 Ent 持久化实现。

@@ -1,6 +1,6 @@
 package unit
 
-import domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
+import domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 
 // CreateUnitCommand 是创建单元的请求体。
 type CreateUnitCommand struct {

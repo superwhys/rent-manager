@@ -11,12 +11,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unit"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unitaccountrole"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/account"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/predicate"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/unitaccountrole"
 )
 
 // UnitUpdate is the builder for updating Unit entities.

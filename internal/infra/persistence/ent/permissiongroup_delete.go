@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permissiongroup"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/predicate"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/permissiongroup"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/predicate"
 )
 
 // PermissionGroupDelete is the builder for deleting a PermissionGroup entity.

@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	domainroomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/roomtype"
-	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
-	entroom "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
-	entroomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/roomtype"
+	domainroomtype "github.com/superwhys/rent-manager/internal/domain/roomtype"
+	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
+	entroom "github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
+	entroomtype "github.com/superwhys/rent-manager/internal/infra/persistence/ent/roomtype"
 )
 
 type RoomTypeRepository struct {

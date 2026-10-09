@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
+	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
 )
 
 type MeterReading struct {

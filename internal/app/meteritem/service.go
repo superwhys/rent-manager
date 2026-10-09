@@ -3,8 +3,8 @@ package meteritem
 import (
 	"context"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
 )
 
 // Service 提供抄表项管理用例。

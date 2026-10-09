@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	approomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/app/roomtype"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	approomtype "github.com/superwhys/rent-manager/internal/app/roomtype"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // RoomTypeRouter 注册房型路由。

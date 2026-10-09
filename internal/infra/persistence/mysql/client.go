@@ -9,7 +9,7 @@ import (
 	"entgo.io/ent/dialect"
 	"github.com/miebyte/goutils/mysqlutils"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent"
 
 	entsql "entgo.io/ent/dialect/sql"
 	_ "github.com/go-sql-driver/mysql"

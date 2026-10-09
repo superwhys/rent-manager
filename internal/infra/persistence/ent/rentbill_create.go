@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/rentbill"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/rentbill"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
 )
 
 // RentBillCreate is the builder for creating a RentBill entity.

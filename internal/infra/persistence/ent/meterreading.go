@@ -9,9 +9,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/meterreading"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
 )
 
 // MeterReading is the model entity for the MeterReading schema.

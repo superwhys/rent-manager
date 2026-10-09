@@ -5,9 +5,9 @@ import (
 	"slices"
 	"testing"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainroom "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/room"
-	domainunit "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/unit"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainroom "github.com/superwhys/rent-manager/internal/domain/room"
+	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
 
 func TestCreateRoomInUnitBindsUnitDefaultMeterItems(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/account"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
 )
 
 // MeterItem is the model entity for the MeterItem schema.

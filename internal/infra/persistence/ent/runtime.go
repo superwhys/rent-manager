@@ -5,19 +5,19 @@ package ent
 import (
 	"time"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/accountsetting"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meterreading"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permission"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permissiongroup"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/rentbill"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/role"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/roomtype"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/schema"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unit"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unitaccountrole"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/account"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/accountsetting"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/meterreading"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/permission"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/permissiongroup"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/rentbill"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/role"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/roomtype"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/schema"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/unitaccountrole"
 )
 
 // The init function reads all schema descriptors with runtime code

@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/config"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/domain/account"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	"github.com/superwhys/rent-manager/config"
+	"github.com/superwhys/rent-manager/internal/domain/account"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // Service 提供登录和令牌刷新用例。

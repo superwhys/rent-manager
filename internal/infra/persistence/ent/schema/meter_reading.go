@@ -14,8 +14,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
-	domainmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meterreading"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/schema/mixin"
+	domainmeterreading "github.com/superwhys/rent-manager/internal/domain/meterreading"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/schema/mixin"
 )
 
 // 抄表数据实体

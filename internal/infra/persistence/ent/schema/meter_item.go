@@ -14,9 +14,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/schema/mixin"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/schema/mixin"
 
-	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
+	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
 )
 
 // 抄表项实体

@@ -3,9 +3,9 @@ package mysql
 import (
 	"context"
 
-	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
-	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
-	entmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
+	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
+	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
+	entmeteritem "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
 )
 
 type MeterItemRepository struct {

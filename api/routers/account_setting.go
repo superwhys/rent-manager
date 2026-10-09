@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	appaccountsetting "git.superwhys.top/rent-manager/rent-manager-server/internal/app/accountsetting"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	appaccountsetting "github.com/superwhys/rent-manager/internal/app/accountsetting"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // AccountSettingRouter 注册当前账号配置路由。

@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent"
 )
 
 // The AccountFunc type is an adapter to allow the use of ordinary

@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	domainmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/meteritem"
-	domainroom "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/room"
-	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
-	entmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/meteritem"
-	entroom "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/room"
-	entroomtype "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/roomtype"
-	entunit "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unit"
+	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
+	domainroom "github.com/superwhys/rent-manager/internal/domain/room"
+	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
+	entmeteritem "github.com/superwhys/rent-manager/internal/infra/persistence/ent/meteritem"
+	entroom "github.com/superwhys/rent-manager/internal/infra/persistence/ent/room"
+	entroomtype "github.com/superwhys/rent-manager/internal/infra/persistence/ent/roomtype"
+	entunit "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
 )
 
 type RoomRepository struct {

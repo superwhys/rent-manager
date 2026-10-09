@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appmeteritem "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meteritem"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	appmeteritem "github.com/superwhys/rent-manager/internal/app/meteritem"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // MeterItemRouter 注册抄表项路由。

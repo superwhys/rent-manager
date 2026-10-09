@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	domainrbac "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/rbac"
-	entclient "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent"
-	entaccount "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/account"
-	entpermission "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permission"
-	entpermissiongroup "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permissiongroup"
-	entrole "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/role"
-	entunit "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unit"
-	entunitaccountrole "git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/unitaccountrole"
+	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
+	entclient "github.com/superwhys/rent-manager/internal/infra/persistence/ent"
+	entaccount "github.com/superwhys/rent-manager/internal/infra/persistence/ent/account"
+	entpermission "github.com/superwhys/rent-manager/internal/infra/persistence/ent/permission"
+	entpermissiongroup "github.com/superwhys/rent-manager/internal/infra/persistence/ent/permissiongroup"
+	entrole "github.com/superwhys/rent-manager/internal/infra/persistence/ent/role"
+	entunit "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unit"
+	entunitaccountrole "github.com/superwhys/rent-manager/internal/infra/persistence/ent/unitaccountrole"
 )
 
 type RBACRepository struct {

@@ -3,7 +3,7 @@ package response
 import (
 	"github.com/miebyte/goutils/ginutils"
 
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // ResponseSuccess 返回无业务数据的成功响应。

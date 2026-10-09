@@ -6,13 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	apiresponse "git.superwhys.top/rent-manager/rent-manager-server/api/response"
-	appmeterreading "git.superwhys.top/rent-manager/rent-manager-server/internal/app/meterreading"
-	apprbac "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rbac"
-	apprentbill "git.superwhys.top/rent-manager/rent-manager-server/internal/app/rentbill"
-	approom "git.superwhys.top/rent-manager/rent-manager-server/internal/app/room"
-	appunit "git.superwhys.top/rent-manager/rent-manager-server/internal/app/unit"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/xerr"
+	apiresponse "github.com/superwhys/rent-manager/api/response"
+	appmeterreading "github.com/superwhys/rent-manager/internal/app/meterreading"
+	apprbac "github.com/superwhys/rent-manager/internal/app/rbac"
+	apprentbill "github.com/superwhys/rent-manager/internal/app/rentbill"
+	approom "github.com/superwhys/rent-manager/internal/app/room"
+	appunit "github.com/superwhys/rent-manager/internal/app/unit"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // UnitRouter 注册单元及单元下资源路由。

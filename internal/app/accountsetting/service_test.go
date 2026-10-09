@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	appcore "git.superwhys.top/rent-manager/rent-manager-server/internal/app"
-	domainaccountsetting "git.superwhys.top/rent-manager/rent-manager-server/internal/domain/accountsetting"
+	appcore "github.com/superwhys/rent-manager/internal/app"
+	domainaccountsetting "github.com/superwhys/rent-manager/internal/domain/accountsetting"
 )
 
 func TestGetSettingsReturnsAccountSettingsMap(t *testing.T) {

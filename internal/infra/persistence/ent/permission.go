@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/permission"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/ent/permission"
 )
 
 // Permission is the model entity for the Permission schema.

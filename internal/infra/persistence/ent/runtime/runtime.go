@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in git.superwhys.top/rent-manager/rent-manager-server/internal/infra/persistence/ent/runtime.go
+// The schema-stitching logic is generated in github.com/superwhys/rent-manager/internal/infra/persistence/ent/runtime.go
 
 const (
 	Version = "v0.14.6"                                         // Version of ent codegen.
