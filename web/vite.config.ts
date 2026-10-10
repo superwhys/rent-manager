@@ -17,6 +17,15 @@ export default defineConfig(({ mode }) => ({
       dts: 'src/components.d.ts',
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[hash].js',
+        chunkFileNames: 'assets/[hash].js',
+        assetFileNames: 'assets/[hash][extname]',
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {

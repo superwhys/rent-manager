@@ -147,6 +147,7 @@ button:focus:not(:focus-visible) {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  line-height: 1;
   font-weight: 500;
   transition:
     background 0.15s,
@@ -189,7 +190,7 @@ input[type='radio'] {
   height: 1rem;
 }
 .el-button {
-  min-height: 39px;
+  min-height: 40px;
   font-weight: 500;
   padding: 0.65rem 1rem;
 }
