@@ -1,0 +1,8 @@
+.git
+**/node_modules
+web/dist
+.pnpm-store
+rent-manager-server
+config.json
+*.local
+**/.env*

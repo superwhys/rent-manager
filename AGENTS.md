@@ -4,6 +4,8 @@ This file provides guidance to Codex and other coding agents when working in thi
 
 ## Commands
 
+- `make build-web` - install locked frontend dependencies with pnpm and build `web/dist`; required before the first `go run`, `go test`, or `go build`, and after frontend changes.
+- `make build` - build the frontend and compile `rent-manager-server` with its static assets embedded.
 - `go test ./...` - run all tests and compile all packages.
 - `go test ./internal/app/rbac` - run tests for one package.
 - `go test ./internal/app/rbac -run TestName` - run a single Go test by name.
@@ -25,7 +27,7 @@ This file provides guidance to Codex and other coding agents when working in thi
 
 ## Architecture
 
-This is a Go 1.27.1 Gin API server for a rent-management backend. `main.go` wires `github.com/miebyte/authkit v1.9.0`, its email/password authentication and MySQL persistence, business repositories/services, and Redis rate limiting. It creates the HTTP router and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
+This is a Go 1.27.1 Gin API server for a rent-management backend. `main.go` wires `github.com/miebyte/authkit v1.9.0`, its email/password authentication and MySQL persistence, business repositories/services, and Redis rate limiting. It creates the HTTP router and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`. The `web` Go package embeds the Vue build output from `web/dist` and serves it at `/`, with `index.html` fallback for frontend history routes. API, Swagger, and health-check routes retain their existing handlers. Build the frontend before compiling Go; production only needs the binary, service configuration, and existing backing services.
 
 The repository follows a DDD-style architecture:
 

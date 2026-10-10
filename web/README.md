@@ -18,7 +18,22 @@ pnpm build
 pnpm preview
 ```
 
-开发时 `/api` 默认代理到 `http://127.0.0.1:8080`。可通过 `.env.local` 的 `API_PROXY_TARGET` 修改代理目标；前端默认使用同源 `/api`，部署到其他 API 地址时设置 `VITE_API_BASE_URL`。生产服务器需要将前端路由回退到 `index.html`，并将 `/api` 转发给 Go 服务。
+开发时 `/api` 默认代理到 `http://127.0.0.1:8080`。可通过 `.env.local` 的 `API_PROXY_TARGET` 修改代理目标；前端默认使用同源 `/api`，部署到其他 API 地址时设置 `VITE_API_BASE_URL`。
+
+## 嵌入 Go 二进制
+
+在仓库根目录执行：
+
+```bash
+make build
+./rent-manager-server --configFile ./config.local
+```
+
+`make build` 会安装锁定版本的前端依赖、构建 `web/dist`，再通过 Go `embed` 将产物编入二进制。访问 [http://localhost:8080/](http://localhost:8080/) 即可打开前端，同源 `/api` 由 Go 服务处理。Go 静态资源 Handler 支持 history 路由回退，直接访问或刷新 `/login`、`/dashboard` 等页面会返回 `index.html`。
+
+仅构建前端时，在仓库根目录运行 `make build-web`。`web/dist` 不提交到版本库，因此首次执行 `go run`、`go test` 或 `go build` 前需要先完成这一步；前端修改后需重新构建静态资源和 Go 二进制。
+
+部署只需二进制及原有服务配置，并准备 MySQL、Redis（邮箱功能还需要 SMTP），无需额外部署静态资源或安装 Node.js。配置说明见 [根目录 README](../README.md)。
 
 ## 登录
 

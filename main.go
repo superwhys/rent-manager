@@ -36,6 +36,7 @@ import (
 	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql"
 	"github.com/superwhys/rent-manager/internal/infra/ratelimit"
+	"github.com/superwhys/rent-manager/web"
 )
 
 var (
@@ -119,10 +120,13 @@ func main() {
 		),
 	}
 	router := api.SetupRouter(httpLimiter, authService, adminServices)
+	webHandler, err := web.NewHandler()
+	logging.PanicError(err)
 
 	srv := cores.NewCores(
 		cores.WithHttpHandler("/api", router),
 		cores.WithHttpHandler("/swagger", api.SwaggerRouter(false)),
+		cores.WithHttpHandler("/", webHandler),
 	)
 
 	logging.PanicError(cores.Start(srv, "0.0.0.0:8080"))

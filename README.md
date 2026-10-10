@@ -2,7 +2,7 @@
 
 租赁管理系统后端，基于 Go、Gin 和 GORM + Gen，使用 MySQL 存储业务数据、Redis 执行接口限流。当前提供邮箱注册与登录、房源与房间管理、月度抄表、租金账单、首页统计以及按房源授权的 RBAC 接口。
 
-本文说明根目录的 Go 后端。`web/` 为独立的 Vue 前端项目，说明见 [web/README.md](web/README.md)。
+本文说明根目录的 Go 服务。`web/` 为 Vue 前端项目，构建产物通过 Go `embed` 嵌入二进制并由同一服务提供访问，前端开发说明见 [web/README.md](web/README.md)。
 
 ## 已实现功能
 
@@ -38,7 +38,7 @@
 
 ### 1. 准备环境
 
-需要 Go 1.27.1 或兼容的更高版本，以及可连接的 MySQL、Redis。邮箱注册和验证码登录还需要可用的 SMTP 发件服务；不配置 SMTP 时仍可使用已有密码账号登录。
+需要 Go 1.27.1 或兼容的更高版本，以及可连接的 MySQL、Redis。构建前端需要 Node.js 20.19+（20.x）或 >= 22.12.0，以及 pnpm 9.15.4。邮箱注册和验证码登录还需要可用的 SMTP 发件服务；不配置 SMTP 时仍可使用已有密码账号登录。
 
 在 MySQL 中先创建数据库，例如：
 
@@ -108,20 +108,26 @@ CREATE DATABASE rent_manager
 
 ```bash
 go mod download
+make build-web
 go run . --configFile ./config.local
 ```
 
 也可以先构建二进制：
 
 ```bash
-go build -o rent-manager-server .
+make build
 ./rent-manager-server --configFile ./config.local
 ```
+
+`make build-web` 安装锁定版本的前端依赖并构建 `web/dist`；`make build` 先执行该步骤，再将静态资源嵌入 `rent-manager-server`。首次运行 `go run`、`go test` 或 `go build` 前，需要先执行 `make build-web`；前端修改后也需重新构建静态资源和 Go 二进制。
+
+部署时只需分发二进制和原有服务配置，并准备可连接的 MySQL、Redis（邮箱功能还需要 SMTP），无需单独分发 `web/dist` 或安装 Node.js。首页由 `/` 提供，直接访问或刷新 `/login`、`/dashboard` 等前端路由会回退到 `index.html`；`/api`、Swagger 和健康检查仍由原有服务路由处理。
 
 当前监听地址在 `main.go` 中固定为 `0.0.0.0:8080`。
 
 | 地址 | 用途 |
 | --- | --- |
+| [前端工作台](http://localhost:8080/) | 嵌入二进制的 Vue 前端 |
 | `http://localhost:8080/api` | 业务接口前缀 |
 | [Swagger UI](http://localhost:8080/swagger/index.html) | 查看接口与请求字段 |
 | `http://localhost:8080/swagger/doc.json` | Swagger JSON |
@@ -304,8 +310,8 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 │   │   └── ratelimit/              # Redis 限流器
 │   └── xerr/                       # 业务错误与错误码
 ├── cmd/generate/                   # 从业务模型生成 Gen Query
-├── Makefile                        # Gen 与 Swagger 生成入口
-└── web/                            # 独立前端项目
+├── Makefile                        # 前后端构建、Gen 与 Swagger 生成入口
+└── web/                            # Vue 前端与静态资源 embed 包
 ```
 
 认证 Handler 调用 `internal/app/auth`，其中注册流程通过 authkit 身份事务编排；业务 HTTP Handler 调用应用服务，应用服务编排领域规则与仓储，MySQL 仓储负责业务持久化。`main.go` 组装这些依赖。
@@ -315,6 +321,9 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 在根目录运行：
 
 ```bash
+# 首次检出或前端修改后，准备 Go embed 所需的静态资源
+make build-web
+
 # 运行全部测试并编译各包
 go test ./...
 
