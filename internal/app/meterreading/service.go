@@ -282,6 +282,7 @@ func (s *Service) buildMeterReadingLine(
 	}
 	previousReading := latest.CurrentReading
 	line.PreviousReading = &previousReading
+	line.PreviousPeriodMonth = latest.PeriodMonth
 	return line, nil
 }
 

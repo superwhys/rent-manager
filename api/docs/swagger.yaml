@@ -236,6 +236,14 @@ definitions:
         $ref: '#/definitions/rentbill.GeneratedRentBillsResponse'
       message: {}
     type: object
+  ginutils.Ret-rentbill_RentBillDetailResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/rentbill.RentBillDetailResponse'
+      message: {}
+    type: object
   ginutils.Ret-rentbill_RentBillResponse:
     properties:
       code:
@@ -453,6 +461,8 @@ definitions:
       meter_item:
         $ref: '#/definitions/meteritem.MeterItemResponse'
       period_month:
+        type: string
+      previous_period_month:
         type: string
       previous_reading:
         type: number
@@ -743,6 +753,35 @@ definitions:
         type: string
     required:
     - RentBillID
+    type: object
+  rentbill.RentBillDetailResponse:
+    properties:
+      base_rent:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      meter_fee:
+        type: integer
+      meter_readings:
+        items:
+          $ref: '#/definitions/meterreading.MeterReadingLineResponse'
+        type: array
+      paid_at:
+        type: string
+      period_month:
+        type: string
+      remark:
+        type: string
+      room_id:
+        type: integer
+      status:
+        type: string
+      total_amount:
+        type: integer
+      updated_at:
+        type: string
     type: object
   rentbill.RentBillResponse:
     properties:
@@ -1404,6 +1443,7 @@ paths:
       - meter_item
   /rent-bills/{rent_bill_id}:
     get:
+      description: 抄表明细为生成账单时的冻结数据，历史无快照账单的 meter_readings 为 null。
       parameters:
       - description: 账单ID
         in: path
@@ -1416,7 +1456,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-rentbill_RentBillResponse'
+            $ref: '#/definitions/ginutils.Ret-rentbill_RentBillDetailResponse'
       security:
       - BearerAuth: []
       summary: 获取账单详情

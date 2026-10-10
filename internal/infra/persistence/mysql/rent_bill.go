@@ -2,11 +2,14 @@ package mysql
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"gorm.io/gen"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
@@ -63,7 +66,7 @@ func (r *RentBillRepository) Get(
 		}
 		return nil, err
 	}
-	return toDomainRentBill(record), nil
+	return toDomainRentBill(record)
 }
 
 // GetByID 获取指定租金账单，不做账号归属过滤。
@@ -80,7 +83,7 @@ func (r *RentBillRepository) GetByID(
 		}
 		return nil, err
 	}
-	return toDomainRentBill(record), nil
+	return toDomainRentBill(record)
 }
 
 // GetByRoomPeriod 获取账号名下房间指定月份的租金账单。
@@ -106,7 +109,7 @@ func (r *RentBillRepository) GetByRoomPeriod(
 		}
 		return nil, err
 	}
-	return toDomainRentBill(record), nil
+	return toDomainRentBill(record)
 }
 
 // List 查询账号名下的租金账单列表。
@@ -126,7 +129,7 @@ func (r *RentBillRepository) List(
 	if err != nil {
 		return nil, err
 	}
-	return toDomainRentBills(records), nil
+	return toDomainRentBills(records)
 }
 
 // SaveGeneratedBills 事务性保存生成的账单：新增、刷新待付账单、跳过已支付或已取消账单。
@@ -152,6 +155,7 @@ func (r *RentBillRepository) SaveGeneratedBills(
 		Transaction(func(client *query.Query) error {
 			for _, bill := range bills {
 				record, err := client.RentBill.WithContext(ctx).
+					Clauses(clause.Locking{Strength: "UPDATE"}).
 					Where(
 						client.RentBill.RoomID.Eq(bill.RoomID),
 						client.RentBill.PeriodMonth.Eq(bill.PeriodMonth),
@@ -172,12 +176,20 @@ func (r *RentBillRepository) SaveGeneratedBills(
 						}
 						return err
 					}
-					result.Saved = append(result.Saved, toDomainRentBill(created))
+					createdBill, err := toDomainRentBill(created)
+					if err != nil {
+						return err
+					}
+					result.Saved = append(result.Saved, createdBill)
 					continue
 				}
 
 				if record.Status != domainrentbill.StatusUnpaid {
-					result.Skipped = append(result.Skipped, toDomainRentBill(record))
+					skippedBill, err := toDomainRentBill(record)
+					if err != nil {
+						return err
+					}
+					result.Skipped = append(result.Skipped, skippedBill)
 					continue
 				}
 				err = r.updateRentBillRecord(
@@ -197,7 +209,11 @@ func (r *RentBillRepository) SaveGeneratedBills(
 					return err
 				}
 
-				result.Saved = append(result.Saved, toDomainRentBill(updated))
+				updatedBill, err := toDomainRentBill(updated)
+				if err != nil {
+					return err
+				}
+				result.Saved = append(result.Saved, updatedBill)
 			}
 
 			return nil
@@ -251,7 +267,10 @@ func (r *RentBillRepository) createRentBillRecord(
 	client *query.Query,
 	bill *domainrentbill.RentBill,
 ) (*models.RentBill, error) {
-	record := toModelRentBill(bill)
+	record, err := toModelRentBill(bill)
+	if err != nil {
+		return nil, err
+	}
 	if err := client.RentBill.WithContext(ctx).Create(record); err != nil {
 		return nil, err
 	}
@@ -263,16 +282,21 @@ func (r *RentBillRepository) updateRentBillRecord(
 	bill *domainrentbill.RentBill,
 ) error {
 	m := r.q.RentBill
+	record, err := toModelRentBill(bill)
+	if err != nil {
+		return err
+	}
 	result, err := q.Select(
 		m.RoomID,
 		m.PeriodMonth,
 		m.BaseRent,
 		m.MeterFee,
+		m.MeterReadingsJSON,
 		m.TotalAmount,
 		m.Status,
 		m.PaidAt,
 		m.Remark,
-	).Updates(toModelRentBill(bill))
+	).Updates(record)
 	if err != nil {
 		if isConstraintError(err) {
 			return domainrentbill.ErrAlreadyExists
@@ -291,17 +315,27 @@ func (r *RentBillRepository) updateRentBillRecord(
 	return nil
 }
 
-func toModelRentBill(bill *domainrentbill.RentBill) *models.RentBill {
-	return &models.RentBill{
-		RoomID:      bill.RoomID,
-		PeriodMonth: bill.PeriodMonth,
-		BaseRent:    bill.BaseRent,
-		MeterFee:    bill.MeterFee,
-		TotalAmount: bill.TotalAmount,
-		Status:      bill.Status,
-		PaidAt:      bill.PaidAt,
-		Remark:      bill.Remark,
+func toModelRentBill(bill *domainrentbill.RentBill) (*models.RentBill, error) {
+	var readingsJSON *string
+	if bill.MeterReadings != nil {
+		data, err := json.Marshal(bill.MeterReadings)
+		if err != nil {
+			return nil, fmt.Errorf("账单抄表快照编码失败: %w", err)
+		}
+		encoded := string(data)
+		readingsJSON = &encoded
 	}
+	return &models.RentBill{
+		RoomID:            bill.RoomID,
+		PeriodMonth:       bill.PeriodMonth,
+		BaseRent:          bill.BaseRent,
+		MeterFee:          bill.MeterFee,
+		MeterReadingsJSON: readingsJSON,
+		TotalAmount:       bill.TotalAmount,
+		Status:            bill.Status,
+		PaidAt:            bill.PaidAt,
+		Remark:            bill.Remark,
+	}, nil
 }
 
 // queryRentBills 构建带账号归属约束的租金账单查询。
@@ -354,31 +388,42 @@ func (r *RentBillRepository) ensureRentBillRoomInAccount(
 }
 
 // toDomainRentBill 将 GORM 租金账单转换为领域对象。
-func toDomainRentBill(record *models.RentBill) *domainrentbill.RentBill {
+func toDomainRentBill(record *models.RentBill) (*domainrentbill.RentBill, error) {
 	if record == nil {
-		return nil
+		return nil, nil
+	}
+	var readings []domainrentbill.MeterReadingSnapshot
+	if record.MeterReadingsJSON != nil {
+		if err := json.Unmarshal([]byte(*record.MeterReadingsJSON), &readings); err != nil {
+			return nil, fmt.Errorf("账单抄表快照解码失败: %w", err)
+		}
 	}
 	return &domainrentbill.RentBill{
-		ID:          record.ID,
-		RoomID:      record.RoomID,
-		PeriodMonth: record.PeriodMonth,
-		BaseRent:    record.BaseRent,
-		MeterFee:    record.MeterFee,
-		TotalAmount: record.TotalAmount,
-		Status:      record.Status,
-		PaidAt:      record.PaidAt,
-		Remark:      record.Remark,
-		CreatedAt:   record.CreatedAt,
-		UpdatedAt:   record.UpdatedAt,
-		DeletedAt:   record.DeletedAt,
-	}
+		ID:            record.ID,
+		RoomID:        record.RoomID,
+		PeriodMonth:   record.PeriodMonth,
+		BaseRent:      record.BaseRent,
+		MeterFee:      record.MeterFee,
+		MeterReadings: readings,
+		TotalAmount:   record.TotalAmount,
+		Status:        record.Status,
+		PaidAt:        record.PaidAt,
+		Remark:        record.Remark,
+		CreatedAt:     record.CreatedAt,
+		UpdatedAt:     record.UpdatedAt,
+		DeletedAt:     record.DeletedAt,
+	}, nil
 }
 
 // toDomainRentBills 将 GORM 租金账单列表转换为领域对象列表。
-func toDomainRentBills(records []*models.RentBill) []*domainrentbill.RentBill {
+func toDomainRentBills(records []*models.RentBill) ([]*domainrentbill.RentBill, error) {
 	bills := make([]*domainrentbill.RentBill, 0, len(records))
 	for _, record := range records {
-		bills = append(bills, toDomainRentBill(record))
+		bill, err := toDomainRentBill(record)
+		if err != nil {
+			return nil, err
+		}
+		bills = append(bills, bill)
 	}
-	return bills
+	return bills, nil
 }

@@ -4,6 +4,8 @@ import (
 	"time"
 
 	appcore "github.com/superwhys/rent-manager/internal/app"
+	appmeteritem "github.com/superwhys/rent-manager/internal/app/meteritem"
+	appmeterreading "github.com/superwhys/rent-manager/internal/app/meterreading"
 	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
 )
 
@@ -75,6 +77,41 @@ type RentBillResponse struct {
 	Remark      *string    `json:"remark,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
+}
+
+// RentBillDetailResponse 是账单详情，抄表项为开单时保存的快照；历史无快照账单返回 null。
+type RentBillDetailResponse struct {
+	RentBillResponse
+	MeterReadings []appmeterreading.MeterReadingLineResponse `json:"meter_readings"`
+}
+
+// ToRentBillDetailResponse 将账单及其冻结抄表明细转换为响应。
+func ToRentBillDetailResponse(bill *domainrentbill.RentBill) RentBillDetailResponse {
+	response := RentBillDetailResponse{RentBillResponse: ToRentBillResponse(bill)}
+	if bill == nil || bill.MeterReadings == nil {
+		return response
+	}
+	response.MeterReadings = make([]appmeterreading.MeterReadingLineResponse, 0, len(bill.MeterReadings))
+	for _, snapshot := range bill.MeterReadings {
+		current := snapshot.CurrentReading
+		readingTime := snapshot.ReadingTime
+		response.MeterReadings = append(response.MeterReadings, appmeterreading.MeterReadingLineResponse{
+			ID:              snapshot.ID,
+			RoomID:          snapshot.RoomID,
+			PeriodMonth:     snapshot.PeriodMonth,
+			MeterItem:       appmeteritem.ToMeterItemResponse(snapshot.MeterItem),
+			PreviousReading: snapshot.PreviousReading,
+			CurrentReading:  &current,
+			UsageAmount:     snapshot.UsageAmount,
+			ReadingTime:     &readingTime,
+			ReaderID:        snapshot.ReaderID,
+			Source:          snapshot.Source,
+			Remark:          snapshot.Remark,
+			Fee:             snapshot.Fee,
+			IsRecorded:      snapshot.IsRecorded,
+		})
+	}
+	return response
 }
 
 // GeneratedRentBillsResponse 是账单生成响应。

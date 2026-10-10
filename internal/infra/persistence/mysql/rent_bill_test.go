@@ -160,6 +160,7 @@ func TestRentBillRepositorySaveGeneratedBillsTransaction(t *testing.T) {
 		Status:      domainrentbill.StatusCancelled,
 	}
 	for _, bill := range []*domainrentbill.RentBill{unpaid, paid, cancelled} {
+		bill.MeterReadings = rentBillTestSnapshots(room.ID, bill.PeriodMonth, owner)
 		saved, err := repo.Create(ctx, owner, bill)
 		if err != nil {
 			t.Fatal(err)
@@ -168,13 +169,17 @@ func TestRentBillRepositorySaveGeneratedBillsTransaction(t *testing.T) {
 	}
 	generated := make([]*domainrentbill.RentBill, 0, 4)
 	for _, month := range []string{"2026-07", "2026-08", "2026-09", "2026-10"} {
+		readings := rentBillTestSnapshots(room.ID, month, owner)
+		readings[0].CurrentReading = 20.5
+		readings[0].Fee = 42
 		generated = append(generated, &domainrentbill.RentBill{
-			RoomID:      room.ID,
-			PeriodMonth: month,
-			BaseRent:    400,
-			MeterFee:    50,
-			TotalAmount: 450,
-			Status:      domainrentbill.StatusUnpaid,
+			RoomID:        room.ID,
+			PeriodMonth:   month,
+			BaseRent:      400,
+			MeterFee:      50,
+			TotalAmount:   450,
+			Status:        domainrentbill.StatusUnpaid,
+			MeterReadings: readings,
 		})
 	}
 	result, err := repo.SaveGeneratedBills(ctx, owner, generated)
@@ -193,6 +198,17 @@ func TestRentBillRepositorySaveGeneratedBillsTransaction(t *testing.T) {
 		result.Skipped[1].TotalAmount != 300 {
 		t.Fatalf("paid/cancelled bills changed: %+v", result.Skipped)
 	}
+	assertRentBillSnapshots(t, generated[0].MeterReadings, result.Saved[0].MeterReadings)
+	assertRentBillSnapshots(t, generated[3].MeterReadings, result.Saved[1].MeterReadings)
+	assertRentBillSnapshots(t, paid.MeterReadings, result.Skipped[0].MeterReadings)
+	assertRentBillSnapshots(t, cancelled.MeterReadings, result.Skipped[1].MeterReadings)
+	for _, bill := range append(result.Saved, result.Skipped...) {
+		stored, err := repo.Get(ctx, owner, bill.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertRentBillSnapshots(t, bill.MeterReadings, stored.MeterReadings)
+	}
 
 	writeErr := errors.New("bill write failed")
 	if err := db.Callback().
@@ -208,6 +224,8 @@ func TestRentBillRepositorySaveGeneratedBillsTransaction(t *testing.T) {
 	t.Cleanup(func() { db.Callback().Create().Remove("rent_bill_test:fail_create") })
 	updated := *result.Saved[0]
 	updated.BaseRent, updated.TotalAmount = 999, 1049
+	updated.MeterReadings = rentBillTestSnapshots(room.ID, updated.PeriodMonth, owner)
+	updated.MeterReadings[0].CurrentReading = 999
 	added := updated
 	added.ID = 0
 	added.PeriodMonth = "2026-11"
@@ -225,6 +243,7 @@ func TestRentBillRepositorySaveGeneratedBillsTransaction(t *testing.T) {
 	if err != nil || stored.TotalAmount != 450 {
 		t.Fatalf("generated update rollback = %+v, %v", stored, err)
 	}
+	assertRentBillSnapshots(t, result.Saved[0].MeterReadings, stored.MeterReadings)
 	if _, err := repo.GetByRoomPeriod(
 		ctx,
 		owner,

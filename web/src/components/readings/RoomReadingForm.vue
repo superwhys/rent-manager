@@ -75,7 +75,7 @@ function submit() {
       <span>{{ room.period_month }}</span>
     </p>
     <p class="muted form-intro">
-      填写本月读数，可先保存已完成的项目。历史表底自动沿用，首次抄表请填写起始读数。
+      上期读数自动带入，只需填写本次读数，可先保存已完成的项目。没有历史记录时，请填写首次起始读数。
     </p>
     <fieldset
       v-for="row in rows"
@@ -97,18 +97,34 @@ function submit() {
       </div>
       <div class="reading-fields">
         <label v-if="row.line.meter_item.calc_type === 'DIFFERENCE'" class="field">
-          <span>上次 / 起始读数</span>
+          <span>
+            {{
+              row.line.previous_period_month
+                ? `上期读数（${row.line.previous_period_month}）`
+                : row.line.previous_reading != null
+                  ? '上次读数'
+                  : '首次起始读数'
+            }}
+          </span>
           <el-input-number
             v-model="row.previous"
             :min="0"
             :step="1"
             :controls="false"
-            :disabled="busy || row.line.previous_reading !== undefined"
+            :disabled="busy || row.line.previous_reading != null"
             :aria-label="`${row.line.meter_item.code}上次读数`"
+            placeholder="填写起始读数"
             @change="row.changed = true"
           />
-          <small v-if="row.line.previous_reading !== undefined" class="muted">
-            沿用已记录的表底
+          <small v-if="row.line.previous_reading != null" class="muted">
+            {{
+              row.line.is_recorded
+                ? '沿用本期已保存的起始读数'
+                : '已自动带入，无需填写'
+            }}
+          </small>
+          <small v-else class="muted">
+            暂无历史抄表记录，请填写首次起始读数
           </small>
         </label>
         <label class="field">

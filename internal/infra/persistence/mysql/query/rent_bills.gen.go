@@ -34,6 +34,7 @@ func newRentBill(db *gorm.DB, opts ...gen.DOOption) rentBill {
 	_rentBill.PeriodMonth = field.NewString(tableName, "period_month")
 	_rentBill.BaseRent = field.NewInt(tableName, "base_rent")
 	_rentBill.MeterFee = field.NewInt(tableName, "meter_fee")
+	_rentBill.MeterReadingsJSON = field.NewString(tableName, "meter_readings")
 	_rentBill.TotalAmount = field.NewInt(tableName, "total_amount")
 	_rentBill.Status = field.NewString(tableName, "status")
 	_rentBill.PaidAt = field.NewTime(tableName, "paid_at")
@@ -76,20 +77,21 @@ func newRentBill(db *gorm.DB, opts ...gen.DOOption) rentBill {
 type rentBill struct {
 	rentBillDo rentBillDo
 
-	ALL         field.Asterisk
-	ID          field.Int
-	CreatedAt   field.Time
-	UpdatedAt   field.Time
-	DeletedAt   field.Time
-	PeriodMonth field.String
-	BaseRent    field.Int
-	MeterFee    field.Int
-	TotalAmount field.Int
-	Status      field.String
-	PaidAt      field.Time
-	Remark      field.String
-	RoomID      field.Int
-	Room        rentBillBelongsToRoom
+	ALL               field.Asterisk
+	ID                field.Int
+	CreatedAt         field.Time
+	UpdatedAt         field.Time
+	DeletedAt         field.Time
+	PeriodMonth       field.String
+	BaseRent          field.Int
+	MeterFee          field.Int
+	MeterReadingsJSON field.String
+	TotalAmount       field.Int
+	Status            field.String
+	PaidAt            field.Time
+	Remark            field.String
+	RoomID            field.Int
+	Room              rentBillBelongsToRoom
 
 	fieldMap map[string]field.Expr
 }
@@ -113,6 +115,7 @@ func (r *rentBill) updateTableName(table string) *rentBill {
 	r.PeriodMonth = field.NewString(table, "period_month")
 	r.BaseRent = field.NewInt(table, "base_rent")
 	r.MeterFee = field.NewInt(table, "meter_fee")
+	r.MeterReadingsJSON = field.NewString(table, "meter_readings")
 	r.TotalAmount = field.NewInt(table, "total_amount")
 	r.Status = field.NewString(table, "status")
 	r.PaidAt = field.NewTime(table, "paid_at")
@@ -142,7 +145,7 @@ func (r *rentBill) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *rentBill) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 13)
+	r.fieldMap = make(map[string]field.Expr, 14)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["created_at"] = r.CreatedAt
 	r.fieldMap["updated_at"] = r.UpdatedAt
@@ -150,6 +153,7 @@ func (r *rentBill) fillFieldMap() {
 	r.fieldMap["period_month"] = r.PeriodMonth
 	r.fieldMap["base_rent"] = r.BaseRent
 	r.fieldMap["meter_fee"] = r.MeterFee
+	r.fieldMap["meter_readings"] = r.MeterReadingsJSON
 	r.fieldMap["total_amount"] = r.TotalAmount
 	r.fieldMap["status"] = r.Status
 	r.fieldMap["paid_at"] = r.PaidAt

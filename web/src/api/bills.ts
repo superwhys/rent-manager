@@ -1,5 +1,11 @@
 import { request } from '@/api/request'
-import type { BillQuery, GeneratedBills, GenerateBillsInput, RentBill } from '@/types/bills'
+import type {
+  BillQuery,
+  GeneratedBills,
+  GenerateBillsInput,
+  RentBill,
+  RentBillDetail,
+} from '@/types/bills'
 
 export function listUnitBills(unitId: number, query: BillQuery = {}) {
   return request<RentBill[]>(`/units/${unitId}/rent-bills`, { query: { ...query } })
@@ -10,7 +16,7 @@ export function listRoomBills(roomId: number, query: BillQuery = {}) {
 }
 
 export function getBill(id: number) {
-  return request<RentBill>(`/rent-bills/${id}`)
+  return request<RentBillDetail>(`/rent-bills/${id}`)
 }
 
 export function generateUnitBills(unitId: number, body: GenerateBillsInput) {

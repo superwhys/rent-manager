@@ -150,10 +150,11 @@ func GenerateUnitRentBillsHandler(rentBillService *apprentbill.Service) gin.Hand
 
 // GetRentBillHandler godoc
 // @Summary 获取账单详情
+// @Description 抄表明细为生成账单时的冻结数据，历史无快照账单的 meter_readings 为 null。
 // @Tags rent_bill
 // @Produce json
 // @Param rent_bill_id path int true "账单ID"
-// @Success 200 {object} ginutils.Ret[rentbill.RentBillResponse]
+// @Success 200 {object} ginutils.Ret[rentbill.RentBillDetailResponse]
 // @Security BearerAuth
 // @Router /rent-bills/{rent_bill_id} [get]
 func GetRentBillHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
@@ -162,7 +163,7 @@ func GetRentBillHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 		if apiresponse.HandleRouterError(c, err, "get rent bill failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprentbill.ToRentBillResponse(bill)))
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprentbill.ToRentBillDetailResponse(bill)))
 	})
 }
 

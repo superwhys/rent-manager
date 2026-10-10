@@ -15,8 +15,9 @@ import AsyncState from '@/components/common/AsyncState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import BillTable from '@/components/bills/BillTable.vue'
 import GenerateBillForm from '@/components/bills/GenerateBillForm.vue'
+import BillMeterReadings from '@/components/bills/BillMeterReadings.vue'
 import { useUnits } from '@/stores/units'
-import type { BillStatus, GenerateBillsInput, RentBill } from '@/types/bills'
+import type { BillStatus, GenerateBillsInput, RentBill, RentBillDetail } from '@/types/bills'
 import type { Room } from '@/types/rooms'
 import { currentMonth, errorMessage, formatMoney } from '@/utils/format'
 
@@ -39,7 +40,7 @@ const submitError = ref('')
 const mutation = ref<{ kind: 'paid' | 'cancel'; bill: RentBill }>()
 const cancelRemark = ref('')
 const paidAt = ref('')
-const detail = ref<RentBill>()
+const detail = ref<RentBillDetail>()
 const detailOpen = ref(false)
 const detailLoading = ref(false)
 const detailError = ref('')
@@ -185,7 +186,7 @@ async function saveMutation() {
 
 async function showDetail(bill: RentBill) {
   const currentRequest = ++detailRequestId
-  detail.value = bill
+  detail.value = { ...bill, meter_readings: null }
   detailOpen.value = true
   detailLoading.value = true
   detailError.value = ''
@@ -448,7 +449,7 @@ onBeforeUnmount(() => {
       </form>
     </el-dialog>
 
-    <el-dialog v-model="detailOpen" title="账单详情" width="min(540px, calc(100vw - 32px))">
+    <el-dialog v-model="detailOpen" title="账单详情" width="min(680px, calc(100vw - 32px))">
       <AsyncState
         :loading="detailLoading"
         :error="detailError"
@@ -502,6 +503,20 @@ onBeforeUnmount(() => {
             <dd>{{ detail.remark || '—' }}</dd>
           </div>
         </dl>
+        <section v-if="detail" class="bill-readings-section" aria-label="账单抄表明细">
+          <BillMeterReadings
+            v-if="detail.meter_readings"
+            :readings="detail.meter_readings"
+            :period-month="detail.period_month"
+          />
+          <div v-else class="bill-readings-missing">
+            <h3>抄表明细</h3>
+            <p>此历史账单未保存生成时的抄表明细。</p>
+            <p v-if="detail.status === 'UNPAID'">
+              重新生成该月份账单后，可保存本次生成时的抄表明细。
+            </p>
+          </div>
+        </section>
       </AsyncState>
     </el-dialog>
   </div>
@@ -554,6 +569,10 @@ onBeforeUnmount(() => {
 }
 .filter-select {
   width: 10rem;
+}
+.filter-month input,
+.filter-select :deep(.el-select__wrapper) {
+  height: 40px;
 }
 .refresh-button {
   margin-left: auto;
@@ -622,6 +641,22 @@ onBeforeUnmount(() => {
   margin: 0;
   text-align: right;
   overflow-wrap: anywhere;
+}
+.bill-readings-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border, #edf0f3);
+}
+.bill-readings-missing h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.bill-readings-missing p {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary, #67717c);
+  font-size: 0.8125rem;
+  line-height: 1.7;
 }
 
 @media (max-width: 600px) {

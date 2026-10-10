@@ -1,3 +1,5 @@
+import type { MeterReadingLine } from '@/types/readings'
+
 export type BillStatus = 'UNPAID' | 'PAID' | 'CANCELLED'
 
 export interface RentBill {
@@ -12,6 +14,10 @@ export interface RentBill {
   remark?: string
   created_at: string
   updated_at: string
+}
+
+export interface RentBillDetail extends RentBill {
+  meter_readings: MeterReadingLine[] | null
 }
 
 export interface BillQuery {

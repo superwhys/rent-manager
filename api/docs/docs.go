@@ -578,6 +578,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "抄表明细为生成账单时的冻结数据，历史无快照账单的 meter_readings 为 null。",
                 "produces": [
                     "application/json"
                 ],
@@ -598,7 +599,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-rentbill_RentBillResponse"
+                            "$ref": "#/definitions/ginutils.Ret-rentbill_RentBillDetailResponse"
                         }
                     }
                 }
@@ -2420,6 +2421,18 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-rentbill_RentBillDetailResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/rentbill.RentBillDetailResponse"
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-rentbill_RentBillResponse": {
             "type": "object",
             "properties": {
@@ -2742,6 +2755,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/meteritem.MeterItemResponse"
                 },
                 "period_month": {
+                    "type": "string"
+                },
+                "previous_period_month": {
                     "type": "string"
                 },
                 "previous_reading": {
@@ -3173,6 +3189,50 @@ const docTemplate = `{
                     "minimum": 1
                 },
                 "paid_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "rentbill.RentBillDetailResponse": {
+            "type": "object",
+            "properties": {
+                "base_rent": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "meter_fee": {
+                    "type": "integer"
+                },
+                "meter_readings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/meterreading.MeterReadingLineResponse"
+                    }
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "period_month": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "integer"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

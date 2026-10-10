@@ -39,13 +39,14 @@ type MeterReadingInput struct {
 
 // MeterReadingLine 表示房间某个月一个抄表项的录入状态。
 type MeterReadingLine struct {
-	RoomID          int
-	PeriodMonth     string
-	MeterItem       *domainmeteritem.MeterItem
-	Reading         *domainmeterreading.MeterReading
-	PreviousReading *float64
-	Fee             int
-	IsRecorded      bool
+	RoomID              int
+	PeriodMonth         string
+	MeterItem           *domainmeteritem.MeterItem
+	Reading             *domainmeterreading.MeterReading
+	PreviousReading     *float64
+	PreviousPeriodMonth string
+	Fee                 int
+	IsRecorded          bool
 }
 
 // RoomMonthReadings 表示房间某个月的抄表视图。
@@ -78,19 +79,20 @@ type UnitMonthReadings struct {
 
 // MeterReadingLineResponse 是单个抄表项的响应。
 type MeterReadingLineResponse struct {
-	ID              int                            `json:"id,omitempty"`
-	RoomID          int                            `json:"room_id"`
-	PeriodMonth     string                         `json:"period_month"`
-	MeterItem       appmeteritem.MeterItemResponse `json:"meter_item"`
-	PreviousReading *float64                       `json:"previous_reading,omitempty"`
-	CurrentReading  *float64                       `json:"current_reading,omitempty"`
-	UsageAmount     *float64                       `json:"usage_amount,omitempty"`
-	ReadingTime     *time.Time                     `json:"reading_time,omitempty"`
-	ReaderID        *string                        `json:"reader_id,omitempty"`
-	Source          string                         `json:"source,omitempty"`
-	Remark          *string                        `json:"remark,omitempty"`
-	Fee             int                            `json:"fee"`
-	IsRecorded      bool                           `json:"is_recorded"`
+	ID                  int                            `json:"id,omitempty"`
+	RoomID              int                            `json:"room_id"`
+	PeriodMonth         string                         `json:"period_month"`
+	MeterItem           appmeteritem.MeterItemResponse `json:"meter_item"`
+	PreviousReading     *float64                       `json:"previous_reading,omitempty"`
+	PreviousPeriodMonth string                         `json:"previous_period_month,omitempty"`
+	CurrentReading      *float64                       `json:"current_reading,omitempty"`
+	UsageAmount         *float64                       `json:"usage_amount,omitempty"`
+	ReadingTime         *time.Time                     `json:"reading_time,omitempty"`
+	ReaderID            *string                        `json:"reader_id,omitempty"`
+	Source              string                         `json:"source,omitempty"`
+	Remark              *string                        `json:"remark,omitempty"`
+	Fee                 int                            `json:"fee"`
+	IsRecorded          bool                           `json:"is_recorded"`
 }
 
 // RoomMonthReadingsResponse 是房间月度抄表响应。
@@ -155,12 +157,13 @@ func ToMeterReadingLineResponse(line *MeterReadingLine) MeterReadingLineResponse
 		return MeterReadingLineResponse{}
 	}
 	response := MeterReadingLineResponse{
-		RoomID:          line.RoomID,
-		PeriodMonth:     line.PeriodMonth,
-		MeterItem:       appmeteritem.ToMeterItemResponse(line.MeterItem),
-		PreviousReading: line.PreviousReading,
-		Fee:             line.Fee,
-		IsRecorded:      line.IsRecorded,
+		RoomID:              line.RoomID,
+		PeriodMonth:         line.PeriodMonth,
+		MeterItem:           appmeteritem.ToMeterItemResponse(line.MeterItem),
+		PreviousReading:     line.PreviousReading,
+		PreviousPeriodMonth: line.PreviousPeriodMonth,
+		Fee:                 line.Fee,
+		IsRecorded:          line.IsRecorded,
 	}
 	if line.Reading != nil {
 		currentReading := line.Reading.CurrentReading

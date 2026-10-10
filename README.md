@@ -263,8 +263,9 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 - 房间 `price`、账单 `base_rent`/`meter_fee`/`total_amount` 和抄表 `fee`/`total_fee` 以整数“分”表示；`unit_price` 单位为“分/计量单位”。首页收入相关字段则按元格式化展示。
 - 抄表项支持 `DIFFERENCE`（本次与上次读数差值）和 `DIRECT`（本次输入值）计费，费用为用量乘单价后四舍五入到分。
 - 差值型抄表首次录入需要基准读数，后续可取此前最新读数；不能录入下降读数或未绑定到房间的抄表项。
-- 月账单由基础租金和抄表费用组成，缺失所需抄表记录时不能生成；单元批量生成只处理已出租房间。
-- 账单状态为 `UNPAID`、`PAID`、`CANCELLED`。重新生成可更新未付款账单，已付款或已取消的账单会跳过。
+- 月账单由基础租金和抄表费用组成，缺失所需抄表记录时不能生成；单元批量生成只处理已出租房间。生成时保存全部抄表项定义、单价、读数、用量、费用及录入信息的快照，之后修改原记录、调整单价或解绑抄表项不会改变已保存的明细。
+- 账单状态为 `UNPAID`、`PAID`、`CANCELLED`。重新生成可同时更新未付款账单的金额和抄表快照，已付款或已取消的账单会跳过；登记收款和取消保留原快照。
+- 账单详情通过 `rent_bill.view` 返回冻结的 `meter_readings`，不额外要求 `meter_reading.view`。历史无快照账单返回 `null`，生成时未配置抄表项返回 `[]`；历史数据不回填，未付款账单可重新生成以保存当前抄表快照。
 
 ### 响应与限流
 
@@ -360,6 +361,8 @@ go generate ./api
 ```
 
 `make generate` 会依次生成 Gen Query 和 Swagger。生成结果位于 `internal/infra/persistence/mysql/query/` 和 `api/docs/`，不要手工编辑生成文件。业务模型的账号引用使用 `varchar(64)` 和二进制排序规则，抄表人的 `reader_id` 可空；不再关联本项目原 `accounts` 表。authkit 的表由 `authmysql.Models()` 提供，业务表由 `models.AllModels()` 提供。旧整型账号及其业务引用不能通过简单修改列类型变为 authkit 身份；已有数据库需要另行处理历史数据，删除表等破坏性改动需单独提供版本化 SQL。
+
+账单快照存储在 `rent_bills.meter_readings` 可空 JSON 列。已有数据库可在停止写入并备份后执行 [账单抄表快照迁移](migrations/20261010_rent_bill_meter_reading_snapshots.sql)，只增加列，不回填历史账单；新数据库和已由新版 AutoMigrate 增加该列的数据库无需执行。
 
 仓储的 MySQL 集成测试可显式提供 DSN。测试账号需要创建和删除数据库的权限，每个测试会创建独立临时库并在结束时删除，不修改 DSN 中的现有数据库：
 

@@ -9,6 +9,7 @@ const paths: Record<string, string> = {
     'M20 8V5a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15v12H5a2 2 0 0 1-2-2V6 M20 12h-5v4h5',
   droplet: 'M12 3s7 8 7 12a7 7 0 0 1-14 0c0-4 7-12 7-12z M8 15a4 4 0 0 0 4 4',
   shield: 'm12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z m-4 9 3 3 5-5',
+  lock: 'M8 10V7a4 4 0 0 1 8 0v3 M6 10h12v11H6z M12 14v3',
   settings:
     'M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
   users:

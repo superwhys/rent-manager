@@ -6,18 +6,19 @@ import (
 )
 
 type RentBill struct {
-	ID          int
-	RoomID      int
-	PeriodMonth string
-	BaseRent    int
-	MeterFee    int
-	TotalAmount int
-	Status      string
-	PaidAt      *time.Time
-	Remark      *string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time
+	ID            int
+	RoomID        int
+	PeriodMonth   string
+	BaseRent      int
+	MeterFee      int
+	MeterReadings []MeterReadingSnapshot
+	TotalAmount   int
+	Status        string
+	PaidAt        *time.Time
+	Remark        *string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     *time.Time
 }
 
 func NewRentBill(params CreateParams) (*RentBill, error) {
@@ -38,7 +39,7 @@ func NewRentBill(params CreateParams) (*RentBill, error) {
 }
 
 func GenerateRentBill(params GenerateParams) (*RentBill, error) {
-	return NewRentBill(CreateParams{
+	bill, err := NewRentBill(CreateParams{
 		RoomID:      params.RoomID,
 		PeriodMonth: params.PeriodMonth,
 		BaseRent:    params.BaseRent,
@@ -46,6 +47,11 @@ func GenerateRentBill(params GenerateParams) (*RentBill, error) {
 		Status:      StatusUnpaid,
 		Remark:      params.Remark,
 	})
+	if err != nil {
+		return nil, err
+	}
+	bill.MeterReadings = params.MeterReadings
+	return bill, nil
 }
 
 func (b *RentBill) Update(params UpdateParams) error {

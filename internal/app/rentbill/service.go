@@ -292,34 +292,36 @@ func (s *Service) buildGeneratedBill(
 	periodMonth string,
 	remark *string,
 ) (*domainrentbill.RentBill, error) {
-	meterFee, err := s.calculateRoomMeterFee(ctx, accountID, room, periodMonth)
+	meterFee, readings, err := s.buildMeterReadingSnapshots(ctx, accountID, room, periodMonth)
 	if err != nil {
 		return nil, err
 	}
 	return domainrentbill.GenerateRentBill(domainrentbill.GenerateParams{
-		RoomID:      room.ID,
-		PeriodMonth: periodMonth,
-		BaseRent:    room.Price,
-		MeterFee:    meterFee,
-		Remark:      remark,
+		RoomID:        room.ID,
+		PeriodMonth:   periodMonth,
+		BaseRent:      room.Price,
+		MeterFee:      meterFee,
+		MeterReadings: readings,
+		Remark:        remark,
 	})
 }
 
-func (s *Service) calculateRoomMeterFee(
+func (s *Service) buildMeterReadingSnapshots(
 	ctx context.Context,
 	accountID string,
 	room *domainroom.Room,
 	periodMonth string,
-) (int, error) {
+) (int, []domainrentbill.MeterReadingSnapshot, error) {
+	snapshots := make([]domainrentbill.MeterReadingSnapshot, 0, len(room.MeterItems))
 	if len(room.MeterItems) == 0 {
-		return 0, nil
+		return 0, snapshots, nil
 	}
 	readings, err := s.meterReadingRepo.List(ctx, accountID, domainmeterreading.ListQuery{
 		RoomID:      room.ID,
 		PeriodMonth: periodMonth,
 	})
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 	readingByMeterItemID := make(map[int]*domainmeterreading.MeterReading, len(readings))
 	for _, reading := range readings {
@@ -335,15 +337,40 @@ func (s *Service) calculateRoomMeterFee(
 		}
 		reading := readingByMeterItemID[item.ID]
 		if reading == nil || reading.UsageAmount == nil {
-			return 0, domainrentbill.ErrMeterReadingMissing
+			return 0, nil, domainrentbill.ErrMeterReadingMissing
 		}
 		fee, err := reading.CalculateFee(item.UnitPrice)
 		if err != nil {
-			return 0, err
+			return 0, nil, err
 		}
 		total += fee
+		frozenItem := *item
+		frozenItem.Remark = cloneSnapshotValue(item.Remark)
+		snapshots = append(snapshots, domainrentbill.MeterReadingSnapshot{
+			ID:              reading.ID,
+			RoomID:          room.ID,
+			PeriodMonth:     periodMonth,
+			MeterItem:       &frozenItem,
+			PreviousReading: cloneSnapshotValue(reading.PreviousReading),
+			CurrentReading:  reading.CurrentReading,
+			UsageAmount:     cloneSnapshotValue(reading.UsageAmount),
+			ReadingTime:     reading.ReadingTime,
+			ReaderID:        cloneSnapshotValue(reading.ReaderID),
+			Source:          reading.Source,
+			Remark:          cloneSnapshotValue(reading.Remark),
+			Fee:             fee,
+			IsRecorded:      true,
+		})
 	}
-	return total, nil
+	return total, snapshots, nil
+}
+
+func cloneSnapshotValue[T any](value *T) *T {
+	if value == nil {
+		return nil
+	}
+	cloned := *value
+	return &cloned
 }
 
 func (s *Service) saveGeneratedBills(

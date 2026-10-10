@@ -13,6 +13,7 @@ declare module 'vue' {
     AppLayout: typeof import('./components/layout/AppLayout.vue')['default']
     AsyncState: typeof import('./components/common/AsyncState.vue')['default']
     AuthShell: typeof import('./components/auth/AuthShell.vue')['default']
+    BillMeterReadings: typeof import('./components/bills/BillMeterReadings.vue')['default']
     BillTable: typeof import('./components/bills/BillTable.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElButton: typeof import('element-plus/es')['ElButton']

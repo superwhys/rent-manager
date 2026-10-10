@@ -13,11 +13,12 @@ type CreateParams struct {
 }
 
 type GenerateParams struct {
-	RoomID      int
-	PeriodMonth string
-	BaseRent    int
-	MeterFee    int
-	Remark      *string
+	RoomID        int
+	PeriodMonth   string
+	BaseRent      int
+	MeterFee      int
+	MeterReadings []MeterReadingSnapshot
+	Remark        *string
 }
 
 type UpdateParams struct {

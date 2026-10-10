@@ -50,7 +50,7 @@ const statusLabels = { UNPAID: '待收款', PAID: '已收款', CANCELLED: '已�
             取消
           </el-button>
         </template>
-        <el-button v-else size="small" text @click="$emit('detail', bill)">查看详情</el-button>
+        <el-button size="small" text @click="$emit('detail', bill)">查看详情</el-button>
       </div>
     </article>
   </div>

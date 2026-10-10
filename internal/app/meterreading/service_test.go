@@ -2,6 +2,7 @@ package meterreading
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -17,6 +18,134 @@ const (
 	testAccountID10 = "000000000000000000000000000000000000000000000000000000000000000a"
 	testAccountID20 = "0000000000000000000000000000000000000000000000000000000000000014"
 )
+
+func TestGetRoomMonthReadingsPreviousReading(t *testing.T) {
+	zero, previous := 0.0, 12.0
+	tests := []struct {
+		name         string
+		periodMonth  string
+		calcType     string
+		latest       *domainmeterreading.MeterReading
+		recorded     *domainmeterreading.MeterReading
+		wantPrevious *float64
+		wantPeriod   string
+		wantRecorded bool
+	}{
+		{
+			name: "上个月读数自动带入", periodMonth: "2026-10",
+			calcType: domainmeteritem.CalcTypeDifference,
+			latest: &domainmeterreading.MeterReading{
+				RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-09", CurrentReading: 12,
+			},
+			wantPrevious: &previous, wantPeriod: "2026-09",
+		},
+		{
+			name: "上个月零读数仍自动带入", periodMonth: "2026-10",
+			calcType: domainmeteritem.CalcTypeDifference,
+			latest: &domainmeterreading.MeterReading{
+				RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-09", CurrentReading: 0,
+			},
+			wantPrevious: &zero, wantPeriod: "2026-09",
+		},
+		{
+			name: "跨年自动带入", periodMonth: "2026-01",
+			calcType: domainmeteritem.CalcTypeDifference,
+			latest: &domainmeterreading.MeterReading{
+				RoomID: 11, MeterItemID: 1, PeriodMonth: "2025-12", CurrentReading: 12,
+			},
+			wantPrevious: &previous, wantPeriod: "2025-12",
+		},
+		{
+			name: "断月展示最近历史月份", periodMonth: "2026-10",
+			calcType: domainmeteritem.CalcTypeDifference,
+			latest: &domainmeterreading.MeterReading{
+				RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-08", CurrentReading: 12,
+			},
+			wantPrevious: &previous, wantPeriod: "2026-08",
+		},
+		{
+			name: "首次抄表保留空表底", periodMonth: "2026-10",
+			calcType: domainmeteritem.CalcTypeDifference,
+		},
+		{
+			name: "直接用量项不带入历史", periodMonth: "2026-10",
+			calcType: domainmeteritem.CalcTypeDirect,
+			latest: &domainmeterreading.MeterReading{
+				RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-09", CurrentReading: 12,
+			},
+		},
+		{
+			name: "本期已保存保持原表底", periodMonth: "2026-10",
+			calcType: domainmeteritem.CalcTypeDifference,
+			latest: &domainmeterreading.MeterReading{
+				RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-09", CurrentReading: 99,
+			},
+			recorded: &domainmeterreading.MeterReading{
+				ID: 3, RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-10",
+				PreviousReading: &previous, CurrentReading: 12, UsageAmount: &zero,
+			},
+			wantPrevious: &previous, wantRecorded: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			item := &domainmeteritem.MeterItem{
+				ID: 1, Code: "水", Unit: "m3", UnitPrice: 200, CalcType: tt.calcType,
+			}
+			room := &domainroom.Room{
+				ID: 11, UnitID: 7, RoomNo: "101", MeterItems: []*domainmeteritem.MeterItem{item},
+			}
+			repo := &fakeMeterReadingRepo{
+				latestByMeterItemID: map[int]*domainmeterreading.MeterReading{1: tt.latest},
+				listByRoomID:        map[int][]*domainmeterreading.MeterReading{11: {tt.recorded}},
+			}
+			service := &Service{
+				repo: repo, roomRepo: &fakeRoomRepo{byID: map[int]*domainroom.Room{11: room}},
+				unitRepo: &fakeUnitRepo{byID: map[int]*domainunit.Unit{
+					7: {ID: 7, AccountID: testAccountID20},
+				}},
+				rbacService: &fakeRbacService{},
+			}
+			ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID20)
+			roomMonth, err := service.GetRoomMonthReadings(ctx, &RoomMeterReadingsQuery{
+				RoomID: 11, PeriodMonth: tt.periodMonth,
+			})
+			if err != nil {
+				t.Fatalf("GetRoomMonthReadings() error = %v", err)
+			}
+			response := ToRoomMonthReadingsResponse(roomMonth)
+			if len(response.Readings) != 1 {
+				t.Fatalf("reading count = %d, want 1", len(response.Readings))
+			}
+			line := response.Readings[0]
+			if tt.wantPrevious == nil {
+				if line.PreviousReading != nil {
+					t.Fatalf("previous reading = %v, want nil", *line.PreviousReading)
+				}
+			} else if line.PreviousReading == nil || *line.PreviousReading != *tt.wantPrevious {
+				t.Fatalf("previous reading = %v, want %v", line.PreviousReading, *tt.wantPrevious)
+			}
+			if line.PreviousPeriodMonth != tt.wantPeriod || line.IsRecorded != tt.wantRecorded {
+				t.Fatalf("reading source = %q, recorded = %v, want %q, %v",
+					line.PreviousPeriodMonth, line.IsRecorded, tt.wantPeriod, tt.wantRecorded)
+			}
+			encoded, err := json.Marshal(line)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var payload map[string]any
+			if err := json.Unmarshal(encoded, &payload); err != nil {
+				t.Fatal(err)
+			}
+			if _, ok := payload["previous_reading"]; ok != (tt.wantPrevious != nil) {
+				t.Fatalf("previous reading field presence = %v, want %v", ok, tt.wantPrevious != nil)
+			}
+			if _, ok := payload["previous_period_month"]; ok != (tt.wantPeriod != "") {
+				t.Fatalf("source month field presence = %v, want %v", ok, tt.wantPeriod != "")
+			}
+		})
+	}
+}
 
 func TestSaveRoomMonthReadingsUsesLatestPreviousReading(t *testing.T) {
 	item := &domainmeteritem.MeterItem{

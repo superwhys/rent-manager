@@ -32,7 +32,7 @@ const scopedPage = computed(() =>
 watch(
   () => auth.session.value?.account.ID,
   (accountId) => {
-    resetUnits()
+    resetUnits(accountId)
     if (accountId) void loadUnits()
   },
   { immediate: true, flush: 'sync' },

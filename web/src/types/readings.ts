@@ -6,6 +6,7 @@ export interface MeterReadingLine {
   period_month: string
   meter_item: MeterItem
   previous_reading?: number
+  previous_period_month?: string
   current_reading?: number
   usage_amount?: number
   reading_time?: string

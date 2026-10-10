@@ -322,6 +322,8 @@ func (r *fakeRentBillRepo) Delete(ctx context.Context, accountID string, id int)
 
 type fakeMeterReadingRepo struct {
 	listByRoomPeriod map[string][]*domainmeterreading.MeterReading
+	listCalls        int
+	listErr          error
 }
 
 func (r *fakeMeterReadingRepo) Create(
@@ -365,6 +367,10 @@ func (r *fakeMeterReadingRepo) List(
 	accountID string,
 	query domainmeterreading.ListQuery,
 ) ([]*domainmeterreading.MeterReading, error) {
+	r.listCalls++
+	if r.listErr != nil {
+		return nil, r.listErr
+	}
 	return r.listByRoomPeriod[meterReadingKey(query.RoomID, query.PeriodMonth)], nil
 }
 
