@@ -1,8 +1,13 @@
 {
   "auth": {
-    "wechat": {
-      "app_id": "your-wechat-app-id",
-      "secret": "your-wechat-app-secret"
+    "smtp": {
+      "host": "smtp.example.com",
+      "port": 465,
+      "username": "notice@example.com",
+      "password": "your-smtp-password",
+      "from": "notice@example.com",
+      "from_name": "租住管理",
+      "timeout": "10s"
     },
     "session_ttl": "720h"
   },

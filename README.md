@@ -1,6 +1,6 @@
 # Rent Manager
 
-租赁管理系统后端，基于 Go、Gin 和 GORM + Gen，使用 MySQL 存储业务数据、Redis 执行接口限流。当前提供微信登录、房源与房间管理、月度抄表、租金账单、首页统计以及按房源授权的 RBAC 接口。
+租赁管理系统后端，基于 Go、Gin 和 GORM + Gen，使用 MySQL 存储业务数据、Redis 执行接口限流。当前提供邮箱注册与登录、房源与房间管理、月度抄表、租金账单、首页统计以及按房源授权的 RBAC 接口。
 
 本文说明根目录的 Go 后端。`web/` 为独立的 Vue 前端项目，说明见 [web/README.md](web/README.md)。
 
@@ -8,7 +8,7 @@
 
 | 模块 | 当前能力 |
 | --- | --- |
-| 认证 | 通过 authkit 使用微信 `code` 登录，首次登录创建 authkit 账号，查询与撤销会话 |
+| 认证 | 邮箱验证码注册并设置密码，使用密码或验证码登录，查询与撤销会话 |
 | 账号与设置 | 通过会话获取 authkit 账号，读取和更新本项目的账号配置 |
 | 房源单元（Unit） | 创建、查询、更新、删除楼栋/单元，区分自有与被授权房源，配置默认抄表项和抄表日 |
 | 房间 | 单元下创建与查询房间，维护房间信息、租金和出租状态 |
@@ -31,14 +31,14 @@
 | goutils | `v1.3.1`，配置解析、服务启动、请求处理、日志和基础设施配置 |
 | MySQL | 业务数据持久化 |
 | Redis | 接口限流，使用 `go-redis/v9` 与 `ulule/limiter/v3` |
-| authkit | `github.com/miebyte/authkit v1.9.0`，账号、微信登录与可撤销的会话令牌 |
+| authkit | `github.com/miebyte/authkit v1.9.0`，账号、邮箱验证码/密码认证与可撤销的会话令牌 |
 | Swagger | `swag v1.16.6` 生成接口文档 |
 
 ## 本地启动
 
 ### 1. 准备环境
 
-需要 Go 1.27.1 或兼容的更高版本，以及可连接的 MySQL、Redis 和微信小程序配置。微信登录需要客户端提供有效的登录 `code`。
+需要 Go 1.27.1 或兼容的更高版本，以及可连接的 MySQL、Redis。邮箱注册和验证码登录还需要可用的 SMTP 发件服务；不配置 SMTP 时仍可使用已有密码账号登录。
 
 在 MySQL 中先创建数据库，例如：
 
@@ -54,14 +54,19 @@ CREATE DATABASE rent_manager
 
 ### 2. 配置服务
 
-在项目根目录创建 `config.local`，内容为 JSON。该文件名匹配现有 `.gitignore` 中的 `*.local`，适合保存本地配置。可复制 [config.example.json](config.example.json)，替换微信配置和数据库账号后使用：
+在项目根目录创建 `config.local`，内容为 JSON。该文件名匹配现有 `.gitignore` 中的 `*.local`，适合保存本地配置。可复制 [config.example.json](config.example.json)，替换 SMTP 配置和数据库账号后使用：
 
 ```json
 {
   "auth": {
-    "wechat": {
-      "app_id": "your-wechat-app-id",
-      "secret": "your-wechat-app-secret"
+    "smtp": {
+      "host": "smtp.example.com",
+      "port": 465,
+      "username": "noreply@example.com",
+      "password": "your-smtp-password",
+      "from": "noreply@example.com",
+      "from_name": "栖居",
+      "timeout": "15s"
     },
     "session_ttl": "720h"
   },
@@ -90,7 +95,8 @@ CREATE DATABASE rent_manager
 
 | 配置 | 说明 |
 | --- | --- |
-| `auth.wechat` | `app_id`、`secret` 均不能为空，不能包含首尾空白 |
+| `auth.smtp` | 完全不配置时禁用发码；启用时配置 `host`、`port`、`from`，SMTP 认证的 `username` / `password` 成对配置 |
+| `auth.smtp.timeout` | SMTP 操作超时；465 使用 TLS，其他端口要求 STARTTLS，验证服务端证书 |
 | `auth.session_ttl` | 会话有效时长，支持 `720h` 等字符串；零值默认 30 天，不允许负值 |
 | `admin.SuperAdminAccountIDs` | 允许写入全局权限和权限组的 authkit 账号 ID 字符串列表，ID 为 64 位小写十六进制；空列表表示无人拥有该管理权限 |
 | `mysql.instance` | MySQL 的 `host:port`；`pool_size` 控制连接池大小 |
@@ -125,19 +131,45 @@ go build -o rent-manager-server .
 curl http://localhost:8080/health_check
 ```
 
-健康检查由 `cores` 提供，返回进程响应状态，不检查 MySQL、Redis 或微信接口的可用性。当前 `main.go` 使用 `SwaggerRouter(false)`，始终启用 Swagger。
+健康检查由 `cores` 提供，返回进程响应状态，不检查 MySQL、Redis 或 SMTP 服务的可用性。当前 `main.go` 使用 `SwaggerRouter(false)`，始终启用 Swagger。
 
 ## 接口调用
 
 ### 登录与会话
 
-微信登录无需令牌。将客户端获取的微信 `code` 发送到：
+注册前发送验证码，`data` 返回重发等待秒数和有效期秒数（默认 60 / 600）。验证码只通过邮件投递，不在 API 响应中返回：
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/wechat-login \
+curl -X POST http://localhost:8080/api/auth/email/code \
   -H 'Content-Type: application/json' \
-  -d '{"code":"your-wechat-login-code"}'
+  -d '{"email":"tenant@example.com"}'
 ```
+
+用邮箱收到的验证码注册并设置 8–128 字符的密码，成功后自动登录：
+
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"tenant@example.com","code":"123456","password":"your-password"}'
+```
+
+已有账号可选择密码登录：
+
+```bash
+curl -X POST http://localhost:8080/api/auth/password-login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"tenant@example.com","password":"your-password"}'
+```
+
+或先请求新验证码，再通过验证码登录：
+
+```bash
+curl -X POST http://localhost:8080/api/auth/email-login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"tenant@example.com","code":"123456"}'
+```
+
+两种登录方式只认证已有账号，不自动注册。注册会在同一个事务内验证邮箱、创建两种凭证并签发有效会话；再次注册已有邮箱不会更改原密码。密码保持原值，不裁剪空格；邮箱由 authkit 规范化。
 
 成功响应示例：
 
@@ -148,7 +180,7 @@ curl -X POST http://localhost:8080/api/auth/wechat-login \
     "account": {
       "ID": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "Username": "",
-      "Email": ""
+      "Email": "tenant@example.com"
     },
     "access_token": "...",
     "expires_at": "2026-11-08T00:00:00Z",
@@ -158,7 +190,7 @@ curl -X POST http://localhost:8080/api/auth/wechat-login \
 }
 ```
 
-`account` 直接返回 authkit 的账号对象，字段名为 `ID`、`Username`、`Email`；`created` 表示本次登录是否创建了账号。`access_token` 是 authkit 签发的会话令牌，客户端应原样保存并以 `Authorization: Bearer <access_token>` 传入。会话过期后重新进行微信登录。
+`account` 直接返回 authkit 的账号对象，字段名为 `ID`、`Username`、`Email`；`created` 表示本次登录是否创建了账号。`access_token` 是 authkit 签发的会话令牌，客户端应原样保存并以 `Authorization: Bearer <access_token>` 传入。会话过期后重新登录。
 
 查询当前会话，响应 `data` 包含 `account` 和 `expires_at`：
 
@@ -178,11 +210,14 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 
 ### 接口概览
 
-下表路径均以 `/api` 为前缀。`POST /auth/wechat-login` 公开，其余接口均校验 authkit 会话令牌。`:id` 等表示路径参数，详细请求和响应字段见 Swagger 及 `internal/app/<业务>/dto.go`。
+下表路径均以 `/api` 为前缀。发码、注册、密码登录和验证码登录接口公开，其余接口均校验 authkit 会话令牌。`:id` 等表示路径参数，详细请求和响应字段见 Swagger 及 `internal/app/<业务>/dto.go`。
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
-| POST | `/auth/wechat-login` | 微信登录 |
+| POST | `/auth/email/code` | 发送邮箱验证码 |
+| POST | `/auth/register` | 验证邮箱、设置密码并注册 |
+| POST | `/auth/password-login` | 邮箱密码登录 |
+| POST | `/auth/email-login` | 邮箱验证码登录 |
 | GET / DELETE | `/auth/session` | 查询当前账号与会话有效期、撤销当前会话 |
 | GET / PUT | `/settings` | 读取、更新账号设置 |
 | GET | `/home` | 首页聚合数据 |
@@ -227,6 +262,8 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 
 `/api` 接口使用 Redis 限流，当前每个“Authorization 请求头 + 请求路径 + 客户端 IP”组合在 10 秒内允许 10 次请求，包括公开认证接口。
 
+默认不信任转发头，客户端 IP 来自直接连接，防止伪造 `X-Forwarded-For` 绕过发码或密码限流。部署在反向代理后时，需要在 `api.SetupRouter` 中显式设置可信代理地址或网段，不要恢复信任全部来源。authkit 另外限制验证码重发间隔、错误尝试次数，以及邮箱/密码账号和 IP 的请求频率。
+
 ## 权限与数据归属
 
 资源以 authkit 账号为归属边界。所有 `account_id`、`granted_by_account_id` 和可空的 `reader_id` 都直接使用 authkit 账号 ID（64 位小写十六进制字符串），单元、角色、房间等业务资源 ID 仍为整数。单元、角色、房型、抄表项和账号设置归属账号，房间归属单元，抄表记录和账单归属房间。
@@ -249,7 +286,7 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 ```text
 .
 ├── main.go                         # 配置解析、依赖组装、迁移与服务启动
-├── config/                         # authkit 微信登录、会话与管理员配置
+├── config/                         # 邮箱发件、会话与管理员配置
 ├── api/
 │   ├── api.go                      # 路由与 Swagger 入口
 │   ├── routers/                    # HTTP Handler 与 Swagger 注解
@@ -271,7 +308,7 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 └── web/                            # 独立前端项目
 ```
 
-认证 Handler 直接接入 authkit；业务 HTTP Handler 调用应用服务，应用服务编排领域规则与仓储，MySQL 仓储负责业务持久化。`main.go` 组装这些依赖。
+认证 Handler 调用 `internal/app/auth`，其中注册流程通过 authkit 身份事务编排；业务 HTTP Handler 调用应用服务，应用服务编排领域规则与仓储，MySQL 仓储负责业务持久化。`main.go` 组装这些依赖。
 
 ## 开发与验证
 
@@ -288,7 +325,7 @@ go test ./internal/app/... ./internal/domain/...
 go build ./...
 ```
 
-修改 Go 文件后执行 `gofmt -w <files>`。领域与应用测试使用内存仓储替身；仓储测试默认使用纯 Go SQLite，覆盖账号隔离、软删除、关联和事务。MySQL 仓储测试可使用临时数据库验证实际数据库行为；Redis 和微信登录仍需单独集成验证。
+修改 Go 文件后执行 `gofmt -w <files>`。领域与应用测试使用内存仓储替身；仓储测试默认使用纯 Go SQLite，覆盖账号隔离、软删除、关联和事务。MySQL 仓储测试可使用临时数据库验证实际数据库行为；Redis 和真实 SMTP 投递仍需单独集成验证。
 
 修改 `internal/infra/persistence/models/` 后重新生成 Query（无需连接数据库）：
 

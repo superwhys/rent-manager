@@ -27,7 +27,7 @@ func TestTokenVerifyMiddlewarePropagatesAuthkitIdentity(t *testing.T) {
 	token := strings.Repeat("b", 64)
 	session := &authkit.AuthenticatedSession{
 		Account: authkit.Account{ID: strings.Repeat("a", 64), Username: "租户"},
-		Method:  authkit.MethodWechat,
+		Method:  authkit.MethodEmail,
 		Expires: time.Now().Add(time.Hour),
 	}
 	type requestContextKey struct{}

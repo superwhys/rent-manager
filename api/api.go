@@ -98,6 +98,8 @@ func SetupRouter(
 		),
 	)
 
+	// 当前未配置可信反向代理，限流只使用连接来源地址。
+	_ = engine.SetTrustedProxies(nil)
 	return engine
 }
 

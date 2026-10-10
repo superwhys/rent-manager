@@ -16,6 +16,56 @@ definitions:
     - key
     - value
     type: object
+  auth.EmailLoginRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+    required:
+    - code
+    - email
+    type: object
+  auth.PasswordLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 128
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.RegisterRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      password:
+        maxLength: 128
+        minLength: 8
+        type: string
+    required:
+    - code
+    - email
+    - password
+    type: object
+  auth.SendEmailCodeRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  auth.SendEmailCodeResponse:
+    properties:
+      expires_in_seconds:
+        type: integer
+      resend_after_seconds:
+        type: integer
+    type: object
   authkit.Account:
     properties:
       Email:
@@ -128,6 +178,14 @@ definitions:
         items:
           $ref: '#/definitions/unit.UnitResponse'
         type: array
+      message: {}
+    type: object
+  ginutils.Ret-auth_SendEmailCodeResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/auth.SendEmailCodeResponse'
       message: {}
     type: object
   ginutils.Ret-home_Response:
@@ -856,13 +914,6 @@ definitions:
       expires_at:
         type: string
     type: object
-  routers.WechatLoginRequest:
-    properties:
-      code:
-        type: string
-    required:
-    - code
-    type: object
   unit.CreateUnitCommand:
     properties:
       address:
@@ -1116,6 +1167,90 @@ paths:
       summary: 批量创建权限
       tags:
       - admin
+  /auth/email-login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 验证码登录参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.EmailLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-routers_LoginResponse'
+      summary: 使用邮箱验证码登录已有账号
+      tags:
+      - auth
+  /auth/email/code:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 接收验证码的邮箱
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.SendEmailCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-auth_SendEmailCodeResponse'
+      summary: 发送邮箱验证码
+      tags:
+      - auth
+  /auth/password-login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 密码登录参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.PasswordLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-routers_LoginResponse'
+      summary: 使用邮箱和密码登录已有账号
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 邮箱注册参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-routers_LoginResponse'
+      summary: 验证邮箱并注册密码账号
+      tags:
+      - auth
   /auth/session:
     delete:
       produces:
@@ -1141,27 +1276,6 @@ paths:
       security:
       - BearerAuth: []
       summary: 获取当前 authkit 账号与会话有效期
-      tags:
-      - auth
-  /auth/wechat-login:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: 微信登录参数
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/routers.WechatLoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ginutils.Ret-routers_LoginResponse'
-      summary: 微信登录并创建 authkit 会话
       tags:
       - auth
   /home:

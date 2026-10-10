@@ -1,74 +1,292 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+html:root {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue',
+    'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 87.5%;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color: #232b31;
+  background: #f6f8f9;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --accent: #187b62;
+  --accent-soft: #e9f4ef;
+  --text-primary: #232b31;
+  --text-secondary: #6d787f;
+  --text-tertiary: #939b9f;
+  --surface: #fff;
+  --surface-secondary: #f3f6f6;
+  --border: #e8edee;
+  --danger: #c44e48;
+  --el-color-primary: #187b62;
+  --el-color-primary-light-3: #5da38e;
+  --el-color-primary-light-5: #8bbdae;
+  --el-color-primary-light-7: #bad7cd;
+  --el-color-primary-light-8: #d1e5de;
+  --el-color-primary-light-9: #e9f4ef;
+  --el-color-primary-dark-2: #12634e;
+  --el-border-radius-base: 9px;
+  --el-border-color: #e2e8e8;
+  --el-font-family: inherit;
 }
 
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
-
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  color: #333;
-}
-
-/* 默认主应用样式 */
-#app {
-  max-width: 90%;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* 登录页面时移除所有约束，实现真正的全屏 */
-#app:has(.login-page) {
-  max-width: 100%;
   margin: 0;
-  padding: 0;
-  height: 100vh;
-  overflow: hidden;
+  min-width: 320px;
 }
-
-@media (max-width: 1450px) {
-  #app {
-    max-width: 100%;
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+button,
+.el-button {
+  touch-action: manipulation;
+}
+button:not(:disabled):active,
+.el-button:not(:disabled):active {
+  transform: scale(0.98);
+}
+:focus-visible {
+  outline: 3px solid #65ac96;
+  outline-offset: 3px;
+}
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+::selection {
+  background: #d5e9e0;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.field > span,
+.field > label {
+  color: #505d65;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.muted {
+  color: var(--text-secondary);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.btn {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 0.65rem 1rem;
+  min-height: 40px;
+  background: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+.btn:hover {
+  background: var(--surface-secondary);
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.btn-primary:hover {
+  background: #12634e;
+}
+.btn-danger {
+  color: var(--danger);
+}
+.btn:disabled {
+  opacity: 0.5;
+}
+input:not([type='checkbox']):not([type='radio']):not(.el-input__inner):not(
+    .el-select__input
+  ):not(.el-range-input),
+select,
+textarea:not(.el-textarea__inner) {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 8px;
+  color: inherit;
+  padding: 0.6rem 0.75rem;
+}
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--accent);
+  width: 1rem;
+  height: 1rem;
+}
+.el-button {
+  min-height: 39px;
+  font-weight: 500;
+  padding: 0.65rem 1rem;
+}
+.el-button + .el-button {
+  margin-left: 0;
+}
+.el-input,
+.el-select,
+.el-date-editor {
+  --el-component-size: 40px;
+}
+.el-input__wrapper,
+.el-select__wrapper {
+  border-radius: 8px;
+}
+.el-table {
+  --el-table-header-bg-color: #f7f9f9;
+  --el-table-border-color: var(--border);
+  --el-table-header-text-color: #77838a;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+.el-table th.el-table__cell {
+  font-weight: 500;
+  height: 45px;
+}
+.el-table td.el-table__cell {
+  height: 62px;
+}
+body .el-dialog {
+  border-radius: 18px;
+  padding: 1.75rem;
+  max-width: calc(100vw - 2rem);
+  max-height: 88dvh;
+  margin-top: 6vh;
+  overflow-y: auto;
+}
+.el-dialog__title {
+  font-weight: 600;
+}
+body .el-overlay {
+  background-color: rgba(29, 42, 37, 0.25);
+  backdrop-filter: blur(4px);
+}
+body .el-message-box {
+  max-width: calc(100vw - 2rem);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+.el-tag {
+  font-weight: 500;
+  border: none;
+}
+.el-alert {
+  border-radius: 10px;
+}
+.el-tabs__item {
+  font-weight: 500;
+}
+@media (max-width: 640px) {
+  .panel {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .el-button,
+  .btn {
+    min-height: 44px;
+  }
+  body .el-dialog {
+    width: calc(100vw - 2rem);
+    padding: 1.25rem;
   }
 }
-
-@media (max-width: 768px) {
-  #app {
-    max-width: 100%;
-    padding: 0 10px;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  
-  /* 移动端登录页面也要全屏 */
-  #app:has(.login-page) {
-    padding: 0;
+  button:active {
+    transform: none !important;
   }
 }
-
-.form-label {
-  font-size: 16px;
-  font-weight: bold;
-  color: #374151;
-  margin-bottom: 6px;
+@media (prefers-reduced-transparency: reduce) {
+  body .el-overlay {
+    backdrop-filter: none;
+  }
 }
-
-.high-z-index-popper {
-  z-index: 10000 !important;
+@media (prefers-contrast: more) {
+  html:root {
+    --text-secondary: #39464c;
+    --border: #66736c;
+  }
 }
-
-/* 自定义确认框样式已移至 ConfirmModal.vue 组件中 */

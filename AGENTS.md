@@ -8,7 +8,7 @@ This file provides guidance to Codex and other coding agents when working in thi
 - `go test ./internal/app/rbac` - run tests for one package.
 - `go test ./internal/app/rbac -run TestName` - run a single Go test by name.
 - `go build ./...` - compile all packages.
-- `go run .` - run the server on `0.0.0.0:8080`; it requires authkit WeChat/session, MySQL, and Redis configuration parsed by `github.com/miebyte/goutils/flags`.
+- `go run .` - run the server on `0.0.0.0:8080`; it requires authkit session, MySQL, and Redis configuration; SMTP configuration enables email verification parsed by `github.com/miebyte/goutils/flags`.
 - `gofmt -w <files>` - format changed Go files before finishing code changes.
 - `make generate` or `go generate ./cmd/generate` - regenerate Gen queries after changing models under `internal/infra/persistence/models`.
 - `go generate ./api` - regenerate Swagger docs from annotations in `api/`.
@@ -25,12 +25,12 @@ This file provides guidance to Codex and other coding agents when working in thi
 
 ## Architecture
 
-This is a Go 1.27.1 Gin API server for a rent-management backend. `main.go` wires `github.com/miebyte/authkit v1.9.0`, its WeChat login and MySQL persistence, business repositories/services, and Redis rate limiting. It creates the HTTP router and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
+This is a Go 1.27.1 Gin API server for a rent-management backend. `main.go` wires `github.com/miebyte/authkit v1.9.0`, its email/password authentication and MySQL persistence, business repositories/services, and Redis rate limiting. It creates the HTTP router and mounts it under `/api` via `cores.WithHttpHandler("/api", router)`.
 
 The repository follows a DDD-style architecture:
 
 - Interface layer: `api/` contains HTTP router registration, handlers, middleware, and generated Swagger docs.
-- Application layer: `internal/app/<business>/` contains business use-case services and DTOs, including account-scoped RBAC. Authentication and account lifecycle are delegated directly to authkit; there is no local account or auth application/domain package.
+- Application layer: `internal/app/<business>/` contains business use-case services and DTOs, including account-scoped RBAC. Authentication and account lifecycle are owned by authkit. `internal/app/auth` coordinates verified email registration and password setup in one authkit transaction; there is no local account model or authentication domain.
 - Domain layer: `internal/domain/` contains domain models, params, repository interfaces, and domain errors.
 - Infrastructure layer: `internal/infra/` contains supporting infrastructure packages and GORM + Gen repositories under `internal/infra/persistence/mysql`.
 
@@ -38,12 +38,14 @@ Routing is centralized in `api/api.go`. Route groups live in `api/routers` and a
 
 Current route surface:
 
-- `POST /api/auth/wechat-login` calls authkit for WeChat login and automatic registration.
+- `POST /api/auth/email/code` sends an email verification code.
+- `POST /api/auth/register` verifies the email and creates both email and password credentials atomically.
+- `POST /api/auth/password-login` and `POST /api/auth/email-login` authenticate existing accounts by password or email code.
 - `GET /api/auth/session` returns the current authkit account and session expiry; `DELETE /api/auth/session` revokes that session.
 - `/api/roles/*`, `/api/admin/permission-groups/*`, `/api/admin/permissions/*`, and `/api/units/:unit_id/grants` or `/api/units/:unit_id/accounts/:account_id/roles` call the RBAC service and GORM repository.
 - The former `/api/auth/refresh-token` and `/api/accout/self` routes are removed.
 
-Global Redis-backed rate limiting is wired in `api/api.go` via `RateLimitMiddleware`. Only WeChat login is public. Session and business routes require a valid authkit Bearer session token; resource-level permission checks are performed in application services, not route middleware.
+Global Redis-backed rate limiting is wired in `api/api.go` via `RateLimitMiddleware`. The router disables default proxy trust; only configure explicitly trusted proxy addresses when deploying behind a reverse proxy, so forwarded headers cannot spoof authentication rate-limit identities. Email code delivery, registration, and the two email login endpoints are public. Session and business routes require a valid authkit Bearer session token; resource-level permission checks are performed in application services, not route middleware.
 
 Handlers should follow the existing flow:
 
@@ -68,7 +70,7 @@ Keep business table names, nullability, indexes and resource relationships compa
 
 ## Authentication And RBAC
 
-Authentication, accounts, credentials and sessions are owned by `github.com/miebyte/authkit`. Configure `auth.wechat.app_id`, `auth.wechat.secret` and `auth.session_ttl` (for example `720h`). Zero session TTL uses authkit's 30-day default. Authkit verifies WeChat credentials and creates an account on first login. The Bearer token is an opaque, revocable session token, not a JWT, and expired sessions require a new login.
+Authentication, accounts, credentials and sessions are owned by `github.com/miebyte/authkit`. Configure `auth.smtp` for email code delivery and `auth.session_ttl` (for example `720h`). Zero session TTL uses authkit's 30-day default. SMTP can be omitted to run the server and use existing password credentials; code delivery and registration require SMTP. Registration verifies the email, sets its password, and returns a new session in one transaction. Both login endpoints authenticate existing accounts only. Re-registering an existing account must not change its password. The Bearer token is an opaque, revocable session token, not a JWT, and expired sessions require a new login. Preserve authkit verification rejection counters when managing its transactions. Passwords are passed verbatim and never stored or logged by the frontend.
 
 Use authkit account IDs directly throughout business code as `string` (64 lowercase hexadecimal characters), with no local account model or ID mapping. `internal/app.AccountIDFromContext` and `SetAccountIDToContext` carry that string. Auth responses retain authkit's `Account` JSON fields `ID`, `Username`, `Email`; the outer login fields are `account`, `access_token`, `expires_at`, `created`. Business resource IDs remain `int`.
 

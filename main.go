@@ -9,13 +9,11 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"time"
 
 	"github.com/miebyte/authkit"
 	authmysql "github.com/miebyte/authkit/mysql"
-	"github.com/miebyte/authkit/wechat"
 	"github.com/miebyte/goutils/cores"
 	"github.com/miebyte/goutils/flags"
 	"github.com/miebyte/goutils/logging"
@@ -24,12 +22,14 @@ import (
 
 	"github.com/superwhys/rent-manager/api"
 	"github.com/superwhys/rent-manager/config"
+	"github.com/superwhys/rent-manager/internal/infra/emailcode"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql"
 	"github.com/superwhys/rent-manager/internal/infra/ratelimit"
 
 	appaccountsetting "github.com/superwhys/rent-manager/internal/app/accountsetting"
 	appadmin "github.com/superwhys/rent-manager/internal/app/admin"
+	appauth "github.com/superwhys/rent-manager/internal/app/auth"
 	apphome "github.com/superwhys/rent-manager/internal/app/home"
 	appmeteritem "github.com/superwhys/rent-manager/internal/app/meteritem"
 	appmeterreading "github.com/superwhys/rent-manager/internal/app/meterreading"
@@ -85,13 +85,12 @@ func main() {
 
 	authStore, err := authmysql.NewStore(client)
 	logging.PanicError(err)
-	wechatClient, err := wechat.New(authConfig.Wechat)
-	logging.PanicError(err)
-	// 延续首次微信登录自动注册，账号及凭证均由 authkit 创建。
-	registration := authkit.RegistrationPolicyFunc(func(context.Context, authkit.Registration) error {
-		return nil
-	})
-	authService, err := authkit.NewService(authStore, nil, wechatClient, registration, authkit.Config{
+	var codeSender authkit.CodeSender
+	if authConfig.SMTP.Configured() {
+		codeSender, err = emailcode.NewSender(authConfig.SMTP)
+		logging.PanicError(err)
+	}
+	authService, err := appauth.NewService(authStore, codeSender, authkit.Config{
 		SessionTTL: authConfig.SessionTTL,
 	})
 	logging.PanicError(err)
