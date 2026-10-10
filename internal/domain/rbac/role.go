@@ -6,14 +6,15 @@ import (
 )
 
 type Role struct {
-	ID             int
-	AccountID      string
-	Name           string
-	IsDefaultOwner bool
-	IsActive       bool
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	DeletedAt      *time.Time
+	ID                 int
+	AccountID          string
+	Name               string
+	IsDefaultOwner     bool
+	IsActive           bool
+	PermissionGroupIDs []int
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	DeletedAt          *time.Time
 }
 
 func NewRole(params CreateRoleParams) (*Role, error) {

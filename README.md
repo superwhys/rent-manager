@@ -139,6 +139,10 @@ curl http://localhost:8080/health_check
 
 健康检查由 `cores` 提供，返回进程响应状态，不检查 MySQL、Redis 或 SMTP 服务的可用性。当前 `main.go` 使用 `SwaggerRouter(false)`，始终启用 Swagger。
 
+## 演示数据
+
+需要体验完整业务及楼栋授权流程时，可在测试数据库执行 [testdata/seed_demo.sql](testdata/seed_demo.sql)。脚本生成 5 个可登录账号、4 栋楼、24 间房及最近三个月的抄表和账单，包含管家、抄表员、财务、只读和撤权场景；执行方式、账号密码及数据范围见 [演示数据说明](testdata/README.md)。
+
 ## 接口调用
 
 ### 登录与会话
@@ -278,6 +282,10 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 - 访问他人单元的业务数据时，服务检查该单元下的授权角色和权限代码。
 - 角色属于创建它的账号，可以绑定全局权限组；权限组关联全局权限。
 - 普通登录账号可以查询全局权限与权限组，写入操作要求账号 ID 位于 `admin.SuperAdminAccountIDs` 中。
+- 楼栋列表无 `unit.view` 时仅返回 `id/name/access_type/is_owner` 作为入口；房间统计和租金字段还分别要求 `room.view`、`rent_bill.view`。首页同样按各楼栋的房间、账单查看权限汇总数据。
+- 角色查询返回 `permission_group_ids`，权限组查询返回 `permission_ids`，未绑定时返回空数组。批量授予角色在同一事务内完成，失败时全部回滚。
+- 房型和收费项目的 GET 列表、详情支持 `?unit_id=楼栋ID`，分别校验该楼栋的 `room_type.view`、`meter_item.view` 后读取所有者的共享目录，供授权楼栋选用；不传时仍读取当前账号自己的目录。
+- 共享房型和收费项目定义仍仅由所有者维护，下级用 `room.manage`、`unit.update` 在授权楼栋选用已有定义。`room_type.manage`、`meter_item.manage` 保留兼容，但不授予跨楼栋共享定义的写权限。
 
 授权关系为：
 

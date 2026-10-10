@@ -20,7 +20,14 @@ type UpdateRoomTypeCommand struct {
 type ListRoomTypesQuery struct {
 	appcore.Pagination
 
-	Name string `form:"name"`
+	Name   string `form:"name"`
+	UnitID int    `form:"unit_id" json:"-" validate:"omitempty,min=1"`
+}
+
+// GetRoomTypeQuery 表示房型详情及可选的授权单元查询参数。
+type GetRoomTypeQuery struct {
+	RoomTypeID int `uri:"room_type_id" form:"-" json:"-" validate:"required,min=1"`
+	UnitID     int `form:"unit_id" uri:"-" json:"-" validate:"omitempty,min=1"`
 }
 
 // RoomTypeIDQuery 表示房型 ID 路径参数。

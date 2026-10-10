@@ -54,6 +54,7 @@ func (r *RBACRepository) GetRole(
 	role := r.q.Role
 	record, err := role.WithContext(ctx).
 		Where(role.ID.Eq(roleID), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).
+		Preload(role.PermissionGroups.On(r.q.PermissionGroup.DeletedAt.IsNull()).Order(r.q.PermissionGroup.ID)).
 		Take()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -70,7 +71,8 @@ func (r *RBACRepository) ListRoles(
 ) ([]*domainrbac.Role, error) {
 	role := r.q.Role
 	q := role.WithContext(ctx).
-		Where(role.AccountID.Eq(query.AccountID), role.DeletedAt.IsNull())
+		Where(role.AccountID.Eq(query.AccountID), role.DeletedAt.IsNull()).
+		Preload(role.PermissionGroups.On(r.q.PermissionGroup.DeletedAt.IsNull()).Order(r.q.PermissionGroup.ID))
 	if query.IsActive != nil {
 		q = q.Where(role.IsActive.Is(*query.IsActive))
 	}
@@ -251,6 +253,7 @@ func (r *RBACRepository) ListPermissionGroups(
 	group := r.q.PermissionGroup
 	records, err := group.WithContext(ctx).
 		Where(group.DeletedAt.IsNull()).
+		Preload(group.Permissions.On(r.q.Permission.DeletedAt.IsNull()).Order(r.q.Permission.ID)).
 		Order(group.SortOrder.Asc(), group.ID.Desc()).
 		Find()
 	if err != nil {
@@ -334,59 +337,77 @@ func (r *RBACRepository) GrantUnitRoles(
 	ctx context.Context,
 	params domainrbac.UnitAccountRolesParams,
 ) ([]*domainrbac.UnitAccountRole, error) {
-	if err := r.ensureUnitOwnedByAccount(ctx, params.OwnerAccountID, params.UnitID); err != nil {
-		return nil, err
-	}
-	if err := r.ensureRolesInAccount(ctx, params.OwnerAccountID, params.RoleIDs); err != nil {
-		return nil, err
-	}
-
-	grant := r.q.UnitAccountRole
-	for _, roleID := range params.RoleIDs {
-		record, err := grant.WithContext(ctx).
-			Where(
-				grant.UnitID.Eq(params.UnitID),
-				grant.AccountID.Eq(params.TargetAccountID),
-				grant.RoleID.Eq(roleID),
-				grant.DeletedAt.IsNull(),
-			).
-			Take()
-		if err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, err
+	var grants []*domainrbac.UnitAccountRole
+	err := query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
+		unit := tx.Unit
+		// 同一单元的授权串行写入，避免并发重试在查询后重复创建授权。
+		if _, err := unit.WithContext(ctx).
+			Where(unit.ID.Eq(params.UnitID), unit.AccountID.Eq(params.OwnerAccountID), unit.DeletedAt.IsNull()).
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			Take(); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return domainrbac.ErrUnitNotInAccount
 			}
-			err = grant.WithContext(ctx).Create(&models.UnitAccountRole{
-				UnitID:             params.UnitID,
-				AccountID:          params.TargetAccountID,
-				RoleID:             roleID,
-				GrantedByAccountID: params.OwnerAccountID,
-				Status:             domainrbac.UnitGrantStatusActive,
-			})
+			return err
+		}
+		repo := &RBACRepository{q: tx}
+		if err := repo.ensureRolesInAccount(ctx, params.OwnerAccountID, params.RoleIDs); err != nil {
+			return err
+		}
+
+		grant := tx.UnitAccountRole
+		for _, roleID := range params.RoleIDs {
+			record, err := grant.WithContext(ctx).
+				Where(
+					grant.UnitID.Eq(params.UnitID),
+					grant.AccountID.Eq(params.TargetAccountID),
+					grant.RoleID.Eq(roleID),
+					grant.DeletedAt.IsNull(),
+				).
+				Take()
 			if err != nil {
-				if isConstraintError(err) {
-					return nil, domainrbac.ErrUnitGrantNotFound
+				if !errors.Is(err, gorm.ErrRecordNotFound) {
+					return err
 				}
-				return nil, err
+				err = grant.WithContext(ctx).Create(&models.UnitAccountRole{
+					UnitID:             params.UnitID,
+					AccountID:          params.TargetAccountID,
+					RoleID:             roleID,
+					GrantedByAccountID: params.OwnerAccountID,
+					Status:             domainrbac.UnitGrantStatusActive,
+				})
+				if err != nil {
+					if isConstraintError(err) {
+						return domainrbac.ErrUnitGrantNotFound
+					}
+					return err
+				}
+				continue
 			}
-			continue
+			if record.GrantedByAccountID != params.OwnerAccountID {
+				return domainrbac.ErrUnitNotInAccount
+			}
+			_, err = grant.WithContext(ctx).
+				Where(grant.ID.Eq(record.ID)).
+				UpdateSimple(grant.Status.Value(domainrbac.UnitGrantStatusActive))
+			if err != nil {
+				return err
+			}
 		}
-		if record.GrantedByAccountID != params.OwnerAccountID {
-			return nil, domainrbac.ErrUnitNotInAccount
-		}
-		_, err = grant.WithContext(ctx).
-			Where(grant.ID.Eq(record.ID)).
-			UpdateSimple(grant.Status.Value(domainrbac.UnitGrantStatusActive))
-		if err != nil {
-			return nil, err
-		}
-	}
 
-	return r.ListUnitGrants(ctx, domainrbac.ListUnitGrantsQuery{
-		OwnerAccountID:  params.OwnerAccountID,
-		UnitID:          params.UnitID,
-		TargetAccountID: params.TargetAccountID,
-		Status:          domainrbac.UnitGrantStatusActive,
+		var err error
+		grants, err = repo.ListUnitGrants(ctx, domainrbac.ListUnitGrantsQuery{
+			OwnerAccountID:  params.OwnerAccountID,
+			UnitID:          params.UnitID,
+			TargetAccountID: params.TargetAccountID,
+			Status:          domainrbac.UnitGrantStatusActive,
+		})
+		return err
 	})
+	if err != nil {
+		return nil, err
+	}
+	return grants, nil
 }
 
 func (r *RBACRepository) RevokeUnitRoles(
@@ -425,7 +446,7 @@ func (r *RBACRepository) ListUnitGrants(
 	grant := r.q.UnitAccountRole
 	q := grant.WithContext(ctx).
 		Where(grant.UnitID.Eq(query.UnitID), grant.GrantedByAccountID.Eq(query.OwnerAccountID), grant.DeletedAt.IsNull()).
-		Preload(grant.Role)
+		Preload(grant.Role.PermissionGroups.On(r.q.PermissionGroup.DeletedAt.IsNull()).Order(r.q.PermissionGroup.ID))
 	if query.TargetAccountID != "" {
 		q = q.Where(grant.AccountID.Eq(query.TargetAccountID))
 	}
@@ -591,15 +612,20 @@ func toDomainRole(record *models.Role) *domainrbac.Role {
 	if record == nil {
 		return nil
 	}
+	groupIDs := make([]int, 0, len(record.PermissionGroups))
+	for _, group := range record.PermissionGroups {
+		groupIDs = append(groupIDs, group.ID)
+	}
 	return &domainrbac.Role{
-		ID:             record.ID,
-		AccountID:      record.AccountID,
-		Name:           record.Name,
-		IsDefaultOwner: record.IsDefaultOwner,
-		IsActive:       *record.IsActive,
-		CreatedAt:      record.CreatedAt,
-		UpdatedAt:      record.UpdatedAt,
-		DeletedAt:      record.DeletedAt,
+		ID:                 record.ID,
+		AccountID:          record.AccountID,
+		Name:               record.Name,
+		IsDefaultOwner:     record.IsDefaultOwner,
+		IsActive:           *record.IsActive,
+		PermissionGroupIDs: groupIDs,
+		CreatedAt:          record.CreatedAt,
+		UpdatedAt:          record.UpdatedAt,
+		DeletedAt:          record.DeletedAt,
 	}
 }
 
@@ -615,16 +641,21 @@ func toDomainPermissionGroup(record *models.PermissionGroup) *domainrbac.Permiss
 	if record == nil {
 		return nil
 	}
+	permissionIDs := make([]int, 0, len(record.Permissions))
+	for _, permission := range record.Permissions {
+		permissionIDs = append(permissionIDs, permission.ID)
+	}
 	return &domainrbac.PermissionGroup{
-		ID:          record.ID,
-		Code:        record.Code,
-		Name:        record.Name,
-		Description: record.Description,
-		SortOrder:   record.SortOrder,
-		IsActive:    *record.IsActive,
-		CreatedAt:   record.CreatedAt,
-		UpdatedAt:   record.UpdatedAt,
-		DeletedAt:   record.DeletedAt,
+		ID:            record.ID,
+		Code:          record.Code,
+		Name:          record.Name,
+		Description:   record.Description,
+		SortOrder:     record.SortOrder,
+		IsActive:      *record.IsActive,
+		PermissionIDs: permissionIDs,
+		CreatedAt:     record.CreatedAt,
+		UpdatedAt:     record.UpdatedAt,
+		DeletedAt:     record.DeletedAt,
 	}
 }
 

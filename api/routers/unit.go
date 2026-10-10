@@ -96,7 +96,7 @@ func CreateUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 // @Tags unit
 // @Produce json
 // @Param scope query string false "列表范围: all/owned/granted，默认 all"
-// @Success 200 {object} ginutils.Ret[[]unit.UnitResponse]
+// @Success 200 {object} ginutils.Ret[[]unit.UnitListResponse]
 // @Security BearerAuth
 // @Router /units [get]
 func ListUnitsHandler(unitService *appunit.Service) gin.HandlerFunc {

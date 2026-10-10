@@ -103,8 +103,8 @@ func main() {
 		RBAC:      rbacService,
 		Unit:      appunit.NewService(repos.Unit, repos.Room, repos.RBAC),
 		Room:      approom.NewService(repos.Room, repos.Unit, repos.RBAC),
-		RoomType:  approomtype.NewService(repos.RoomType),
-		MeterItem: appmeteritem.NewService(repos.MeterItem),
+		RoomType:  approomtype.NewService(repos.RoomType, repos.Unit, repos.RBAC),
+		MeterItem: appmeteritem.NewService(repos.MeterItem, repos.Unit, repos.RBAC),
 		MeterReading: appmeterreading.NewService(
 			repos.MeterReading,
 			repos.Room,

@@ -1,11 +1,53 @@
 package rbac
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
+
+	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
 )
+
+func TestBindingResponsesPreserveIDs(t *testing.T) {
+	role := &domainrbac.Role{ID: 1, PermissionGroupIDs: []int{2, 3}}
+	group := &domainrbac.PermissionGroup{ID: 2, PermissionIDs: []int{4, 5}}
+	roles := ToRoleListResponse([]*domainrbac.Role{role})
+	groups := ToPermissionGroupListResponse([]*domainrbac.PermissionGroup{group})
+	grant := ToUnitGrantResponse(&domainrbac.UnitAccountRole{Role: role})
+	if !reflect.DeepEqual(roles[0].PermissionGroupIDs, []int{2, 3}) ||
+		!reflect.DeepEqual(grant.Role.PermissionGroupIDs, []int{2, 3}) ||
+		!reflect.DeepEqual(groups[0].PermissionIDs, []int{4, 5}) {
+		t.Fatalf("binding IDs missing from responses: roles=%+v, groups=%+v, grant=%+v", roles[0], groups[0], grant.Role)
+	}
+}
+
+func TestBindingResponsesUseEmptyArrays(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		value any
+		key   string
+	}{
+		{"role", ToRoleResponse(&domainrbac.Role{}), "permission_group_ids"},
+		{"permission group", ToPermissionGroupResponse(&domainrbac.PermissionGroup{}), "permission_ids"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			data, err := json.Marshal(test.value)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var response map[string]json.RawMessage
+			if err := json.Unmarshal(data, &response); err != nil {
+				t.Fatal(err)
+			}
+			if string(response[test.key]) != "[]" {
+				t.Fatalf("%s = %s, want []", test.key, response[test.key])
+			}
+		})
+	}
+}
 
 func TestUnitAccountRolesCommandValidatesAuthkitAccountID(t *testing.T) {
 	validate := validator.New()

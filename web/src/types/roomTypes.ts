@@ -5,6 +5,7 @@ export interface RoomType {
 }
 
 export interface RoomTypeQuery {
+  unit_id?: number
   name?: string
   limit?: number
   offset?: number

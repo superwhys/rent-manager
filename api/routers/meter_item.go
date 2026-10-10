@@ -57,6 +57,7 @@ func CreateMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerF
 // @Param code query string false "抄表项编码"
 // @Param is_system query bool false "是否系统内置"
 // @Param calc_type query string false "计费类型"
+// @Param unit_id query int false "授权楼栋ID；需 meter_item.view，可读取楼栋所有者的完整收费项目录，省略时读取本人收费项"
 // @Success 200 {object} ginutils.Ret[[]meteritem.MeterItemResponse]
 // @Security BearerAuth
 // @Router /meter-items [get]
@@ -78,12 +79,13 @@ func ListMeterItemsHandler(meterItemService *appmeteritem.Service) gin.HandlerFu
 // @Tags meter_item
 // @Produce json
 // @Param meter_item_id path int true "抄表项ID"
+// @Param unit_id query int false "授权楼栋ID；需 meter_item.view，仅查询该楼栋所有者的收费项"
 // @Success 200 {object} ginutils.Ret[meteritem.MeterItemResponse]
 // @Security BearerAuth
 // @Router /meter-items/{meter_item_id} [get]
 func GetMeterItemHandler(meterItemService *appmeteritem.Service) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.MeterItemIDQuery) {
-		item, err := meterItemService.GetMeterItem(c.Request.Context(), req.MeterItemID)
+	return ginutils.RequestHandler(func(c *gin.Context, req *appmeteritem.GetMeterItemQuery) {
+		item, err := meterItemService.GetMeterItem(c.Request.Context(), req)
 		if apiresponse.HandleRouterError(c, err, "get meter item failed", xerr.ErrSysInternal) {
 			return
 		}

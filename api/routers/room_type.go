@@ -59,6 +59,7 @@ func CreateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc
 // @Param limit query int false "分页数量"
 // @Param offset query int false "分页偏移"
 // @Param name query string false "房型名称"
+// @Param unit_id query int false "授权楼栋ID；需 room_type.view，可读取楼栋所有者的完整房型目录，省略时读取本人房型"
 // @Success 200 {object} ginutils.Ret[[]roomtype.RoomTypeResponse]
 // @Security BearerAuth
 // @Router /room-types [get]
@@ -80,12 +81,13 @@ func ListRoomTypesHandler(roomTypeService *approomtype.Service) gin.HandlerFunc 
 // @Tags room_type
 // @Produce json
 // @Param room_type_id path int true "房型ID"
+// @Param unit_id query int false "授权楼栋ID；需 room_type.view，仅查询该楼栋所有者的房型"
 // @Success 200 {object} ginutils.Ret[roomtype.RoomTypeResponse]
 // @Security BearerAuth
 // @Router /room-types/{room_type_id} [get]
 func GetRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.RoomTypeIDQuery) {
-		roomType, err := roomTypeService.GetRoomType(c.Request.Context(), req.RoomTypeID)
+	return ginutils.RequestHandler(func(c *gin.Context, req *approomtype.GetRoomTypeQuery) {
+		roomType, err := roomTypeService.GetRoomType(c.Request.Context(), req)
 		if apiresponse.HandleRouterError(c, err, "get room type failed", xerr.ErrSysInternal) {
 			return
 		}

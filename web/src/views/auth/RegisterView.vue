@@ -93,7 +93,7 @@ async function submit() {
 
 <template>
   <AuthShell
-    title="创建你的栖居账号"
+    title="创建你的租序账号"
     description="验证邮箱并设置密码，开启有条理的租赁生活。"
     :restoring="restoring"
     :restore-error="restoreError"

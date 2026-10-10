@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { createRoom, deleteRoom, listRooms, updateRoom } from '@/api/rooms'
 import { listRoomTypes } from '@/api/roomTypes'
@@ -82,7 +82,14 @@ async function loadRooms() {
 async function loadDictionaries() {
   const version = ++dictionaryVersion
   dictionaryError.value = ''
-  const results = await Promise.allSettled([listRoomTypes(), listMeterItems()])
+  roomTypes.value = []
+  meterItems.value = []
+  const unitId = selectedUnitId.value
+  if (!unitId) return
+  const results = await Promise.allSettled([
+    listRoomTypes({ unit_id: unitId }),
+    listMeterItems({ unit_id: unitId }),
+  ])
   if (disposed || version !== dictionaryVersion) return
   const [types, meters] = results
   if (types.status === 'fulfilled') roomTypes.value = types.value
@@ -101,11 +108,15 @@ watch(
   },
   { immediate: true },
 )
-watch(selectedUnitId, () => {
-  typeFilter.value = undefined
-  if (!saving.value) formVisible.value = false
-})
-onMounted(loadDictionaries)
+watch(
+  selectedUnitId,
+  () => {
+    typeFilter.value = undefined
+    if (!saving.value) formVisible.value = false
+    void loadDictionaries()
+  },
+  { immediate: true },
+)
 onUnmounted(() => {
   disposed = true
   requestVersion += 1
@@ -206,18 +217,20 @@ async function removeRoom(room: Room) {
         <AppIcon name="building" /><span>{{ selectedUnit.name }}</span>
       </div>
       <div>
-        <strong>{{ selectedUnit.room_count }}</strong
+        <strong>{{ selectedUnit.room_count ?? '—' }}</strong
         ><span>间房</span>
       </div>
       <div>
         <i class="status-dot rented" /><strong>{{
-          selectedUnit.rented_count
+          selectedUnit.rented_count ?? '—'
         }}</strong
         ><span>已出租</span>
       </div>
       <div>
         <i class="status-dot vacant" /><strong>{{
-          selectedUnit.room_count - selectedUnit.rented_count
+          selectedUnit.room_count !== undefined && selectedUnit.rented_count !== undefined
+            ? selectedUnit.room_count - selectedUnit.rented_count
+            : '—'
         }}</strong
         ><span>空置</span>
       </div>
@@ -355,8 +368,8 @@ async function removeRoom(room: Room) {
         :initial="editing"
         :unit="formUnit"
         :units="units"
-        :room-types="formUnit.is_owner ? roomTypes : []"
-        :meter-items="formUnit.is_owner ? meterItems : []"
+        :room-types="roomTypes"
+        :meter-items="meterItems"
         :saving="saving"
         :error="formError"
         @submit="saveRoom"

@@ -58,7 +58,7 @@ async function logout() {
     <aside class="sidebar" aria-label="主导航">
       <RouterLink to="/dashboard" class="brand">
         <span class="brand-mark"><AppIcon name="building" :size="25" /></span>
-        <span><strong>栖居</strong><small>RENT MANAGER</small></span>
+        <span><strong>租序</strong><small>租赁管理工作台</small></span>
       </RouterLink>
       <div class="workspace-label">我的工作空间</div>
       <nav>
@@ -157,7 +157,7 @@ async function logout() {
         </el-alert>
         <slot />
         <footer class="page-footer">
-          <span>栖居 · 用心打理，安心生活</span><span>RENT MANAGER</span>
+          <span>租序</span><span>租赁管理工作台</span>
         </footer>
       </main>
     </div>

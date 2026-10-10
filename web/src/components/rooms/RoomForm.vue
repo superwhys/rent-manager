@@ -27,15 +27,18 @@ const draft = reactive({
   is_active: props.initial?.is_active ?? true,
   meter_item_ids:
     props.initial?.meter_items.map((item) => item.id) ??
-    props.unit.default_meter_items.map((item) => item.id),
+    props.unit.default_meter_items?.map((item) => item.id) ??
+    [],
 })
-const manualMeterIDs = ref(draft.meter_item_ids.join(', '))
 const availableUnits = computed(() =>
-  props.units.filter((unit) => unit.account_id === props.unit.account_id),
+  props.units.filter((unit) =>
+    unit.id === props.unit.id ||
+    (props.unit.account_id && unit.account_id === props.unit.account_id),
+  ),
 )
 const meterOptions = computed(() => {
   const items = new Map(props.meterItems.map((item) => [item.id, item]))
-  for (const item of props.unit.default_meter_items) items.set(item.id, item)
+  for (const item of props.unit.default_meter_items ?? []) items.set(item.id, item)
   for (const item of props.initial?.meter_items ?? []) items.set(item.id, item)
   return [...items.values()]
 })
@@ -49,7 +52,6 @@ const roomTypeOptions = computed(() => {
     ...props.roomTypes,
     {
       id: props.initial.room_type_id,
-      account_id: props.unit.account_id,
       name: `房型 #${props.initial.room_type_id}`,
     },
   ]
@@ -104,12 +106,7 @@ const rules: FormRules = {
 async function submit() {
   if (props.saving || !(await form.value?.validate().catch(() => false))) return
   validationError.value = ''
-  const meterIDs = props.unit.is_owner
-    ? draft.meter_item_ids
-    : manualMeterIDs.value
-        .split(/[,，\s]+/)
-        .filter(Boolean)
-        .map(Number)
+  const meterIDs = draft.meter_item_ids
   if (meterIDs.some((id) => !Number.isSafeInteger(id) || id < 1)) {
     validationError.value = '收费项目 ID 须为正整数，多个 ID 用逗号分隔'
     return
@@ -194,12 +191,8 @@ async function submit() {
         />
       </el-form-item>
     </div>
-    <el-form-item
-      :label="unit.is_owner ? '房型' : '楼栋所有者的房型 ID'"
-      prop="room_type_id"
-    >
+    <el-form-item label="房型" prop="room_type_id">
       <el-select
-        v-if="unit.is_owner"
         v-model="draft.room_type_id"
         placeholder="选择房型"
       >
@@ -210,18 +203,11 @@ async function submit() {
           :label="type.name"
         />
       </el-select>
-      <el-input-number
-        v-else
-        v-model="draft.room_type_id"
-        :min="1"
-        :precision="0"
-        controls-position="right"
-      />
       <p v-if="unit.is_owner && roomTypes.length === 0" class="muted form-hint">
         请先在“设置 → 房型配置”中添加房型。
       </p>
       <p v-if="!unit.is_owner" class="muted form-hint">
-        请向楼栋所有者确认房型及收费项目 ID。
+        房型和收费项目由楼栋所有者维护；查看选项需要相应的查看权限。
       </p>
     </el-form-item>
     <el-form-item v-if="initial" label="出租状态">
@@ -230,9 +216,8 @@ async function submit() {
         <el-radio-button :value="false">已出租</el-radio-button>
       </el-radio-group>
     </el-form-item>
-    <el-form-item :label="unit.is_owner ? '收费项目' : '收费项目 ID'">
+    <el-form-item label="收费项目">
       <el-select
-        v-if="unit.is_owner"
         v-model="draft.meter_item_ids"
         multiple
         clearable
@@ -245,11 +230,6 @@ async function submit() {
           :label="`${item.code} · ${item.unit}`"
         />
       </el-select>
-      <el-input
-        v-else
-        v-model="manualMeterIDs"
-        placeholder="多个 ID 用逗号分隔，可留空"
-      />
       <p v-if="!initial" class="muted form-hint">
         新房间初始为空置，楼栋的默认收费项目会自动加入。
       </p>

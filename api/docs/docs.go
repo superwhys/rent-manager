@@ -473,6 +473,12 @@ const docTemplate = `{
                         "description": "计费类型",
                         "name": "calc_type",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "授权楼栋ID；需 meter_item.view，可读取楼栋所有者的完整收费项目录，省略时读取本人收费项",
+                        "name": "unit_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -542,6 +548,12 @@ const docTemplate = `{
                         "name": "meter_item_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "授权楼栋ID；需 meter_item.view，仅查询该楼栋所有者的收费项",
+                        "name": "unit_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1009,6 +1021,12 @@ const docTemplate = `{
                         "description": "房型名称",
                         "name": "name",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "授权楼栋ID；需 room_type.view，可读取楼栋所有者的完整房型目录，省略时读取本人房型",
+                        "name": "unit_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1078,6 +1096,12 @@ const docTemplate = `{
                         "name": "room_type_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "授权楼栋ID；需 room_type.view，仅查询该楼栋所有者的房型",
+                        "name": "unit_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1542,7 +1566,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_unit_UnitResponse"
+                            "$ref": "#/definitions/ginutils.Ret-array_unit_UnitListResponse"
                         }
                     }
                 }
@@ -2335,7 +2359,7 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "ginutils.Ret-array_unit_UnitResponse": {
+        "ginutils.Ret-array_unit_UnitListResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2344,7 +2368,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/unit.UnitResponse"
+                        "$ref": "#/definitions/unit.UnitListResponse"
                     }
                 },
                 "message": {}
@@ -2996,6 +3020,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "sort_order": {
                     "type": "integer"
                 }
@@ -3055,6 +3085,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "permission_group_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -3492,6 +3528,56 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "meter_reading_day": {
+                    "type": "integer"
+                }
+            }
+        },
+        "unit.UnitListResponse": {
+            "type": "object",
+            "properties": {
+                "access_type": {
+                    "type": "string"
+                },
+                "account_id": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "default_meter_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/unit.UnitMeterItemResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_owner": {
+                    "type": "boolean"
+                },
+                "json_extend": {
+                    "$ref": "#/definitions/unit.UnitConfigResponse"
+                },
+                "monthly_rent_amount": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "occupancy_status": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
+                },
+                "rented_count": {
+                    "type": "integer"
+                },
+                "room_count": {
                     "type": "integer"
                 }
             }

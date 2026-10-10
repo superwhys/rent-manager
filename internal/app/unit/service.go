@@ -2,6 +2,7 @@ package unit
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	appcore "github.com/superwhys/rent-manager/internal/app"
@@ -89,7 +90,7 @@ func (s *Service) GetUnitInfo(ctx context.Context, id int) (*domainunit.Unit, er
 func (s *Service) ListUnits(
 	ctx context.Context,
 	query *ListUnitsQuery,
-) ([]*domainunit.Summary, error) {
+) ([]*Summary, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -114,7 +115,7 @@ func (s *Service) ListUnits(
 		return nil, err
 	}
 
-	return s.buildUnitSummaries(ctx, units)
+	return s.buildUnitSummaries(ctx, accountID, units)
 }
 
 // UpdateUnit 更新当前账号可管理的单元。
@@ -203,9 +204,10 @@ func (s *Service) requireUnitPermission(
 // buildUnitSummaries 汇总单元列表的房间统计信息。
 func (s *Service) buildUnitSummaries(
 	ctx context.Context,
+	accountID string,
 	units []*domainunit.Unit,
-) ([]*domainunit.Summary, error) {
-	summaries := make([]*domainunit.Summary, 0, len(units))
+) ([]*Summary, error) {
+	summaries := make([]*Summary, 0, len(units))
 	rented := false
 
 	for _, unit := range units {
@@ -213,30 +215,65 @@ func (s *Service) buildUnitSummaries(
 			continue
 		}
 
-		roomCount, err := s.roomRepo.Count(ctx, unit.AccountID, domainroom.ListQuery{
-			UnitID: unit.ID,
-		})
+		setUnitAccessType(unit, accountID)
+		canViewDetails, err := s.canViewUnit(ctx, accountID, unit, domainrbac.PermissionUnitView)
 		if err != nil {
 			return nil, err
 		}
-		rentedCount, err := s.roomRepo.Count(ctx, unit.AccountID, domainroom.ListQuery{
-			UnitID:   unit.ID,
-			IsActive: &rented,
-		})
+		summary := &Summary{
+			Summary:        &domainunit.Summary{Unit: unit},
+			CanViewDetails: canViewDetails,
+		}
+		summaries = append(summaries, summary)
+		if !canViewDetails {
+			continue
+		}
+		summary.CanViewRooms, err = s.canViewUnit(ctx, accountID, unit, domainrbac.PermissionRoomView)
 		if err != nil {
 			return nil, err
 		}
-
-		summaries = append(summaries, &domainunit.Summary{
-			Unit:              unit,
-			RoomCount:         roomCount,
-			RentedCount:       rentedCount,
-			MonthlyRentAmount: mockUnitMonthlyRentAmount(unit),
-			OccupancyStatus:   unitOccupancyStatus(roomCount, rentedCount),
-		})
+		if summary.CanViewRooms {
+			summary.RoomCount, err = s.roomRepo.Count(ctx, unit.AccountID, domainroom.ListQuery{UnitID: unit.ID})
+			if err != nil {
+				return nil, err
+			}
+			summary.RentedCount, err = s.roomRepo.Count(ctx, unit.AccountID, domainroom.ListQuery{
+				UnitID:   unit.ID,
+				IsActive: &rented,
+			})
+			if err != nil {
+				return nil, err
+			}
+			summary.OccupancyStatus = unitOccupancyStatus(summary.RoomCount, summary.RentedCount)
+		}
+		summary.CanViewBills, err = s.canViewUnit(ctx, accountID, unit, domainrbac.PermissionRentBillView)
+		if err != nil {
+			return nil, err
+		}
+		if summary.CanViewBills {
+			summary.MonthlyRentAmount = mockUnitMonthlyRentAmount(unit)
+		}
 	}
 
 	return summaries, nil
+}
+
+func (s *Service) canViewUnit(
+	ctx context.Context,
+	accountID string,
+	unit *domainunit.Unit,
+	permission string,
+) (bool, error) {
+	if unit.AccountID == accountID {
+		return true, nil
+	}
+	if err := s.rbacService.RequireUnitPermission(ctx, accountID, unit.ID, permission); err != nil {
+		if errors.Is(err, domainrbac.ErrForbidden) || errors.Is(err, domainrbac.ErrUnitNotInAccount) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 // setUnitAccessType 根据账号与单元归属设置访问类型。

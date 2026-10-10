@@ -15,7 +15,7 @@ defineEmits<{ restore: [] }>()
   <main class="auth-page">
     <div class="auth-brand">
       <span><AppIcon name="building" :size="24" /></span>
-      栖居 <small>RENT MANAGER</small>
+      租序 <small>租赁管理工作台</small>
     </div>
     <section class="auth-card" aria-labelledby="auth-title">
       <div class="welcome-icon"><AppIcon name="home" :size="28" /></div>
@@ -43,7 +43,7 @@ defineEmits<{ restore: [] }>()
         <AppIcon name="shield" :size="14" /> 登录状态仅保留在当前浏览器标签页
       </p>
     </section>
-    <footer>栖居 · 用心打理，安心生活</footer>
+    <footer>租序 · 租赁管理工作台</footer>
   </main>
 </template>
 

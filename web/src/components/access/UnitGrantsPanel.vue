@@ -100,6 +100,7 @@ watch(
         <span>管理单元</span>
         <el-select
           :model-value="unitId"
+          size="large"
           placeholder="选择一个单元"
           :disabled="busy"
           @update:model-value="(value) => emit('selectUnit', value)"

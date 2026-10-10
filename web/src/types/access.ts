@@ -4,6 +4,7 @@ export interface Role {
   name: string
   is_default_owner: boolean
   is_active: boolean
+  permission_group_ids: number[]
 }
 
 export interface RoleInput {
@@ -19,6 +20,7 @@ export interface PermissionGroup {
   description?: string | null
   sort_order: number
   is_active: boolean
+  permission_ids: number[]
 }
 
 export interface Permission {

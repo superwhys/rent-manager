@@ -204,15 +204,16 @@ onMounted(load)
                 /></span>
                 <div class="property-description">
                   <strong>{{ unit.name }}</strong
-                  ><span
+                  ><span v-if="unit.address !== undefined"
                     >{{ unit.province }} {{ unit.city }} ·
                     {{ unit.address }}</span
                   >
+                  <span v-else>详细资料未授权</span>
                 </div>
                 <div class="property-numbers">
                   <strong
-                    >{{ unit.rented_count
-                    }}<span> / {{ unit.room_count }}</span></strong
+                    >{{ unit.rented_count ?? '—'
+                    }}<span> / {{ unit.room_count ?? '—' }}</span></strong
                   ><small>已出租 / 总房间</small>
                 </div>
                 <AppIcon name="chevron-right" :size="15" />

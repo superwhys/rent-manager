@@ -41,6 +41,23 @@ const permissionDraft = reactive({ code: '', description: '' })
 const bindingGroup = ref<PermissionGroup | null>(null)
 const permissionIds = ref<number[]>([])
 const bindingAction = ref<BindingAction>('add')
+const bindingOptions = computed(() =>
+  props.permissions.filter((permission) =>
+    bindingAction.value === 'remove'
+      ? bindingGroup.value?.permission_ids.includes(permission.id)
+      : !bindingGroup.value?.permission_ids.includes(permission.id),
+  ),
+)
+
+function boundPermissionNames(group: PermissionGroup) {
+  return (
+    group.permission_ids
+      .map((id) =>
+        props.permissions.find((permission) => permission.id === id)?.code ?? `#${id}`,
+      )
+      .join('、') || '尚未绑定权限'
+  )
+}
 const visibleGroups = computed(() =>
   props.groups.filter((group) =>
     `${group.name} ${group.code} ${group.description ?? ''}`
@@ -122,6 +139,9 @@ watch(
     bindingGroup.value = null
   },
 )
+watch(bindingAction, () => {
+  permissionIds.value = []
+})
 </script>
 
 <template>
@@ -190,6 +210,7 @@ watch(
               <p v-if="group.description" class="muted">
                 {{ group.description }}
               </p>
+              <p class="muted">已绑定：{{ boundPermissionNames(group) }}</p>
             </div>
             <button
               v-if="management"
@@ -328,7 +349,9 @@ watch(
     "
   >
     <form class="catalog-form" @submit.prevent="bind">
-      <p class="muted">只添加或移除本次选择的权限。当前绑定清单暂不可查看。</p>
+      <p class="muted">
+        当前绑定：{{ bindingGroup ? boundPermissionNames(bindingGroup) : '' }}
+      </p>
       <label class="field">
         <span>本次操作</span>
         <select v-model="bindingAction" :disabled="busy">
@@ -346,7 +369,7 @@ watch(
           :disabled="busy"
         >
           <el-option
-            v-for="permission in permissions"
+            v-for="permission in bindingOptions"
             :key="permission.id"
             :value="permission.id"
             :label="`${permission.description} · ${permission.code}`"

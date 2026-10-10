@@ -31,11 +31,13 @@ type ListMeterItemsQuery struct {
 	Code     string `form:"code"`
 	IsSystem *bool  `form:"is_system"`
 	CalcType string `form:"calc_type" validate:"omitempty,oneof=DIFFERENCE DIRECT"`
+	UnitID   int    `form:"unit_id" json:"-" validate:"omitempty,min=1"`
 }
 
-// MeterItemIDQuery 是抄表项 ID 路径参数。
-type MeterItemIDQuery struct {
-	MeterItemID int `uri:"meter_item_id" validate:"required,min=1"`
+// GetMeterItemQuery 是抄表项详情及可选的授权单元查询参数。
+type GetMeterItemQuery struct {
+	MeterItemID int `uri:"meter_item_id" form:"-" json:"-" validate:"required,min=1"`
+	UnitID      int `form:"unit_id" uri:"-" json:"-" validate:"omitempty,min=1"`
 }
 
 // MeterItemResponse 是抄表项响应。

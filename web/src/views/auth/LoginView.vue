@@ -97,7 +97,7 @@ async function submit() {
 
 <template>
   <AuthShell
-    title="欢迎回到栖居"
+    title="欢迎回到租序"
     description="登录你的账号，继续打理每一处安心。"
     :restoring="restoring"
     :restore-error="restoreError"

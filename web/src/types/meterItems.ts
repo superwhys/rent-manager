@@ -20,6 +20,7 @@ export interface MeterItemInput {
 }
 
 export interface MeterItemQuery {
+  unit_id?: number
   limit?: number
   offset?: number
   code?: string

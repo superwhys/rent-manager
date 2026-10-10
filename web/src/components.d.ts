@@ -28,8 +28,6 @@ declare module 'vue' {
     ElRadioButton: typeof import('element-plus/es')['ElRadioButton']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElSelect: typeof import('element-plus/es')['ElSelect']
-    ElTabPane: typeof import('element-plus/es')['ElTabPane']
-    ElTabs: typeof import('element-plus/es')['ElTabs']
     EmailCodeField: typeof import('./components/auth/EmailCodeField.vue')['default']
     GenerateBillForm: typeof import('./components/bills/GenerateBillForm.vue')['default']
     MeterItemsSettings: typeof import('./components/settings/MeterItemsSettings.vue')['default']

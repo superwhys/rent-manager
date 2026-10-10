@@ -187,6 +187,8 @@ async function bindRoleGroups(
     ElMessage.success(
       action === 'add' ? '所选权限组已添加' : '所选权限组已移除',
     )
+    await loadRoles()
+    if (rolesError.value) ElMessage.warning('权限组已调整，角色列表刷新失败，请重试')
   } catch (error) {
     actionError.value = errorMessage(error)
   } finally {
@@ -235,6 +237,8 @@ async function bindGroupPermissions(
     await accessApi.changeGroupPermissions(id, ids, action)
     catalogVersion.value++
     ElMessage.success(action === 'add' ? '所选权限已添加' : '所选权限已移除')
+    await loadGroups()
+    if (groupsError.value) ElMessage.warning('权限已调整，权限组列表刷新失败，请重试')
   } catch (error) {
     actionError.value = errorMessage(error)
   } finally {

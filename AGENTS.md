@@ -92,6 +92,10 @@ Effective authorization follows:
 
 `target account -> unit_account_role -> owner role -> permission_group -> permission`
 
+Unit lists keep only `id`, `name`, `access_type`, and `is_owner` for grants without `unit.view`; other list fields require the corresponding unit, room, or bill view permission. Home room and financial aggregates also check each unit's view permissions. Role responses expose `permission_group_ids`, and permission-group responses expose `permission_ids`, including empty arrays.
+
+Room-type and meter-item GET endpoints accept an optional `unit_id`. With it, the service checks `room_type.view` or `meter_item.view` on that unit before reading the owner's shared catalog for selection in the unit. Without it, queries remain scoped to the signed-in account. Shared definitions can only be created, changed, or deleted by their owner; per-unit grants do not confer account-wide dictionary write access. `room.manage` and `unit.update` continue to control selecting existing definitions in a unit.
+
 The RBAC API covers global permission/permission-group management, account-private role management, role permission-group binding, and unit role grants. Global permission and permission-group write APIs require `AdminConfig.SuperAdminAccountIDs` (`[]string` containing exact authkit account IDs); normal accounts can list global permissions/groups, manage their own roles, and grant roles only on units they own.
 
 Before granting unit roles, the RBAC application service checks the target account directly through authkit's `GetByID` account repository method. Define permission checks by code constants in `internal/domain/rbac/permissions.go` and call `domain/rbac.RbacService.RequireUnitPermission` from business application services. Do not maintain a route-to-permission map unless route-level authorization is intentionally introduced later.

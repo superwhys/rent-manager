@@ -79,6 +79,14 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 			continue
 		}
 		summary.BuildingCount++
+		canViewRooms, err := s.canViewUnit(ctx, accountID, unit.ID, domainrbac.PermissionRoomView)
+		if err != nil {
+			return nil, err
+		}
+		canViewRentBill, err := s.canViewUnit(ctx, accountID, unit.ID, domainrbac.PermissionRentBillView)
+		if err != nil {
+			return nil, err
+		}
 
 		// 查询出所有已出租的房间
 		rentedRooms, err := s.listRoomsInUnit(ctx, unit, new(false))
@@ -86,18 +94,19 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 			return nil, err
 		}
 
-		// 统计空房的数量
-		availableCount, err := s.countRoomsInUnit(ctx, unit, new(true))
-		if err != nil {
-			return nil, err
+		if canViewRooms {
+			availableCount, err := s.countRoomsInUnit(ctx, unit, new(true))
+			if err != nil {
+				return nil, err
+			}
+			summary.RentedRoomCount += len(rentedRooms)
+			summary.VacantRoomCount += availableCount
+			summary.RoomCount += len(rentedRooms) + availableCount
 		}
-
-		summary.RentedRoomCount += len(rentedRooms)
-		summary.VacantRoomCount += availableCount
-		summary.RoomCount += len(rentedRooms) + availableCount
-		err = s.collectRentBillSummary(ctx, unit, summary, currentMonth, previousMonth)
-		if err != nil {
-			return nil, err
+		if canViewRentBill {
+			if err := s.collectRentBillSummary(ctx, unit, summary, currentMonth, previousMonth); err != nil {
+				return nil, err
+			}
 		}
 		todoPeriodMonth := unitTodoPeriodMonth(unit, now)
 		unitTodos, err := s.collectUnitTodos(ctx, accountID, unit, rentedRooms, todoPeriodMonth)

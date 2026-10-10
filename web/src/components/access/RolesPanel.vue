@@ -31,6 +31,21 @@ const bindingRole = ref<Role | null>(null)
 const bindingIds = ref<number[]>([])
 const bindingAction = ref<BindingAction>('add')
 const canSave = computed(() => draft.name.trim().length > 0 && !props.busy)
+const bindingOptions = computed(() =>
+  props.groups.filter((group) =>
+    bindingAction.value === 'remove'
+      ? bindingRole.value?.permission_group_ids.includes(group.id)
+      : !bindingRole.value?.permission_group_ids.includes(group.id),
+  ),
+)
+
+function boundGroupNames(role: Role) {
+  return (
+    role.permission_group_ids
+      .map((id) => props.groups.find((group) => group.id === id)?.name ?? `#${id}`)
+      .join('、') || '尚未绑定权限组'
+  )
+}
 
 function edit(role?: Role) {
   emit('clearError')
@@ -63,6 +78,9 @@ watch(
     bindingRole.value = null
   },
 )
+watch(bindingAction, () => {
+  bindingIds.value = []
+})
 </script>
 
 <template>
@@ -97,6 +115,7 @@ watch(
                 role.id
               }}
             </p>
+            <p class="muted">已绑定：{{ boundGroupNames(role) }}</p>
           </div>
           <div class="row-actions">
             <button
@@ -197,7 +216,7 @@ watch(
   >
     <form class="role-form" @submit.prevent="bind">
       <p class="muted">
-        选择本次要添加或移除的权限组。当前绑定清单暂不可查看。
+        当前绑定：{{ bindingRole ? boundGroupNames(bindingRole) : '' }}
       </p>
       <label class="field">
         <span>本次操作</span>
@@ -215,7 +234,7 @@ watch(
           :disabled="busy"
         >
           <el-option
-            v-for="group in groups"
+            v-for="group in bindingOptions"
             :key="group.id"
             :value="group.id"
             :label="`${group.name} · ${group.code}`"

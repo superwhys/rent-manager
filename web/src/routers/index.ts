@@ -82,7 +82,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  document.title = `${String(to.meta.title ?? '工作台')} · 栖居 Rent Manager`
+  document.title = `${String(to.meta.title ?? '工作台')} · 租序`
   const auth = useSession()
   if (to.meta.public) return
   try {

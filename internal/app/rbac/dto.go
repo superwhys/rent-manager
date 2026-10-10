@@ -80,21 +80,23 @@ type UnitGrantsQuery struct {
 
 // RoleResponse 是角色响应。
 type RoleResponse struct {
-	ID             int    `json:"id"`
-	AccountID      string `json:"account_id"`
-	Name           string `json:"name"`
-	IsDefaultOwner bool   `json:"is_default_owner"`
-	IsActive       bool   `json:"is_active"`
+	ID                 int    `json:"id"`
+	AccountID          string `json:"account_id"`
+	Name               string `json:"name"`
+	IsDefaultOwner     bool   `json:"is_default_owner"`
+	IsActive           bool   `json:"is_active"`
+	PermissionGroupIDs []int  `json:"permission_group_ids"`
 }
 
 // PermissionGroupResponse 是权限组响应。
 type PermissionGroupResponse struct {
-	ID          int     `json:"id"`
-	Code        string  `json:"code"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	SortOrder   int     `json:"sort_order"`
-	IsActive    bool    `json:"is_active"`
+	ID            int     `json:"id"`
+	Code          string  `json:"code"`
+	Name          string  `json:"name"`
+	Description   *string `json:"description,omitempty"`
+	SortOrder     int     `json:"sort_order"`
+	IsActive      bool    `json:"is_active"`
+	PermissionIDs []int   `json:"permission_ids"`
 }
 
 // PermissionResponse 是权限响应。
@@ -122,11 +124,12 @@ func ToRoleResponse(role *domainrbac.Role) *RoleResponse {
 		return nil
 	}
 	return &RoleResponse{
-		ID:             role.ID,
-		AccountID:      role.AccountID,
-		Name:           role.Name,
-		IsDefaultOwner: role.IsDefaultOwner,
-		IsActive:       role.IsActive,
+		ID:                 role.ID,
+		AccountID:          role.AccountID,
+		Name:               role.Name,
+		IsDefaultOwner:     role.IsDefaultOwner,
+		IsActive:           role.IsActive,
+		PermissionGroupIDs: append([]int{}, role.PermissionGroupIDs...),
 	}
 }
 
@@ -145,12 +148,13 @@ func ToPermissionGroupResponse(group *domainrbac.PermissionGroup) *PermissionGro
 		return nil
 	}
 	return &PermissionGroupResponse{
-		ID:          group.ID,
-		Code:        group.Code,
-		Name:        group.Name,
-		Description: group.Description,
-		SortOrder:   group.SortOrder,
-		IsActive:    group.IsActive,
+		ID:            group.ID,
+		Code:          group.Code,
+		Name:          group.Name,
+		Description:   group.Description,
+		SortOrder:     group.SortOrder,
+		IsActive:      group.IsActive,
+		PermissionIDs: append([]int{}, group.PermissionIDs...),
 	}
 }
 

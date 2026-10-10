@@ -21,15 +21,19 @@ const visibleUnits = computed(() =>
     const matchesScope =
       scope.value === 'all' || unit.access_type === scope.value
     const text =
-      `${unit.name} ${unit.province} ${unit.city} ${unit.address}`.toLowerCase()
+      `${unit.name} ${unit.province ?? ''} ${unit.city ?? ''} ${unit.address ?? ''}`.toLowerCase()
     return matchesScope && text.includes(search.value.trim().toLowerCase())
   }),
 )
 const totalRooms = computed(() =>
-  units.value.reduce((total, unit) => total + unit.room_count, 0),
+  units.value.some((unit) => unit.room_count === undefined)
+    ? undefined
+    : units.value.reduce((total, unit) => total + (unit.room_count ?? 0), 0),
 )
 const rentedRooms = computed(() =>
-  units.value.reduce((total, unit) => total + unit.rented_count, 0),
+  units.value.some((unit) => unit.rented_count === undefined)
+    ? undefined
+    : units.value.reduce((total, unit) => total + (unit.rented_count ?? 0), 0),
 )
 const formVisible = ref(false)
 const editing = ref<Unit>()
@@ -57,15 +61,10 @@ async function openForm(unit?: Unit) {
 
 async function loadMeterOptions() {
   const version = ++meterVersion
-  if (editing.value && !editing.value.is_owner) {
-    meterItems.value = editing.value.default_meter_items
-    meterLoading.value = false
-    return
-  }
   meterLoading.value = true
   meterError.value = ''
   try {
-    const items = await listMeterItems()
+    const items = await listMeterItems({ unit_id: editing.value?.id })
     if (version !== meterVersion) return
     meterItems.value = items
   } catch (error) {
@@ -146,15 +145,15 @@ function openRooms(unit: Unit) {
       </div>
       <div>
         <span class="muted">房间总数</span
-        ><strong>{{ totalRooms }}<small>间</small></strong>
+        ><strong>{{ totalRooms ?? '—' }}<small>间</small></strong>
       </div>
       <div>
         <span class="muted">已出租</span
-        ><strong>{{ rentedRooms }}<small>间</small></strong>
+        ><strong>{{ rentedRooms ?? '—' }}<small>间</small></strong>
       </div>
       <div>
         <span class="muted">空置房间</span
-        ><strong>{{ totalRooms - rentedRooms }}<small>间</small></strong>
+        ><strong>{{ totalRooms !== undefined && rentedRooms !== undefined ? totalRooms - rentedRooms : '—' }}<small>间</small></strong>
       </div>
     </div>
 
@@ -215,24 +214,26 @@ function openRooms(unit: Unit) {
             >
           </div>
           <h2>{{ unit.name }}</h2>
-          <p class="unit-address">
+          <p v-if="unit.address !== undefined" class="unit-address">
             {{ unit.province }} · {{ unit.city }}<br />{{ unit.address }}
           </p>
+          <p v-else class="unit-address">详细资料未授权</p>
           <div class="unit-counts">
             <div>
-              <strong>{{ unit.room_count }}</strong
+              <strong>{{ unit.room_count ?? '—' }}</strong
               ><span>全部房间</span>
             </div>
             <div>
-              <strong>{{ unit.rented_count }}</strong
+              <strong>{{ unit.rented_count ?? '—' }}</strong
               ><span>已出租</span>
             </div>
             <div>
-              <strong>{{ unit.room_count - unit.rented_count }}</strong
+              <strong>{{ unit.room_count !== undefined && unit.rented_count !== undefined ? unit.room_count - unit.rented_count : '—' }}</strong
               ><span>空置</span>
             </div>
           </div>
           <div
+            v-if="unit.room_count !== undefined && unit.rented_count !== undefined"
             class="occupancy-track"
             :aria-label="`已出租 ${unit.rented_count} 间，共 ${unit.room_count} 间`"
           >
@@ -242,7 +243,7 @@ function openRooms(unit: Unit) {
               }"
             />
           </div>
-          <div class="unit-meta">
+          <div v-if="unit.json_extend && unit.default_meter_items" class="unit-meta">
             <span>每月 {{ unit.json_extend.meter_reading_day }} 日抄表</span
             ><span>{{ unit.default_meter_items.length }} 个收费项目</span>
           </div>
@@ -252,6 +253,7 @@ function openRooms(unit: Unit) {
             /></el-button>
             <div>
               <el-button
+                v-if="unit.address !== undefined"
                 text
                 :aria-label="`编辑${unit.name}`"
                 @click="openForm(unit)"

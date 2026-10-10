@@ -6,15 +6,16 @@ import (
 )
 
 type PermissionGroup struct {
-	ID          int
-	Code        string
-	Name        string
-	Description *string
-	SortOrder   int
-	IsActive    bool
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time
+	ID            int
+	Code          string
+	Name          string
+	Description   *string
+	SortOrder     int
+	IsActive      bool
+	PermissionIDs []int
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     *time.Time
 }
 
 func NewPermissionGroup(params CreatePermissionGroupParams) (*PermissionGroup, error) {
