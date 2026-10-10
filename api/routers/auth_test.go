@@ -23,9 +23,14 @@ type authServiceStub struct {
 	sendCode      func(context.Context, authkit.SendCodeInput) error
 	loginEmail    func(context.Context, authkit.EmailLoginInput) (*authkit.LoginResult, error)
 	register      func(context.Context, appauth.RegisterRequest, string) (*authkit.LoginResult, error)
+	updateAccount func(context.Context, appauth.UpdateAccountRequest) (*authkit.Account, error)
 	loginPassword func(context.Context, authkit.PasswordLoginInput) (*authkit.LoginResult, error)
 	authenticate  func(context.Context, string) (*authkit.AuthenticatedSession, error)
 	logout        func(context.Context, string) error
+}
+
+func (s authServiceStub) UpdateAccount(ctx context.Context, input appauth.UpdateAccountRequest) (*authkit.Account, error) {
+	return s.updateAccount(ctx, input)
 }
 
 func (s authServiceStub) LoginPassword(
@@ -571,5 +576,87 @@ func TestAuthRouterRequiresSessionAndRemovesRefreshToken(t *testing.T) {
 				recorder.Body.String(),
 			)
 		}
+	}
+}
+
+func TestAuthRouterUpdateAccountUsesAuthenticatedIdentity(t *testing.T) {
+	accountID := strings.Repeat("a", 64)
+	otherID := strings.Repeat("b", 64)
+	account := authkit.Account{ID: accountID, Username: "新名字", Email: "tenant@example.com"}
+	calls := 0
+	handler := newAuthHandler(authServiceStub{
+		authenticate: func(context.Context, string) (*authkit.AuthenticatedSession, error) {
+			return &authkit.AuthenticatedSession{Account: authkit.Account{ID: accountID}}, nil
+		},
+		updateAccount: func(ctx context.Context, input appauth.UpdateAccountRequest) (*authkit.Account, error) {
+			calls++
+			gotID, err := appcore.AccountIDFromContext(ctx)
+			if err != nil || gotID != accountID || input.Username != "  新名字  " {
+				t.Fatalf("update identity=%q, input=%+v, err=%v", gotID, input, err)
+			}
+			return &account, nil
+		},
+	})
+	req := httptest.NewRequest(http.MethodPatch, "/auth/account?account_id="+otherID+"&Username=query-name", strings.NewReader(
+		`{"username":"  新名字  ","account_id":"`+otherID+`","ID":"`+otherID+`","Email":"other@example.com"}`,
+	))
+	req.Header.Set("Authorization", "Bearer token")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Username", "header-name")
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, req)
+	var body struct {
+		Code int             `json:"code"`
+		Data authkit.Account `json:"data"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if recorder.Code != http.StatusOK || body.Code != 0 || body.Data != account || calls != 1 {
+		t.Fatalf("update response=%s, status=%d, calls=%d", recorder.Body.String(), recorder.Code, calls)
+	}
+	if recorder.Header().Get("Cache-Control") != "no-store" || !strings.Contains(recorder.Body.String(), `"Username":"新名字"`) {
+		t.Fatalf("account response lost auth contract: %s", recorder.Body.String())
+	}
+}
+
+func TestAuthRouterUpdateAccountRequiresSession(t *testing.T) {
+	for _, authorization := range []string{"", "Bearer expired-token"} {
+		handler := newAuthHandler(authServiceStub{
+			authenticate: func(context.Context, string) (*authkit.AuthenticatedSession, error) {
+				return nil, authkit.ErrUnauthorized
+			},
+			updateAccount: func(context.Context, appauth.UpdateAccountRequest) (*authkit.Account, error) {
+				t.Fatal("unauthorized request reached account updater")
+				return nil, nil
+			},
+		})
+		req := httptest.NewRequest(http.MethodPatch, "/auth/account", strings.NewReader(`{"username":"新名字"}`))
+		req.Header.Set("Authorization", authorization)
+		req.Header.Set("Content-Type", "application/json")
+		recorder := httptest.NewRecorder()
+		handler.ServeHTTP(recorder, req)
+		if recorder.Code != http.StatusUnauthorized {
+			t.Fatalf("unauthorized update status=%d, body=%s", recorder.Code, recorder.Body.String())
+		}
+	}
+}
+
+func TestAuthRouterUpdateAccountMapsInvalidName(t *testing.T) {
+	handler := newAuthHandler(authServiceStub{
+		authenticate: func(context.Context, string) (*authkit.AuthenticatedSession, error) {
+			return &authkit.AuthenticatedSession{Account: authkit.Account{ID: strings.Repeat("a", 64)}}, nil
+		},
+		updateAccount: func(context.Context, appauth.UpdateAccountRequest) (*authkit.Account, error) {
+			return nil, authkit.ErrInvalidInput
+		},
+	})
+	req := httptest.NewRequest(http.MethodPatch, "/auth/account", strings.NewReader(`{"username":"   "}`))
+	req.Header.Set("Authorization", "Bearer token")
+	req.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, req)
+	if recorder.Code != http.StatusBadRequest || !strings.Contains(recorder.Body.String(), "账号名称须为 1–64 个字符，且不能包含控制字符") {
+		t.Fatalf("invalid name status=%d, body=%s", recorder.Code, recorder.Body.String())
 	}
 }

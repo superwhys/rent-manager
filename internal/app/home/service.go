@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	appcore "github.com/superwhys/rent-manager/internal/app"
@@ -21,6 +22,8 @@ const (
 	todoTagBillGeneration = "账单"
 	todoTagRentCollection = "收租"
 )
+
+var homeLocation = time.FixedZone("Asia/Shanghai", 8*60*60)
 
 // Service 提供首页聚合数据用例。
 type Service struct {
@@ -69,7 +72,7 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 		return nil, err
 	}
 
-	now := s.currentTime()
+	now := s.currentTime().In(homeLocation)
 	currentMonth, previousMonth := currentAndPreviousMonth(now)
 	summary := &Summary{CurrentMonth: currentMonth}
 	todoBuckets := &homeTodoBuckets{}
@@ -108,8 +111,7 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 				return nil, err
 			}
 		}
-		todoPeriodMonth := unitTodoPeriodMonth(unit, now)
-		unitTodos, err := s.collectUnitTodos(ctx, accountID, unit, rentedRooms, todoPeriodMonth)
+		unitTodos, err := s.collectUnitTodos(ctx, accountID, unit, rentedRooms, now)
 		if err != nil {
 			return nil, err
 		}
@@ -207,127 +209,114 @@ func (s *Service) collectUnitTodos(
 	accountID string,
 	unit *domainunit.Unit,
 	rentedRooms []*domainroom.Room,
-	periodMonth string,
+	now time.Time,
 ) (*unitTodoResult, error) {
 	result := &unitTodoResult{}
-	// 首页待办只针对已出租房间；可用空房不需要抄表、出账或收租。
-	if len(rentedRooms) == 0 {
+	currentMonth := now.Format("2006-01")
+	canViewMeterReading, err := s.canViewUnit(ctx, accountID, unit.ID, domainrbac.PermissionMeterReadingView)
+	if err != nil {
+		return nil, err
+	}
+	canViewRentBill, err := s.canViewUnit(ctx, accountID, unit.ID, domainrbac.PermissionRentBillView)
+	if err != nil {
+		return nil, err
+	}
+	if !canViewMeterReading && !canViewRentBill {
 		return result, nil
 	}
 
-	// 先按当前账号权限判断哪些类型的待办允许展示。
-	canViewMeterReading, err := s.canViewUnit(
-		ctx,
-		accountID,
-		unit.ID,
-		domainrbac.PermissionMeterReadingView,
-	)
+	readingsByPeriod, err := s.listUnitReadingsByPeriod(ctx, unit, currentMonth)
 	if err != nil {
 		return nil, err
 	}
-	canViewRentBill, err := s.canViewUnit(
-		ctx,
-		accountID,
-		unit.ID,
-		domainrbac.PermissionRentBillView,
-	)
-	if err != nil {
-		return nil, err
+	periodSet := map[string]struct{}{currentMonth: {}}
+	for month := range readingsByPeriod {
+		periodSet[month] = struct{}{}
 	}
 
-	// 抄表待办和账单生成都依赖目标月份的抄表完成度；无权限时跳过查询。
-	needReadings := canViewMeterReading || canViewRentBill
-	readingsByRoom, err := s.listUnitReadingsByRoom(ctx, unit, periodMonth, needReadings)
-	if err != nil {
-		return nil, err
-	}
-
-	// 逐房间记录抄表是否完成，并统计有抄表项但未完整抄表的房间。
-	completeByRoomID := make(map[int]bool, len(rentedRooms))
-	missingMeterRoomCount := 0
-	for _, room := range rentedRooms {
-		if room == nil {
-			continue
+	billRoomIDsByPeriod := make(map[string]map[int]bool)
+	unpaidCountByPeriod := make(map[string]int)
+	if s.rentBillRepo != nil {
+		bills, err := s.rentBillRepo.List(ctx, unit.AccountID, domainrentbill.ListQuery{UnitID: unit.ID})
+		if err != nil {
+			return nil, err
 		}
-		complete, hasMeterItems := isRoomMeterReadingComplete(room, readingsByRoom[room.ID])
-		completeByRoomID[room.ID] = complete
-		if hasMeterItems && !complete {
-			missingMeterRoomCount++
-		}
-	}
-	if canViewMeterReading && missingMeterRoomCount > 0 {
-		result.meterReading = newHomeTodo(
-			unit.Name,
-			fmt.Sprintf("还有 %d 间房未抄表", missingMeterRoomCount),
-			todoTagMeterReading,
-		)
-	}
-
-	// 没有账单查看权限时，只返回前面已经收集到的抄表待办。
-	if !canViewRentBill || s.rentBillRepo == nil {
-		return result, nil
-	}
-
-	// 查询楼栋目标账单月份已有账单，用于判断哪些房间已出账、哪些账单还待收。
-	bills, err := s.rentBillRepo.List(ctx, unit.AccountID, domainrentbill.ListQuery{
-		UnitID:      unit.ID,
-		PeriodMonth: periodMonth,
-	})
-	if err != nil {
-		return nil, err
-	}
-	billRoomIDs := make(map[int]struct{}, len(bills))
-	unpaidBillCount := 0
-	for _, bill := range bills {
-		if bill == nil {
-			continue
-		}
-		billRoomIDs[bill.RoomID] = struct{}{}
-		if bill.Status == domainrentbill.StatusUnpaid {
-			unpaidBillCount++
+		for _, bill := range bills {
+			if bill == nil {
+				continue
+			}
+			if billRoomIDsByPeriod[bill.PeriodMonth] == nil {
+				billRoomIDsByPeriod[bill.PeriodMonth] = make(map[int]bool)
+			}
+			billRoomIDsByPeriod[bill.PeriodMonth][bill.RoomID] = true
+			if canViewRentBill && bill.Status == domainrentbill.StatusUnpaid {
+				unpaidCountByPeriod[bill.PeriodMonth]++
+			}
 		}
 	}
 
-	// 只有抄表完成且目标月份还没有账单的已租房间，才进入待生成账单统计。
-	pendingBillGenerationRoomCount := 0
-	for _, room := range rentedRooms {
-		if room == nil || !completeByRoomID[room.ID] {
-			continue
+	periods := make([]string, 0, len(periodSet))
+	for month := range periodSet {
+		periods = append(periods, month)
+	}
+	sort.Strings(periods)
+	for _, month := range periods {
+		missingReadingCount, generationCount := 0, 0
+		for _, room := range rentedRooms {
+			if room == nil {
+				continue
+			}
+			roomReadings := readingsByPeriod[month][room.ID]
+			hasBill := billRoomIDsByPeriod[month][room.ID]
+			complete, hasMeterItems := isRoomMeterReadingComplete(room, roomReadings)
+			// 历史月份只追踪已有抄表记录，不推测过去的出租状态。
+			needsReading := month == currentMonth || len(roomReadings) > 0
+			if canViewMeterReading && needsReading && hasMeterItems && !complete && (month == currentMonth || !hasBill) {
+				missingReadingCount++
+			}
+			if canViewRentBill && s.rentBillRepo != nil && needsReading && complete && !hasBill {
+				generationCount++
+			}
 		}
-		if _, ok := billRoomIDs[room.ID]; !ok {
-			pendingBillGenerationRoomCount++
+		if missingReadingCount > 0 {
+			todo := *newHomeTodo(unit.Name, meterReadingTodoDescription(unit, month, missingReadingCount, now), todoTagMeterReading)
+			if month == currentMonth {
+				result.currentMeterReadings = append(result.currentMeterReadings, todo)
+			} else {
+				result.meterReadings = append(result.meterReadings, todo)
+			}
+		}
+		if generationCount > 0 {
+			result.billGenerations = append(result.billGenerations, *newHomeTodo(
+				unit.Name, fmt.Sprintf("%s 月还有 %d 间房待生成账单", month, generationCount), todoTagBillGeneration,
+			))
 		}
 	}
-	if pendingBillGenerationRoomCount > 0 {
-		result.billGeneration = newHomeTodo(
-			unit.Name,
-			fmt.Sprintf("还有 %d 间房待生成账单", pendingBillGenerationRoomCount),
-			todoTagBillGeneration,
-		)
+
+	unpaidPeriods := make([]string, 0, len(unpaidCountByPeriod))
+	for month := range unpaidCountByPeriod {
+		unpaidPeriods = append(unpaidPeriods, month)
 	}
-	if unpaidBillCount > 0 {
-		result.rentCollection = newHomeTodo(
-			unit.Name,
-			fmt.Sprintf("还有 %d 笔租金待收", unpaidBillCount),
-			todoTagRentCollection,
-		)
+	sort.Strings(unpaidPeriods)
+	for _, month := range unpaidPeriods {
+		result.rentCollections = append(result.rentCollections, *newHomeTodo(
+			unit.Name, fmt.Sprintf("%s 月还有 %d 笔租金待收", month, unpaidCountByPeriod[month]), todoTagRentCollection,
+		))
 	}
 	return result, nil
 }
 
-func (s *Service) listUnitReadingsByRoom(
+func (s *Service) listUnitReadingsByPeriod(
 	ctx context.Context,
 	unit *domainunit.Unit,
-	periodMonth string,
-	enabled bool,
-) (map[int]map[int]*domainmeterreading.MeterReading, error) {
-	readingsByRoom := make(map[int]map[int]*domainmeterreading.MeterReading)
-	if !enabled || s.meterReadingRepo == nil {
-		return readingsByRoom, nil
+	currentMonth string,
+) (map[string]map[int]map[int]*domainmeterreading.MeterReading, error) {
+	readingsByPeriod := make(map[string]map[int]map[int]*domainmeterreading.MeterReading)
+	if s.meterReadingRepo == nil {
+		return readingsByPeriod, nil
 	}
 	readings, err := s.meterReadingRepo.List(ctx, unit.AccountID, domainmeterreading.ListQuery{
-		UnitID:      unit.ID,
-		PeriodMonth: periodMonth,
+		UnitID: unit.ID, PeriodMonthTo: currentMonth,
 	})
 	if err != nil {
 		return nil, err
@@ -336,14 +325,15 @@ func (s *Service) listUnitReadingsByRoom(
 		if reading == nil {
 			continue
 		}
-		readingsByMeterItem := readingsByRoom[reading.RoomID]
-		if readingsByMeterItem == nil {
-			readingsByMeterItem = make(map[int]*domainmeterreading.MeterReading)
-			readingsByRoom[reading.RoomID] = readingsByMeterItem
+		if readingsByPeriod[reading.PeriodMonth] == nil {
+			readingsByPeriod[reading.PeriodMonth] = make(map[int]map[int]*domainmeterreading.MeterReading)
 		}
-		readingsByMeterItem[reading.MeterItemID] = reading
+		if readingsByPeriod[reading.PeriodMonth][reading.RoomID] == nil {
+			readingsByPeriod[reading.PeriodMonth][reading.RoomID] = make(map[int]*domainmeterreading.MeterReading)
+		}
+		readingsByPeriod[reading.PeriodMonth][reading.RoomID][reading.MeterItemID] = reading
 	}
-	return readingsByRoom, nil
+	return readingsByPeriod, nil
 }
 
 func (s *Service) canViewUnit(
@@ -413,34 +403,32 @@ func newHomeTodo(title string, description string, tag string) *Todo {
 }
 
 type unitTodoResult struct {
-	meterReading   *Todo
-	billGeneration *Todo
-	rentCollection *Todo
+	currentMeterReadings []Todo
+	meterReadings        []Todo
+	billGenerations      []Todo
+	rentCollections      []Todo
 }
 
 type homeTodoBuckets struct {
-	meterReadings   []Todo
-	billGenerations []Todo
-	rentCollections []Todo
+	currentMeterReadings []Todo
+	meterReadings        []Todo
+	billGenerations      []Todo
+	rentCollections      []Todo
 }
 
 func (b *homeTodoBuckets) append(result *unitTodoResult) {
 	if result == nil {
 		return
 	}
-	if result.meterReading != nil {
-		b.meterReadings = append(b.meterReadings, *result.meterReading)
-	}
-	if result.billGeneration != nil {
-		b.billGenerations = append(b.billGenerations, *result.billGeneration)
-	}
-	if result.rentCollection != nil {
-		b.rentCollections = append(b.rentCollections, *result.rentCollection)
-	}
+	b.currentMeterReadings = append(b.currentMeterReadings, result.currentMeterReadings...)
+	b.meterReadings = append(b.meterReadings, result.meterReadings...)
+	b.billGenerations = append(b.billGenerations, result.billGenerations...)
+	b.rentCollections = append(b.rentCollections, result.rentCollections...)
 }
 
 func (b *homeTodoBuckets) todos(limit int) []Todo {
-	todos := make([]Todo, 0, len(b.meterReadings)+len(b.billGenerations)+len(b.rentCollections))
+	todos := make([]Todo, 0, len(b.currentMeterReadings)+len(b.meterReadings)+len(b.billGenerations)+len(b.rentCollections))
+	todos = append(todos, b.currentMeterReadings...)
 	todos = append(todos, b.meterReadings...)
 	todos = append(todos, b.billGenerations...)
 	todos = append(todos, b.rentCollections...)
@@ -460,14 +448,6 @@ func currentAndPreviousMonth(now time.Time) (string, string) {
 	return monthStart.Format("2006-01"), monthStart.AddDate(0, -1, 0).Format("2006-01")
 }
 
-func unitTodoPeriodMonth(unit *domainunit.Unit, now time.Time) string {
-	meterReadingDay := domainunit.DefaultMeterReadingDay
-	if unit != nil && unit.Config.MeterReadingDay != 0 {
-		meterReadingDay = unit.Config.MeterReadingDay
-	}
-	return todoPeriodMonthByMeterReadingDay(now, meterReadingDay)
-}
-
 func (s *Service) currentTime() time.Time {
 	if s.now != nil {
 		return s.now()
@@ -475,20 +455,25 @@ func (s *Service) currentTime() time.Time {
 	return time.Now()
 }
 
-func todoPeriodMonthByMeterReadingDay(now time.Time, meterReadingDay int) string {
-	if meterReadingDay < domainunit.MinMeterReadingDay ||
-		meterReadingDay > domainunit.MaxMeterReadingDay {
+func meterReadingTodoDescription(unit *domainunit.Unit, month string, missingCount int, now time.Time) string {
+	now = now.In(homeLocation)
+	if month < now.Format("2006-01") {
+		return fmt.Sprintf("%s 月抄表已逾期，还有 %d 间房未抄表", month, missingCount)
+	}
+	meterReadingDay := unit.Config.MeterReadingDay
+	if meterReadingDay < domainunit.MinMeterReadingDay || meterReadingDay > domainunit.MaxMeterReadingDay {
 		meterReadingDay = domainunit.DefaultMeterReadingDay
 	}
-	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	currentDueDate := meterReadingDueDate(monthStart, meterReadingDay)
-
-	offsetMonths := -2
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	if !today.Before(currentDueDate) {
-		offsetMonths = -1
+	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, homeLocation)
+	dueDate := meterReadingDueDate(monthStart, meterReadingDay)
+	switch {
+	case now.Day() < dueDate.Day():
+		return fmt.Sprintf("%s 月还有 %d 间房待抄表，计划 %s 抄表", month, missingCount, dueDate.Format("2006-01-02"))
+	case now.Day() == dueDate.Day():
+		return fmt.Sprintf("今日需完成 %s 月抄表，还有 %d 间房未抄表", month, missingCount)
+	default:
+		return fmt.Sprintf("%s 月抄表已逾期，还有 %d 间房未抄表", month, missingCount)
 	}
-	return monthStart.AddDate(0, offsetMonths, 0).Format("2006-01")
 }
 
 func meterReadingDueDate(monthStart time.Time, meterReadingDay int) time.Time {

@@ -156,7 +156,17 @@ onBeforeUnmount(() => {
     <div class="panel toolbar readings-toolbar">
       <label class="field month-filter">
         <span>抄表月份</span>
-        <input v-model="month" type="month" required :disabled="!selectedUnitId" />
+        <el-date-picker
+          v-model="month"
+          type="month"
+          format="YYYY-MM"
+          value-format="YYYY-MM"
+          value-on-clear=""
+          popper-class="rent-date-picker"
+          placeholder="选择抄表月份"
+          :disabled="!selectedUnitId"
+          aria-label="抄表月份"
+        />
       </label>
       <label class="field search-filter">
         <span>查找房间</span>

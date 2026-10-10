@@ -45,7 +45,7 @@ func (s *Service) CreateUnit(
 	if err != nil {
 		return nil, err
 	}
-	config, err := toDomainUnitConfig(cmd.JsonExtend)
+	config, err := toDomainUnitConfig(cmd.JsonExtend, domainunit.DefaultUnitConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (s *Service) UpdateUnit(
 	if err != nil {
 		return nil, err
 	}
-	config, err := toDomainUnitConfig(cmd.JsonExtend)
+	config, err := toDomainUnitConfig(cmd.JsonExtend, existing.Config)
 	if err != nil {
 		return nil, err
 	}

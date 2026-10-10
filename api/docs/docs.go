@@ -189,6 +189,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/account": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "修改当前账号名称",
+                "parameters": [
+                    {
+                        "description": "账号名称（去除首尾空白后为 1–64 个字符，不允许控制字符）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.UpdateAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-authkit_Account"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/email-login": {
             "post": {
                 "consumes": [
@@ -2166,6 +2204,16 @@ const docTemplate = `{
                 }
             }
         },
+        "auth.UpdateAccountRequest": {
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "minLength": 1
+                }
+            }
+        },
         "authkit.Account": {
             "type": "object",
             "properties": {
@@ -2345,6 +2393,18 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/auth.SendEmailCodeResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-authkit_Account": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/authkit.Account"
                 },
                 "message": {}
             }

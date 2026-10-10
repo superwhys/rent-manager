@@ -87,7 +87,7 @@ func main() {
 		codeSender, err = emailcode.NewSender(authConfig.SMTP)
 		logging.PanicError(err)
 	}
-	authService, err := appauth.NewService(authStore, codeSender, authkit.Config{
+	authService, err := appauth.NewService(authStore, mysql.NewAccountProfileRepository(client), codeSender, authkit.Config{
 		SessionTTL: authConfig.SessionTTL,
 	})
 	logging.PanicError(err)

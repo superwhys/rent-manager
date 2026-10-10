@@ -18,6 +18,7 @@ import (
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:                        db,
+		Account:                   newAccount(db, opts...),
 		AccountSetting:            newAccountSetting(db, opts...),
 		MeterItem:                 newMeterItem(db, opts...),
 		MeterReading:              newMeterReading(db, opts...),
@@ -38,6 +39,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 type Query struct {
 	db *gorm.DB
 
+	Account                   account
 	AccountSetting            accountSetting
 	MeterItem                 meterItem
 	MeterReading              meterReading
@@ -61,6 +63,7 @@ func (q *Query) UnderlyingDB() *gorm.DB { return q.db }
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:                        db,
+		Account:                   q.Account.clone(db),
 		AccountSetting:            q.AccountSetting.clone(db),
 		MeterItem:                 q.MeterItem.clone(db),
 		MeterReading:              q.MeterReading.clone(db),
@@ -89,6 +92,7 @@ func (q *Query) WriteDB() *Query {
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:                        db,
+		Account:                   q.Account.replaceDB(db),
 		AccountSetting:            q.AccountSetting.replaceDB(db),
 		MeterItem:                 q.MeterItem.replaceDB(db),
 		MeterReading:              q.MeterReading.replaceDB(db),
@@ -107,6 +111,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 }
 
 type queryCtx struct {
+	Account                   IAccountDo
 	AccountSetting            IAccountSettingDo
 	MeterItem                 IMeterItemDo
 	MeterReading              IMeterReadingDo
@@ -125,6 +130,7 @@ type queryCtx struct {
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
+		Account:                   q.Account.WithContext(ctx),
 		AccountSetting:            q.AccountSetting.WithContext(ctx),
 		MeterItem:                 q.MeterItem.WithContext(ctx),
 		MeterReading:              q.MeterReading.WithContext(ctx),

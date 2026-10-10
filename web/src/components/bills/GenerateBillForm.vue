@@ -46,7 +46,17 @@ function submit() {
     <p class="muted form-intro">按房间租金和当月抄表费用生成账单，请先完成当月抄表。</p>
     <label class="field">
       <span>账单月份</span>
-      <input v-model="periodMonth" type="month" required :disabled="busy" />
+      <el-date-picker
+        v-model="periodMonth"
+        type="month"
+        format="YYYY-MM"
+        value-format="YYYY-MM"
+        value-on-clear=""
+        popper-class="rent-date-picker"
+        placeholder="选择账单月份"
+        :disabled="busy"
+        aria-label="账单月份"
+      />
       <small v-if="attempted && !monthValid" class="field-error">请选择有效的账单月份</small>
     </label>
     <div class="field">

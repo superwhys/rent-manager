@@ -23,7 +23,7 @@ const (
 var fixedHomeNow = time.Date(2026, time.June, 20, 9, 0, 0, 0, time.UTC)
 
 func TestGetHomeSummaryBuildsDynamicTodos(t *testing.T) {
-	periodMonth := "2026-05"
+	periodMonth := "2026-06"
 	unit := &domainunit.Unit{ID: 1, AccountID: testAccountID10, Name: "幸福小区 · 3栋"}
 	water := &domainmeteritem.MeterItem{ID: 1}
 	rooms := []*domainroom.Room{
@@ -88,14 +88,14 @@ func TestGetHomeSummaryBuildsDynamicTodos(t *testing.T) {
 		t.Fatalf("room count = %d, want 7", summary.RoomCount)
 	}
 	assertHomeTodos(t, summary.Todos, []Todo{
-		{Title: unit.Name, Description: "还有 1 间房未抄表", Tag: todoTagMeterReading},
-		{Title: unit.Name, Description: "还有 2 间房待生成账单", Tag: todoTagBillGeneration},
-		{Title: unit.Name, Description: "还有 1 笔租金待收", Tag: todoTagRentCollection},
+		{Title: unit.Name, Description: "2026-06 月抄表已逾期，还有 1 间房未抄表", Tag: todoTagMeterReading},
+		{Title: unit.Name, Description: "2026-06 月还有 2 间房待生成账单", Tag: todoTagBillGeneration},
+		{Title: unit.Name, Description: "2026-06 月还有 1 笔租金待收", Tag: todoTagRentCollection},
 	})
 }
 
 func TestGetHomeSummaryFiltersTodosByPermission(t *testing.T) {
-	periodMonth := "2026-05"
+	periodMonth := "2026-06"
 	unit := &domainunit.Unit{ID: 1, AccountID: testAccountID20, Name: "阳光公寓 · 1栋"}
 	water := &domainmeteritem.MeterItem{ID: 1}
 	rooms := []*domainroom.Room{
@@ -132,8 +132,8 @@ func TestGetHomeSummaryFiltersTodosByPermission(t *testing.T) {
 			t.Fatalf("GetHomeSummary() error = %v", err)
 		}
 		assertHomeTodos(t, summary.Todos, []Todo{
-			{Title: unit.Name, Description: "还有 1 间房待生成账单", Tag: todoTagBillGeneration},
-			{Title: unit.Name, Description: "还有 1 笔租金待收", Tag: todoTagRentCollection},
+			{Title: unit.Name, Description: "2026-06 月还有 1 间房待生成账单", Tag: todoTagBillGeneration},
+			{Title: unit.Name, Description: "2026-06 月还有 1 笔租金待收", Tag: todoTagRentCollection},
 		})
 	})
 
@@ -155,67 +155,12 @@ func TestGetHomeSummaryFiltersTodosByPermission(t *testing.T) {
 			t.Fatalf("GetHomeSummary() error = %v", err)
 		}
 		assertHomeTodos(t, summary.Todos, []Todo{
-			{Title: unit.Name, Description: "还有 1 间房未抄表", Tag: todoTagMeterReading},
+			{Title: unit.Name, Description: "2026-06 月抄表已逾期，还有 1 间房未抄表", Tag: todoTagMeterReading},
 		})
 	})
 }
 
-func TestTodoPeriodMonthByMeterReadingDay(t *testing.T) {
-	tests := []struct {
-		name            string
-		now             time.Time
-		meterReadingDay int
-		want            string
-	}{
-		{
-			name:            "before configured day uses previous due cycle",
-			now:             time.Date(2026, time.June, 18, 9, 0, 0, 0, time.UTC),
-			meterReadingDay: 20,
-			want:            "2026-04",
-		},
-		{
-			name:            "on configured day uses previous month",
-			now:             time.Date(2026, time.June, 20, 9, 0, 0, 0, time.UTC),
-			meterReadingDay: 20,
-			want:            "2026-05",
-		},
-		{
-			name:            "after configured day uses previous month",
-			now:             time.Date(2026, time.June, 21, 9, 0, 0, 0, time.UTC),
-			meterReadingDay: 20,
-			want:            "2026-05",
-		},
-		{
-			name:            "short month clamps day 31 to month end",
-			now:             time.Date(2026, time.April, 30, 9, 0, 0, 0, time.UTC),
-			meterReadingDay: 31,
-			want:            "2026-03",
-		},
-		{
-			name:            "before short month end uses previous due cycle",
-			now:             time.Date(2026, time.April, 29, 9, 0, 0, 0, time.UTC),
-			meterReadingDay: 31,
-			want:            "2026-02",
-		},
-		{
-			name:            "zero day falls back to default day",
-			now:             time.Date(2026, time.June, 18, 9, 0, 0, 0, time.UTC),
-			meterReadingDay: 0,
-			want:            "2026-05",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := todoPeriodMonthByMeterReadingDay(tt.now, tt.meterReadingDay)
-			if got != tt.want {
-				t.Fatalf("todoPeriodMonthByMeterReadingDay() = %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestGetHomeSummaryUsesLastDueTodoPeriodBeforeMeterReadingDay(t *testing.T) {
+func TestGetHomeSummaryUsesCurrentMonthBeforeMeterReadingDay(t *testing.T) {
 	now := time.Date(2026, time.June, 18, 9, 0, 0, 0, time.UTC)
 	unit := &domainunit.Unit{
 		ID:        1,
@@ -256,11 +201,12 @@ func TestGetHomeSummaryUsesLastDueTodoPeriodBeforeMeterReadingDay(t *testing.T) 
 		t.Fatalf("GetHomeSummary() error = %v", err)
 	}
 	assertHomeTodos(t, summary.Todos, []Todo{
-		{Title: unit.Name, Description: "还有 1 间房未抄表", Tag: todoTagMeterReading},
+		{Title: unit.Name, Description: "2026-06 月还有 1 间房待抄表，计划 2026-06-20 抄表", Tag: todoTagMeterReading},
+		{Title: unit.Name, Description: "2026-05 月还有 1 笔租金待收", Tag: todoTagRentCollection},
 	})
 }
 
-func TestGetHomeSummaryUsesPreviousMonthOnMeterReadingDay(t *testing.T) {
+func TestGetHomeSummaryUsesCurrentMonthOnMeterReadingDay(t *testing.T) {
 	unit := &domainunit.Unit{
 		ID:        1,
 		AccountID: testAccountID10,
@@ -279,7 +225,7 @@ func TestGetHomeSummaryUsesPreviousMonthOnMeterReadingDay(t *testing.T) {
 		[]*domainunit.Unit{unit},
 		[]*domainroom.Room{room},
 		[]*domainmeterreading.MeterReading{
-			{RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-05", UsageAmount: &usage},
+			{RoomID: 11, MeterItemID: 1, PeriodMonth: "2026-06", UsageAmount: &usage},
 		},
 		nil,
 		&fakeHomeRbacService{},
@@ -291,11 +237,11 @@ func TestGetHomeSummaryUsesPreviousMonthOnMeterReadingDay(t *testing.T) {
 		t.Fatalf("GetHomeSummary() error = %v", err)
 	}
 	assertHomeTodos(t, summary.Todos, []Todo{
-		{Title: unit.Name, Description: "还有 1 间房待生成账单", Tag: todoTagBillGeneration},
+		{Title: unit.Name, Description: "2026-06 月还有 1 间房待生成账单", Tag: todoTagBillGeneration},
 	})
 }
 
-func TestGetHomeSummaryRentCollectionUsesTodoPeriodMonth(t *testing.T) {
+func TestGetHomeSummaryRentCollectionIncludesHistoricalMonths(t *testing.T) {
 	unit := &domainunit.Unit{
 		ID:        1,
 		AccountID: testAccountID10,
@@ -350,7 +296,8 @@ func TestGetHomeSummaryRentCollectionUsesTodoPeriodMonth(t *testing.T) {
 		t.Fatalf("GetHomeSummary() error = %v", err)
 	}
 	assertHomeTodos(t, summary.Todos, []Todo{
-		{Title: unit.Name, Description: "还有 1 笔租金待收", Tag: todoTagRentCollection},
+		{Title: unit.Name, Description: "2026-05 月还有 1 笔租金待收", Tag: todoTagRentCollection},
+		{Title: unit.Name, Description: "2026-06 月还有 2 笔租金待收", Tag: todoTagRentCollection},
 	})
 }
 
@@ -702,6 +649,9 @@ func (r *fakeHomeMeterReadingRepo) List(
 			continue
 		}
 		if query.PeriodMonth != "" && reading.PeriodMonth != query.PeriodMonth {
+			continue
+		}
+		if query.PeriodMonthTo != "" && reading.PeriodMonth > query.PeriodMonthTo {
 			continue
 		}
 		readings = append(readings, reading)

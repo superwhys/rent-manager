@@ -1,11 +1,13 @@
 import { request } from './request'
 import type {
+  Account,
   EmailCodeResult,
   EmailLoginRequest,
   LoginResult,
   PasswordLoginRequest,
   RegisterRequest,
   Session,
+  UpdateAccountRequest,
 } from '@/types/auth'
 
 export const sendEmailCode = (email: string) =>
@@ -40,5 +42,7 @@ export const loginEmail = (body: EmailLoginRequest, signal?: AbortSignal) =>
   })
 export const getSession = (token?: string) =>
   request<Session>('/auth/session', { token })
+export const updateAccount = (body: UpdateAccountRequest) =>
+  request<Account>('/auth/account', { method: 'PATCH', body })
 export const revokeSession = () =>
   request<null>('/auth/session', { method: 'DELETE' })

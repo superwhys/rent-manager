@@ -5,6 +5,7 @@ import {
   loginPassword,
   registerEmail,
   revokeSession,
+  updateAccount,
 } from '@/api/auth'
 import { ApiError, configureSession } from '@/api/request'
 import type {
@@ -84,6 +85,17 @@ export function useSession() {
     isSuperAdmin: computed(() => session.value?.is_super_admin === true),
     accountName: computed(() => session.value?.account.Username || '我的账号'),
     initialize,
+    async updateAccountName(username: string) {
+      const currentToken = token.value
+      const account = await updateAccount({ username })
+      if (
+        session.value &&
+        token.value === currentToken &&
+        session.value.account.ID === account.ID
+      ) {
+        session.value = { ...session.value, account }
+      }
+    },
     async loginWithPassword(body: PasswordLoginRequest, signal?: AbortSignal) {
       const result = await loginPassword(body, signal)
       signal?.throwIfAborted()

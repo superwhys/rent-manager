@@ -189,10 +189,14 @@ watch(
       </div>
       <label class="field">
         <span>计费方式</span>
-        <select v-model="draft.calc_type" :disabled="busy">
-          <option value="DIFFERENCE">差值计费</option>
-          <option value="DIRECT">直接计费</option>
-        </select>
+        <el-select
+          v-model="draft.calc_type"
+          :disabled="busy"
+          aria-label="计费方式"
+        >
+          <el-option value="DIFFERENCE" label="差值计费" />
+          <el-option value="DIRECT" label="直接计费" />
+        </el-select>
         <small class="muted">{{
           draft.calc_type === 'DIFFERENCE'
             ? '本次读数减去上次读数，计算实际用量。'

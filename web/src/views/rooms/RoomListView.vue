@@ -319,9 +319,10 @@ async function removeRoom(room: Room) {
             >
           </div>
           <div class="room-card-actions">
-            <el-button text type="primary" @click="openForm(room)"
-              ><AppIcon name="edit" />编辑房间</el-button
-            >
+            <el-button text type="primary" @click="openForm(room)">
+              <template #icon><AppIcon name="edit" /></template>
+              编辑房间
+            </el-button>
             <el-button
               text
               type="danger"

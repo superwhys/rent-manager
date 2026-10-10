@@ -102,9 +102,11 @@ async function submit() {
 <template>
   <el-form
     ref="form"
+    class="unit-form"
     :model="draft"
     :rules="rules"
     label-position="top"
+    size="large"
     @submit.prevent="submit"
   >
     <el-form-item label="楼栋名称" prop="name">
@@ -144,7 +146,9 @@ async function submit() {
         :max="31"
         :precision="0"
       />
-      <span class="field-note">日</span>
+      <p class="muted form-hint">
+        每月抄当月，可提前录入；超过计划日未完成会提示逾期，短月按月末。
+      </p>
     </el-form-item>
     <el-form-item label="默认收费项目">
       <el-select
@@ -184,8 +188,8 @@ async function submit() {
 </template>
 
 <style scoped>
-.field-note {
-  margin-left: 0.6rem;
+.unit-form :deep(.el-input-number) {
+  width: 100%;
 }
 .form-hint {
   margin: 0.5rem 0 0;

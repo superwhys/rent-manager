@@ -149,12 +149,11 @@ func ToUnitSummaryResponse(summary *Summary) UnitListResponse {
 	return response
 }
 
-func toDomainUnitConfig(cmd *UnitConfigCommand) (*domainunit.UnitConfig, error) {
-	if cmd == nil || cmd.MeterReadingDay == nil {
-		return nil, nil
+func toDomainUnitConfig(cmd *UnitConfigCommand, config domainunit.UnitConfig) (*domainunit.UnitConfig, error) {
+	if cmd != nil && cmd.MeterReadingDay != nil {
+		config.MeterReadingDay = *cmd.MeterReadingDay
 	}
-	config, err := domainunit.NewUnitConfig(*cmd.MeterReadingDay)
-	if err != nil {
+	if err := config.Validate(); err != nil {
 		return nil, err
 	}
 	return &config, nil
@@ -162,7 +161,7 @@ func toDomainUnitConfig(cmd *UnitConfigCommand) (*domainunit.UnitConfig, error) 
 
 func toUnitConfigResponse(config domainunit.UnitConfig) UnitConfigResponse {
 	if config.MeterReadingDay == 0 {
-		config = domainunit.DefaultUnitConfig()
+		config.MeterReadingDay = domainunit.DefaultMeterReadingDay
 	}
 	return UnitConfigResponse{
 		MeterReadingDay: config.MeterReadingDay,

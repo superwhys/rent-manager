@@ -4,6 +4,10 @@ export interface Account {
   Email: string
 }
 
+export interface UpdateAccountRequest {
+  username: string
+}
+
 export interface Session {
   account: Account
   expires_at: string

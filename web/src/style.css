@@ -208,6 +208,10 @@ input[type='radio'] {
 .el-date-editor {
   --el-component-size: 40px;
 }
+.field .el-date-editor.el-input {
+  width: 100%;
+  min-width: 0;
+}
 .el-input__wrapper,
 .el-select__wrapper {
   border-radius: 8px;
@@ -255,6 +259,18 @@ body .el-message-box {
 }
 .el-tabs__item {
   font-weight: 500;
+}
+@media (max-width: 360px) {
+  .rent-date-picker .el-date-picker {
+    width: calc(100vw - 24px);
+  }
+  .rent-date-picker .el-date-picker .el-picker-panel__content {
+    width: calc(100% - 30px);
+  }
+  .rent-date-picker .el-date-picker .el-time-panel {
+    left: auto;
+    right: 0;
+  }
 }
 @media (max-width: 640px) {
   .panel {

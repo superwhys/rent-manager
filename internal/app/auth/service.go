@@ -2,27 +2,60 @@ package auth
 
 import (
 	"context"
+	"errors"
+	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/miebyte/authkit"
+
+	appcore "github.com/superwhys/rent-manager/internal/app"
 )
+
+type AccountProfileRepository interface {
+	UpdateUsername(context.Context, string, string) error
+}
 
 // Service 只在注册用例中允许 authkit 新建账号。
 type Service struct {
 	*authkit.Service
-	store authkit.Store
+	store    authkit.Store
+	profiles AccountProfileRepository
 }
 
 func NewService(
 	store authkit.Store,
+	profiles AccountProfileRepository,
 	sender authkit.CodeSender,
 	config authkit.Config,
 ) (*Service, error) {
+	if profiles == nil {
+		return nil, errors.New("账号资料仓储未配置")
+	}
 	service, err := authkit.NewService(store, sender, nil, nil, config)
 	if err != nil {
 		return nil, err
 	}
-	return &Service{Service: service, store: store}, nil
+	return &Service{Service: service, store: store, profiles: profiles}, nil
+}
+
+// UpdateAccount 只修改当前登录账号的展示名称，保留登录凭证与会话。
+func (s *Service) UpdateAccount(ctx context.Context, input UpdateAccountRequest) (*authkit.Account, error) {
+	accountID, err := appcore.AccountIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !utf8.ValidString(input.Username) || strings.ContainsFunc(input.Username, unicode.IsControl) {
+		return nil, authkit.ErrInvalidInput
+	}
+	username := strings.TrimSpace(input.Username)
+	if username == "" || utf8.RuneCountInString(username) > 64 {
+		return nil, authkit.ErrInvalidInput
+	}
+	if err := s.profiles.UpdateUsername(ctx, accountID, username); err != nil {
+		return nil, err
+	}
+	return s.store.Accounts().GetByID(ctx, accountID)
 }
 
 // Register 原子地验证邮箱、创建账号、设置密码并签发有效会话。

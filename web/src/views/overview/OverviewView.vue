@@ -87,9 +87,15 @@ onMounted(load)
     :description="`${today} · 欢迎回到你的租赁工作台`"
   >
     <template #actions>
-      <el-button :loading="loading" aria-label="刷新经营概览" @click="load"
-        ><AppIcon name="refresh" :size="15" /> <span>刷新</span></el-button
+      <el-button
+        class="overview-refresh"
+        :loading="loading"
+        aria-label="刷新经营概览"
+        @click="load"
       >
+        <AppIcon name="refresh" :size="15" />
+        <span>刷新</span>
+      </el-button>
       <RouterLink class="btn btn-primary" to="/properties"
         ><AppIcon name="plus" :size="17" /> 管理房源</RouterLink
       >
@@ -183,68 +189,84 @@ onMounted(load)
               >全部房源 <AppIcon name="chevron-right" :size="14"
             /></RouterLink>
           </div>
-          <AsyncState
-            :loading="unitsLoading"
-            :error="unitsError"
-            :empty="units.length === 0"
-            empty-title="从你的第一处房源开始"
-            empty-description="添加楼栋后，就可以管理房间、记录抄表和生成账单。"
-            @retry="loadUnits"
+          <el-scrollbar
+            class="overview-scrollbar"
+            always
+            :tabindex="0"
+            role="region"
+            aria-label="我的房源列表"
           >
-            <div class="property-list">
-              <RouterLink
-                v-for="unit in units.slice(0, 4)"
-                :key="unit.id"
-                class="property-row"
-                to="/rooms"
-                @click="setSelectedUnit(unit.id)"
-              >
-                <span class="property-icon"
-                  ><AppIcon name="building" :size="25"
-                /></span>
-                <div class="property-description">
-                  <strong>{{ unit.name }}</strong
-                  ><span v-if="unit.address !== undefined"
-                    >{{ unit.province }} {{ unit.city }} ·
-                    {{ unit.address }}</span
-                  >
-                  <span v-else>详细资料未授权</span>
-                </div>
-                <div class="property-numbers">
-                  <strong
-                    >{{ unit.rented_count ?? '—'
-                    }}<span> / {{ unit.room_count ?? '—' }}</span></strong
-                  ><small>已出租 / 总房间</small>
-                </div>
-                <AppIcon name="chevron-right" :size="15" />
-              </RouterLink>
-            </div>
-          </AsyncState>
+            <AsyncState
+              :loading="unitsLoading"
+              :error="unitsError"
+              :empty="units.length === 0"
+              empty-title="从你的第一处房源开始"
+              empty-description="添加楼栋后，就可以管理房间、记录抄表和生成账单。"
+              @retry="loadUnits"
+            >
+              <div class="property-list">
+                <RouterLink
+                  v-for="unit in units"
+                  :key="unit.id"
+                  class="property-row"
+                  to="/rooms"
+                  @click="setSelectedUnit(unit.id)"
+                >
+                  <span class="property-icon"
+                    ><AppIcon name="building" :size="25"
+                  /></span>
+                  <div class="property-description">
+                    <strong>{{ unit.name }}</strong
+                    ><span v-if="unit.address !== undefined"
+                      >{{ unit.province }} {{ unit.city }} ·
+                      {{ unit.address }}</span
+                    >
+                    <span v-else>详细资料未授权</span>
+                  </div>
+                  <div class="property-numbers">
+                    <strong
+                      >{{ unit.rented_count ?? '—'
+                      }}<span> / {{ unit.room_count ?? '—' }}</span></strong
+                    ><small>已出租 / 总房间</small>
+                  </div>
+                  <AppIcon name="chevron-right" :size="15" />
+                </RouterLink>
+              </div>
+            </AsyncState>
+          </el-scrollbar>
         </section>
         <section class="panel todo-panel">
           <div class="section-title">
             <h2>待办提醒</h2>
             <span class="count-label">{{ data.todos.length }}</span>
           </div>
-          <div v-if="!data.todos.length" class="todo-empty">
-            <AppIcon name="check" :size="28" />
-            <h3>今天，一切就绪</h3>
-            <p>暂时没有待处理事项。</p>
-          </div>
-          <div
-            v-for="(todo, index) in data.todos"
-            :key="`${todo.title}-${index}`"
-            class="todo-item"
+          <el-scrollbar
+            class="overview-scrollbar"
+            always
+            :tabindex="0"
+            role="region"
+            aria-label="待办提醒列表"
           >
-            <span class="todo-dot" />
-            <div>
-              <div class="todo-title">
-                <h3>{{ todo.title }}</h3>
-                <span>{{ todo.tag }}</span>
-              </div>
-              <p>{{ todo.description }}</p>
+            <div v-if="!data.todos.length" class="todo-empty">
+              <AppIcon name="check" :size="28" />
+              <h3>今天，一切就绪</h3>
+              <p>暂时没有待处理事项。</p>
             </div>
-          </div>
+            <div
+              v-for="(todo, index) in data.todos"
+              :key="`${todo.title}-${index}`"
+              class="todo-item"
+            >
+              <span class="todo-dot" />
+              <div>
+                <div class="todo-title">
+                  <h3>{{ todo.title }}</h3>
+                  <span>{{ todo.tag }}</span>
+                </div>
+                <p>{{ todo.description }}</p>
+              </div>
+            </div>
+          </el-scrollbar>
           <RouterLink to="/bills" class="todo-action"
             >前往账单管理 <AppIcon name="arrow-right" :size="16"
           /></RouterLink>
@@ -267,6 +289,9 @@ onMounted(load)
 </template>
 
 <style scoped>
+.overview-refresh :deep(> span) {
+  gap: 0.5rem;
+}
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -520,11 +545,27 @@ onMounted(load)
 }
 .overview-bottom {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: 1.5rem;
 }
 .overview-bottom .panel {
   margin: 0;
+  min-width: 0;
+  min-height: 420px;
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+.overview-bottom .section-title,
+.todo-action {
+  flex-shrink: 0;
+}
+.overview-scrollbar {
+  flex: 1;
+  min-height: 0;
+}
+.overview-scrollbar :deep(.el-scrollbar__view) {
+  padding-right: 0.75rem;
 }
 .count-label {
   font-size: 0.7rem;
@@ -618,9 +659,12 @@ onMounted(load)
 }
 .todo-item > div {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .todo-title {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.6rem;
   align-items: center;
 }

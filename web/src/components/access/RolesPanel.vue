@@ -220,10 +220,14 @@ watch(bindingAction, () => {
       </p>
       <label class="field">
         <span>本次操作</span>
-        <select v-model="bindingAction" :disabled="busy">
-          <option value="add">添加权限组</option>
-          <option value="remove">移除权限组</option>
-        </select>
+        <el-select
+          v-model="bindingAction"
+          :disabled="busy"
+          aria-label="权限组绑定操作"
+        >
+          <el-option value="add" label="添加权限组" />
+          <el-option value="remove" label="移除权限组" />
+        </el-select>
       </label>
       <label class="field">
         <span>权限组</span>

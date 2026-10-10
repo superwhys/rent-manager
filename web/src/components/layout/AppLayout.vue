@@ -88,7 +88,7 @@ async function logout() {
         </div>
         <RouterLink to="/settings" class="account-link">
           <span class="avatar">{{
-            auth.accountName.value.slice(0, 1).toUpperCase()
+            Array.from(auth.accountName.value)[0]?.toUpperCase()
           }}</span>
           <span class="account-copy">
             <strong>{{ auth.accountName.value }}</strong>

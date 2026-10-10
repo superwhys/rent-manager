@@ -123,11 +123,16 @@ watch(
       </label>
       <label class="field">
         <span>授权状态</span>
-        <select v-model="filters.status" :disabled="busy">
-          <option value="active">有效</option>
-          <option value="disabled">已停用</option>
-          <option value="">全部状态</option>
-        </select>
+        <el-select
+          v-model="filters.status"
+          :disabled="busy"
+          :empty-values="[null, undefined]"
+          aria-label="授权状态"
+        >
+          <el-option value="active" label="有效" />
+          <el-option value="disabled" label="已停用" />
+          <el-option value="" label="全部状态" />
+        </el-select>
       </label>
       <button
         class="btn btn-secondary"

@@ -1,12 +1,25 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  accountNameError,
   emailError,
   verificationCodeError,
   registrationPasswordError,
   loginPasswordError,
   safeAuthRedirect,
 } from '../src/utils/authValidation.ts'
+
+test('账号名称去除首尾空白，按 Unicode 字符限制长度并拒绝控制字符', () => {
+  for (const name of ['  我的账号  ', '租序 @团队', '😀'.repeat(64)]) {
+    assert.equal(accountNameError(name), '')
+  }
+  for (const name of ['', '   ', '名'.repeat(65), '😀'.repeat(65)]) {
+    assert.ok(accountNameError(name))
+  }
+  for (const name of ['名称\n', '\t名称', '名\u0000称', '名\u0085称']) {
+    assert.match(accountNameError(name), /控制字符/)
+  }
+})
 
 test('邮箱校验接受首尾空白，拒绝空值、不完整地址与超长地址', () => {
   assert.equal(emailError('  Owner@example.com  '), '')

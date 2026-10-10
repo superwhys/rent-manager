@@ -66,6 +66,13 @@ definitions:
       resend_after_seconds:
         type: integer
     type: object
+  auth.UpdateAccountRequest:
+    properties:
+      username:
+        maxLength: 64
+        minLength: 1
+        type: string
+    type: object
   authkit.Account:
     properties:
       Email:
@@ -186,6 +193,14 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/auth.SendEmailCodeResponse'
+      message: {}
+    type: object
+  ginutils.Ret-authkit_Account:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/authkit.Account'
       message: {}
     type: object
   ginutils.Ret-home_Response:
@@ -1204,6 +1219,29 @@ paths:
       summary: 获取代码定义的固定权限列表
       tags:
       - admin
+  /auth/account:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账号名称（去除首尾空白后为 1–64 个字符，不允许控制字符）
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.UpdateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-authkit_Account'
+      security:
+      - BearerAuth: []
+      summary: 修改当前账号名称
+      tags:
+      - auth
   /auth/email-login:
     post:
       consumes:

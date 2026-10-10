@@ -41,3 +41,12 @@ export function safeAuthRedirect(value: unknown): string {
     return '/dashboard'
   }
 }
+
+export function accountNameError(value: string): string {
+  if (/[\u0000-\u001f\u007f-\u009f]/u.test(value))
+    return '账号名称不能包含控制字符'
+  const name = value.trim()
+  if (!name) return '请输入账号名称'
+  if ([...name].length > 64) return '账号名称不能超过 64 个字符'
+  return ''
+}

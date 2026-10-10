@@ -2,6 +2,7 @@ package routers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	apiresponse "github.com/superwhys/rent-manager/api/response"
 	"github.com/superwhys/rent-manager/config"
 	appauth "github.com/superwhys/rent-manager/internal/app/auth"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 type AuthService interface {
@@ -21,6 +23,7 @@ type AuthService interface {
 	LoginEmail(context.Context, authkit.EmailLoginInput) (*authkit.LoginResult, error)
 	LoginPassword(context.Context, authkit.PasswordLoginInput) (*authkit.LoginResult, error)
 	Register(context.Context, appauth.RegisterRequest, string) (*authkit.LoginResult, error)
+	UpdateAccount(context.Context, appauth.UpdateAccountRequest) (*authkit.Account, error)
 	Logout(context.Context, string) error
 }
 
@@ -51,10 +54,36 @@ func AuthRouter(authService AuthService, adminConfig *config.AdminConfig) ginuti
 		ginutils.WithHandler(http.MethodPost, "/password-login", PasswordLoginHandler(authService, adminConfig)),
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(authService)),
+			ginutils.WithHandler(http.MethodPatch, "/account", UpdateAccountHandler(authService)),
 			ginutils.WithHandler(http.MethodGet, "/session", SessionHandler(adminConfig)),
 			ginutils.WithHandler(http.MethodDelete, "/session", LogoutHandler(authService)),
 		),
 	)
+}
+
+// UpdateAccountHandler godoc
+// @Summary 修改当前账号名称
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body appauth.UpdateAccountRequest true "账号名称（去除首尾空白后为 1–64 个字符，不允许控制字符）"
+// @Success 200 {object} ginutils.Ret[authkit.Account]
+// @Security BearerAuth
+// @Router /auth/account [patch]
+func UpdateAccountHandler(authService AuthService) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *appauth.UpdateAccountRequest) {
+		account, err := authService.UpdateAccount(c.Request.Context(), *req)
+		if errors.Is(err, authkit.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, apiresponse.ErrorResponseWithCode(
+				xerr.ErrBadRequest.WithMessage("账号名称须为 1–64 个字符，且不能包含控制字符"),
+			))
+			return
+		}
+		if apiresponse.HandleAuthError(c, err) {
+			return
+		}
+		c.JSON(http.StatusOK, apiresponse.ResponseWithData(account))
+	})
 }
 
 // SendEmailCodeHandler godoc

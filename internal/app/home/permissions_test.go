@@ -73,7 +73,10 @@ func TestGetHomeSummaryFiltersAggregatesByPermission(t *testing.T) {
 			}
 			var wantTodos []Todo
 			if tt.canReadings {
-				wantTodos = []Todo{{Title: "授权楼栋", Description: "还有 1 间房未抄表", Tag: todoTagMeterReading}}
+				wantTodos = []Todo{{Title: "授权楼栋", Description: "2026-06 月抄表已逾期，还有 1 间房未抄表", Tag: todoTagMeterReading}}
+			}
+			if tt.canBills {
+				wantTodos = append(wantTodos, Todo{Title: "授权楼栋", Description: "2026-06 月还有 1 笔租金待收", Tag: todoTagRentCollection})
 			}
 			assertHomeTodos(t, summary.Todos, wantTodos)
 		})

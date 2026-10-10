@@ -18,7 +18,10 @@ import (
 	"gorm.io/gorm/migrator"
 	"gorm.io/gorm/schema"
 
+	appcore "github.com/superwhys/rent-manager/internal/app"
 	appauth "github.com/superwhys/rent-manager/internal/app/auth"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql"
+	"github.com/superwhys/rent-manager/internal/xerr"
 )
 
 // sqliteAuthDialector keeps authkit's schema while adapting MySQL-only column types.
@@ -76,7 +79,7 @@ func newAuthFixture(t *testing.T) authFixture {
 		t.Fatal(err)
 	}
 	sender := &codeSender{}
-	service, err := appauth.NewService(authmysql.Bind(db), sender, authkit.Config{})
+	service, err := appauth.NewService(authmysql.Bind(db), mysql.NewAccountProfileRepository(db), sender, authkit.Config{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,5 +349,104 @@ func TestRegistrationRateLimitDoesNotLeavePartialAccount(t *testing.T) {
 	}
 	if _, err := f.service.Register(context.Background(), request, "192.0.2.8"); err != nil {
 		t.Fatalf("limited registration consumed code or left conflicting binding: %v", err)
+	}
+}
+
+func TestUpdateAccountPersistsDisplayNameAndPreservesLogin(t *testing.T) {
+	f := newAuthFixture(t)
+	registered := f.register(t)
+	ctx := appcore.SetAccountIDToContext(context.Background(), registered.Account.ID)
+	other := authkit.Account{ID: strings.Repeat("b", 64), Username: "其他账号"}
+	if err := authmysql.Bind(f.db).WithTransaction(ctx, func(repos authkit.Repositories) error {
+		return repos.Accounts().Create(ctx, &other, authkit.Credential{
+			Method: authkit.MethodEmail, Identifier: "other@example.com",
+		})
+	}); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"房东 @团队", strings.Repeat("名", 64)} {
+		account, err := f.service.UpdateAccount(ctx, appauth.UpdateAccountRequest{Username: "　 " + name + " 　"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if account.ID != registered.Account.ID || account.Username != name || account.Email != registered.Account.Email {
+			t.Fatalf("updated account = %+v", account)
+		}
+		session, err := f.service.AuthenticateSession(ctx, registered.Token)
+		if err != nil || session.Account != *account {
+			t.Fatalf("session did not read saved account: %+v, %v", session, err)
+		}
+		if _, err := f.service.UpdateAccount(ctx, appauth.UpdateAccountRequest{Username: name}); err != nil {
+			t.Fatalf("saving unchanged name failed: %v", err)
+		}
+	}
+	storedOther, err := authmysql.Bind(f.db).Accounts().GetByID(ctx, other.ID)
+	if err != nil || storedOther.Username != other.Username {
+		t.Fatalf("another account changed: %+v, %v", storedOther, err)
+	}
+	login, err := f.service.LoginPassword(ctx, authkit.PasswordLoginInput{
+		Identifier: registered.Account.Email, Password: "  original-password  ", IP: "192.0.2.8",
+	})
+	if err != nil || login.Account.ID != registered.Account.ID || login.Account.Username != strings.Repeat("名", 64) {
+		t.Fatalf("display name update affected password login: %+v, %v", login, err)
+	}
+}
+
+func TestUpdateAccountRejectsInvalidNamesWithoutChangingAccount(t *testing.T) {
+	f := newAuthFixture(t)
+	registered := f.register(t)
+	ctx := appcore.SetAccountIDToContext(context.Background(), registered.Account.ID)
+	for _, tt := range []struct {
+		name     string
+		username string
+	}{
+		{name: "empty"},
+		{name: "whitespace", username: "　   "},
+		{name: "long ASCII", username: strings.Repeat("a", 65)},
+		{name: "long Unicode", username: strings.Repeat("名", 65)},
+		{name: "embedded newline", username: "账号\n名称"},
+		{name: "trailing newline", username: "账号\n"},
+		{name: "tab", username: "\t账号"},
+		{name: "NUL", username: "账号\x00"},
+		{name: "DEL", username: "账号\x7f"},
+		{name: "invalid UTF-8", username: "\xff"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := f.service.UpdateAccount(ctx, appauth.UpdateAccountRequest{Username: tt.username}); !errors.Is(err, authkit.ErrInvalidInput) {
+				t.Fatalf("invalid display name = %v", err)
+			}
+			stored, err := authmysql.Bind(f.db).Accounts().GetByID(ctx, registered.Account.ID)
+			if err != nil || *stored != registered.Account {
+				t.Fatalf("rejected update changed account: %+v, %v", stored, err)
+			}
+		})
+	}
+}
+
+func TestUpdateAccountRequiresIdentityAndPreservesRepositoryError(t *testing.T) {
+	f := newAuthFixture(t)
+	registered := f.register(t)
+	request := appauth.UpdateAccountRequest{Username: "新账号名称"}
+	if _, err := f.service.UpdateAccount(context.Background(), request); !errors.Is(err, xerr.ErrUnauthorized) {
+		t.Fatalf("missing identity error = %v", err)
+	}
+	ctx := appcore.SetAccountIDToContext(context.Background(), registered.Account.ID)
+	cancelled, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, err := f.service.UpdateAccount(cancelled, request); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancelled request error = %v", err)
+	}
+	failure := errors.New("profile storage failed")
+	if err := f.db.Callback().Update().Before("gorm:update").Register("test:reject-profile-update", func(tx *gorm.DB) {
+		tx.AddError(failure)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.service.UpdateAccount(ctx, request); !errors.Is(err, failure) {
+		t.Fatalf("repository error was replaced: %v", err)
+	}
+	stored, err := authmysql.Bind(f.db).Accounts().GetByID(ctx, registered.Account.ID)
+	if err != nil || *stored != registered.Account {
+		t.Fatalf("failed update changed account: %+v, %v", stored, err)
 	}
 }

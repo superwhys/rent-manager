@@ -44,6 +44,7 @@ Current route surface:
 - `POST /api/auth/register` verifies the email and creates both email and password credentials atomically.
 - `POST /api/auth/password-login` and `POST /api/auth/email-login` authenticate existing accounts by password or email code.
 - `GET /api/auth/session` returns the current authkit account and session expiry; `DELETE /api/auth/session` revokes that session.
+- `PATCH /api/auth/account` updates the current account's display name and returns the authkit account. Names are trimmed, require 1–64 Unicode characters, and reject control characters; credentials and sessions are preserved.
 - `/api/roles/*`, `/api/admin/permission-groups/*`, and `/api/units/:unit_id/grants` or `/api/units/:unit_id/accounts/:account_id/roles` call the RBAC service and GORM repository. `GET /api/admin/permissions` returns the fixed backend permission catalog; permission creation APIs are removed.
 - The former `/api/auth/refresh-token` and `/api/accout/self` routes are removed.
 

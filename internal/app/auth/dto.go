@@ -20,6 +20,10 @@ type RegisterRequest struct {
 	Password string `json:"password" form:"-" header:"-" validate:"required,min=8,max=128"`
 }
 
+type UpdateAccountRequest struct {
+	Username string `json:"username" form:"-" header:"-" minLength:"1" maxLength:"64"`
+}
+
 type SendEmailCodeResponse struct {
 	ResendAfterSeconds int `json:"resend_after_seconds"`
 	ExpiresInSeconds   int `json:"expires_in_seconds"`

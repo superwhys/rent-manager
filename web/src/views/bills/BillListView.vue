@@ -281,7 +281,17 @@ onBeforeUnmount(() => {
       <div class="toolbar bill-toolbar">
         <label class="field filter-month">
           <span>账单月份</span>
-          <input v-model="month" type="month" :disabled="!selectedUnitId" />
+          <el-date-picker
+            v-model="month"
+            type="month"
+            format="YYYY-MM"
+            value-format="YYYY-MM"
+            value-on-clear=""
+            popper-class="rent-date-picker"
+            placeholder="全部月份"
+            :disabled="!selectedUnitId"
+            aria-label="账单月份"
+          />
         </label>
         <label class="field filter-select">
           <span>收款状态</span>
@@ -410,7 +420,17 @@ onBeforeUnmount(() => {
               收款时间
               <span class="muted">（选填，默认现在）</span>
             </span>
-            <input v-model="paidAt" type="datetime-local" :disabled="submitting" />
+            <el-date-picker
+              v-model="paidAt"
+              type="datetime"
+              format="YYYY-MM-DD HH:mm"
+              value-format="YYYY-MM-DD[T]HH:mm"
+              value-on-clear=""
+              popper-class="rent-date-picker"
+              placeholder="选择收款时间"
+              :disabled="submitting"
+              aria-label="收款时间"
+            />
           </label>
         </template>
         <template v-else>
@@ -565,12 +585,11 @@ onBeforeUnmount(() => {
   margin-bottom: 0;
 }
 .filter-month {
-  min-width: 10.5rem;
+  width: 11rem;
 }
 .filter-select {
   width: 10rem;
 }
-.filter-month input,
 .filter-select :deep(.el-select__wrapper) {
   height: 40px;
 }
