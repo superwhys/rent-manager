@@ -38,13 +38,29 @@ func TestMeterReadingRepositoryOwnershipNullableValuesAndFilters(t *testing.T) {
 	if err != nil || stored.ReaderID == nil || *stored.ReaderID != owner {
 		t.Fatalf("抄表人账号 ID 未完整保存: %+v, %v", stored, err)
 	}
-	if _, err := repo.Create(ctx, owner, reading); !errors.Is(err, domainmeterreading.ErrAlreadyExists) {
+	if _, err := repo.Create(
+		ctx,
+		owner,
+		reading,
+	); !errors.Is(
+		err,
+		domainmeterreading.ErrAlreadyExists,
+	) {
 		t.Fatalf("duplicate Create error = %v", err)
 	}
 	if _, err := repo.Get(ctx, other, reading.ID); !errors.Is(err, domainmeterreading.ErrNotFound) {
 		t.Fatalf("foreign Get error = %v", err)
 	}
-	if _, err := repo.GetByRoomMeterItemPeriod(ctx, other, room.ID, water.ID, reading.PeriodMonth); !errors.Is(err, domainmeterreading.ErrNotFound) {
+	if _, err := repo.GetByRoomMeterItemPeriod(
+		ctx,
+		other,
+		room.ID,
+		water.ID,
+		reading.PeriodMonth,
+	); !errors.Is(
+		err,
+		domainmeterreading.ErrNotFound,
+	) {
 		t.Fatalf("foreign period Get error = %v", err)
 	}
 	if _, err := repo.Update(ctx, owner, reading); err != nil {
@@ -60,7 +76,14 @@ func TestMeterReadingRepositoryOwnershipNullableValuesAndFilters(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if reading.PreviousReading == nil || *reading.PreviousReading != 0 || reading.CurrentReading != 0 || reading.UsageAmount == nil || *reading.UsageAmount != 0 || reading.ReaderID == nil || *reading.ReaderID != "" || reading.Remark == nil || *reading.Remark != "" {
+	if reading.PreviousReading == nil || *reading.PreviousReading != 0 ||
+		reading.CurrentReading != 0 ||
+		reading.UsageAmount == nil ||
+		*reading.UsageAmount != 0 ||
+		reading.ReaderID == nil ||
+		*reading.ReaderID != "" ||
+		reading.Remark == nil ||
+		*reading.Remark != "" {
 		t.Fatalf("zero values not saved: %+v", reading)
 	}
 	reading.PreviousReading, reading.UsageAmount, reading.ReaderID, reading.Remark = nil, nil, nil, nil
@@ -68,7 +91,8 @@ func TestMeterReadingRepositoryOwnershipNullableValuesAndFilters(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if reading.PreviousReading != nil || reading.UsageAmount != nil || reading.ReaderID != nil || reading.Remark != nil {
+	if reading.PreviousReading != nil || reading.UsageAmount != nil || reading.ReaderID != nil ||
+		reading.Remark != nil {
 		t.Fatalf("nullable fields not cleared: %+v", reading)
 	}
 	later := *reading
@@ -84,12 +108,25 @@ func TestMeterReadingRepositoryOwnershipNullableValuesAndFilters(t *testing.T) {
 		t.Fatalf("latest reading = %+v, %v", latest, err)
 	}
 	items, err := repo.List(ctx, owner, domainmeterreading.ListQuery{
-		UnitID: room.UnitID, RoomID: room.ID, MeterItemID: water.ID, PeriodMonthFrom: "2026-09", PeriodMonthTo: "2026-10", Limit: 1, Offset: 1,
+		UnitID:          room.UnitID,
+		RoomID:          room.ID,
+		MeterItemID:     water.ID,
+		PeriodMonthFrom: "2026-09",
+		PeriodMonthTo:   "2026-10",
+		Limit:           1,
+		Offset:          1,
 	})
 	if err != nil || len(items) != 1 || items[0].ID != reading.ID {
 		t.Fatalf("ordered reading page = %+v, %v", items, err)
 	}
-	items, err = repo.List(ctx, owner, domainmeterreading.ListQuery{PeriodMonth: "2026-10", Source: domainmeterreading.SourceImport})
+	items, err = repo.List(
+		ctx,
+		owner,
+		domainmeterreading.ListQuery{
+			PeriodMonth: "2026-10",
+			Source:      domainmeterreading.SourceImport,
+		},
+	)
 	if err != nil || len(items) != 1 || items[0].ID != created.ID {
 		t.Fatalf("filtered readings = %+v, %v", items, err)
 	}
@@ -99,7 +136,14 @@ func TestMeterReadingRepositoryOwnershipNullableValuesAndFilters(t *testing.T) {
 	}
 	foreignUpdate := *reading
 	foreignUpdate.RoomID, foreignUpdate.MeterItemID = otherRoom.ID, foreign.ID
-	if _, err := repo.Update(ctx, other, &foreignUpdate); !errors.Is(err, domainmeterreading.ErrNotFound) {
+	if _, err := repo.Update(
+		ctx,
+		other,
+		&foreignUpdate,
+	); !errors.Is(
+		err,
+		domainmeterreading.ErrNotFound,
+	) {
 		t.Fatalf("foreign Update error = %v", err)
 	}
 	if err := repo.Delete(ctx, other, reading.ID); !errors.Is(err, domainmeterreading.ErrNotFound) {
@@ -141,26 +185,62 @@ func TestMeterReadingRepositorySaveRoomMonthTransaction(t *testing.T) {
 	added.MeterItemID = power.ID
 	invalid := added
 	invalid.MeterItemID = unassigned.ID
-	if _, err := repo.SaveRoomMonth(ctx, owner, []*domainmeterreading.MeterReading{&updated, &added, &invalid}); !errors.Is(err, domainmeterreading.ErrRoomMeterItemNotAssigned) {
+	if _, err := repo.SaveRoomMonth(
+		ctx,
+		owner,
+		[]*domainmeterreading.MeterReading{&updated, &added, &invalid},
+	); !errors.Is(
+		err,
+		domainmeterreading.ErrRoomMeterItemNotAssigned,
+	) {
 		t.Fatalf("SaveRoomMonth error = %v", err)
 	}
 	stored, err := repo.Get(ctx, owner, reading.ID)
 	if err != nil || stored.CurrentReading != 10 {
 		t.Fatalf("update rollback = %+v, %v", stored, err)
 	}
-	if _, err := repo.GetByRoomMeterItemPeriod(ctx, owner, room.ID, power.ID, "2026-10"); !errors.Is(err, domainmeterreading.ErrNotFound) {
+	if _, err := repo.GetByRoomMeterItemPeriod(
+		ctx,
+		owner,
+		room.ID,
+		power.ID,
+		"2026-10",
+	); !errors.Is(
+		err,
+		domainmeterreading.ErrNotFound,
+	) {
 		t.Fatalf("create rollback error = %v", err)
 	}
-	saved, err := repo.SaveRoomMonth(ctx, owner, []*domainmeterreading.MeterReading{&updated, &added})
-	if err != nil || len(saved) != 2 || saved[0].ID != reading.ID || saved[0].CurrentReading != 20 || saved[1].MeterItemID != power.ID {
+	saved, err := repo.SaveRoomMonth(
+		ctx,
+		owner,
+		[]*domainmeterreading.MeterReading{&updated, &added},
+	)
+	if err != nil || len(saved) != 2 || saved[0].ID != reading.ID ||
+		saved[0].CurrentReading != 20 ||
+		saved[1].MeterItemID != power.ID {
 		t.Fatalf("saved readings = %+v, %v", saved, err)
 	}
-	if _, err := repo.SaveRoomMonth(ctx, owner, nil); !errors.Is(err, domainmeterreading.ErrReadingsRequired) {
+	if _, err := repo.SaveRoomMonth(
+		ctx,
+		owner,
+		nil,
+	); !errors.Is(
+		err,
+		domainmeterreading.ErrReadingsRequired,
+	) {
 		t.Fatalf("empty save error = %v", err)
 	}
 }
 
-func createBillingTestRoom(t *testing.T, db *gorm.DB, q *query.Query, accountID string, name string, meterItemIDs []int) *domainroom.Room {
+func createBillingTestRoom(
+	t *testing.T,
+	db *gorm.DB,
+	q *query.Query,
+	accountID string,
+	name string,
+	meterItemIDs []int,
+) *domainroom.Room {
 	t.Helper()
 	unit := createUnitTestUnit(t, q, accountID, name)
 	roomType := &models.RoomType{AccountID: accountID, Name: name}

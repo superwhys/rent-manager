@@ -1,0 +1,19 @@
+version: "2"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+    - gofumpt
+    - gci
+    - golines
+  settings:
+    gofumpt:
+      module-path: github.com/superwhys/rent-manager
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/superwhys/rent-manager)
+  exclusions:
+    generated: strict

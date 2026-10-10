@@ -12,8 +12,8 @@ type RoomRentBillsQuery struct {
 	appcore.Pagination
 
 	RoomID      int    `uri:"room_id" validate:"required,min=1"`
-	PeriodMonth string `form:"period_month"`
-	Status      string `form:"status" validate:"omitempty,oneof=UNPAID PAID CANCELLED"`
+	PeriodMonth string `                                                               form:"period_month"`
+	Status      string `              validate:"omitempty,oneof=UNPAID PAID CANCELLED" form:"status"`
 }
 
 // UnitRentBillsQuery 是单元账单列表查询参数。
@@ -21,8 +21,8 @@ type UnitRentBillsQuery struct {
 	appcore.Pagination
 
 	UnitID      int    `uri:"unit_id" validate:"required,min=1"`
-	PeriodMonth string `form:"period_month"`
-	Status      string `form:"status" validate:"omitempty,oneof=UNPAID PAID CANCELLED"`
+	PeriodMonth string `                                                               form:"period_month"`
+	Status      string `              validate:"omitempty,oneof=UNPAID PAID CANCELLED" form:"status"`
 }
 
 // RentBillIDQuery 是账单 ID 路径参数。
@@ -33,27 +33,27 @@ type RentBillIDQuery struct {
 // GenerateRoomRentBillCommand 是生成房间月度账单的请求参数。
 type GenerateRoomRentBillCommand struct {
 	RoomID      int     `uri:"room_id" validate:"required,min=1"`
-	PeriodMonth string  `json:"period_month" validate:"required"`
-	Remark      *string `json:"remark"`
+	PeriodMonth string  `              validate:"required"       json:"period_month"`
+	Remark      *string `                                        json:"remark"`
 }
 
 // GenerateUnitRentBillsCommand 是生成单元月度账单的请求参数。
 type GenerateUnitRentBillsCommand struct {
 	UnitID      int     `uri:"unit_id" validate:"required,min=1"`
-	PeriodMonth string  `json:"period_month" validate:"required"`
-	Remark      *string `json:"remark"`
+	PeriodMonth string  `              validate:"required"       json:"period_month"`
+	Remark      *string `                                        json:"remark"`
 }
 
 // MarkRentBillPaidCommand 是标记账单已收款的请求参数。
 type MarkRentBillPaidCommand struct {
 	RentBillID int        `uri:"rent_bill_id" validate:"required,min=1"`
-	PaidAt     *time.Time `json:"paid_at"`
+	PaidAt     *time.Time `                                             json:"paid_at"`
 }
 
 // CancelRentBillCommand 是取消账单的请求参数。
 type CancelRentBillCommand struct {
 	RentBillID int     `uri:"rent_bill_id" validate:"required,min=1"`
-	Remark     *string `json:"remark"`
+	Remark     *string `                                             json:"remark"`
 }
 
 // GeneratedRentBills 表示生成账单的结果。

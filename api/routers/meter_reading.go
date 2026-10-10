@@ -21,13 +21,25 @@ import (
 // @Security BearerAuth
 // @Router /rooms/{room_id}/meter-readings [get]
 func GetRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *appmeterreading.RoomMeterReadingsQuery) {
-		roomMonth, err := meterReadingService.GetRoomMonthReadings(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "get room meter readings failed", xerr.ErrSysInternal) {
-			return
-		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appmeterreading.ToRoomMonthReadingsResponse(roomMonth)))
-	})
+	return ginutils.RequestHandler(
+		func(c *gin.Context, req *appmeterreading.RoomMeterReadingsQuery) {
+			roomMonth, err := meterReadingService.GetRoomMonthReadings(c.Request.Context(), req)
+			if apiresponse.HandleRouterError(
+				c,
+				err,
+				"get room meter readings failed",
+				xerr.ErrSysInternal,
+			) {
+				return
+			}
+			c.JSON(
+				http.StatusOK,
+				apiresponse.ResponseWithData(
+					appmeterreading.ToRoomMonthReadingsResponse(roomMonth),
+				),
+			)
+		},
+	)
 }
 
 // SaveRoomMeterReadingsHandler godoc
@@ -43,10 +55,18 @@ func GetRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) g
 func SaveRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appmeterreading.SaveRoomMonthCommand) {
 		roomMonth, err := meterReadingService.SaveRoomMonthReadings(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "save room meter readings failed", xerr.ErrSysInternal) {
+		if apiresponse.HandleRouterError(
+			c,
+			err,
+			"save room meter readings failed",
+			xerr.ErrSysInternal,
+		) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appmeterreading.ToRoomMonthReadingsResponse(roomMonth)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(appmeterreading.ToRoomMonthReadingsResponse(roomMonth)),
+		)
 	})
 }
 
@@ -60,11 +80,23 @@ func SaveRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) 
 // @Security BearerAuth
 // @Router /units/{unit_id}/meter-readings [get]
 func GetUnitMeterReadingsHandler(meterReadingService *appmeterreading.Service) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *appmeterreading.UnitMeterReadingsQuery) {
-		unitMonth, err := meterReadingService.GetUnitMonthReadings(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "get unit meter readings failed", xerr.ErrSysInternal) {
-			return
-		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appmeterreading.ToUnitMonthReadingsResponse(unitMonth)))
-	})
+	return ginutils.RequestHandler(
+		func(c *gin.Context, req *appmeterreading.UnitMeterReadingsQuery) {
+			unitMonth, err := meterReadingService.GetUnitMonthReadings(c.Request.Context(), req)
+			if apiresponse.HandleRouterError(
+				c,
+				err,
+				"get unit meter readings failed",
+				xerr.ErrSysInternal,
+			) {
+				return
+			}
+			c.JSON(
+				http.StatusOK,
+				apiresponse.ResponseWithData(
+					appmeterreading.ToUnitMonthReadingsResponse(unitMonth),
+				),
+			)
+		},
+	)
 }

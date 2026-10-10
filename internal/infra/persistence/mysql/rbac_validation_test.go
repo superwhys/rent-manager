@@ -28,7 +28,11 @@ func TestRBACRepositoryBulkByteLengthValidation(t *testing.T) {
 					return err
 				case "权限组编码", "权限组名称", "权限组描述":
 					model = &models.PermissionGroup{}
-					group := &domainrbac.PermissionGroup{Code: "second", Name: "第二组", IsActive: true}
+					group := &domainrbac.PermissionGroup{
+						Code:     "second",
+						Name:     "第二组",
+						IsActive: true,
+					}
 					switch field {
 					case "权限组编码":
 						group.Code = value
@@ -37,17 +41,33 @@ func TestRBACRepositoryBulkByteLengthValidation(t *testing.T) {
 					case "权限组描述":
 						group.Description = &value
 					}
-					_, err := repo.CreatePermissionGroups(ctx, []*domainrbac.PermissionGroup{{Code: "first", Name: "有效权限组", IsActive: true}, group})
+					_, err := repo.CreatePermissionGroups(
+						ctx,
+						[]*domainrbac.PermissionGroup{
+							{Code: "first", Name: "有效权限组", IsActive: true},
+							group,
+						},
+					)
 					return err
 				default:
 					model = &models.Permission{}
-					permission := &domainrbac.Permission{Code: "second", Description: "第二个权限", IsActive: true}
+					permission := &domainrbac.Permission{
+						Code:        "second",
+						Description: "第二个权限",
+						IsActive:    true,
+					}
 					if field == "权限编码" {
 						permission.Code = value
 					} else {
 						permission.Description = value
 					}
-					_, err := repo.CreatePermissions(ctx, []*domainrbac.Permission{{Code: "first", Description: "有效权限", IsActive: true}, permission})
+					_, err := repo.CreatePermissions(
+						ctx,
+						[]*domainrbac.Permission{
+							{Code: "first", Description: "有效权限", IsActive: true},
+							permission,
+						},
+					)
 					return err
 				}
 			}
@@ -73,7 +93,10 @@ func TestRBACRepositoryUpdateRoleByteLengthValidation(t *testing.T) {
 	db := newTestDB(t)
 	owner, _, _ := seedRBACUnit(t, db)
 	repo := NewRBACRepository(db)
-	roles, err := repo.CreateRoles(ctx, []*domainrbac.Role{{AccountID: owner, Name: "原始名称", IsActive: true}})
+	roles, err := repo.CreateRoles(
+		ctx,
+		[]*domainrbac.Role{{AccountID: owner, Name: "原始名称", IsActive: true}},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}

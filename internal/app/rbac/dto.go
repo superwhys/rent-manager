@@ -4,7 +4,7 @@ import domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
 
 // CreateRoleItem 表示批量创建角色中的单个角色参数。
 type CreateRoleItem struct {
-	Name           string `json:"name" validate:"required"`
+	Name           string `json:"name"             validate:"required"`
 	IsDefaultOwner bool   `json:"is_default_owner"`
 }
 
@@ -15,8 +15,8 @@ type CreateRolesCommand struct {
 
 // CreatePermissionGroupItem 表示批量创建权限组中的单个权限组参数。
 type CreatePermissionGroupItem struct {
-	Code        string `json:"code" validate:"required"`
-	Name        string `json:"name" validate:"required"`
+	Code        string `json:"code"        validate:"required"`
+	Name        string `json:"name"        validate:"required"`
 	Description string `json:"description"`
 	SortOrder   int    `json:"sort_order"`
 }
@@ -28,7 +28,7 @@ type CreatePermissionGroupsCommand struct {
 
 // CreatePermissionItem 表示批量创建权限中的单个权限参数。
 type CreatePermissionItem struct {
-	Code        string `json:"code" validate:"required"`
+	Code        string `json:"code"        validate:"required"`
 	Description string `json:"description" validate:"required"`
 }
 
@@ -40,13 +40,13 @@ type CreatePermissionsCommand struct {
 // PermissionGroupPermissionsCommand 表示权限组绑定或解绑权限命令。
 type PermissionGroupPermissionsCommand struct {
 	PermissionGroupID int   `uri:"permission_group_id" validate:"required,min=1"`
-	PermissionIDs     []int `json:"permission_ids" validate:"required,min=1,dive,min=1"`
+	PermissionIDs     []int `                          validate:"required,min=1,dive,min=1" json:"permission_ids"`
 }
 
 // RolePermissionGroupsCommand 表示角色绑定或解绑权限组命令。
 type RolePermissionGroupsCommand struct {
 	RoleID             int   `uri:"role_id" validate:"required,min=1"`
-	PermissionGroupIDs []int `json:"permission_group_ids" validate:"required,min=1,dive,min=1"`
+	PermissionGroupIDs []int `              validate:"required,min=1,dive,min=1" json:"permission_group_ids"`
 }
 
 // RoleIDCommand 表示角色 ID 路径参数。
@@ -57,25 +57,25 @@ type RoleIDCommand struct {
 // UpdateRoleCommand 表示更新角色命令。
 type UpdateRoleCommand struct {
 	RoleID         int    `uri:"role_id" validate:"required,min=1"`
-	Name           string `json:"name" validate:"required"`
-	IsDefaultOwner bool   `json:"is_default_owner"`
-	IsActive       *bool  `json:"is_active"`
+	Name           string `              validate:"required"       json:"name"`
+	IsDefaultOwner bool   `                                        json:"is_default_owner"`
+	IsActive       *bool  `                                        json:"is_active"`
 }
 
 // UnitAccountRolesCommand 表示单元账号角色授权命令。
 type UnitAccountRolesCommand struct {
-	UnitID    int    `uri:"unit_id" validate:"required,min=1"`
+	UnitID    int    `uri:"unit_id"    validate:"required,min=1"`
 	AccountID string `uri:"account_id" validate:"required,len=64,hexadecimal,lowercase"`
-	RoleIDs   []int  `json:"role_ids" validate:"required,min=1,dive,min=1"`
+	RoleIDs   []int  `                 validate:"required,min=1,dive,min=1"             json:"role_ids"`
 }
 
 // UnitGrantsQuery 表示单元授权列表查询参数。
 type UnitGrantsQuery struct {
 	UnitID    int    `uri:"unit_id" validate:"required,min=1"`
-	AccountID string `form:"account_id" validate:"omitempty,len=64,hexadecimal,lowercase"`
-	Status    string `form:"status"`
-	Limit     int    `form:"limit"`
-	Offset    int    `form:"offset"`
+	AccountID string `              validate:"omitempty,len=64,hexadecimal,lowercase" form:"account_id"`
+	Status    string `                                                                form:"status"`
+	Limit     int    `                                                                form:"limit"`
+	Offset    int    `                                                                form:"offset"`
 }
 
 // RoleResponse 是角色响应。
@@ -155,7 +155,9 @@ func ToPermissionGroupResponse(group *domainrbac.PermissionGroup) *PermissionGro
 }
 
 // ToPermissionGroupListResponse 将权限组列表转换为响应列表。
-func ToPermissionGroupListResponse(groups []*domainrbac.PermissionGroup) []*PermissionGroupResponse {
+func ToPermissionGroupListResponse(
+	groups []*domainrbac.PermissionGroup,
+) []*PermissionGroupResponse {
 	resp := make([]*PermissionGroupResponse, 0, len(groups))
 	for _, group := range groups {
 		resp = append(resp, ToPermissionGroupResponse(group))

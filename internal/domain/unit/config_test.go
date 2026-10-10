@@ -89,6 +89,10 @@ func TestNewUnitUsesDefaultConfig(t *testing.T) {
 		t.Fatalf("NewUnit() error = %v", err)
 	}
 	if unit.Config.MeterReadingDay != DefaultMeterReadingDay {
-		t.Fatalf("meter reading day = %d, want %d", unit.Config.MeterReadingDay, DefaultMeterReadingDay)
+		t.Fatalf(
+			"meter reading day = %d, want %d",
+			unit.Config.MeterReadingDay,
+			DefaultMeterReadingDay,
+		)
 	}
 }

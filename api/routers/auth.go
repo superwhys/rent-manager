@@ -64,11 +64,14 @@ func AuthRouter(authService AuthService) ginutils.Option {
 // @Router /auth/email/code [post]
 func SendEmailCodeHandler(authService AuthService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appauth.SendEmailCodeRequest) {
-		if apiresponse.HandleAuthError(c, authService.SendCode(c.Request.Context(), authkit.SendCodeInput{
+		err := authService.SendCode(c.Request.Context(), authkit.SendCodeInput{
 			Email: req.Email, IP: c.ClientIP(),
-		})) {
+		})
+
+		if apiresponse.HandleAuthError(c, err) {
 			return
 		}
+
 		c.Header("Cache-Control", "no-store")
 		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appauth.SendEmailCodeResponse{
 			ResendAfterSeconds: int(authkit.ResendInterval / time.Second),
@@ -105,7 +108,10 @@ func RegisterHandler(authService AuthService) gin.HandlerFunc {
 // @Router /auth/email-login [post]
 func EmailLoginHandler(authService AuthService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appauth.EmailLoginRequest) {
-		login, err := authService.LoginEmail(c.Request.Context(), authkit.EmailLoginInput{Email: req.Email, Code: req.Code})
+		login, err := authService.LoginEmail(
+			c.Request.Context(),
+			authkit.EmailLoginInput{Email: req.Email, Code: req.Code},
+		)
 		if apiresponse.HandleAuthError(c, err) {
 			return
 		}
@@ -140,7 +146,10 @@ func PasswordLoginHandler(authService AuthService) gin.HandlerFunc {
 func writeLoginResponse(c *gin.Context, login *authkit.LoginResult) {
 	c.Header("Cache-Control", "no-store")
 	c.JSON(http.StatusOK, apiresponse.ResponseWithData(LoginResponse{
-		Account: login.Account, AccessToken: login.Token, ExpiresAt: login.Expires, Created: login.Created,
+		Account:     login.Account,
+		AccessToken: login.Token,
+		ExpiresAt:   login.Expires,
+		Created:     login.Created,
 	}))
 }
 
@@ -170,7 +179,10 @@ func SessionHandler() gin.HandlerFunc {
 // @Router /auth/session [delete]
 func LogoutHandler(authService AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if apiresponse.HandleAuthError(c, authService.Logout(c.Request.Context(), middlewares.BearerToken(c))) {
+		if apiresponse.HandleAuthError(
+			c,
+			authService.Logout(c.Request.Context(), middlewares.BearerToken(c)),
+		) {
 			return
 		}
 		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())

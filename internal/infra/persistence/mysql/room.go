@@ -23,8 +23,18 @@ func NewRoomRepository(db *gorm.DB) *RoomRepository {
 	return &RoomRepository{q: query.Use(db)}
 }
 
-func (r *RoomRepository) Create(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
-	if err := r.ensureRoomRelationsInAccount(ctx, accountID, room.UnitID, room.RoomTypeID, room.MeterItemIDs); err != nil {
+func (r *RoomRepository) Create(
+	ctx context.Context,
+	accountID string,
+	room *domainroom.Room,
+) (*domainroom.Room, error) {
+	if err := r.ensureRoomRelationsInAccount(
+		ctx,
+		accountID,
+		room.UnitID,
+		room.RoomTypeID,
+		room.MeterItemIDs,
+	); err != nil {
 		return nil, err
 	}
 	if err := validateByteLength(255, room.RoomNo); err != nil {
@@ -51,7 +61,11 @@ func (r *RoomRepository) Create(ctx context.Context, accountID string, room *dom
 	return r.Get(ctx, accountID, record.ID)
 }
 
-func (r *RoomRepository) Get(ctx context.Context, accountID string, id int) (*domainroom.Room, error) {
+func (r *RoomRepository) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainroom.Room, error) {
 	room := r.q.Room
 	record, err := room.WithContext(ctx).
 		Where(room.ID.Eq(id), room.DeletedAt.IsNull(), r.roomAccountPredicate(ctx, accountID)).
@@ -81,7 +95,11 @@ func (r *RoomRepository) GetByID(ctx context.Context, id int) (*domainroom.Room,
 	return toDomainRoom(record), nil
 }
 
-func (r *RoomRepository) List(ctx context.Context, accountID string, params domainroom.ListQuery) ([]*domainroom.Room, error) {
+func (r *RoomRepository) List(
+	ctx context.Context,
+	accountID string,
+	params domainroom.ListQuery,
+) ([]*domainroom.Room, error) {
 	room := r.q.Room
 	q := r.queryRooms(ctx, accountID, params).Preload(room.MeterItems)
 	if params.Limit > 0 {
@@ -97,12 +115,20 @@ func (r *RoomRepository) List(ctx context.Context, accountID string, params doma
 	return toDomainRooms(records), nil
 }
 
-func (r *RoomRepository) Count(ctx context.Context, accountID string, params domainroom.ListQuery) (int, error) {
+func (r *RoomRepository) Count(
+	ctx context.Context,
+	accountID string,
+	params domainroom.ListQuery,
+) (int, error) {
 	count, err := r.queryRooms(ctx, accountID, params).Count()
 	return int(count), err
 }
 
-func (r *RoomRepository) queryRooms(ctx context.Context, accountID string, params domainroom.ListQuery) query.IRoomDo {
+func (r *RoomRepository) queryRooms(
+	ctx context.Context,
+	accountID string,
+	params domainroom.ListQuery,
+) query.IRoomDo {
 	room := r.q.Room
 	q := room.WithContext(ctx).
 		Where(room.UnitID.Eq(params.UnitID), room.DeletedAt.IsNull(), r.roomAccountPredicate(ctx, accountID))
@@ -124,8 +150,18 @@ func (r *RoomRepository) roomAccountPredicate(ctx context.Context, accountID str
 	))
 }
 
-func (r *RoomRepository) Update(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
-	if err := r.ensureRoomRelationsInAccount(ctx, accountID, room.UnitID, room.RoomTypeID, room.MeterItemIDs); err != nil {
+func (r *RoomRepository) Update(
+	ctx context.Context,
+	accountID string,
+	room *domainroom.Room,
+) (*domainroom.Room, error) {
+	if err := r.ensureRoomRelationsInAccount(
+		ctx,
+		accountID,
+		room.UnitID,
+		room.RoomTypeID,
+		room.MeterItemIDs,
+	); err != nil {
 		return nil, err
 	}
 	if err := validateByteLength(255, room.RoomNo); err != nil {
@@ -136,7 +172,9 @@ func (r *RoomRepository) Update(ctx context.Context, accountID string, room *dom
 		r := tx.Room
 		target := r.WithContext(ctx).
 			Where(r.ID.Eq(room.ID), r.DeletedAt.IsNull(), repo.roomAccountPredicate(ctx, accountID))
-		if _, err := target.Select(r.ID).Clauses(clause.Locking{Strength: "UPDATE"}).Take(); err != nil {
+		if _, err := target.Select(r.ID).
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			Take(); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return domainroom.ErrNotFound
 			}
@@ -178,7 +216,13 @@ func (r *RoomRepository) Delete(ctx context.Context, accountID string, id int) e
 	return nil
 }
 
-func (r *RoomRepository) ensureRoomRelationsInAccount(ctx context.Context, accountID string, unitID int, roomTypeID int, meterItemIDs []int) error {
+func (r *RoomRepository) ensureRoomRelationsInAccount(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	roomTypeID int,
+	meterItemIDs []int,
+) error {
 	unit := r.q.Unit
 	count, err := unit.WithContext(ctx).
 		Where(unit.ID.Eq(unitID), unit.AccountID.Eq(accountID), unit.DeletedAt.IsNull()).

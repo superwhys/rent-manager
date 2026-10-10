@@ -124,7 +124,11 @@ type fakeRoomServiceRoomRepo struct {
 	nextID int
 }
 
-func (r *fakeRoomServiceRoomRepo) Create(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
+func (r *fakeRoomServiceRoomRepo) Create(
+	ctx context.Context,
+	accountID string,
+	room *domainroom.Room,
+) (*domainroom.Room, error) {
 	if r.byID == nil {
 		r.byID = make(map[int]*domainroom.Room)
 	}
@@ -137,7 +141,11 @@ func (r *fakeRoomServiceRoomRepo) Create(ctx context.Context, accountID string, 
 	return cloneRoom(created), nil
 }
 
-func (r *fakeRoomServiceRoomRepo) Get(ctx context.Context, accountID string, id int) (*domainroom.Room, error) {
+func (r *fakeRoomServiceRoomRepo) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainroom.Room, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -149,7 +157,11 @@ func (r *fakeRoomServiceRoomRepo) GetByID(ctx context.Context, id int) (*domainr
 	return cloneRoom(room), nil
 }
 
-func (r *fakeRoomServiceRoomRepo) List(ctx context.Context, accountID string, query domainroom.ListQuery) ([]*domainroom.Room, error) {
+func (r *fakeRoomServiceRoomRepo) List(
+	ctx context.Context,
+	accountID string,
+	query domainroom.ListQuery,
+) ([]*domainroom.Room, error) {
 	rooms := make([]*domainroom.Room, 0, len(r.byID))
 	for _, room := range r.byID {
 		if room == nil || room.UnitID != query.UnitID {
@@ -160,12 +172,20 @@ func (r *fakeRoomServiceRoomRepo) List(ctx context.Context, accountID string, qu
 	return rooms, nil
 }
 
-func (r *fakeRoomServiceRoomRepo) Count(ctx context.Context, accountID string, query domainroom.ListQuery) (int, error) {
+func (r *fakeRoomServiceRoomRepo) Count(
+	ctx context.Context,
+	accountID string,
+	query domainroom.ListQuery,
+) (int, error) {
 	rooms, err := r.List(ctx, accountID, query)
 	return len(rooms), err
 }
 
-func (r *fakeRoomServiceRoomRepo) Update(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
+func (r *fakeRoomServiceRoomRepo) Update(
+	ctx context.Context,
+	accountID string,
+	room *domainroom.Room,
+) (*domainroom.Room, error) {
 	if r.byID == nil || r.byID[room.ID] == nil {
 		return nil, domainroom.ErrNotFound
 	}
@@ -183,11 +203,18 @@ type fakeRoomServiceUnitRepo struct {
 	byID map[int]*domainunit.Unit
 }
 
-func (r *fakeRoomServiceUnitRepo) Create(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
+func (r *fakeRoomServiceUnitRepo) Create(
+	ctx context.Context,
+	unit *domainunit.Unit,
+) (*domainunit.Unit, error) {
 	return unit, nil
 }
 
-func (r *fakeRoomServiceUnitRepo) Get(ctx context.Context, accountID string, id int) (*domainunit.Unit, error) {
+func (r *fakeRoomServiceUnitRepo) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainunit.Unit, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -199,7 +226,10 @@ func (r *fakeRoomServiceUnitRepo) GetByID(ctx context.Context, id int) (*domainu
 	return cloneUnit(unit), nil
 }
 
-func (r *fakeRoomServiceUnitRepo) List(ctx context.Context, query domainunit.ListQuery) ([]*domainunit.Unit, error) {
+func (r *fakeRoomServiceUnitRepo) List(
+	ctx context.Context,
+	query domainunit.ListQuery,
+) ([]*domainunit.Unit, error) {
 	units := make([]*domainunit.Unit, 0, len(r.byID))
 	for _, unit := range r.byID {
 		units = append(units, cloneUnit(unit))
@@ -207,7 +237,10 @@ func (r *fakeRoomServiceUnitRepo) List(ctx context.Context, query domainunit.Lis
 	return units, nil
 }
 
-func (r *fakeRoomServiceUnitRepo) Update(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
+func (r *fakeRoomServiceUnitRepo) Update(
+	ctx context.Context,
+	unit *domainunit.Unit,
+) (*domainunit.Unit, error) {
 	return unit, nil
 }
 
@@ -234,5 +267,7 @@ func cloneUnit(unit *domainunit.Unit) *domainunit.Unit {
 	return &cloned
 }
 
-var _ domainroom.Repository = (*fakeRoomServiceRoomRepo)(nil)
-var _ domainunit.Repository = (*fakeRoomServiceUnitRepo)(nil)
+var (
+	_ domainroom.Repository = (*fakeRoomServiceRoomRepo)(nil)
+	_ domainunit.Repository = (*fakeRoomServiceUnitRepo)(nil)
+)

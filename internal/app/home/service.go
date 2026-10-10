@@ -33,7 +33,13 @@ type Service struct {
 }
 
 // NewService 创建首页聚合服务。
-func NewService(unitRepo domainunit.Repository, roomRepo domainroom.Repository, rentBillRepo domainrentbill.Repository, meterReadingRepo domainmeterreading.Repository, rbacRepo domainrbac.Repository) *Service {
+func NewService(
+	unitRepo domainunit.Repository,
+	roomRepo domainroom.Repository,
+	rentBillRepo domainrentbill.Repository,
+	meterReadingRepo domainmeterreading.Repository,
+	rbacRepo domainrbac.Repository,
+) *Service {
 	var rbacService domainrbac.IRbacService
 	if rbacRepo != nil {
 		rbacService = domainrbac.NewRbacService(rbacRepo)
@@ -108,7 +114,11 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 }
 
 // listRoomsInUnit 查询指定楼栋下符合状态条件的房间。
-func (s *Service) listRoomsInUnit(ctx context.Context, unit *domainunit.Unit, isActive *bool) ([]*domainroom.Room, error) {
+func (s *Service) listRoomsInUnit(
+	ctx context.Context,
+	unit *domainunit.Unit,
+	isActive *bool,
+) ([]*domainroom.Room, error) {
 	return s.roomRepo.List(ctx, unit.AccountID, domainroom.ListQuery{
 		UnitID:   unit.ID,
 		IsActive: isActive,
@@ -116,7 +126,11 @@ func (s *Service) listRoomsInUnit(ctx context.Context, unit *domainunit.Unit, is
 }
 
 // countRoomsInUnit 统计指定楼栋下符合状态条件的房间数量。
-func (s *Service) countRoomsInUnit(ctx context.Context, unit *domainunit.Unit, isActive *bool) (int, error) {
+func (s *Service) countRoomsInUnit(
+	ctx context.Context,
+	unit *domainunit.Unit,
+	isActive *bool,
+) (int, error) {
 	return s.roomRepo.Count(ctx, unit.AccountID, domainroom.ListQuery{
 		UnitID:   unit.ID,
 		IsActive: isActive,
@@ -124,7 +138,13 @@ func (s *Service) countRoomsInUnit(ctx context.Context, unit *domainunit.Unit, i
 }
 
 // collectRentBillSummary 汇总指定楼栋当前月和上月的租金账单数据。
-func (s *Service) collectRentBillSummary(ctx context.Context, unit *domainunit.Unit, summary *Summary, currentMonth string, previousMonth string) error {
+func (s *Service) collectRentBillSummary(
+	ctx context.Context,
+	unit *domainunit.Unit,
+	summary *Summary,
+	currentMonth string,
+	previousMonth string,
+) error {
 	if s.rentBillRepo == nil {
 		return nil
 	}
@@ -147,7 +167,12 @@ func (s *Service) collectRentBillSummary(ctx context.Context, unit *domainunit.U
 }
 
 // sumRentBills 汇总指定楼栋、月份和状态下的账单金额与数量。
-func (s *Service) sumRentBills(ctx context.Context, unit *domainunit.Unit, periodMonth string, status string) (int, int, error) {
+func (s *Service) sumRentBills(
+	ctx context.Context,
+	unit *domainunit.Unit,
+	periodMonth string,
+	status string,
+) (int, int, error) {
 	bills, err := s.rentBillRepo.List(ctx, unit.AccountID, domainrentbill.ListQuery{
 		UnitID:      unit.ID,
 		PeriodMonth: periodMonth,
@@ -168,7 +193,13 @@ func (s *Service) sumRentBills(ctx context.Context, unit *domainunit.Unit, perio
 	return totalAmount, count, nil
 }
 
-func (s *Service) collectUnitTodos(ctx context.Context, accountID string, unit *domainunit.Unit, rentedRooms []*domainroom.Room, periodMonth string) (*unitTodoResult, error) {
+func (s *Service) collectUnitTodos(
+	ctx context.Context,
+	accountID string,
+	unit *domainunit.Unit,
+	rentedRooms []*domainroom.Room,
+	periodMonth string,
+) (*unitTodoResult, error) {
 	result := &unitTodoResult{}
 	// 首页待办只针对已出租房间；可用空房不需要抄表、出账或收租。
 	if len(rentedRooms) == 0 {
@@ -176,11 +207,21 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID string, unit *
 	}
 
 	// 先按当前账号权限判断哪些类型的待办允许展示。
-	canViewMeterReading, err := s.canViewUnit(ctx, accountID, unit.ID, domainrbac.PermissionMeterReadingView)
+	canViewMeterReading, err := s.canViewUnit(
+		ctx,
+		accountID,
+		unit.ID,
+		domainrbac.PermissionMeterReadingView,
+	)
 	if err != nil {
 		return nil, err
 	}
-	canViewRentBill, err := s.canViewUnit(ctx, accountID, unit.ID, domainrbac.PermissionRentBillView)
+	canViewRentBill, err := s.canViewUnit(
+		ctx,
+		accountID,
+		unit.ID,
+		domainrbac.PermissionRentBillView,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +247,11 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID string, unit *
 		}
 	}
 	if canViewMeterReading && missingMeterRoomCount > 0 {
-		result.meterReading = newHomeTodo(unit.Name, fmt.Sprintf("还有 %d 间房未抄表", missingMeterRoomCount), todoTagMeterReading)
+		result.meterReading = newHomeTodo(
+			unit.Name,
+			fmt.Sprintf("还有 %d 间房未抄表", missingMeterRoomCount),
+			todoTagMeterReading,
+		)
 	}
 
 	// 没有账单查看权限时，只返回前面已经收集到的抄表待办。
@@ -245,15 +290,28 @@ func (s *Service) collectUnitTodos(ctx context.Context, accountID string, unit *
 		}
 	}
 	if pendingBillGenerationRoomCount > 0 {
-		result.billGeneration = newHomeTodo(unit.Name, fmt.Sprintf("还有 %d 间房待生成账单", pendingBillGenerationRoomCount), todoTagBillGeneration)
+		result.billGeneration = newHomeTodo(
+			unit.Name,
+			fmt.Sprintf("还有 %d 间房待生成账单", pendingBillGenerationRoomCount),
+			todoTagBillGeneration,
+		)
 	}
 	if unpaidBillCount > 0 {
-		result.rentCollection = newHomeTodo(unit.Name, fmt.Sprintf("还有 %d 笔租金待收", unpaidBillCount), todoTagRentCollection)
+		result.rentCollection = newHomeTodo(
+			unit.Name,
+			fmt.Sprintf("还有 %d 笔租金待收", unpaidBillCount),
+			todoTagRentCollection,
+		)
 	}
 	return result, nil
 }
 
-func (s *Service) listUnitReadingsByRoom(ctx context.Context, unit *domainunit.Unit, periodMonth string, enabled bool) (map[int]map[int]*domainmeterreading.MeterReading, error) {
+func (s *Service) listUnitReadingsByRoom(
+	ctx context.Context,
+	unit *domainunit.Unit,
+	periodMonth string,
+	enabled bool,
+) (map[int]map[int]*domainmeterreading.MeterReading, error) {
 	readingsByRoom := make(map[int]map[int]*domainmeterreading.MeterReading)
 	if !enabled || s.meterReadingRepo == nil {
 		return readingsByRoom, nil
@@ -279,12 +337,23 @@ func (s *Service) listUnitReadingsByRoom(ctx context.Context, unit *domainunit.U
 	return readingsByRoom, nil
 }
 
-func (s *Service) canViewUnit(ctx context.Context, accountID string, unitID int, permissionCode string) (bool, error) {
+func (s *Service) canViewUnit(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	permissionCode string,
+) (bool, error) {
 	if s.rbacService == nil {
 		return true, nil
 	}
-	if err := s.rbacService.RequireUnitPermission(ctx, accountID, unitID, permissionCode); err != nil {
-		if errors.Is(err, domainrbac.ErrForbidden) || errors.Is(err, domainrbac.ErrUnitNotInAccount) {
+	if err := s.rbacService.RequireUnitPermission(
+		ctx,
+		accountID,
+		unitID,
+		permissionCode,
+	); err != nil {
+		if errors.Is(err, domainrbac.ErrForbidden) ||
+			errors.Is(err, domainrbac.ErrUnitNotInAccount) {
 			return false, nil
 		}
 		return false, err
@@ -292,7 +361,10 @@ func (s *Service) canViewUnit(ctx context.Context, accountID string, unitID int,
 	return true, nil
 }
 
-func isRoomMeterReadingComplete(room *domainroom.Room, readings map[int]*domainmeterreading.MeterReading) (bool, bool) {
+func isRoomMeterReadingComplete(
+	room *domainroom.Room,
+	readings map[int]*domainmeterreading.MeterReading,
+) (bool, bool) {
 	meterItemIDs := roomMeterItemIDs(room)
 	if len(meterItemIDs) == 0 {
 		return true, false
@@ -395,7 +467,8 @@ func (s *Service) currentTime() time.Time {
 }
 
 func todoPeriodMonthByMeterReadingDay(now time.Time, meterReadingDay int) string {
-	if meterReadingDay < domainunit.MinMeterReadingDay || meterReadingDay > domainunit.MaxMeterReadingDay {
+	if meterReadingDay < domainunit.MinMeterReadingDay ||
+		meterReadingDay > domainunit.MaxMeterReadingDay {
 		meterReadingDay = domainunit.DefaultMeterReadingDay
 	}
 	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
@@ -414,5 +487,14 @@ func meterReadingDueDate(monthStart time.Time, meterReadingDay int) time.Time {
 	if meterReadingDay > lastDay {
 		meterReadingDay = lastDay
 	}
-	return time.Date(monthStart.Year(), monthStart.Month(), meterReadingDay, 0, 0, 0, 0, monthStart.Location())
+	return time.Date(
+		monthStart.Year(),
+		monthStart.Month(),
+		meterReadingDay,
+		0,
+		0,
+		0,
+		0,
+		monthStart.Location(),
+	)
 }

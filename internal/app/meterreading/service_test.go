@@ -26,7 +26,12 @@ func TestSaveRoomMonthReadingsUsesLatestPreviousReading(t *testing.T) {
 		UnitPrice: 200,
 		CalcType:  domainmeteritem.CalcTypeDifference,
 	}
-	room := &domainroom.Room{ID: 11, UnitID: 7, RoomNo: "101", MeterItems: []*domainmeteritem.MeterItem{item}}
+	room := &domainroom.Room{
+		ID:         11,
+		UnitID:     7,
+		RoomNo:     "101",
+		MeterItems: []*domainmeteritem.MeterItem{item},
+	}
 	unit := &domainunit.Unit{ID: 7, AccountID: testAccountID10}
 	repo := &fakeMeterReadingRepo{
 		latestByMeterItemID: map[int]*domainmeterreading.MeterReading{
@@ -70,7 +75,11 @@ func TestSaveRoomMonthReadingsUsesLatestPreviousReading(t *testing.T) {
 		t.Fatalf("total fee = %d, want 4600", roomMonth.TotalFee)
 	}
 	if rbac.permissionCode != domainrbac.PermissionMeterReadingManage {
-		t.Fatalf("permission = %q, want %q", rbac.permissionCode, domainrbac.PermissionMeterReadingManage)
+		t.Fatalf(
+			"permission = %q, want %q",
+			rbac.permissionCode,
+			domainrbac.PermissionMeterReadingManage,
+		)
 	}
 }
 
@@ -82,7 +91,12 @@ func TestSaveRoomMonthReadingsRequiresFirstBaseline(t *testing.T) {
 		UnitPrice: 200,
 		CalcType:  domainmeteritem.CalcTypeDifference,
 	}
-	room := &domainroom.Room{ID: 11, UnitID: 7, RoomNo: "101", MeterItems: []*domainmeteritem.MeterItem{item}}
+	room := &domainroom.Room{
+		ID:         11,
+		UnitID:     7,
+		RoomNo:     "101",
+		MeterItems: []*domainmeteritem.MeterItem{item},
+	}
 	unit := &domainunit.Unit{ID: 7, AccountID: testAccountID20}
 	repo := &fakeMeterReadingRepo{}
 	service := &Service{
@@ -116,7 +130,12 @@ func TestSaveRoomMonthReadingsRejectsUnassignedMeterItem(t *testing.T) {
 		UnitPrice: 200,
 		CalcType:  domainmeteritem.CalcTypeDifference,
 	}
-	room := &domainroom.Room{ID: 11, UnitID: 7, RoomNo: "101", MeterItems: []*domainmeteritem.MeterItem{item}}
+	room := &domainroom.Room{
+		ID:         11,
+		UnitID:     7,
+		RoomNo:     "101",
+		MeterItems: []*domainmeteritem.MeterItem{item},
+	}
 	unit := &domainunit.Unit{ID: 7, AccountID: testAccountID20}
 	repo := &fakeMeterReadingRepo{}
 	service := &Service{
@@ -149,19 +168,39 @@ type fakeMeterReadingRepo struct {
 	saved               []*domainmeterreading.MeterReading
 }
 
-func (r *fakeMeterReadingRepo) Create(ctx context.Context, accountID string, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) Create(
+	ctx context.Context,
+	accountID string,
+	reading *domainmeterreading.MeterReading,
+) (*domainmeterreading.MeterReading, error) {
 	return reading, nil
 }
 
-func (r *fakeMeterReadingRepo) Get(ctx context.Context, accountID string, id int) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainmeterreading.MeterReading, error) {
 	return nil, domainmeterreading.ErrNotFound
 }
 
-func (r *fakeMeterReadingRepo) GetByRoomMeterItemPeriod(ctx context.Context, accountID string, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) GetByRoomMeterItemPeriod(
+	ctx context.Context,
+	accountID string,
+	roomID int,
+	meterItemID int,
+	periodMonth string,
+) (*domainmeterreading.MeterReading, error) {
 	return nil, domainmeterreading.ErrNotFound
 }
 
-func (r *fakeMeterReadingRepo) GetLatestBeforePeriod(ctx context.Context, accountID string, roomID int, meterItemID int, periodMonth string) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) GetLatestBeforePeriod(
+	ctx context.Context,
+	accountID string,
+	roomID int,
+	meterItemID int,
+	periodMonth string,
+) (*domainmeterreading.MeterReading, error) {
 	reading := r.latestByMeterItemID[meterItemID]
 	if reading == nil {
 		return nil, domainmeterreading.ErrNotFound
@@ -169,14 +208,22 @@ func (r *fakeMeterReadingRepo) GetLatestBeforePeriod(ctx context.Context, accoun
 	return reading, nil
 }
 
-func (r *fakeMeterReadingRepo) List(ctx context.Context, accountID string, query domainmeterreading.ListQuery) ([]*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) List(
+	ctx context.Context,
+	accountID string,
+	query domainmeterreading.ListQuery,
+) ([]*domainmeterreading.MeterReading, error) {
 	if r.listByRoomID == nil {
 		return nil, nil
 	}
 	return r.listByRoomID[query.RoomID], nil
 }
 
-func (r *fakeMeterReadingRepo) SaveRoomMonth(ctx context.Context, accountID string, readings []*domainmeterreading.MeterReading) ([]*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) SaveRoomMonth(
+	ctx context.Context,
+	accountID string,
+	readings []*domainmeterreading.MeterReading,
+) ([]*domainmeterreading.MeterReading, error) {
 	r.saved = append([]*domainmeterreading.MeterReading(nil), readings...)
 	if r.listByRoomID == nil {
 		r.listByRoomID = make(map[int][]*domainmeterreading.MeterReading)
@@ -188,7 +235,8 @@ func (r *fakeMeterReadingRepo) SaveRoomMonth(ctx context.Context, accountID stri
 		roomReadings := r.listByRoomID[reading.RoomID]
 		replaced := false
 		for index, existing := range roomReadings {
-			if existing.MeterItemID == reading.MeterItemID && existing.PeriodMonth == reading.PeriodMonth {
+			if existing.MeterItemID == reading.MeterItemID &&
+				existing.PeriodMonth == reading.PeriodMonth {
 				roomReadings[index] = reading
 				replaced = true
 				break
@@ -202,7 +250,11 @@ func (r *fakeMeterReadingRepo) SaveRoomMonth(ctx context.Context, accountID stri
 	return readings, nil
 }
 
-func (r *fakeMeterReadingRepo) Update(ctx context.Context, accountID string, reading *domainmeterreading.MeterReading) (*domainmeterreading.MeterReading, error) {
+func (r *fakeMeterReadingRepo) Update(
+	ctx context.Context,
+	accountID string,
+	reading *domainmeterreading.MeterReading,
+) (*domainmeterreading.MeterReading, error) {
 	return reading, nil
 }
 
@@ -215,11 +267,19 @@ type fakeRoomRepo struct {
 	list []*domainroom.Room
 }
 
-func (r *fakeRoomRepo) Create(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
+func (r *fakeRoomRepo) Create(
+	ctx context.Context,
+	accountID string,
+	room *domainroom.Room,
+) (*domainroom.Room, error) {
 	return room, nil
 }
 
-func (r *fakeRoomRepo) Get(ctx context.Context, accountID string, id int) (*domainroom.Room, error) {
+func (r *fakeRoomRepo) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainroom.Room, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -231,7 +291,11 @@ func (r *fakeRoomRepo) GetByID(ctx context.Context, id int) (*domainroom.Room, e
 	return room, nil
 }
 
-func (r *fakeRoomRepo) List(ctx context.Context, accountID string, query domainroom.ListQuery) ([]*domainroom.Room, error) {
+func (r *fakeRoomRepo) List(
+	ctx context.Context,
+	accountID string,
+	query domainroom.ListQuery,
+) ([]*domainroom.Room, error) {
 	if r.list != nil {
 		return r.list, nil
 	}
@@ -244,12 +308,20 @@ func (r *fakeRoomRepo) List(ctx context.Context, accountID string, query domainr
 	return rooms, nil
 }
 
-func (r *fakeRoomRepo) Count(ctx context.Context, accountID string, query domainroom.ListQuery) (int, error) {
+func (r *fakeRoomRepo) Count(
+	ctx context.Context,
+	accountID string,
+	query domainroom.ListQuery,
+) (int, error) {
 	rooms, err := r.List(ctx, accountID, query)
 	return len(rooms), err
 }
 
-func (r *fakeRoomRepo) Update(ctx context.Context, accountID string, room *domainroom.Room) (*domainroom.Room, error) {
+func (r *fakeRoomRepo) Update(
+	ctx context.Context,
+	accountID string,
+	room *domainroom.Room,
+) (*domainroom.Room, error) {
 	return room, nil
 }
 
@@ -261,11 +333,18 @@ type fakeUnitRepo struct {
 	byID map[int]*domainunit.Unit
 }
 
-func (r *fakeUnitRepo) Create(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
+func (r *fakeUnitRepo) Create(
+	ctx context.Context,
+	unit *domainunit.Unit,
+) (*domainunit.Unit, error) {
 	return unit, nil
 }
 
-func (r *fakeUnitRepo) Get(ctx context.Context, accountID string, id int) (*domainunit.Unit, error) {
+func (r *fakeUnitRepo) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainunit.Unit, error) {
 	return r.GetByID(ctx, id)
 }
 
@@ -277,7 +356,10 @@ func (r *fakeUnitRepo) GetByID(ctx context.Context, id int) (*domainunit.Unit, e
 	return unit, nil
 }
 
-func (r *fakeUnitRepo) List(ctx context.Context, query domainunit.ListQuery) ([]*domainunit.Unit, error) {
+func (r *fakeUnitRepo) List(
+	ctx context.Context,
+	query domainunit.ListQuery,
+) ([]*domainunit.Unit, error) {
 	units := make([]*domainunit.Unit, 0, len(r.byID))
 	for _, unit := range r.byID {
 		units = append(units, unit)
@@ -285,7 +367,10 @@ func (r *fakeUnitRepo) List(ctx context.Context, query domainunit.ListQuery) ([]
 	return units, nil
 }
 
-func (r *fakeUnitRepo) Update(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
+func (r *fakeUnitRepo) Update(
+	ctx context.Context,
+	unit *domainunit.Unit,
+) (*domainunit.Unit, error) {
 	return unit, nil
 }
 
@@ -300,14 +385,21 @@ type fakeRbacService struct {
 	err            error
 }
 
-func (s *fakeRbacService) RequireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) error {
+func (s *fakeRbacService) RequireUnitPermission(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	permissionCode string,
+) error {
 	s.accountID = accountID
 	s.unitID = unitID
 	s.permissionCode = permissionCode
 	return s.err
 }
 
-var _ domainmeterreading.Repository = (*fakeMeterReadingRepo)(nil)
-var _ domainroom.Repository = (*fakeRoomRepo)(nil)
-var _ domainunit.Repository = (*fakeUnitRepo)(nil)
-var _ domainrbac.IRbacService = (*fakeRbacService)(nil)
+var (
+	_ domainmeterreading.Repository = (*fakeMeterReadingRepo)(nil)
+	_ domainroom.Repository         = (*fakeRoomRepo)(nil)
+	_ domainunit.Repository         = (*fakeUnitRepo)(nil)
+	_ domainrbac.IRbacService       = (*fakeRbacService)(nil)
+)

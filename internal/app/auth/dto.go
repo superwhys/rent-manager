@@ -6,17 +6,17 @@ type SendEmailCodeRequest struct {
 
 type EmailLoginRequest struct {
 	Email string `json:"email" form:"-" header:"-" validate:"required"`
-	Code  string `json:"code" form:"-" header:"-" validate:"required,len=6,number"`
+	Code  string `json:"code"  form:"-" header:"-" validate:"required,len=6,number"`
 }
 
 type PasswordLoginRequest struct {
-	Email    string `json:"email" form:"-" header:"-" validate:"required"`
+	Email    string `json:"email"    form:"-" header:"-" validate:"required"`
 	Password string `json:"password" form:"-" header:"-" validate:"required,max=128"`
 }
 
 type RegisterRequest struct {
-	Email    string `json:"email" form:"-" header:"-" validate:"required"`
-	Code     string `json:"code" form:"-" header:"-" validate:"required,len=6,number"`
+	Email    string `json:"email"    form:"-" header:"-" validate:"required"`
+	Code     string `json:"code"     form:"-" header:"-" validate:"required,len=6,number"`
 	Password string `json:"password" form:"-" header:"-" validate:"required,min=8,max=128"`
 }
 

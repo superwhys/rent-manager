@@ -38,7 +38,10 @@ func (s *Service) GetSettings(ctx context.Context) (*Settings, error) {
 }
 
 // UpdateSettings 更新当前账号配置。
-func (s *Service) UpdateSettings(ctx context.Context, cmd *UpdateSettingsCommand) (*Settings, error) {
+func (s *Service) UpdateSettings(
+	ctx context.Context,
+	cmd *UpdateSettingsCommand,
+) (*Settings, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err

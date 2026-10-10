@@ -35,7 +35,9 @@ func HandleAuthError(ctx *gin.Context, err error) bool {
 	case errors.Is(err, authkit.ErrTooManyRequests):
 		status, responseErr = http.StatusTooManyRequests, xerr.ErrTooManyRequests
 	case errors.Is(err, authkit.ErrResendTooSoon):
-		status, responseErr = http.StatusTooManyRequests, xerr.ErrTooManyRequests.WithMessage("验证码发送过于频繁，请稍后重试")
+		status, responseErr = http.StatusTooManyRequests, xerr.ErrTooManyRequests.WithMessage(
+			"验证码发送过于频繁，请稍后重试",
+		)
 	case errors.Is(err, authkit.ErrChallengeMismatch):
 		status, responseErr = http.StatusBadRequest, xerr.ErrBadRequest.WithMessage("验证码错误，请重新输入")
 	case errors.Is(err, authkit.ErrChallengeInvalid):
@@ -43,9 +45,13 @@ func HandleAuthError(ctx *gin.Context, err error) bool {
 	case errors.Is(err, authkit.ErrChallengeUpdated):
 		status, responseErr = http.StatusConflict, xerr.ErrBadRequest.WithMessage("验证码已更新，请使用最新验证码")
 	case errors.Is(err, authkit.ErrEmailUnavailable):
-		status, responseErr = http.StatusServiceUnavailable, xerr.ErrSysInternal.WithMessage("邮箱验证码服务尚未配置")
+		status, responseErr = http.StatusServiceUnavailable, xerr.ErrSysInternal.WithMessage(
+			"邮箱验证码服务尚未配置",
+		)
 	case errors.Is(err, authkit.ErrMailFailed):
-		status, responseErr = http.StatusBadGateway, xerr.ErrSysInternal.WithMessage("验证码发送失败，请稍后重试")
+		status, responseErr = http.StatusBadGateway, xerr.ErrSysInternal.WithMessage(
+			"验证码发送失败，请稍后重试",
+		)
 	default:
 		logging.Errorw(ctx.Request.Context(), "authkit request failed", logging.Err(err))
 	}

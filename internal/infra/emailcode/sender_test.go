@@ -26,17 +26,23 @@ func TestSendCodeUsesEncryptedSMTP(t *testing.T) {
 	for _, directTLS := range []bool{false, true} {
 		t.Run(strconv.FormatBool(directTLS), func(t *testing.T) {
 			sender, result := newTestSender(t, smtpScenario{directTLS: directTLS, offerTLS: true})
-			if err := sender.SendCode(context.Background(), "tenant@example.com", "123456"); err != nil {
+			if err := sender.SendCode(
+				context.Background(),
+				"tenant@example.com",
+				"123456",
+			); err != nil {
 				t.Fatal(err)
 			}
 			received := <-result
 			if received.err != nil {
 				t.Fatal(received.err)
 			}
-			if !received.authEncrypted || received.auth != "\x00notice@example.com\x00smtp-password" {
+			if !received.authEncrypted ||
+				received.auth != "\x00notice@example.com\x00smtp-password" {
 				t.Fatal("SMTP 身份验证必须在 TLS 内完成")
 			}
-			if received.from != "FROM:<notice@example.com> BODY=8BITMIME" && received.from != "FROM:<notice@example.com>" {
+			if received.from != "FROM:<notice@example.com> BODY=8BITMIME" &&
+				received.from != "FROM:<notice@example.com>" {
 				t.Fatalf("unexpected sender: %s", received.from)
 			}
 			if received.to != "TO:<tenant@example.com>" {
@@ -47,7 +53,8 @@ func TestSendCodeUsesEncryptedSMTP(t *testing.T) {
 				t.Fatal(err)
 			}
 			body, err := io.ReadAll(message.Body)
-			if err != nil || !strings.Contains(string(body), "123456") || !strings.Contains(string(body), "10 分钟") {
+			if err != nil || !strings.Contains(string(body), "123456") ||
+				!strings.Contains(string(body), "10 分钟") {
 				t.Fatal("邮件应包含验证码和有效期")
 			}
 		})
@@ -56,7 +63,14 @@ func TestSendCodeUsesEncryptedSMTP(t *testing.T) {
 
 func TestSendCodeRejectsUnencryptedSMTP(t *testing.T) {
 	sender, result := newTestSender(t, smtpScenario{})
-	if err := sender.SendCode(context.Background(), "tenant@example.com", "123456"); !errors.Is(err, ErrDeliveryFailed) {
+	if err := sender.SendCode(
+		context.Background(),
+		"tenant@example.com",
+		"123456",
+	); !errors.Is(
+		err,
+		ErrDeliveryFailed,
+	) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	received := <-result
@@ -68,7 +82,14 @@ func TestSendCodeRejectsUnencryptedSMTP(t *testing.T) {
 func TestSendCodeRejectsUntrustedCertificate(t *testing.T) {
 	sender, result := newTestSender(t, smtpScenario{offerTLS: true})
 	sender.tlsConfig.RootCAs = x509.NewCertPool()
-	if err := sender.SendCode(context.Background(), "tenant@example.com", "123456"); !errors.Is(err, ErrDeliveryFailed) {
+	if err := sender.SendCode(
+		context.Background(),
+		"tenant@example.com",
+		"123456",
+	); !errors.Is(
+		err,
+		ErrDeliveryFailed,
+	) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	received := <-result
@@ -80,7 +101,8 @@ func TestSendCodeRejectsUntrustedCertificate(t *testing.T) {
 func TestSendCodeHidesSMTPFailureDetails(t *testing.T) {
 	sender, result := newTestSender(t, smtpScenario{offerTLS: true, rejectData: true})
 	err := sender.SendCode(context.Background(), "tenant@example.com", "123456")
-	if !errors.Is(err, ErrDeliveryFailed) || strings.Contains(err.Error(), "123456") || strings.Contains(err.Error(), "smtp-password") {
+	if !errors.Is(err, ErrDeliveryFailed) || strings.Contains(err.Error(), "123456") ||
+		strings.Contains(err.Error(), "smtp-password") {
 		t.Fatalf("SMTP 错误不应透出邮件或凭据: %v", err)
 	}
 	<-result
@@ -98,7 +120,10 @@ func TestSendCodeCancellationClosesConnection(t *testing.T) {
 	for _, explicitCancel := range []bool{false, true} {
 		t.Run(strconv.FormatBool(explicitCancel), func(t *testing.T) {
 			sender, err := NewSender(config.SMTPConfig{
-				Host: "smtp.example.com", Port: 587, From: "notice@example.com", Timeout: 30 * time.Millisecond,
+				Host:    "smtp.example.com",
+				Port:    587,
+				From:    "notice@example.com",
+				Timeout: 30 * time.Millisecond,
 			})
 			if err != nil {
 				t.Fatal(err)
@@ -132,7 +157,9 @@ func TestSendCodeCancellationClosesConnection(t *testing.T) {
 }
 
 func TestSendCodeRejectsRecipientHeaderInjectionBeforeDial(t *testing.T) {
-	sender, err := NewSender(config.SMTPConfig{Host: "smtp.example.com", Port: 587, From: "notice@example.com"})
+	sender, err := NewSender(
+		config.SMTPConfig{Host: "smtp.example.com", Port: 587, From: "notice@example.com"},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +168,14 @@ func TestSendCodeRejectsRecipientHeaderInjectionBeforeDial(t *testing.T) {
 		return nil, nil
 	}
 	for _, email := range []string{"invalid", "tenant@example.com\r\nBcc: other@example.com", "Tenant <tenant@example.com>"} {
-		if err := sender.SendCode(context.Background(), email, "123456"); !errors.Is(err, ErrDeliveryFailed) {
+		if err := sender.SendCode(
+			context.Background(),
+			email,
+			"123456",
+		); !errors.Is(
+			err,
+			ErrDeliveryFailed,
+		) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 	}
@@ -170,9 +204,15 @@ func newTestSender(t *testing.T, scenario smtpScenario) (*Sender, <-chan smtpRes
 		t.Fatal(err)
 	}
 	certificate := &x509.Certificate{
-		SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "smtp.example.com"},
-		DNSNames: []string{"smtp.example.com"}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(time.Hour),
-		KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "smtp.example.com"},
+		DNSNames: []string{
+			"smtp.example.com",
+		},
+		NotBefore:   time.Now().Add(-time.Hour),
+		NotAfter:    time.Now().Add(time.Hour),
+		KeyUsage:    x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}
 	der, err := x509.CreateCertificate(rand.Reader, certificate, certificate, publicKey, privateKey)
 	if err != nil {
@@ -220,7 +260,11 @@ func newTestSender(t *testing.T, scenario smtpScenario) (*Sender, <-chan smtpRes
 	return sender, result
 }
 
-func serveSMTP(listener net.Listener, tlsConfig *tls.Config, scenario smtpScenario) (result smtpResult) {
+func serveSMTP(
+	listener net.Listener,
+	tlsConfig *tls.Config,
+	scenario smtpScenario,
+) (result smtpResult) {
 	conn, err := listener.Accept()
 	if err != nil {
 		result.err = err

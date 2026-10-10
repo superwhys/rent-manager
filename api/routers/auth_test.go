@@ -27,7 +27,10 @@ type authServiceStub struct {
 	logout        func(context.Context, string) error
 }
 
-func (s authServiceStub) LoginPassword(ctx context.Context, input authkit.PasswordLoginInput) (*authkit.LoginResult, error) {
+func (s authServiceStub) LoginPassword(
+	ctx context.Context,
+	input authkit.PasswordLoginInput,
+) (*authkit.LoginResult, error) {
 	return s.loginPassword(ctx, input)
 }
 
@@ -35,15 +38,25 @@ func (s authServiceStub) SendCode(ctx context.Context, input authkit.SendCodeInp
 	return s.sendCode(ctx, input)
 }
 
-func (s authServiceStub) LoginEmail(ctx context.Context, input authkit.EmailLoginInput) (*authkit.LoginResult, error) {
+func (s authServiceStub) LoginEmail(
+	ctx context.Context,
+	input authkit.EmailLoginInput,
+) (*authkit.LoginResult, error) {
 	return s.loginEmail(ctx, input)
 }
 
-func (s authServiceStub) Register(ctx context.Context, input appauth.RegisterRequest, ip string) (*authkit.LoginResult, error) {
+func (s authServiceStub) Register(
+	ctx context.Context,
+	input appauth.RegisterRequest,
+	ip string,
+) (*authkit.LoginResult, error) {
 	return s.register(ctx, input, ip)
 }
 
-func (s authServiceStub) AuthenticateSession(ctx context.Context, token string) (*authkit.AuthenticatedSession, error) {
+func (s authServiceStub) AuthenticateSession(
+	ctx context.Context,
+	token string,
+) (*authkit.AuthenticatedSession, error) {
 	return s.authenticate(ctx, token)
 }
 
@@ -69,7 +82,11 @@ func TestAuthRouterSendEmailCodeReturnsOnlyTiming(t *testing.T) {
 			return nil
 		},
 	})
-	req := httptest.NewRequest(http.MethodPost, "/auth/email/code?email=override@example.com", strings.NewReader(`{"email":"tenant@example.com"}`))
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/auth/email/code?email=override@example.com",
+		strings.NewReader(`{"email":"tenant@example.com"}`),
+	)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Email", "header@example.com")
 	req.RemoteAddr = "192.0.2.8:4567"
@@ -82,8 +99,14 @@ func TestAuthRouterSendEmailCodeReturnsOnlyTiming(t *testing.T) {
 	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if recorder.Code != http.StatusOK || body.Code != 0 || calls != 1 || len(body.Data) != 2 || body.Data["resend_after_seconds"] != 60 || body.Data["expires_in_seconds"] != 600 {
-		t.Fatalf("unexpected code response: status=%d body=%s", recorder.Code, recorder.Body.String())
+	if recorder.Code != http.StatusOK || body.Code != 0 || calls != 1 || len(body.Data) != 2 ||
+		body.Data["resend_after_seconds"] != 60 ||
+		body.Data["expires_in_seconds"] != 600 {
+		t.Fatalf(
+			"unexpected code response: status=%d body=%s",
+			recorder.Code,
+			recorder.Body.String(),
+		)
 	}
 }
 
@@ -104,7 +127,9 @@ func TestAuthRouterEmailRegistrationAndCodeLogin(t *testing.T) {
 			handler := newAuthHandler(authServiceStub{
 				register: func(_ context.Context, input appauth.RegisterRequest, ip string) (*authkit.LoginResult, error) {
 					calls++
-					if input.Email != "tenant@example.com" || input.Code != "123456" || input.Password != "  actual-password  " || ip != "192.0.2.8" {
+					if input.Email != "tenant@example.com" || input.Code != "123456" ||
+						input.Password != "  actual-password  " ||
+						ip != "192.0.2.8" {
 						t.Error("registration input differs from JSON body or client IP")
 					}
 					return result, nil
@@ -117,7 +142,11 @@ func TestAuthRouterEmailRegistrationAndCodeLogin(t *testing.T) {
 					return result, nil
 				},
 			})
-			req := httptest.NewRequest(http.MethodPost, tt.path+"?email=override@example.com&code=654321&password=override", strings.NewReader(tt.body))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				tt.path+"?email=override@example.com&code=654321&password=override",
+				strings.NewReader(tt.body),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Email", "header@example.com")
 			req.Header.Set("Code", "654321")
@@ -132,8 +161,14 @@ func TestAuthRouterEmailRegistrationAndCodeLogin(t *testing.T) {
 			if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
 				t.Fatal(err)
 			}
-			if recorder.Code != http.StatusOK || body.Code != 0 || calls != 1 || body.Data.Account != result.Account || body.Data.AccessToken != result.Token {
-				t.Fatalf("unexpected response: status=%d body=%s", recorder.Code, recorder.Body.String())
+			if recorder.Code != http.StatusOK || body.Code != 0 || calls != 1 ||
+				body.Data.Account != result.Account ||
+				body.Data.AccessToken != result.Token {
+				t.Fatalf(
+					"unexpected response: status=%d body=%s",
+					recorder.Code,
+					recorder.Body.String(),
+				)
 			}
 		})
 	}
@@ -173,7 +208,11 @@ func TestAuthRouterRejectsInvalidRegistrationAndCode(t *testing.T) {
 
 func TestAuthRouterPasswordLoginReturnsAuthkitSession(t *testing.T) {
 	result := &authkit.LoginResult{
-		Account: authkit.Account{ID: strings.Repeat("a", 64), Username: "租户", Email: "tenant@example.com"},
+		Account: authkit.Account{
+			ID:       strings.Repeat("a", 64),
+			Username: "租户",
+			Email:    "tenant@example.com",
+		},
 		Token:   strings.Repeat("b", 64),
 		Expires: time.Date(2026, time.November, 1, 0, 0, 0, 0, time.UTC),
 	}
@@ -189,7 +228,9 @@ func TestAuthRouterPasswordLoginReturnsAuthkitSession(t *testing.T) {
 				IP:         "192.0.2.8",
 			}
 			if input != want {
-				t.Error("email normalization, password preservation, or client IP differs from expected input")
+				t.Error(
+					"email normalization, password preservation, or client IP differs from expected input",
+				)
 			}
 			if gotCtx.Value(requestKey{}) != "request-context" {
 				t.Error("request context was not propagated")
@@ -197,7 +238,8 @@ func TestAuthRouterPasswordLoginReturnsAuthkitSession(t *testing.T) {
 			return result, nil
 		},
 	})
-	req := httptest.NewRequest(http.MethodPost, "/auth/password-login?email=override@example.com&password=override", strings.NewReader(`{"email":" TENANT@EXAMPLE.COM ","password":"  actual-password  "}`)).WithContext(ctx)
+	req := httptest.NewRequest(http.MethodPost, "/auth/password-login?email=override@example.com&password=override", strings.NewReader(`{"email":" TENANT@EXAMPLE.COM ","password":"  actual-password  "}`)).
+		WithContext(ctx)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Email", "header@example.com")
 	req.Header.Set("Password", "header-password")
@@ -205,7 +247,12 @@ func TestAuthRouterPasswordLoginReturnsAuthkitSession(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, req)
 	if recorder.Code != http.StatusOK || loginCalls != 1 {
-		t.Fatalf("status = %d, login calls = %d, body = %s", recorder.Code, loginCalls, recorder.Body.String())
+		t.Fatalf(
+			"status = %d, login calls = %d, body = %s",
+			recorder.Code,
+			loginCalls,
+			recorder.Body.String(),
+		)
 	}
 	if recorder.Header().Get("Cache-Control") != "no-store" {
 		t.Error("login response must not be cached")
@@ -217,7 +264,10 @@ func TestAuthRouterPasswordLoginReturnsAuthkitSession(t *testing.T) {
 	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if body.Code != 0 || body.Data.Account != result.Account || body.Data.AccessToken != result.Token || !body.Data.ExpiresAt.Equal(result.Expires) || body.Data.Created {
+	if body.Code != 0 || body.Data.Account != result.Account ||
+		body.Data.AccessToken != result.Token ||
+		!body.Data.ExpiresAt.Equal(result.Expires) ||
+		body.Data.Created {
 		t.Fatalf("unexpected email login response: %s", recorder.Body.String())
 	}
 }
@@ -244,7 +294,11 @@ func TestAuthRouterPasswordLoginRejectsInvalidInput(t *testing.T) {
 					return nil, authkit.ErrInvalidCredentials
 				},
 			})
-			req := httptest.NewRequest(http.MethodPost, "/auth/password-login?email=query@example.com&password=query-password", strings.NewReader(tt.body))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/auth/password-login?email=query@example.com&password=query-password",
+				strings.NewReader(tt.body),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Email", "header@example.com")
 			req.Header.Set("Password", "header-password")
@@ -257,7 +311,12 @@ func TestAuthRouterPasswordLoginRejectsInvalidInput(t *testing.T) {
 				t.Fatalf("invalid error response: %s", recorder.Body.String())
 			}
 			if body.Code == 0 || loginCalls != 0 {
-				t.Fatalf("code = %d, login calls = %d, body = %s", body.Code, loginCalls, recorder.Body.String())
+				t.Fatalf(
+					"code = %d, login calls = %d, body = %s",
+					body.Code,
+					loginCalls,
+					recorder.Body.String(),
+				)
 			}
 			if strings.Contains(recorder.Body.String(), "private-test-password") {
 				t.Error("error response exposed the password")
@@ -286,7 +345,13 @@ func TestAuthRouterPasswordLoginMapsAuthErrors(t *testing.T) {
 					return nil, tt.err
 				},
 			})
-			req := httptest.NewRequest(http.MethodPost, "/auth/password-login", strings.NewReader(`{"email":"tenant@example.com","password":"private-test-password"}`))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/auth/password-login",
+				strings.NewReader(
+					`{"email":"tenant@example.com","password":"private-test-password"}`,
+				),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			recorder := httptest.NewRecorder()
 			handler.ServeHTTP(recorder, req)
@@ -337,7 +402,12 @@ func TestAuthRouterSessionAndLogout(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, req)
 	if recorder.Code != http.StatusOK || authCalls != 1 {
-		t.Fatalf("session status = %d, authentication calls = %d, body = %s", recorder.Code, authCalls, recorder.Body.String())
+		t.Fatalf(
+			"session status = %d, authentication calls = %d, body = %s",
+			recorder.Code,
+			authCalls,
+			recorder.Body.String(),
+		)
 	}
 	var body struct {
 		Code int `json:"code"`
@@ -349,7 +419,8 @@ func TestAuthRouterSessionAndLogout(t *testing.T) {
 	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if body.Code != 0 || body.Data.Account != session.Account || !body.Data.ExpiresAt.Equal(session.Expires) {
+	if body.Code != 0 || body.Data.Account != session.Account ||
+		!body.Data.ExpiresAt.Equal(session.Expires) {
 		t.Fatalf("unexpected session response: %s", recorder.Body.String())
 	}
 	req = httptest.NewRequest(http.MethodDelete, "/auth/session", nil)
@@ -357,7 +428,13 @@ func TestAuthRouterSessionAndLogout(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	handler.ServeHTTP(recorder, req)
 	if recorder.Code != http.StatusOK || authCalls != 2 || logoutCalls != 1 {
-		t.Fatalf("logout status = %d, authentication calls = %d, logout calls = %d, body = %s", recorder.Code, authCalls, logoutCalls, recorder.Body.String())
+		t.Fatalf(
+			"logout status = %d, authentication calls = %d, logout calls = %d, body = %s",
+			recorder.Code,
+			authCalls,
+			logoutCalls,
+			recorder.Body.String(),
+		)
 	}
 }
 
@@ -376,7 +453,12 @@ func TestAuthRouterRequiresSessionAndRemovesRefreshToken(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, path, nil))
 		if recorder.Code != http.StatusNotFound {
-			t.Fatalf("removed route %s status = %d, want 404; body = %s", path, recorder.Code, recorder.Body.String())
+			t.Fatalf(
+				"removed route %s status = %d, want 404; body = %s",
+				path,
+				recorder.Code,
+				recorder.Body.String(),
+			)
 		}
 	}
 }

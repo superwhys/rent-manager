@@ -8,44 +8,44 @@ import (
 
 // CreateRoomCommand 表示创建房间命令。
 type CreateRoomCommand struct {
-	RoomNo       string `json:"room_no" validate:"required"`
+	RoomNo       string `json:"room_no"        validate:"required"`
 	Floor        int    `json:"floor"`
-	Price        int    `json:"price" validate:"required,min=1"`
+	Price        int    `json:"price"          validate:"required,min=1"`
 	Size         int    `json:"size"`
-	UnitID       int    `json:"unit_id" validate:"required,min=1"`
-	RoomTypeID   int    `json:"room_type_id" validate:"required,min=1"`
+	UnitID       int    `json:"unit_id"        validate:"required,min=1"`
+	RoomTypeID   int    `json:"room_type_id"   validate:"required,min=1"`
 	MeterItemIDs []int  `json:"meter_item_ids" validate:"omitempty,dive,min=1"`
 }
 
 // CreateRoomInUnitCommand 是在单元下创建房间的请求参数。
 type CreateRoomInUnitCommand struct {
 	UnitID       int    `uri:"unit_id" validate:"required,min=1"`
-	RoomNo       string `json:"room_no" validate:"required"`
-	Floor        int    `json:"floor"`
-	Price        int    `json:"price" validate:"required,min=1"`
-	Size         int    `json:"size" validate:"omitempty,min=1"`
-	RoomTypeID   int    `json:"room_type_id" validate:"required,min=1"`
-	MeterItemIDs []int  `json:"meter_item_ids" validate:"omitempty,dive,min=1"`
+	RoomNo       string `              validate:"required"             json:"room_no"`
+	Floor        int    `                                              json:"floor"`
+	Price        int    `              validate:"required,min=1"       json:"price"`
+	Size         int    `              validate:"omitempty,min=1"      json:"size"`
+	RoomTypeID   int    `              validate:"required,min=1"       json:"room_type_id"`
+	MeterItemIDs []int  `              validate:"omitempty,dive,min=1" json:"meter_item_ids"`
 }
 
 // UpdateRoomCommand 表示更新房间命令。
 type UpdateRoomCommand struct {
 	RoomID       int    `uri:"room_id" validate:"required,min=1"`
-	RoomNo       string `json:"room_no"`
-	Floor        *int   `json:"floor" validate:"omitempty,min=0"`
-	Price        *int   `json:"price" validate:"omitempty,min=0"`
-	Size         *int   `json:"size" validate:"omitempty,min=1"`
-	UnitID       *int   `json:"unit_id" validate:"omitempty,min=1"`
-	RoomTypeID   *int   `json:"room_type_id" validate:"omitempty,min=1"`
-	IsActive     *bool  `json:"is_active"`
-	MeterItemIDs []int  `json:"meter_item_ids" validate:"omitempty,dive,min=1"`
+	RoomNo       string `                                              json:"room_no"`
+	Floor        *int   `              validate:"omitempty,min=0"      json:"floor"`
+	Price        *int   `              validate:"omitempty,min=0"      json:"price"`
+	Size         *int   `              validate:"omitempty,min=1"      json:"size"`
+	UnitID       *int   `              validate:"omitempty,min=1"      json:"unit_id"`
+	RoomTypeID   *int   `              validate:"omitempty,min=1"      json:"room_type_id"`
+	IsActive     *bool  `                                              json:"is_active"`
+	MeterItemIDs []int  `              validate:"omitempty,dive,min=1" json:"meter_item_ids"`
 }
 
 // ListRoomsQuery 表示房间列表查询参数。
 type ListRoomsQuery struct {
 	appcore.Pagination
 
-	UnitID     int   `form:"unit_id" validate:"required,min=1"`
+	UnitID     int   `form:"unit_id"      validate:"required,min=1"`
 	RoomTypeID *int  `form:"room_type_id"`
 	IsActive   *bool `form:"is_active"`
 }
@@ -60,8 +60,8 @@ type UnitRoomsQuery struct {
 	appcore.Pagination
 
 	UnitID     int   `uri:"unit_id" validate:"required,min=1"`
-	RoomTypeID *int  `form:"room_type_id"`
-	IsActive   *bool `form:"is_active"`
+	RoomTypeID *int  `                                        form:"room_type_id"`
+	IsActive   *bool `                                        form:"is_active"`
 }
 
 // RoomResponse 是房间响应。

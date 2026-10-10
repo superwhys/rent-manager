@@ -18,7 +18,10 @@ func NewService(repo domainmeteritem.Repository) *Service {
 }
 
 // CreateMeterItem 创建当前账号下的抄表项。
-func (s *Service) CreateMeterItem(ctx context.Context, cmd *CreateMeterItemCommand) (*domainmeteritem.MeterItem, error) {
+func (s *Service) CreateMeterItem(
+	ctx context.Context,
+	cmd *CreateMeterItemCommand,
+) (*domainmeteritem.MeterItem, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -50,7 +53,10 @@ func (s *Service) GetMeterItem(ctx context.Context, id int) (*domainmeteritem.Me
 }
 
 // ListMeterItems 获取当前账号下的抄表项列表。
-func (s *Service) ListMeterItems(ctx context.Context, query *ListMeterItemsQuery) ([]*domainmeteritem.MeterItem, error) {
+func (s *Service) ListMeterItems(
+	ctx context.Context,
+	query *ListMeterItemsQuery,
+) ([]*domainmeteritem.MeterItem, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -67,7 +73,10 @@ func (s *Service) ListMeterItems(ctx context.Context, query *ListMeterItemsQuery
 }
 
 // UpdateMeterItem 更新当前账号下的抄表项。
-func (s *Service) UpdateMeterItem(ctx context.Context, cmd *UpdateMeterItemCommand) (*domainmeteritem.MeterItem, error) {
+func (s *Service) UpdateMeterItem(
+	ctx context.Context,
+	cmd *UpdateMeterItemCommand,
+) (*domainmeteritem.MeterItem, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err

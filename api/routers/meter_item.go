@@ -16,8 +16,16 @@ func MeterItemRouter(meterItemService *appmeteritem.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodPost, "", CreateMeterItemHandler(meterItemService)),
 		ginutils.WithHandler(http.MethodGet, "", ListMeterItemsHandler(meterItemService)),
-		ginutils.WithHandler(http.MethodGet, "/:meter_item_id", GetMeterItemHandler(meterItemService)),
-		ginutils.WithHandler(http.MethodPut, "/:meter_item_id", UpdateMeterItemHandler(meterItemService)),
+		ginutils.WithHandler(
+			http.MethodGet,
+			"/:meter_item_id",
+			GetMeterItemHandler(meterItemService),
+		),
+		ginutils.WithHandler(
+			http.MethodPut,
+			"/:meter_item_id",
+			UpdateMeterItemHandler(meterItemService),
+		),
 	)
 }
 
@@ -58,7 +66,10 @@ func ListMeterItemsHandler(meterItemService *appmeteritem.Service) gin.HandlerFu
 		if apiresponse.HandleRouterError(c, err, "list meter items failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appmeteritem.ToMeterItemListResponse(items)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(appmeteritem.ToMeterItemListResponse(items)),
+		)
 	})
 }
 

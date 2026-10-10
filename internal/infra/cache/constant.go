@@ -1,5 +1,3 @@
 package cache
 
-var (
-	PermissionVersionCache = genCacheWithKey("rbac:permission:version", 0)
-)
+var PermissionVersionCache = genCacheWithKey("rbac:permission:version", 0)

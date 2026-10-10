@@ -49,7 +49,10 @@ func (f *RepositoryFactory) Repositories() Repositories {
 }
 
 // WithTransaction runs all supplied repositories on the same transaction.
-func (f *RepositoryFactory) WithTransaction(ctx context.Context, fn func(Repositories) error) error {
+func (f *RepositoryFactory) WithTransaction(
+	ctx context.Context,
+	fn func(Repositories) error,
+) error {
 	return f.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(NewRepositoryFactory(tx).Repositories())
 	})

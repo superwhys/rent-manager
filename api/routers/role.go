@@ -20,8 +20,16 @@ func RoleRouter(rbacService *apprbac.Service) ginutils.Option {
 		ginutils.WithHandler(http.MethodGet, "/:role_id", GetRoleHandler(rbacService)),
 		ginutils.WithHandler(http.MethodPut, "/:role_id", UpdateRoleHandler(rbacService)),
 		ginutils.WithHandler(http.MethodDelete, "/:role_id", DeleteRoleHandler(rbacService)),
-		ginutils.WithHandler(http.MethodPost, "/:role_id/permission-groups", AddPermissionGroupsToRoleHandler(rbacService)),
-		ginutils.WithHandler(http.MethodDelete, "/:role_id/permission-groups", RemovePermissionGroupsFromRoleHandler(rbacService)),
+		ginutils.WithHandler(
+			http.MethodPost,
+			"/:role_id/permission-groups",
+			AddPermissionGroupsToRoleHandler(rbacService),
+		),
+		ginutils.WithHandler(
+			http.MethodDelete,
+			"/:role_id/permission-groups",
+			RemovePermissionGroupsFromRoleHandler(rbacService),
+		),
 	)
 }
 
@@ -130,7 +138,12 @@ func DeleteRoleHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 func AddPermissionGroupsToRoleHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.RolePermissionGroupsCommand) {
 		err := rbacService.AddPermissionGroupsToRole(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "add permission groups to role failed", xerr.ErrSysInternal) {
+		if apiresponse.HandleRouterError(
+			c,
+			err,
+			"add permission groups to role failed",
+			xerr.ErrSysInternal,
+		) {
 			return
 		}
 		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())
@@ -150,7 +163,12 @@ func AddPermissionGroupsToRoleHandler(rbacService *apprbac.Service) gin.HandlerF
 func RemovePermissionGroupsFromRoleHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.RolePermissionGroupsCommand) {
 		err := rbacService.RemovePermissionGroupsFromRole(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "remove permission groups from role failed", xerr.ErrSysInternal) {
+		if apiresponse.HandleRouterError(
+			c,
+			err,
+			"remove permission groups from role failed",
+			xerr.ErrSysInternal,
+		) {
 			return
 		}
 		c.JSON(http.StatusOK, apiresponse.ResponseSuccess())

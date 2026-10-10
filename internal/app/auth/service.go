@@ -13,7 +13,11 @@ type Service struct {
 	store authkit.Store
 }
 
-func NewService(store authkit.Store, sender authkit.CodeSender, config authkit.Config) (*Service, error) {
+func NewService(
+	store authkit.Store,
+	sender authkit.CodeSender,
+	config authkit.Config,
+) (*Service, error) {
 	service, err := authkit.NewService(store, sender, nil, nil, config)
 	if err != nil {
 		return nil, err
@@ -22,17 +26,26 @@ func NewService(store authkit.Store, sender authkit.CodeSender, config authkit.C
 }
 
 // Register 原子地验证邮箱、创建账号、设置密码并签发有效会话。
-func (s *Service) Register(ctx context.Context, input RegisterRequest, ip string) (*authkit.LoginResult, error) {
+func (s *Service) Register(
+	ctx context.Context,
+	input RegisterRequest,
+	ip string,
+) (*authkit.LoginResult, error) {
 	length := utf8.RuneCountInString(input.Password)
 	if !utf8.ValidString(input.Password) || length < 8 || length > 128 || len(ip) > 512 {
 		return nil, authkit.ErrInvalidInput
 	}
 	var outcome authkit.Outcome
 	err := s.store.WithTransaction(ctx, func(repos authkit.Repositories) error {
-		policy := authkit.RegistrationPolicyFunc(func(context.Context, authkit.Registration) error { return nil })
+		policy := authkit.RegistrationPolicyFunc(
+			func(context.Context, authkit.Registration) error { return nil },
+		)
 		tx := s.InTransaction(repos, policy)
 		var err error
-		outcome, err = tx.LoginEmail(ctx, authkit.EmailLoginInput{Email: input.Email, Code: input.Code})
+		outcome, err = tx.LoginEmail(
+			ctx,
+			authkit.EmailLoginInput{Email: input.Email, Code: input.Code},
+		)
 		// 验证拒绝必须提交，保留验证码的错误尝试次数。
 		if err != nil || outcome.Rejected != nil {
 			return err
@@ -41,7 +54,9 @@ func (s *Service) Register(ctx context.Context, input RegisterRequest, ip string
 			return authkit.ErrConflict
 		}
 		if err := tx.SetPassword(ctx, authkit.SetPasswordInput{
-			AccountID: outcome.Login.Account.ID, Identifier: outcome.Login.Account.Email, Password: input.Password,
+			AccountID:  outcome.Login.Account.ID,
+			Identifier: outcome.Login.Account.Email,
+			Password:   input.Password,
 		}); err != nil {
 			return err
 		}

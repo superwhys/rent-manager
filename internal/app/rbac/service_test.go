@@ -35,20 +35,25 @@ func TestGrantUnitRolesUsesAuthkitAccountAfterOwnershipCheck(t *testing.T) {
 			units := &ownedUnitLookup{err: test.unitErr}
 			service := NewService(repo, accounts, units, nil)
 			ctx := appcore.SetAccountIDToContext(context.Background(), ownerID)
-			_, err := service.GrantUnitRoles(ctx, &UnitAccountRolesCommand{UnitID: 7, AccountID: targetID, RoleIDs: []int{3, 3}})
+			_, err := service.GrantUnitRoles(
+				ctx,
+				&UnitAccountRolesCommand{UnitID: 7, AccountID: targetID, RoleIDs: []int{3, 3}},
+			)
 			if !errors.Is(err, test.wantErr) {
 				t.Fatalf("GrantUnitRoles error = %v, want %v", err, test.wantErr)
 			}
 			if units.accountID != ownerID || units.unitID != 7 {
 				t.Fatalf("ownership lookup = %+v", units)
 			}
-			if (accounts.id != "") != test.lookupAccount || accounts.id != "" && accounts.id != targetID {
+			if (accounts.id != "") != test.lookupAccount ||
+				accounts.id != "" && accounts.id != targetID {
 				t.Fatalf("authkit lookup ID = %q", accounts.id)
 			}
 			if repo.called != test.grantRoles {
 				t.Fatalf("grant repository called = %v, want %v", repo.called, test.grantRoles)
 			}
-			if test.grantRoles && (repo.params.OwnerAccountID != ownerID || repo.params.TargetAccountID != targetID || len(repo.params.RoleIDs) != 1) {
+			if test.grantRoles &&
+				(repo.params.OwnerAccountID != ownerID || repo.params.TargetAccountID != targetID || len(repo.params.RoleIDs) != 1) {
 				t.Fatalf("grant must preserve authkit IDs: %+v", repo.params)
 			}
 		})
@@ -74,7 +79,11 @@ type ownedUnitLookup struct {
 	err       error
 }
 
-func (u *ownedUnitLookup) Get(_ context.Context, accountID string, unitID int) (*domainunit.Unit, error) {
+func (u *ownedUnitLookup) Get(
+	_ context.Context,
+	accountID string,
+	unitID int,
+) (*domainunit.Unit, error) {
 	u.accountID, u.unitID = accountID, unitID
 	return &domainunit.Unit{ID: unitID, AccountID: accountID}, u.err
 }
@@ -85,7 +94,10 @@ type grantRepository struct {
 	params domainrbac.UnitAccountRolesParams
 }
 
-func (r *grantRepository) GrantUnitRoles(_ context.Context, params domainrbac.UnitAccountRolesParams) ([]*domainrbac.UnitAccountRole, error) {
+func (r *grantRepository) GrantUnitRoles(
+	_ context.Context,
+	params domainrbac.UnitAccountRolesParams,
+) ([]*domainrbac.UnitAccountRole, error) {
 	r.called, r.params = true, params
 	return nil, nil
 }

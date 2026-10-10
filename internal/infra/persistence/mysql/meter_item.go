@@ -7,10 +7,9 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
+	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
-
-	domainmeteritem "github.com/superwhys/rent-manager/internal/domain/meteritem"
 )
 
 type MeterItemRepository struct {
@@ -21,7 +20,10 @@ func NewMeterItemRepository(client *gorm.DB) *MeterItemRepository {
 	return &MeterItemRepository{q: query.Use(client)}
 }
 
-func (r *MeterItemRepository) Create(ctx context.Context, item *domainmeteritem.MeterItem) (*domainmeteritem.MeterItem, error) {
+func (r *MeterItemRepository) Create(
+	ctx context.Context,
+	item *domainmeteritem.MeterItem,
+) (*domainmeteritem.MeterItem, error) {
 	record := &models.MeterItem{
 		AccountID: item.AccountID,
 		Code:      item.Code,
@@ -41,7 +43,11 @@ func (r *MeterItemRepository) Create(ctx context.Context, item *domainmeteritem.
 	return toDomainMeterItem(record), nil
 }
 
-func (r *MeterItemRepository) Get(ctx context.Context, accountID string, id int) (*domainmeteritem.MeterItem, error) {
+func (r *MeterItemRepository) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainmeteritem.MeterItem, error) {
 	record, err := r.q.MeterItem.WithContext(ctx).
 		Where(r.q.MeterItem.ID.Eq(id), r.q.MeterItem.AccountID.Eq(accountID), r.q.MeterItem.DeletedAt.IsNull()).
 		Take()
@@ -54,7 +60,10 @@ func (r *MeterItemRepository) Get(ctx context.Context, accountID string, id int)
 	return toDomainMeterItem(record), nil
 }
 
-func (r *MeterItemRepository) List(ctx context.Context, query domainmeteritem.ListQuery) ([]*domainmeteritem.MeterItem, error) {
+func (r *MeterItemRepository) List(
+	ctx context.Context,
+	query domainmeteritem.ListQuery,
+) ([]*domainmeteritem.MeterItem, error) {
 	q := r.q.MeterItem.WithContext(ctx).
 		Where(r.q.MeterItem.AccountID.Eq(query.AccountID), r.q.MeterItem.DeletedAt.IsNull())
 	if query.Code != "" {
@@ -79,7 +88,10 @@ func (r *MeterItemRepository) List(ctx context.Context, query domainmeteritem.Li
 	return toDomainMeterItems(records), nil
 }
 
-func (r *MeterItemRepository) Update(ctx context.Context, item *domainmeteritem.MeterItem) (*domainmeteritem.MeterItem, error) {
+func (r *MeterItemRepository) Update(
+	ctx context.Context,
+	item *domainmeteritem.MeterItem,
+) (*domainmeteritem.MeterItem, error) {
 	m := r.q.MeterItem
 	assignments := []field.AssignExpr{
 		m.Code.Value(item.Code),

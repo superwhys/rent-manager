@@ -15,7 +15,9 @@ func accountRooms(ctx context.Context, q *query.Query, accountID string) query.I
 	r := q.Room
 	return r.WithContext(ctx).Where(
 		r.DeletedAt.IsNull(),
-		gen.Columns{r.UnitID}.In(u.WithContext(ctx).Select(u.ID).Where(u.AccountID.Eq(accountID), u.DeletedAt.IsNull())),
+		gen.Columns{
+			r.UnitID,
+		}.In(u.WithContext(ctx).Select(u.ID).Where(u.AccountID.Eq(accountID), u.DeletedAt.IsNull())),
 	)
 }
 

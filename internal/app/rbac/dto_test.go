@@ -23,7 +23,9 @@ func TestUnitAccountRolesCommandValidatesAuthkitAccountID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validate.Struct(UnitAccountRolesCommand{UnitID: 7, AccountID: tt.accountID, RoleIDs: []int{3}})
+			err := validate.Struct(
+				UnitAccountRolesCommand{UnitID: 7, AccountID: tt.accountID, RoleIDs: []int{3}},
+			)
 			if (err == nil) != tt.valid {
 				t.Fatalf("validation error = %v, want valid=%v", err, tt.valid)
 			}

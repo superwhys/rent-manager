@@ -25,13 +25,20 @@ func TestAccountIDFromContextRejectsMissingOrLegacyIdentity(t *testing.T) {
 		{name: "missing", ctx: context.Background()},
 		{name: "empty", ctx: SetAccountIDToContext(context.Background(), "")},
 		{name: "blank", ctx: SetAccountIDToContext(context.Background(), " \t\n")},
-		{name: "legacy numeric ID", ctx: context.WithValue(context.Background(), accountIDContextKey{}, 10)},
+		{
+			name: "legacy numeric ID",
+			ctx:  context.WithValue(context.Background(), accountIDContextKey{}, 10),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := AccountIDFromContext(tt.ctx)
 			if got != "" || !errors.Is(err, xerr.ErrUnauthorized) {
-				t.Fatalf("AccountIDFromContext() = %q, %v, want empty ID and ErrUnauthorized", got, err)
+				t.Fatalf(
+					"AccountIDFromContext() = %q, %v, want empty ID and ErrUnauthorized",
+					got,
+					err,
+				)
 			}
 		})
 	}

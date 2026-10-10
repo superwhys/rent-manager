@@ -13,14 +13,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
-	"github.com/superwhys/rent-manager/api/middlewares"
-	"github.com/superwhys/rent-manager/api/routers"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/ulule/limiter/v3"
 
-	appadmin "github.com/superwhys/rent-manager/internal/app/admin"
-	httpSwagger "github.com/swaggo/http-swagger/v2"
-
 	_ "github.com/superwhys/rent-manager/api/docs"
+	"github.com/superwhys/rent-manager/api/middlewares"
+	"github.com/superwhys/rent-manager/api/routers"
+	appadmin "github.com/superwhys/rent-manager/internal/app/admin"
 )
 
 // SetupRouter godoc
@@ -64,13 +63,23 @@ func SetupRouter(
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/units"),
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(authService)),
-			routers.UnitRouter(adminServices.Unit, adminServices.Room, adminServices.RBAC, adminServices.MeterReading, adminServices.RentBill),
+			routers.UnitRouter(
+				adminServices.Unit,
+				adminServices.Room,
+				adminServices.RBAC,
+				adminServices.MeterReading,
+				adminServices.RentBill,
+			),
 		),
 
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/rooms"),
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(authService)),
-			routers.RoomRouter(adminServices.Room, adminServices.MeterReading, adminServices.RentBill),
+			routers.RoomRouter(
+				adminServices.Room,
+				adminServices.MeterReading,
+				adminServices.RentBill,
+			),
 		),
 
 		ginutils.WithGroupHandlers(

@@ -22,15 +22,28 @@ func NewUnitRepository(db *gorm.DB) *UnitRepository {
 	return &UnitRepository{q: query.Use(db)}
 }
 
-func (r *UnitRepository) Create(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
-	if err := r.ensureMeterItemsInAccount(ctx, unit.AccountID, unit.DefaultMeterItemIDs); err != nil {
+func (r *UnitRepository) Create(
+	ctx context.Context,
+	unit *domainunit.Unit,
+) (*domainunit.Unit, error) {
+	if err := r.ensureMeterItemsInAccount(
+		ctx,
+		unit.AccountID,
+		unit.DefaultMeterItemIDs,
+	); err != nil {
 		return nil, err
 	}
 	jsonExtend, err := unit.Config.JSONString()
 	if err != nil {
 		return nil, err
 	}
-	if err := validateByteLength(255, unit.Name, unit.Address, unit.City, unit.Province); err != nil {
+	if err := validateByteLength(
+		255,
+		unit.Name,
+		unit.Address,
+		unit.City,
+		unit.Province,
+	); err != nil {
 		return nil, err
 	}
 	if err := validateByteLength(2048, jsonExtend); err != nil {
@@ -59,7 +72,11 @@ func (r *UnitRepository) Create(ctx context.Context, unit *domainunit.Unit) (*do
 	return r.Get(ctx, unit.AccountID, record.ID)
 }
 
-func (r *UnitRepository) Get(ctx context.Context, accountID string, id int) (*domainunit.Unit, error) {
+func (r *UnitRepository) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainunit.Unit, error) {
 	u := r.q.Unit
 	record, err := u.WithContext(ctx).
 		Where(u.ID.Eq(id), u.AccountID.Eq(accountID), u.DeletedAt.IsNull()).
@@ -89,7 +106,10 @@ func (r *UnitRepository) GetByID(ctx context.Context, id int) (*domainunit.Unit,
 	return toDomainUnit(record)
 }
 
-func (r *UnitRepository) List(ctx context.Context, params domainunit.ListQuery) ([]*domainunit.Unit, error) {
+func (r *UnitRepository) List(
+	ctx context.Context,
+	params domainunit.ListQuery,
+) ([]*domainunit.Unit, error) {
 	u := r.q.Unit
 	q := u.WithContext(ctx).
 		Where(u.DeletedAt.IsNull()).
@@ -100,7 +120,11 @@ func (r *UnitRepository) List(ctx context.Context, params domainunit.ListQuery) 
 	case domainunit.ListScopeGranted:
 		q = q.Where(r.grantedUnitPredicate(ctx, params.AccountID))
 	case domainunit.ListScopeAll, "":
-		q = q.Where(u.WithContext(ctx).Where(u.AccountID.Eq(params.AccountID)).Or(r.grantedUnitPredicate(ctx, params.AccountID)))
+		q = q.Where(
+			u.WithContext(ctx).
+				Where(u.AccountID.Eq(params.AccountID)).
+				Or(r.grantedUnitPredicate(ctx, params.AccountID)),
+		)
 	default:
 		return nil, domainunit.ErrInvalidListScope
 	}
@@ -127,15 +151,28 @@ func (r *UnitRepository) grantedUnitPredicate(ctx context.Context, accountID str
 	))
 }
 
-func (r *UnitRepository) Update(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
-	if err := r.ensureMeterItemsInAccount(ctx, unit.AccountID, unit.DefaultMeterItemIDs); err != nil {
+func (r *UnitRepository) Update(
+	ctx context.Context,
+	unit *domainunit.Unit,
+) (*domainunit.Unit, error) {
+	if err := r.ensureMeterItemsInAccount(
+		ctx,
+		unit.AccountID,
+		unit.DefaultMeterItemIDs,
+	); err != nil {
 		return nil, err
 	}
 	jsonExtend, err := unit.Config.JSONString()
 	if err != nil {
 		return nil, err
 	}
-	if err := validateByteLength(255, unit.Name, unit.Address, unit.City, unit.Province); err != nil {
+	if err := validateByteLength(
+		255,
+		unit.Name,
+		unit.Address,
+		unit.City,
+		unit.Province,
+	); err != nil {
 		return nil, err
 	}
 	if err := validateByteLength(2048, jsonExtend); err != nil {
@@ -145,7 +182,9 @@ func (r *UnitRepository) Update(ctx context.Context, unit *domainunit.Unit) (*do
 		u := tx.Unit
 		target := u.WithContext(ctx).
 			Where(u.ID.Eq(unit.ID), u.AccountID.Eq(unit.AccountID), u.DeletedAt.IsNull())
-		if _, err := target.Select(u.ID).Clauses(clause.Locking{Strength: "UPDATE"}).Take(); err != nil {
+		if _, err := target.Select(u.ID).
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			Take(); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return domainunit.ErrNotFound
 			}
@@ -198,7 +237,11 @@ func (r *UnitRepository) Delete(ctx context.Context, accountID string, id int) e
 	return nil
 }
 
-func (r *UnitRepository) ensureMeterItemsInAccount(ctx context.Context, accountID string, ids []int) error {
+func (r *UnitRepository) ensureMeterItemsInAccount(
+	ctx context.Context,
+	accountID string,
+	ids []int,
+) error {
 	if len(ids) == 0 {
 		return nil
 	}

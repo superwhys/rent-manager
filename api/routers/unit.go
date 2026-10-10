@@ -16,21 +16,59 @@ import (
 )
 
 // UnitRouter 注册单元及单元下资源路由。
-func UnitRouter(unitService *appunit.Service, roomService *approom.Service, rbacService *apprbac.Service, meterReadingService *appmeterreading.Service, rentBillService *apprentbill.Service) ginutils.Option {
+func UnitRouter(
+	unitService *appunit.Service,
+	roomService *approom.Service,
+	rbacService *apprbac.Service,
+	meterReadingService *appmeterreading.Service,
+	rentBillService *apprentbill.Service,
+) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodPost, "", CreateUnitHandler(unitService)),
 		ginutils.WithHandler(http.MethodGet, "", ListUnitsHandler(unitService)),
 		ginutils.WithHandler(http.MethodGet, "/:unit_id", GetUnitHandler(unitService)),
 		ginutils.WithHandler(http.MethodPut, "/:unit_id", UpdateUnitHandler(unitService)),
 		ginutils.WithHandler(http.MethodDelete, "/:unit_id", DeleteUnitHandler(unitService)),
-		ginutils.WithHandler(http.MethodPost, "/:unit_id/rooms", CreateRoomInUnitHandler(roomService)),
-		ginutils.WithHandler(http.MethodGet, "/:unit_id/rooms", ListRoomsInUnitHandler(roomService)),
-		ginutils.WithHandler(http.MethodGet, "/:unit_id/meter-readings", GetUnitMeterReadingsHandler(meterReadingService)),
-		ginutils.WithHandler(http.MethodGet, "/:unit_id/rent-bills", ListUnitRentBillsHandler(rentBillService)),
-		ginutils.WithHandler(http.MethodPost, "/:unit_id/rent-bills/generate", GenerateUnitRentBillsHandler(rentBillService)),
-		ginutils.WithHandler(http.MethodGet, "/:unit_id/grants", ListUnitGrantsHandler(rbacService)),
-		ginutils.WithHandler(http.MethodPost, "/:unit_id/accounts/:account_id/roles", GrantUnitRolesHandler(rbacService)),
-		ginutils.WithHandler(http.MethodDelete, "/:unit_id/accounts/:account_id/roles", RevokeUnitRolesHandler(rbacService)),
+		ginutils.WithHandler(
+			http.MethodPost,
+			"/:unit_id/rooms",
+			CreateRoomInUnitHandler(roomService),
+		),
+		ginutils.WithHandler(
+			http.MethodGet,
+			"/:unit_id/rooms",
+			ListRoomsInUnitHandler(roomService),
+		),
+		ginutils.WithHandler(
+			http.MethodGet,
+			"/:unit_id/meter-readings",
+			GetUnitMeterReadingsHandler(meterReadingService),
+		),
+		ginutils.WithHandler(
+			http.MethodGet,
+			"/:unit_id/rent-bills",
+			ListUnitRentBillsHandler(rentBillService),
+		),
+		ginutils.WithHandler(
+			http.MethodPost,
+			"/:unit_id/rent-bills/generate",
+			GenerateUnitRentBillsHandler(rentBillService),
+		),
+		ginutils.WithHandler(
+			http.MethodGet,
+			"/:unit_id/grants",
+			ListUnitGrantsHandler(rbacService),
+		),
+		ginutils.WithHandler(
+			http.MethodPost,
+			"/:unit_id/accounts/:account_id/roles",
+			GrantUnitRolesHandler(rbacService),
+		),
+		ginutils.WithHandler(
+			http.MethodDelete,
+			"/:unit_id/accounts/:account_id/roles",
+			RevokeUnitRolesHandler(rbacService),
+		),
 	)
 }
 

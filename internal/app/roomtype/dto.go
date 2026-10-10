@@ -13,7 +13,7 @@ type CreateRoomTypeCommand struct {
 // UpdateRoomTypeCommand 表示更新房型命令。
 type UpdateRoomTypeCommand struct {
 	RoomTypeID int    `uri:"room_type_id" validate:"required,min=1"`
-	Name       string `json:"name" validate:"required,max=12"`
+	Name       string `                   validate:"required,max=12" json:"name"`
 }
 
 // ListRoomTypesQuery 表示房型列表查询参数。

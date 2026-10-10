@@ -23,8 +23,13 @@ func TestUnitRepositoryByteLengthValidation(t *testing.T) {
 			power := createUnitTestMeterItem(t, q, owner, "power")
 			repo := NewUnitRepository(db)
 			unit := &domainunit.Unit{
-				AccountID: owner, Name: "name", Address: "address", City: "city", Province: "province",
-				Config: domainunit.DefaultUnitConfig(), DefaultMeterItemIDs: []int{water.ID},
+				AccountID:           owner,
+				Name:                "name",
+				Address:             "address",
+				City:                "city",
+				Province:            "province",
+				Config:              domainunit.DefaultUnitConfig(),
+				DefaultMeterItemIDs: []int{water.ID},
 			}
 			setField := func(unit *domainunit.Unit, value string) {
 				switch field {
@@ -68,11 +73,21 @@ func TestUnitRepositoryByteLengthValidation(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if after.Name != stored.Name || after.Address != stored.Address || after.City != stored.City || after.Province != stored.Province || after.Config != stored.Config || !reflect.DeepEqual(after.DefaultMeterItemIDs, stored.DefaultMeterItemIDs) {
+			if after.Name != stored.Name || after.Address != stored.Address ||
+				after.City != stored.City ||
+				after.Province != stored.Province ||
+				after.Config != stored.Config ||
+				!reflect.DeepEqual(after.DefaultMeterItemIDs, stored.DefaultMeterItemIDs) {
 				t.Fatalf("invalid Update changed the unit: %+v", after)
 			}
 			invalid.DefaultMeterItemIDs = []int{power.ID + 1}
-			if _, err := repo.Create(ctx, &invalid); !errors.Is(err, domainunit.ErrMeterItemNotFound) {
+			if _, err := repo.Create(
+				ctx,
+				&invalid,
+			); !errors.Is(
+				err,
+				domainunit.ErrMeterItemNotFound,
+			) {
 				t.Fatalf("relation validation precedence: %v", err)
 			}
 		})
@@ -114,7 +129,8 @@ func TestRoomRepositoryByteLengthValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if after.RoomNo != stored.RoomNo || after.Price != stored.Price || !reflect.DeepEqual(after.MeterItemIDs, stored.MeterItemIDs) {
+	if after.RoomNo != stored.RoomNo || after.Price != stored.Price ||
+		!reflect.DeepEqual(after.MeterItemIDs, stored.MeterItemIDs) {
 		t.Fatalf("invalid Update changed the room: %+v", after)
 	}
 	invalid.UnitID++

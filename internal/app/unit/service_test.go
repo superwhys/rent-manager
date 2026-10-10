@@ -28,7 +28,11 @@ func TestCreateUnitUsesDefaultConfig(t *testing.T) {
 		t.Fatalf("CreateUnit() error = %v", err)
 	}
 	if unit.Config.MeterReadingDay != domainunit.DefaultMeterReadingDay {
-		t.Fatalf("meter reading day = %d, want %d", unit.Config.MeterReadingDay, domainunit.DefaultMeterReadingDay)
+		t.Fatalf(
+			"meter reading day = %d, want %d",
+			unit.Config.MeterReadingDay,
+			domainunit.DefaultMeterReadingDay,
+		)
 	}
 }
 
@@ -77,7 +81,11 @@ func TestUpdateUnitDefaultsConfigWhenJsonExtendOmitted(t *testing.T) {
 		t.Fatalf("UpdateUnit() error = %v", err)
 	}
 	if unit.Config.MeterReadingDay != domainunit.DefaultMeterReadingDay {
-		t.Fatalf("meter reading day = %d, want default %d", unit.Config.MeterReadingDay, domainunit.DefaultMeterReadingDay)
+		t.Fatalf(
+			"meter reading day = %d, want default %d",
+			unit.Config.MeterReadingDay,
+			domainunit.DefaultMeterReadingDay,
+		)
 	}
 }
 
@@ -141,7 +149,10 @@ func (r *fakeUnitRepo) seed(units ...*domainunit.Unit) {
 	}
 }
 
-func (r *fakeUnitRepo) Create(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
+func (r *fakeUnitRepo) Create(
+	ctx context.Context,
+	unit *domainunit.Unit,
+) (*domainunit.Unit, error) {
 	next := cloneUnit(unit)
 	next.ID = r.next
 	r.next++
@@ -149,7 +160,11 @@ func (r *fakeUnitRepo) Create(ctx context.Context, unit *domainunit.Unit) (*doma
 	return cloneUnit(next), nil
 }
 
-func (r *fakeUnitRepo) Get(ctx context.Context, accountID string, id int) (*domainunit.Unit, error) {
+func (r *fakeUnitRepo) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainunit.Unit, error) {
 	unit := r.units[id]
 	if unit == nil || unit.AccountID != accountID {
 		return nil, domainunit.ErrNotFound
@@ -165,7 +180,10 @@ func (r *fakeUnitRepo) GetByID(ctx context.Context, id int) (*domainunit.Unit, e
 	return cloneUnit(unit), nil
 }
 
-func (r *fakeUnitRepo) List(ctx context.Context, query domainunit.ListQuery) ([]*domainunit.Unit, error) {
+func (r *fakeUnitRepo) List(
+	ctx context.Context,
+	query domainunit.ListQuery,
+) ([]*domainunit.Unit, error) {
 	units := make([]*domainunit.Unit, 0, len(r.units))
 	for _, unit := range r.units {
 		if unit.AccountID == query.AccountID {
@@ -175,7 +193,10 @@ func (r *fakeUnitRepo) List(ctx context.Context, query domainunit.ListQuery) ([]
 	return units, nil
 }
 
-func (r *fakeUnitRepo) Update(ctx context.Context, unit *domainunit.Unit) (*domainunit.Unit, error) {
+func (r *fakeUnitRepo) Update(
+	ctx context.Context,
+	unit *domainunit.Unit,
+) (*domainunit.Unit, error) {
 	if r.units[unit.ID] == nil {
 		return nil, domainunit.ErrNotFound
 	}
@@ -199,9 +220,16 @@ func cloneUnit(unit *domainunit.Unit) *domainunit.Unit {
 
 type fakeUnitRbacService struct{}
 
-func (s *fakeUnitRbacService) RequireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) error {
+func (s *fakeUnitRbacService) RequireUnitPermission(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	permissionCode string,
+) error {
 	return nil
 }
 
-var _ domainunit.Repository = (*fakeUnitRepo)(nil)
-var _ domainrbac.IRbacService = (*fakeUnitRbacService)(nil)
+var (
+	_ domainunit.Repository   = (*fakeUnitRepo)(nil)
+	_ domainrbac.IRbacService = (*fakeUnitRbacService)(nil)
+)

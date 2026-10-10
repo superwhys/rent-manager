@@ -21,7 +21,10 @@ func NewRBACRepository(db *gorm.DB) *RBACRepository {
 	return &RBACRepository{q: query.Use(db)}
 }
 
-func (r *RBACRepository) CreateRoles(ctx context.Context, roles []*domainrbac.Role) ([]*domainrbac.Role, error) {
+func (r *RBACRepository) CreateRoles(
+	ctx context.Context,
+	roles []*domainrbac.Role,
+) ([]*domainrbac.Role, error) {
 	records := make([]*models.Role, 0, len(roles))
 	for _, role := range roles {
 		if err := validateByteLength(255, role.Name); err != nil {
@@ -43,7 +46,11 @@ func (r *RBACRepository) CreateRoles(ctx context.Context, roles []*domainrbac.Ro
 	return toDomainRoles(records), nil
 }
 
-func (r *RBACRepository) GetRole(ctx context.Context, accountID string, roleID int) (*domainrbac.Role, error) {
+func (r *RBACRepository) GetRole(
+	ctx context.Context,
+	accountID string,
+	roleID int,
+) (*domainrbac.Role, error) {
 	role := r.q.Role
 	record, err := role.WithContext(ctx).
 		Where(role.ID.Eq(roleID), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).
@@ -57,7 +64,10 @@ func (r *RBACRepository) GetRole(ctx context.Context, accountID string, roleID i
 	return toDomainRole(record), nil
 }
 
-func (r *RBACRepository) ListRoles(ctx context.Context, query domainrbac.ListRolesQuery) ([]*domainrbac.Role, error) {
+func (r *RBACRepository) ListRoles(
+	ctx context.Context,
+	query domainrbac.ListRolesQuery,
+) ([]*domainrbac.Role, error) {
 	role := r.q.Role
 	q := role.WithContext(ctx).
 		Where(role.AccountID.Eq(query.AccountID), role.DeletedAt.IsNull())
@@ -77,7 +87,10 @@ func (r *RBACRepository) ListRoles(ctx context.Context, query domainrbac.ListRol
 	return toDomainRoles(records), nil
 }
 
-func (r *RBACRepository) UpdateRole(ctx context.Context, role *domainrbac.Role) (*domainrbac.Role, error) {
+func (r *RBACRepository) UpdateRole(
+	ctx context.Context,
+	role *domainrbac.Role,
+) (*domainrbac.Role, error) {
 	if err := validateByteLength(255, role.Name); err != nil {
 		return nil, err
 	}
@@ -119,7 +132,12 @@ func (r *RBACRepository) DeleteRole(ctx context.Context, accountID string, roleI
 	return err
 }
 
-func (r *RBACRepository) AddPermissionGroupsToRole(ctx context.Context, accountID string, roleID int, groupIDs []int) error {
+func (r *RBACRepository) AddPermissionGroupsToRole(
+	ctx context.Context,
+	accountID string,
+	roleID int,
+	groupIDs []int,
+) error {
 	if err := r.ensureRoleInAccount(ctx, accountID, roleID); err != nil {
 		return err
 	}
@@ -129,17 +147,29 @@ func (r *RBACRepository) AddPermissionGroupsToRole(ctx context.Context, accountI
 	return query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
 		records := make([]*models.RolePermissionGroup, 0, len(groupIDs))
 		for _, groupID := range groupIDs {
-			records = append(records, &models.RolePermissionGroup{RoleID: roleID, PermissionGroupID: groupID})
+			records = append(
+				records,
+				&models.RolePermissionGroup{RoleID: roleID, PermissionGroupID: groupID},
+			)
 		}
-		if err := tx.RolePermissionGroup.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(records...); err != nil {
+		if err := tx.RolePermissionGroup.WithContext(ctx).
+			Clauses(clause.OnConflict{DoNothing: true}).
+			Create(records...); err != nil {
 			return err
 		}
-		_, err := tx.Role.WithContext(ctx).Where(tx.Role.ID.Eq(roleID)).UpdateSimple(tx.Role.UpdatedAt.Value(time.Now()))
+		_, err := tx.Role.WithContext(ctx).
+			Where(tx.Role.ID.Eq(roleID)).
+			UpdateSimple(tx.Role.UpdatedAt.Value(time.Now()))
 		return err
 	})
 }
 
-func (r *RBACRepository) RemovePermissionGroupsFromRole(ctx context.Context, accountID string, roleID int, groupIDs []int) error {
+func (r *RBACRepository) RemovePermissionGroupsFromRole(
+	ctx context.Context,
+	accountID string,
+	roleID int,
+	groupIDs []int,
+) error {
 	if err := r.ensureRoleInAccount(ctx, accountID, roleID); err != nil {
 		return err
 	}
@@ -148,15 +178,22 @@ func (r *RBACRepository) RemovePermissionGroupsFromRole(ctx context.Context, acc
 	}
 	return query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
 		link := tx.RolePermissionGroup
-		if _, err := link.WithContext(ctx).Where(link.RoleID.Eq(roleID), link.PermissionGroupID.In(groupIDs...)).Delete(); err != nil {
+		if _, err := link.WithContext(ctx).
+			Where(link.RoleID.Eq(roleID), link.PermissionGroupID.In(groupIDs...)).
+			Delete(); err != nil {
 			return err
 		}
-		_, err := tx.Role.WithContext(ctx).Where(tx.Role.ID.Eq(roleID)).UpdateSimple(tx.Role.UpdatedAt.Value(time.Now()))
+		_, err := tx.Role.WithContext(ctx).
+			Where(tx.Role.ID.Eq(roleID)).
+			UpdateSimple(tx.Role.UpdatedAt.Value(time.Now()))
 		return err
 	})
 }
 
-func (r *RBACRepository) CreatePermissionGroups(ctx context.Context, groups []*domainrbac.PermissionGroup) ([]*domainrbac.PermissionGroup, error) {
+func (r *RBACRepository) CreatePermissionGroups(
+	ctx context.Context,
+	groups []*domainrbac.PermissionGroup,
+) ([]*domainrbac.PermissionGroup, error) {
 	records := make([]*models.PermissionGroup, 0, len(groups))
 	for _, group := range groups {
 		if err := validateByteLength(255, group.Code, group.Name); err != nil {
@@ -184,7 +221,10 @@ func (r *RBACRepository) CreatePermissionGroups(ctx context.Context, groups []*d
 	return toDomainPermissionGroups(records), nil
 }
 
-func (r *RBACRepository) CreatePermissions(ctx context.Context, permissions []*domainrbac.Permission) ([]*domainrbac.Permission, error) {
+func (r *RBACRepository) CreatePermissions(
+	ctx context.Context,
+	permissions []*domainrbac.Permission,
+) ([]*domainrbac.Permission, error) {
 	records := make([]*models.Permission, 0, len(permissions))
 	for _, permission := range permissions {
 		if err := validateByteLength(255, permission.Code, permission.Description); err != nil {
@@ -205,7 +245,9 @@ func (r *RBACRepository) CreatePermissions(ctx context.Context, permissions []*d
 	return toDomainPermissions(records), nil
 }
 
-func (r *RBACRepository) ListPermissionGroups(ctx context.Context) ([]*domainrbac.PermissionGroup, error) {
+func (r *RBACRepository) ListPermissionGroups(
+	ctx context.Context,
+) ([]*domainrbac.PermissionGroup, error) {
 	group := r.q.PermissionGroup
 	records, err := group.WithContext(ctx).
 		Where(group.DeletedAt.IsNull()).
@@ -229,7 +271,11 @@ func (r *RBACRepository) ListPermissions(ctx context.Context) ([]*domainrbac.Per
 	return toDomainPermissions(records), nil
 }
 
-func (r *RBACRepository) AddPermissionsToPermissionGroup(ctx context.Context, groupID int, permissionIDs []int) error {
+func (r *RBACRepository) AddPermissionsToPermissionGroup(
+	ctx context.Context,
+	groupID int,
+	permissionIDs []int,
+) error {
 	if err := r.ensurePermissionGroupExists(ctx, groupID); err != nil {
 		return err
 	}
@@ -239,17 +285,31 @@ func (r *RBACRepository) AddPermissionsToPermissionGroup(ctx context.Context, gr
 	return query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
 		records := make([]*models.PermissionGroupPermission, 0, len(permissionIDs))
 		for _, permissionID := range permissionIDs {
-			records = append(records, &models.PermissionGroupPermission{PermissionGroupID: groupID, PermissionID: permissionID})
+			records = append(
+				records,
+				&models.PermissionGroupPermission{
+					PermissionGroupID: groupID,
+					PermissionID:      permissionID,
+				},
+			)
 		}
-		if err := tx.PermissionGroupPermission.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(records...); err != nil {
+		if err := tx.PermissionGroupPermission.WithContext(ctx).
+			Clauses(clause.OnConflict{DoNothing: true}).
+			Create(records...); err != nil {
 			return err
 		}
-		_, err := tx.PermissionGroup.WithContext(ctx).Where(tx.PermissionGroup.ID.Eq(groupID)).UpdateSimple(tx.PermissionGroup.UpdatedAt.Value(time.Now()))
+		_, err := tx.PermissionGroup.WithContext(ctx).
+			Where(tx.PermissionGroup.ID.Eq(groupID)).
+			UpdateSimple(tx.PermissionGroup.UpdatedAt.Value(time.Now()))
 		return err
 	})
 }
 
-func (r *RBACRepository) RemovePermissionsFromPermissionGroup(ctx context.Context, groupID int, permissionIDs []int) error {
+func (r *RBACRepository) RemovePermissionsFromPermissionGroup(
+	ctx context.Context,
+	groupID int,
+	permissionIDs []int,
+) error {
 	if err := r.ensurePermissionGroupExists(ctx, groupID); err != nil {
 		return err
 	}
@@ -258,15 +318,22 @@ func (r *RBACRepository) RemovePermissionsFromPermissionGroup(ctx context.Contex
 	}
 	return query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
 		link := tx.PermissionGroupPermission
-		if _, err := link.WithContext(ctx).Where(link.PermissionGroupID.Eq(groupID), link.PermissionID.In(permissionIDs...)).Delete(); err != nil {
+		if _, err := link.WithContext(ctx).
+			Where(link.PermissionGroupID.Eq(groupID), link.PermissionID.In(permissionIDs...)).
+			Delete(); err != nil {
 			return err
 		}
-		_, err := tx.PermissionGroup.WithContext(ctx).Where(tx.PermissionGroup.ID.Eq(groupID)).UpdateSimple(tx.PermissionGroup.UpdatedAt.Value(time.Now()))
+		_, err := tx.PermissionGroup.WithContext(ctx).
+			Where(tx.PermissionGroup.ID.Eq(groupID)).
+			UpdateSimple(tx.PermissionGroup.UpdatedAt.Value(time.Now()))
 		return err
 	})
 }
 
-func (r *RBACRepository) GrantUnitRoles(ctx context.Context, params domainrbac.UnitAccountRolesParams) ([]*domainrbac.UnitAccountRole, error) {
+func (r *RBACRepository) GrantUnitRoles(
+	ctx context.Context,
+	params domainrbac.UnitAccountRolesParams,
+) ([]*domainrbac.UnitAccountRole, error) {
 	if err := r.ensureUnitOwnedByAccount(ctx, params.OwnerAccountID, params.UnitID); err != nil {
 		return nil, err
 	}
@@ -306,7 +373,9 @@ func (r *RBACRepository) GrantUnitRoles(ctx context.Context, params domainrbac.U
 		if record.GrantedByAccountID != params.OwnerAccountID {
 			return nil, domainrbac.ErrUnitNotInAccount
 		}
-		_, err = grant.WithContext(ctx).Where(grant.ID.Eq(record.ID)).UpdateSimple(grant.Status.Value(domainrbac.UnitGrantStatusActive))
+		_, err = grant.WithContext(ctx).
+			Where(grant.ID.Eq(record.ID)).
+			UpdateSimple(grant.Status.Value(domainrbac.UnitGrantStatusActive))
 		if err != nil {
 			return nil, err
 		}
@@ -320,7 +389,10 @@ func (r *RBACRepository) GrantUnitRoles(ctx context.Context, params domainrbac.U
 	})
 }
 
-func (r *RBACRepository) RevokeUnitRoles(ctx context.Context, params domainrbac.UnitAccountRolesParams) error {
+func (r *RBACRepository) RevokeUnitRoles(
+	ctx context.Context,
+	params domainrbac.UnitAccountRolesParams,
+) error {
 	if err := r.ensureUnitOwnedByAccount(ctx, params.OwnerAccountID, params.UnitID); err != nil {
 		return err
 	}
@@ -343,7 +415,10 @@ func (r *RBACRepository) RevokeUnitRoles(ctx context.Context, params domainrbac.
 	return nil
 }
 
-func (r *RBACRepository) ListUnitGrants(ctx context.Context, query domainrbac.ListUnitGrantsQuery) ([]*domainrbac.UnitAccountRole, error) {
+func (r *RBACRepository) ListUnitGrants(
+	ctx context.Context,
+	query domainrbac.ListUnitGrantsQuery,
+) ([]*domainrbac.UnitAccountRole, error) {
 	if err := r.ensureUnitOwnedByAccount(ctx, query.OwnerAccountID, query.UnitID); err != nil {
 		return nil, err
 	}
@@ -370,9 +445,16 @@ func (r *RBACRepository) ListUnitGrants(ctx context.Context, query domainrbac.Li
 	return toDomainUnitAccountRoles(records), nil
 }
 
-func (r *RBACRepository) HasUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (bool, error) {
+func (r *RBACRepository) HasUnitPermission(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	permissionCode string,
+) (bool, error) {
 	unit := r.q.Unit
-	unitRecord, err := unit.WithContext(ctx).Where(unit.ID.Eq(unitID), unit.DeletedAt.IsNull()).Take()
+	unitRecord, err := unit.WithContext(ctx).
+		Where(unit.ID.Eq(unitID), unit.DeletedAt.IsNull()).
+		Take()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, domainrbac.ErrUnitNotInAccount
@@ -402,14 +484,22 @@ func (r *RBACRepository) HasUnitPermission(ctx context.Context, accountID string
 			grant.DeletedAt.IsNull(),
 			role.IsActive.Is(true), role.DeletedAt.IsNull(),
 			group.IsActive.Is(true), group.DeletedAt.IsNull(),
-			permission.Code.Eq(permissionCode), permission.IsActive.Is(true), permission.DeletedAt.IsNull(),
-		).Count()
+			permission.Code.Eq(permissionCode),
+			permission.IsActive.Is(true), permission.DeletedAt.IsNull(),
+		).
+		Count()
 	return count > 0, err
 }
 
-func (r *RBACRepository) ensureRoleInAccount(ctx context.Context, accountID string, roleID int) error {
+func (r *RBACRepository) ensureRoleInAccount(
+	ctx context.Context,
+	accountID string,
+	roleID int,
+) error {
 	role := r.q.Role
-	count, err := role.WithContext(ctx).Where(role.ID.Eq(roleID), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).Count()
+	count, err := role.WithContext(ctx).
+		Where(role.ID.Eq(roleID), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
@@ -419,9 +509,15 @@ func (r *RBACRepository) ensureRoleInAccount(ctx context.Context, accountID stri
 	return nil
 }
 
-func (r *RBACRepository) ensureRolesInAccount(ctx context.Context, accountID string, roleIDs []int) error {
+func (r *RBACRepository) ensureRolesInAccount(
+	ctx context.Context,
+	accountID string,
+	roleIDs []int,
+) error {
 	role := r.q.Role
-	count, err := role.WithContext(ctx).Where(role.ID.In(roleIDs...), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).Count()
+	count, err := role.WithContext(ctx).
+		Where(role.ID.In(roleIDs...), role.AccountID.Eq(accountID), role.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
@@ -431,9 +527,15 @@ func (r *RBACRepository) ensureRolesInAccount(ctx context.Context, accountID str
 	return nil
 }
 
-func (r *RBACRepository) ensureUnitOwnedByAccount(ctx context.Context, accountID string, unitID int) error {
+func (r *RBACRepository) ensureUnitOwnedByAccount(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+) error {
 	unit := r.q.Unit
-	count, err := unit.WithContext(ctx).Where(unit.ID.Eq(unitID), unit.AccountID.Eq(accountID), unit.DeletedAt.IsNull()).Count()
+	count, err := unit.WithContext(ctx).
+		Where(unit.ID.Eq(unitID), unit.AccountID.Eq(accountID), unit.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
@@ -445,7 +547,9 @@ func (r *RBACRepository) ensureUnitOwnedByAccount(ctx context.Context, accountID
 
 func (r *RBACRepository) ensurePermissionGroupExists(ctx context.Context, groupID int) error {
 	group := r.q.PermissionGroup
-	count, err := group.WithContext(ctx).Where(group.ID.Eq(groupID), group.DeletedAt.IsNull()).Count()
+	count, err := group.WithContext(ctx).
+		Where(group.ID.Eq(groupID), group.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
@@ -457,7 +561,9 @@ func (r *RBACRepository) ensurePermissionGroupExists(ctx context.Context, groupI
 
 func (r *RBACRepository) ensurePermissionGroupsExist(ctx context.Context, groupIDs []int) error {
 	group := r.q.PermissionGroup
-	count, err := group.WithContext(ctx).Where(group.ID.In(groupIDs...), group.DeletedAt.IsNull()).Count()
+	count, err := group.WithContext(ctx).
+		Where(group.ID.In(groupIDs...), group.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}
@@ -469,7 +575,9 @@ func (r *RBACRepository) ensurePermissionGroupsExist(ctx context.Context, groupI
 
 func (r *RBACRepository) ensurePermissionsExist(ctx context.Context, permissionIDs []int) error {
 	permission := r.q.Permission
-	count, err := permission.WithContext(ctx).Where(permission.ID.In(permissionIDs...), permission.DeletedAt.IsNull()).Count()
+	count, err := permission.WithContext(ctx).
+		Where(permission.ID.In(permissionIDs...), permission.DeletedAt.IsNull()).
+		Count()
 	if err != nil {
 		return err
 	}

@@ -74,7 +74,8 @@ func TestTimestampsPreserveCreationAndRefreshUpdate(t *testing.T) {
 	if result.Error != nil {
 		t.Fatal(result.Error)
 	}
-	if strings.Contains(result.Statement.SQL.String(), "`created_at`") || !role.UpdatedAt.Equal(updatedAt) {
+	if strings.Contains(result.Statement.SQL.String(), "`created_at`") ||
+		!role.UpdatedAt.Equal(updatedAt) {
 		t.Fatalf("更新时间语义变化: %s", result.Statement.SQL.String())
 	}
 }
@@ -85,7 +86,9 @@ func TestNullableValuesAndExplicitSoftDeletion(t *testing.T) {
 	if err := db.Create(reading).Error; err != nil {
 		t.Fatal(err)
 	}
-	if reading.PreviousReading != nil || reading.UsageAmount != nil || reading.ReaderID != nil || reading.Remark != nil || reading.DeletedAt != nil {
+	if reading.PreviousReading != nil || reading.UsageAmount != nil || reading.ReaderID != nil ||
+		reading.Remark != nil ||
+		reading.DeletedAt != nil {
 		t.Fatal("可空字段不应被默认值替换")
 	}
 

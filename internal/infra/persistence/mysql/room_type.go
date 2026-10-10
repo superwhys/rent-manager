@@ -7,10 +7,9 @@ import (
 
 	"gorm.io/gorm"
 
+	domainroomtype "github.com/superwhys/rent-manager/internal/domain/roomtype"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
-
-	domainroomtype "github.com/superwhys/rent-manager/internal/domain/roomtype"
 )
 
 type RoomTypeRepository struct {
@@ -21,7 +20,10 @@ func NewRoomTypeRepository(client *gorm.DB) *RoomTypeRepository {
 	return &RoomTypeRepository{q: query.Use(client)}
 }
 
-func (r *RoomTypeRepository) Create(ctx context.Context, roomType *domainroomtype.RoomType) (*domainroomtype.RoomType, error) {
+func (r *RoomTypeRepository) Create(
+	ctx context.Context,
+	roomType *domainroomtype.RoomType,
+) (*domainroomtype.RoomType, error) {
 	if err := validateByteLength(12, roomType.Name); err != nil {
 		return nil, err
 	}
@@ -36,7 +38,11 @@ func (r *RoomTypeRepository) Create(ctx context.Context, roomType *domainroomtyp
 	return toDomainRoomType(record), nil
 }
 
-func (r *RoomTypeRepository) Get(ctx context.Context, accountID string, id int) (*domainroomtype.RoomType, error) {
+func (r *RoomTypeRepository) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainroomtype.RoomType, error) {
 	record, err := r.q.RoomType.WithContext(ctx).
 		Where(r.q.RoomType.ID.Eq(id), r.q.RoomType.AccountID.Eq(accountID), r.q.RoomType.DeletedAt.IsNull()).
 		Take()
@@ -49,7 +55,10 @@ func (r *RoomTypeRepository) Get(ctx context.Context, accountID string, id int) 
 	return toDomainRoomType(record), nil
 }
 
-func (r *RoomTypeRepository) List(ctx context.Context, query domainroomtype.ListQuery) ([]*domainroomtype.RoomType, error) {
+func (r *RoomTypeRepository) List(
+	ctx context.Context,
+	query domainroomtype.ListQuery,
+) ([]*domainroomtype.RoomType, error) {
 	q := r.q.RoomType.WithContext(ctx).
 		Where(r.q.RoomType.AccountID.Eq(query.AccountID), r.q.RoomType.DeletedAt.IsNull())
 	if query.Name != "" {
@@ -68,7 +77,10 @@ func (r *RoomTypeRepository) List(ctx context.Context, query domainroomtype.List
 	return toDomainRoomTypes(records), nil
 }
 
-func (r *RoomTypeRepository) Update(ctx context.Context, roomType *domainroomtype.RoomType) (*domainroomtype.RoomType, error) {
+func (r *RoomTypeRepository) Update(
+	ctx context.Context,
+	roomType *domainroomtype.RoomType,
+) (*domainroomtype.RoomType, error) {
 	if err := validateByteLength(12, roomType.Name); err != nil {
 		return nil, err
 	}

@@ -15,8 +15,16 @@ import (
 func RentBillRouter(rentBillService *apprentbill.Service) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithHandler(http.MethodGet, "/:rent_bill_id", GetRentBillHandler(rentBillService)),
-		ginutils.WithHandler(http.MethodPost, "/:rent_bill_id/paid", MarkRentBillPaidHandler(rentBillService)),
-		ginutils.WithHandler(http.MethodPost, "/:rent_bill_id/cancel", CancelRentBillHandler(rentBillService)),
+		ginutils.WithHandler(
+			http.MethodPost,
+			"/:rent_bill_id/paid",
+			MarkRentBillPaidHandler(rentBillService),
+		),
+		ginutils.WithHandler(
+			http.MethodPost,
+			"/:rent_bill_id/cancel",
+			CancelRentBillHandler(rentBillService),
+		),
 	)
 }
 
@@ -35,10 +43,18 @@ func RentBillRouter(rentBillService *apprentbill.Service) ginutils.Option {
 func ListRoomRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.RoomRentBillsQuery) {
 		bills, err := rentBillService.ListRoomRentBills(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "list room rent bills failed", xerr.ErrSysInternal) {
+		if apiresponse.HandleRouterError(
+			c,
+			err,
+			"list room rent bills failed",
+			xerr.ErrSysInternal,
+		) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprentbill.ToRentBillListResponse(bills)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(apprentbill.ToRentBillListResponse(bills)),
+		)
 	})
 }
 
@@ -53,13 +69,23 @@ func ListRoomRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerF
 // @Security BearerAuth
 // @Router /rooms/{room_id}/rent-bills/generate [post]
 func GenerateRoomRentBillHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.GenerateRoomRentBillCommand) {
-		result, err := rentBillService.GenerateRoomRentBill(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "generate room rent bill failed", xerr.ErrSysInternal) {
-			return
-		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprentbill.ToGeneratedRentBillsResponse(result)))
-	})
+	return ginutils.RequestHandler(
+		func(c *gin.Context, req *apprentbill.GenerateRoomRentBillCommand) {
+			result, err := rentBillService.GenerateRoomRentBill(c.Request.Context(), req)
+			if apiresponse.HandleRouterError(
+				c,
+				err,
+				"generate room rent bill failed",
+				xerr.ErrSysInternal,
+			) {
+				return
+			}
+			c.JSON(
+				http.StatusOK,
+				apiresponse.ResponseWithData(apprentbill.ToGeneratedRentBillsResponse(result)),
+			)
+		},
+	)
 }
 
 // ListUnitRentBillsHandler godoc
@@ -77,10 +103,18 @@ func GenerateRoomRentBillHandler(rentBillService *apprentbill.Service) gin.Handl
 func ListUnitRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.UnitRentBillsQuery) {
 		bills, err := rentBillService.ListUnitRentBills(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "list unit rent bills failed", xerr.ErrSysInternal) {
+		if apiresponse.HandleRouterError(
+			c,
+			err,
+			"list unit rent bills failed",
+			xerr.ErrSysInternal,
+		) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprentbill.ToRentBillListResponse(bills)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(apprentbill.ToRentBillListResponse(bills)),
+		)
 	})
 }
 
@@ -95,13 +129,23 @@ func ListUnitRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerF
 // @Security BearerAuth
 // @Router /units/{unit_id}/rent-bills/generate [post]
 func GenerateUnitRentBillsHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.GenerateUnitRentBillsCommand) {
-		result, err := rentBillService.GenerateUnitRentBills(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "generate unit rent bills failed", xerr.ErrSysInternal) {
-			return
-		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprentbill.ToGeneratedRentBillsResponse(result)))
-	})
+	return ginutils.RequestHandler(
+		func(c *gin.Context, req *apprentbill.GenerateUnitRentBillsCommand) {
+			result, err := rentBillService.GenerateUnitRentBills(c.Request.Context(), req)
+			if apiresponse.HandleRouterError(
+				c,
+				err,
+				"generate unit rent bills failed",
+				xerr.ErrSysInternal,
+			) {
+				return
+			}
+			c.JSON(
+				http.StatusOK,
+				apiresponse.ResponseWithData(apprentbill.ToGeneratedRentBillsResponse(result)),
+			)
+		},
+	)
 }
 
 // GetRentBillHandler godoc
@@ -135,7 +179,12 @@ func GetRentBillHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 func MarkRentBillPaidHandler(rentBillService *apprentbill.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *apprentbill.MarkRentBillPaidCommand) {
 		bill, err := rentBillService.MarkRentBillPaid(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "mark rent bill paid failed", xerr.ErrSysInternal) {
+		if apiresponse.HandleRouterError(
+			c,
+			err,
+			"mark rent bill paid failed",
+			xerr.ErrSysInternal,
+		) {
 			return
 		}
 		c.JSON(http.StatusOK, apiresponse.ResponseWithData(apprentbill.ToRentBillResponse(bill)))

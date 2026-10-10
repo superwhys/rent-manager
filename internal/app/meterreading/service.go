@@ -24,7 +24,12 @@ type Service struct {
 }
 
 // NewService 创建房间抄表服务。
-func NewService(repo domainmeterreading.Repository, roomRepo domainroom.Repository, unitRepo domainunit.Repository, rbacRepo domainrbac.Repository) *Service {
+func NewService(
+	repo domainmeterreading.Repository,
+	roomRepo domainroom.Repository,
+	unitRepo domainunit.Repository,
+	rbacRepo domainrbac.Repository,
+) *Service {
 	return &Service{
 		repo:        repo,
 		roomRepo:    roomRepo,
@@ -34,7 +39,10 @@ func NewService(repo domainmeterreading.Repository, roomRepo domainroom.Reposito
 }
 
 // GetRoomMonthReadings 获取房间某个月的抄表状态。
-func (s *Service) GetRoomMonthReadings(ctx context.Context, query *RoomMeterReadingsQuery) (*RoomMonthReadings, error) {
+func (s *Service) GetRoomMonthReadings(
+	ctx context.Context,
+	query *RoomMeterReadingsQuery,
+) (*RoomMonthReadings, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -43,7 +51,12 @@ func (s *Service) GetRoomMonthReadings(ctx context.Context, query *RoomMeterRead
 	if err != nil {
 		return nil, err
 	}
-	room, unit, err := s.requireRoomPermission(ctx, accountID, query.RoomID, domainrbac.PermissionMeterReadingView)
+	room, unit, err := s.requireRoomPermission(
+		ctx,
+		accountID,
+		query.RoomID,
+		domainrbac.PermissionMeterReadingView,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +64,10 @@ func (s *Service) GetRoomMonthReadings(ctx context.Context, query *RoomMeterRead
 }
 
 // SaveRoomMonthReadings 保存房间某个月的一组抄表记录。
-func (s *Service) SaveRoomMonthReadings(ctx context.Context, cmd *SaveRoomMonthCommand) (*RoomMonthReadings, error) {
+func (s *Service) SaveRoomMonthReadings(
+	ctx context.Context,
+	cmd *SaveRoomMonthCommand,
+) (*RoomMonthReadings, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -64,7 +80,12 @@ func (s *Service) SaveRoomMonthReadings(ctx context.Context, cmd *SaveRoomMonthC
 		return nil, domainmeterreading.ErrReadingsRequired
 	}
 
-	room, unit, err := s.requireRoomPermission(ctx, accountID, cmd.RoomID, domainrbac.PermissionMeterReadingManage)
+	room, unit, err := s.requireRoomPermission(
+		ctx,
+		accountID,
+		cmd.RoomID,
+		domainrbac.PermissionMeterReadingManage,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +105,14 @@ func (s *Service) SaveRoomMonthReadings(ctx context.Context, cmd *SaveRoomMonthC
 			return nil, domainmeterreading.ErrRoomMeterItemNotAssigned
 		}
 
-		previousReading, err := s.resolvePreviousReading(ctx, unit.AccountID, room.ID, item, periodMonth, input.PreviousReading)
+		previousReading, err := s.resolvePreviousReading(
+			ctx,
+			unit.AccountID,
+			room.ID,
+			item,
+			periodMonth,
+			input.PreviousReading,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +148,10 @@ func (s *Service) SaveRoomMonthReadings(ctx context.Context, cmd *SaveRoomMonthC
 }
 
 // GetUnitMonthReadings 获取单元某个月的抄表汇总。
-func (s *Service) GetUnitMonthReadings(ctx context.Context, query *UnitMeterReadingsQuery) (*UnitMonthReadings, error) {
+func (s *Service) GetUnitMonthReadings(
+	ctx context.Context,
+	query *UnitMeterReadingsQuery,
+) (*UnitMonthReadings, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -129,7 +160,12 @@ func (s *Service) GetUnitMonthReadings(ctx context.Context, query *UnitMeterRead
 	if err != nil {
 		return nil, err
 	}
-	unit, err := s.requireUnitPermission(ctx, accountID, query.UnitID, domainrbac.PermissionMeterReadingView)
+	unit, err := s.requireUnitPermission(
+		ctx,
+		accountID,
+		query.UnitID,
+		domainrbac.PermissionMeterReadingView,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +196,12 @@ func (s *Service) GetUnitMonthReadings(ctx context.Context, query *UnitMeterRead
 }
 
 // buildRoomMonthReadings 构建房间某个月所有当前绑定抄表项的录入状态。
-func (s *Service) buildRoomMonthReadings(ctx context.Context, accountID string, room *domainroom.Room, periodMonth string) (*RoomMonthReadings, error) {
+func (s *Service) buildRoomMonthReadings(
+	ctx context.Context,
+	accountID string,
+	room *domainroom.Room,
+	periodMonth string,
+) (*RoomMonthReadings, error) {
 	readings, err := s.repo.List(ctx, accountID, domainmeterreading.ListQuery{
 		RoomID:      room.ID,
 		PeriodMonth: periodMonth,
@@ -185,7 +226,14 @@ func (s *Service) buildRoomMonthReadings(ctx context.Context, accountID string, 
 		if item == nil {
 			continue
 		}
-		line, err := s.buildMeterReadingLine(ctx, accountID, room.ID, item, periodMonth, readingByMeterItemID[item.ID])
+		line, err := s.buildMeterReadingLine(
+			ctx,
+			accountID,
+			room.ID,
+			item,
+			periodMonth,
+			readingByMeterItemID[item.ID],
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +246,14 @@ func (s *Service) buildRoomMonthReadings(ctx context.Context, accountID string, 
 	return roomMonth, nil
 }
 
-func (s *Service) buildMeterReadingLine(ctx context.Context, accountID string, roomID int, item *domainmeteritem.MeterItem, periodMonth string, reading *domainmeterreading.MeterReading) (*MeterReadingLine, error) {
+func (s *Service) buildMeterReadingLine(
+	ctx context.Context,
+	accountID string,
+	roomID int,
+	item *domainmeteritem.MeterItem,
+	periodMonth string,
+	reading *domainmeterreading.MeterReading,
+) (*MeterReadingLine, error) {
 	line := &MeterReadingLine{
 		RoomID:      roomID,
 		PeriodMonth: periodMonth,
@@ -230,7 +285,14 @@ func (s *Service) buildMeterReadingLine(ctx context.Context, accountID string, r
 	return line, nil
 }
 
-func (s *Service) resolvePreviousReading(ctx context.Context, accountID string, roomID int, item *domainmeteritem.MeterItem, periodMonth string, inputPreviousReading *float64) (*float64, error) {
+func (s *Service) resolvePreviousReading(
+	ctx context.Context,
+	accountID string,
+	roomID int,
+	item *domainmeteritem.MeterItem,
+	periodMonth string,
+	inputPreviousReading *float64,
+) (*float64, error) {
 	if item.CalcType != domainmeteritem.CalcTypeDifference {
 		return nil, nil
 	}
@@ -248,7 +310,12 @@ func (s *Service) resolvePreviousReading(ctx context.Context, accountID string, 
 	return inputPreviousReading, nil
 }
 
-func (s *Service) requireRoomPermission(ctx context.Context, accountID string, roomID int, permissionCode string) (*domainroom.Room, *domainunit.Unit, error) {
+func (s *Service) requireRoomPermission(
+	ctx context.Context,
+	accountID string,
+	roomID int,
+	permissionCode string,
+) (*domainroom.Room, *domainunit.Unit, error) {
 	room, err := s.roomRepo.GetByID(ctx, roomID)
 	if err != nil {
 		return nil, nil, err
@@ -260,7 +327,12 @@ func (s *Service) requireRoomPermission(ctx context.Context, accountID string, r
 	return room, unit, nil
 }
 
-func (s *Service) requireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (*domainunit.Unit, error) {
+func (s *Service) requireUnitPermission(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	permissionCode string,
+) (*domainunit.Unit, error) {
 	unit, err := s.unitRepo.GetByID(ctx, unitID)
 	if err != nil {
 		return nil, err
@@ -268,7 +340,12 @@ func (s *Service) requireUnitPermission(ctx context.Context, accountID string, u
 	if unit.AccountID == accountID {
 		return unit, nil
 	}
-	if err := s.rbacService.RequireUnitPermission(ctx, accountID, unitID, permissionCode); err != nil {
+	if err := s.rbacService.RequireUnitPermission(
+		ctx,
+		accountID,
+		unitID,
+		permissionCode,
+	); err != nil {
 		return nil, err
 	}
 	return unit, nil
@@ -299,7 +376,10 @@ func roomMeterItemMap(room *domainroom.Room) map[int]*domainmeteritem.MeterItem 
 	return items
 }
 
-func collectRoomMonthSummary(summaryByMeterItemID map[int]*MeterItemSummary, roomMonth *RoomMonthReadings) {
+func collectRoomMonthSummary(
+	summaryByMeterItemID map[int]*MeterItemSummary,
+	roomMonth *RoomMonthReadings,
+) {
 	for _, line := range roomMonth.Readings {
 		if line == nil || line.MeterItem == nil {
 			continue

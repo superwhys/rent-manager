@@ -43,7 +43,13 @@ func TestRoomRepositoryOwnershipFiltersAndZeroValues(t *testing.T) {
 		t.Fatalf("unexpected room: %+v", room)
 	}
 	second, err := repo.Create(ctx, owner, &domainroom.Room{
-		RoomNo: "102", Floor: 1, Price: 100, Size: 20, UnitID: unit.ID, RoomTypeID: roomType.ID, IsActive: true,
+		RoomNo:     "102",
+		Floor:      1,
+		Price:      100,
+		Size:       20,
+		UnitID:     unit.ID,
+		RoomTypeID: roomType.ID,
+		IsActive:   true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -60,7 +66,17 @@ func TestRoomRepositoryOwnershipFiltersAndZeroValues(t *testing.T) {
 		t.Fatalf("offset page = %+v, %v", rooms, err)
 	}
 	inactive := false
-	count, err := repo.Count(ctx, owner, domainroom.ListQuery{UnitID: unit.ID, RoomTypeID: roomType.ID, IsActive: &inactive, Offset: 9, Limit: 1})
+	count, err := repo.Count(
+		ctx,
+		owner,
+		domainroom.ListQuery{
+			UnitID:     unit.ID,
+			RoomTypeID: roomType.ID,
+			IsActive:   &inactive,
+			Offset:     9,
+			Limit:      1,
+		},
+	)
 	if err != nil || count != 1 {
 		t.Fatalf("filtered count = %d, %v", count, err)
 	}
@@ -82,7 +98,8 @@ func TestRoomRepositoryOwnershipFiltersAndZeroValues(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if room.Floor != 0 || room.Price != 0 || room.IsActive || !reflect.DeepEqual(room.MeterItemIDs, []int{power.ID}) {
+	if room.Floor != 0 || room.Price != 0 || room.IsActive ||
+		!reflect.DeepEqual(room.MeterItemIDs, []int{power.ID}) {
 		t.Fatalf("zero values/relations not saved: %+v", room)
 	}
 
@@ -116,7 +133,12 @@ func TestRoomRepositoryOwnershipFiltersAndZeroValues(t *testing.T) {
 	if err := repo.Delete(ctx, other, room.ID); !errors.Is(err, domainroom.ErrNotFound) {
 		t.Fatalf("foreign Delete error = %v", err)
 	}
-	if err := NewUnitRepository(db).Delete(ctx, owner, unit.ID); !errors.Is(err, domainunit.ErrUnitHasRooms) {
+	if err := NewUnitRepository(
+		db,
+	).Delete(ctx, owner, unit.ID); !errors.Is(
+		err,
+		domainunit.ErrUnitHasRooms,
+	) {
 		t.Fatalf("occupied unit Delete error = %v", err)
 	}
 	room.MeterItemIDs = nil
@@ -134,7 +156,9 @@ func TestRoomRepositoryOwnershipFiltersAndZeroValues(t *testing.T) {
 	if err != nil || stored.DeletedAt == nil || *stored.IsActive {
 		t.Fatalf("soft deleted room = %+v, %v", stored, err)
 	}
-	if _, err := q.Unit.WithContext(ctx).Where(q.Unit.ID.Eq(unit.ID)).UpdateSimple(q.Unit.DeletedAt.Value(time.Now())); err != nil {
+	if _, err := q.Unit.WithContext(ctx).
+		Where(q.Unit.ID.Eq(unit.ID)).
+		UpdateSimple(q.Unit.DeletedAt.Value(time.Now())); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := repo.Get(ctx, owner, second.ID); !errors.Is(err, domainroom.ErrNotFound) {
@@ -166,11 +190,14 @@ func TestRoomRepositoryMeterItemTransactionRollback(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeErr := errors.New("relation write failed")
-	if err := db.Callback().Create().Before("gorm:create").Register("room_test:fail_relation", func(tx *gorm.DB) {
-		if tx.Statement.Table == "room_meter_items" {
-			tx.AddError(writeErr)
-		}
-	}); err != nil {
+	if err := db.Callback().
+		Create().
+		Before("gorm:create").
+		Register("room_test:fail_relation", func(tx *gorm.DB) {
+			if tx.Statement.Table == "room_meter_items" {
+				tx.AddError(writeErr)
+			}
+		}); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { db.Callback().Create().Remove("room_test:fail_relation") })

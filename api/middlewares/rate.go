@@ -9,11 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
 	"github.com/ulule/limiter/v3"
+	ginlimiter "github.com/ulule/limiter/v3/drivers/middleware/gin"
 
 	"github.com/superwhys/rent-manager/api/response"
 	"github.com/superwhys/rent-manager/internal/xerr"
-
-	ginlimiter "github.com/ulule/limiter/v3/drivers/middleware/gin"
 )
 
 const (
@@ -38,7 +37,13 @@ func keyGenerator(excludedPaths []string) func(c *gin.Context) string {
 		hash.Write([]byte(clientIP))
 		key := fmt.Sprintf("%x", hash.Sum(nil))
 
-		logging.Debugc(c.Request.Context(), "limit path: %s clientIp: %s key: %s", path, clientIP, key)
+		logging.Debugc(
+			c.Request.Context(),
+			"limit path: %s clientIp: %s key: %s",
+			path,
+			clientIP,
+			key,
+		)
 		return key
 	}
 }

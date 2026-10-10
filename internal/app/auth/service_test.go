@@ -55,9 +55,14 @@ type authFixture struct {
 
 func newAuthFixture(t *testing.T) authFixture {
 	t.Helper()
-	db, err := gorm.Open(sqliteAuthDialector{sqlite.Dialector{DSN: fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())}}, &gorm.Config{
-		TranslateError: true, Logger: logger.Default.LogMode(logger.Silent),
-	})
+	db, err := gorm.Open(
+		sqliteAuthDialector{
+			sqlite.Dialector{DSN: fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())},
+		},
+		&gorm.Config{
+			TranslateError: true, Logger: logger.Default.LogMode(logger.Silent),
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,11 +85,16 @@ func newAuthFixture(t *testing.T) authFixture {
 
 func (f authFixture) sendCode(t *testing.T, email string) string {
 	t.Helper()
-	if err := f.db.Model(&models.Challenge{}).Where("email = ?", strings.ToLower(strings.TrimSpace(email))).
-		Update("sent", time.Now().Add(-2*time.Minute)).Error; err != nil {
+	if err := f.db.Model(&models.Challenge{}).
+		Where("email = ?", strings.ToLower(strings.TrimSpace(email))).
+		Update("sent", time.Now().Add(-2*time.Minute)).
+		Error; err != nil {
 		t.Fatal(err)
 	}
-	if err := f.service.SendCode(context.Background(), authkit.SendCodeInput{Email: email, IP: "192.0.2.8"}); err != nil {
+	if err := f.service.SendCode(
+		context.Background(),
+		authkit.SendCodeInput{Email: email, IP: "192.0.2.8"},
+	); err != nil {
 		t.Fatal(err)
 	}
 	return f.sender.code
@@ -119,7 +129,9 @@ func TestRegisterCreatesBothBindingsAndValidSession(t *testing.T) {
 	}
 	for _, method := range []string{authkit.MethodEmail, authkit.MethodPassword} {
 		var binding models.Binding
-		if err := f.db.Where("method = ? AND identifier = ?", method, registered.Account.Email).Take(&binding).Error; err != nil {
+		if err := f.db.Where("method = ? AND identifier = ?", method, registered.Account.Email).
+			Take(&binding).
+			Error; err != nil {
 			t.Fatal(err)
 		}
 		if binding.AccountID == nil || *binding.AccountID != registered.Account.ID {
@@ -133,11 +145,20 @@ func TestRegisterCreatesBothBindingsAndValidSession(t *testing.T) {
 		t.Fatalf("password login did not reuse registered account: %v", err)
 	}
 	code := f.sendCode(t, registered.Account.Email)
-	emailLogin, err := f.service.LoginEmail(ctx, authkit.EmailLoginInput{Email: registered.Account.Email, Code: code})
+	emailLogin, err := f.service.LoginEmail(
+		ctx,
+		authkit.EmailLoginInput{Email: registered.Account.Email, Code: code},
+	)
 	if err != nil || emailLogin.Account.ID != registered.Account.ID || emailLogin.Created {
 		t.Fatalf("code login did not reuse registered account: %v", err)
 	}
-	if _, err := f.service.LoginEmail(ctx, authkit.EmailLoginInput{Email: registered.Account.Email, Code: code}); !errors.Is(err, authkit.ErrChallengeInvalid) {
+	if _, err := f.service.LoginEmail(
+		ctx,
+		authkit.EmailLoginInput{Email: registered.Account.Email, Code: code},
+	); !errors.Is(
+		err,
+		authkit.ErrChallengeInvalid,
+	) {
 		t.Fatalf("consumed code remained usable: %v", err)
 	}
 }
@@ -171,10 +192,22 @@ func TestLoginDoesNotRegisterUnknownEmail(t *testing.T) {
 	f := newAuthFixture(t)
 	ctx := context.Background()
 	code := f.sendCode(t, "unknown@example.com")
-	if _, err := f.service.LoginEmail(ctx, authkit.EmailLoginInput{Email: "unknown@example.com", Code: code}); !errors.Is(err, authkit.ErrRegistrationDenied) {
+	if _, err := f.service.LoginEmail(
+		ctx,
+		authkit.EmailLoginInput{Email: "unknown@example.com", Code: code},
+	); !errors.Is(
+		err,
+		authkit.ErrRegistrationDenied,
+	) {
 		t.Fatalf("unknown code login = %v", err)
 	}
-	if _, err := f.service.LoginPassword(ctx, authkit.PasswordLoginInput{Identifier: "unknown@example.com", Password: "some-password"}); !errors.Is(err, authkit.ErrInvalidCredentials) {
+	if _, err := f.service.LoginPassword(
+		ctx,
+		authkit.PasswordLoginInput{Identifier: "unknown@example.com", Password: "some-password"},
+	); !errors.Is(
+		err,
+		authkit.ErrInvalidCredentials,
+	) {
 		t.Fatalf("unknown password login = %v", err)
 	}
 	var count int64
@@ -236,11 +269,15 @@ func TestRegistrationRollsBackWhenFinalSessionFails(t *testing.T) {
 	f := newAuthFixture(t)
 	code := f.sendCode(t, "tenant@example.com")
 	failure := errors.New("session storage failed")
-	if err := f.db.Callback().Create().Before("gorm:create").Register("test:reject-password-session", func(tx *gorm.DB) {
-		if session, ok := tx.Statement.Dest.(*models.Session); ok && session.Method == authkit.MethodPassword {
-			tx.AddError(failure)
-		}
-	}); err != nil {
+	if err := f.db.Callback().
+		Create().
+		Before("gorm:create").
+		Register("test:reject-password-session", func(tx *gorm.DB) {
+			if session, ok := tx.Statement.Dest.(*models.Session); ok &&
+				session.Method == authkit.MethodPassword {
+				tx.AddError(failure)
+			}
+		}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := f.service.Register(context.Background(), appauth.RegisterRequest{
@@ -274,9 +311,20 @@ func TestRegistrationRateLimitDoesNotLeavePartialAccount(t *testing.T) {
 	if err := f.db.Create(&rate).Error; err != nil {
 		t.Fatal(err)
 	}
-	request := appauth.RegisterRequest{Email: "tenant@example.com", Code: code, Password: "valid-password"}
+	request := appauth.RegisterRequest{
+		Email:    "tenant@example.com",
+		Code:     code,
+		Password: "valid-password",
+	}
 	for attempt := 0; attempt < 2; attempt++ {
-		if _, err := f.service.Register(context.Background(), request, "192.0.2.8"); !errors.Is(err, authkit.ErrTooManyRequests) {
+		if _, err := f.service.Register(
+			context.Background(),
+			request,
+			"192.0.2.8",
+		); !errors.Is(
+			err,
+			authkit.ErrTooManyRequests,
+		) {
 			t.Fatalf("limited registration = %v", err)
 		}
 		for _, model := range []any{&models.Account{}, &models.Session{}} {
@@ -286,7 +334,10 @@ func TestRegistrationRateLimitDoesNotLeavePartialAccount(t *testing.T) {
 			}
 		}
 		var stored models.Rate
-		if err := f.db.Where("id = ?", rate.ID).Take(&stored).Error; err != nil || stored.Hits != authkit.PasswordIPRateLimit {
+		if err := f.db.Where("id = ?", rate.ID).
+			Take(&stored).
+			Error; err != nil ||
+			stored.Hits != authkit.PasswordIPRateLimit {
 			t.Fatalf("rollback reset IP rate: hits=%d err=%v", stored.Hits, err)
 		}
 	}

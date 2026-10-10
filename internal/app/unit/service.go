@@ -23,7 +23,11 @@ type Service struct {
 }
 
 // NewService 创建单元管理服务。
-func NewService(repo domainunit.Repository, roomRepo domainroom.Repository, rbacRepo domainrbac.Repository) *Service {
+func NewService(
+	repo domainunit.Repository,
+	roomRepo domainroom.Repository,
+	rbacRepo domainrbac.Repository,
+) *Service {
 	return &Service{
 		repo:        repo,
 		roomRepo:    roomRepo,
@@ -32,7 +36,10 @@ func NewService(repo domainunit.Repository, roomRepo domainroom.Repository, rbac
 }
 
 // CreateUnit 创建当前账号下的单元。
-func (s *Service) CreateUnit(ctx context.Context, cmd *CreateUnitCommand) (*domainunit.Unit, error) {
+func (s *Service) CreateUnit(
+	ctx context.Context,
+	cmd *CreateUnitCommand,
+) (*domainunit.Unit, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -79,7 +86,10 @@ func (s *Service) GetUnitInfo(ctx context.Context, id int) (*domainunit.Unit, er
 }
 
 // ListUnits 获取当前账号可访问的单元列表。
-func (s *Service) ListUnits(ctx context.Context, query *ListUnitsQuery) ([]*domainunit.Summary, error) {
+func (s *Service) ListUnits(
+	ctx context.Context,
+	query *ListUnitsQuery,
+) ([]*domainunit.Summary, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -108,13 +118,21 @@ func (s *Service) ListUnits(ctx context.Context, query *ListUnitsQuery) ([]*doma
 }
 
 // UpdateUnit 更新当前账号可管理的单元。
-func (s *Service) UpdateUnit(ctx context.Context, cmd *UpdateUnitCommand) (*domainunit.Unit, error) {
+func (s *Service) UpdateUnit(
+	ctx context.Context,
+	cmd *UpdateUnitCommand,
+) (*domainunit.Unit, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	existing, err := s.requireUnitPermission(ctx, accountID, cmd.UnitID, domainrbac.PermissionUnitUpdate)
+	existing, err := s.requireUnitPermission(
+		ctx,
+		accountID,
+		cmd.UnitID,
+		domainrbac.PermissionUnitUpdate,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +175,12 @@ func (s *Service) DeleteUnit(ctx context.Context, id int) error {
 }
 
 // requireUnitPermission 校验当前账号对单元的权限并标记访问类型。
-func (s *Service) requireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (*domainunit.Unit, error) {
+func (s *Service) requireUnitPermission(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	permissionCode string,
+) (*domainunit.Unit, error) {
 	err := s.rbacService.RequireUnitPermission(ctx, accountID, unitID, permissionCode)
 	if err != nil {
 		return nil, err
@@ -178,7 +201,10 @@ func (s *Service) requireUnitPermission(ctx context.Context, accountID string, u
 }
 
 // buildUnitSummaries 汇总单元列表的房间统计信息。
-func (s *Service) buildUnitSummaries(ctx context.Context, units []*domainunit.Unit) ([]*domainunit.Summary, error) {
+func (s *Service) buildUnitSummaries(
+	ctx context.Context,
+	units []*domainunit.Unit,
+) ([]*domainunit.Summary, error) {
 	summaries := make([]*domainunit.Summary, 0, len(units))
 	rented := false
 

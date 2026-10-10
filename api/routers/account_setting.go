@@ -30,10 +30,18 @@ func AccountSettingRouter(settingService *appaccountsetting.Service) ginutils.Op
 func GetSettingsHandler(settingService *appaccountsetting.Service) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appcore.EmptyRequest) {
 		settings, err := settingService.GetSettings(c.Request.Context())
-		if apiresponse.HandleRouterError(c, err, "get account settings failed", xerr.ErrSysInternal) {
+		if apiresponse.HandleRouterError(
+			c,
+			err,
+			"get account settings failed",
+			xerr.ErrSysInternal,
+		) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appaccountsetting.ToSettingsResponse(settings)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(appaccountsetting.ToSettingsResponse(settings)),
+		)
 	})
 }
 
@@ -47,11 +55,21 @@ func GetSettingsHandler(settingService *appaccountsetting.Service) gin.HandlerFu
 // @Security BearerAuth
 // @Router /settings [put]
 func UpdateSettingsHandler(settingService *appaccountsetting.Service) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *appaccountsetting.UpdateSettingsCommand) {
-		settings, err := settingService.UpdateSettings(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "update account settings failed", xerr.ErrSysInternal) {
-			return
-		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(appaccountsetting.ToSettingsResponse(settings)))
-	})
+	return ginutils.RequestHandler(
+		func(c *gin.Context, req *appaccountsetting.UpdateSettingsCommand) {
+			settings, err := settingService.UpdateSettings(c.Request.Context(), req)
+			if apiresponse.HandleRouterError(
+				c,
+				err,
+				"update account settings failed",
+				xerr.ErrSysInternal,
+			) {
+				return
+			}
+			c.JSON(
+				http.StatusOK,
+				apiresponse.ResponseWithData(appaccountsetting.ToSettingsResponse(settings)),
+			)
+		},
+	)
 }

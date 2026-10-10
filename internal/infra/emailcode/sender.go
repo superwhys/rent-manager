@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/miebyte/authkit"
+
 	"github.com/superwhys/rent-manager/config"
 )
 
@@ -69,7 +70,11 @@ func (s *Sender) SendCode(ctx context.Context, email, code string) error {
 }
 
 func (s *Sender) send(ctx context.Context, email, code string) error {
-	conn, err := s.dialContext(ctx, "tcp", net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port)))
+	conn, err := s.dialContext(
+		ctx,
+		"tcp",
+		net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port)),
+	)
 	if err != nil {
 		return err
 	}
@@ -102,7 +107,9 @@ func (s *Sender) send(ctx context.Context, email, code string) error {
 		}
 	}
 	if s.config.Username != "" {
-		if err := client.Auth(smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host)); err != nil {
+		if err := client.Auth(
+			smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host),
+		); err != nil {
 			return err
 		}
 	}
@@ -119,8 +126,11 @@ func (s *Sender) send(ctx context.Context, email, code string) error {
 	from := (&mail.Address{Name: s.config.FromName, Address: s.config.From}).String()
 	message := fmt.Sprintf(
 		"From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n您的租住管理验证码是：%s\r\n\r\n验证码在 %d 分钟内有效，请勿向他人透露。若非本人操作，请忽略此邮件。\r\n",
-		from, (&mail.Address{Address: email}).String(), mime.QEncoding.Encode("UTF-8", "租住管理 · 邮箱验证码"),
-		code, int(authkit.CodeTTL/time.Minute),
+		from,
+		(&mail.Address{Address: email}).String(),
+		mime.QEncoding.Encode("UTF-8", "租住管理 · 邮箱验证码"),
+		code,
+		int(authkit.CodeTTL/time.Minute),
 	)
 	if _, err := writer.Write([]byte(message)); err != nil {
 		return err

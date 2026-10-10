@@ -17,7 +17,11 @@ type Service struct {
 }
 
 // NewService 创建房间服务。
-func NewService(repo domainroom.Repository, unitRepo domainunit.Repository, rbacRepo domainrbac.Repository) *Service {
+func NewService(
+	repo domainroom.Repository,
+	unitRepo domainunit.Repository,
+	rbacRepo domainrbac.Repository,
+) *Service {
 	return &Service{
 		repo:        repo,
 		unitRepo:    unitRepo,
@@ -26,13 +30,21 @@ func NewService(repo domainroom.Repository, unitRepo domainunit.Repository, rbac
 }
 
 // CreateRoomInUnit 在当前账号可管理的单元下创建房间。
-func (s *Service) CreateRoomInUnit(ctx context.Context, cmd *CreateRoomInUnitCommand) (*domainroom.Room, error) {
+func (s *Service) CreateRoomInUnit(
+	ctx context.Context,
+	cmd *CreateRoomInUnitCommand,
+) (*domainroom.Room, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	unit, err := s.requireUnitPermission(ctx, accountID, cmd.UnitID, domainrbac.PermissionRoomManage)
+	unit, err := s.requireUnitPermission(
+		ctx,
+		accountID,
+		cmd.UnitID,
+		domainrbac.PermissionRoomManage,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +77,12 @@ func (s *Service) GetRoom(ctx context.Context, roomID int) (*domainroom.Room, er
 		return nil, err
 	}
 
-	if _, err := s.requireUnitPermission(ctx, accountID, room.UnitID, domainrbac.PermissionRoomView); err != nil {
+	if _, err := s.requireUnitPermission(
+		ctx,
+		accountID,
+		room.UnitID,
+		domainrbac.PermissionRoomView,
+	); err != nil {
 		return nil, err
 	}
 
@@ -73,13 +90,21 @@ func (s *Service) GetRoom(ctx context.Context, roomID int) (*domainroom.Room, er
 }
 
 // ListRoomsInUnit 获取当前账号可访问的单元房间列表。
-func (s *Service) ListRoomsInUnit(ctx context.Context, query *UnitRoomsQuery) ([]*domainroom.Room, error) {
+func (s *Service) ListRoomsInUnit(
+	ctx context.Context,
+	query *UnitRoomsQuery,
+) ([]*domainroom.Room, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	unit, err := s.requireUnitPermission(ctx, accountID, query.UnitID, domainrbac.PermissionRoomView)
+	unit, err := s.requireUnitPermission(
+		ctx,
+		accountID,
+		query.UnitID,
+		domainrbac.PermissionRoomView,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +124,10 @@ func (s *Service) ListRoomsInUnit(ctx context.Context, query *UnitRoomsQuery) ([
 }
 
 // UpdateRoom 更新当前账号可管理的房间。
-func (s *Service) UpdateRoom(ctx context.Context, cmd *UpdateRoomCommand) (*domainroom.Room, error) {
+func (s *Service) UpdateRoom(
+	ctx context.Context,
+	cmd *UpdateRoomCommand,
+) (*domainroom.Room, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -110,7 +138,12 @@ func (s *Service) UpdateRoom(ctx context.Context, cmd *UpdateRoomCommand) (*doma
 		return nil, err
 	}
 
-	unit, err := s.requireUnitPermission(ctx, accountID, existing.UnitID, domainrbac.PermissionRoomManage)
+	unit, err := s.requireUnitPermission(
+		ctx,
+		accountID,
+		existing.UnitID,
+		domainrbac.PermissionRoomManage,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +163,12 @@ func (s *Service) UpdateRoom(ctx context.Context, cmd *UpdateRoomCommand) (*doma
 	}
 	if cmd.UnitID != nil {
 		if *cmd.UnitID != existing.UnitID {
-			targetUnit, err := s.requireUnitPermission(ctx, accountID, *cmd.UnitID, domainrbac.PermissionRoomManage)
+			targetUnit, err := s.requireUnitPermission(
+				ctx,
+				accountID,
+				*cmd.UnitID,
+				domainrbac.PermissionRoomManage,
+			)
 			if err != nil {
 				return nil, err
 			}
@@ -177,7 +215,12 @@ func (s *Service) DeleteRoom(ctx context.Context, roomID int) error {
 		return err
 	}
 
-	unit, err := s.requireUnitPermission(ctx, accountID, room.UnitID, domainrbac.PermissionRoomManage)
+	unit, err := s.requireUnitPermission(
+		ctx,
+		accountID,
+		room.UnitID,
+		domainrbac.PermissionRoomManage,
+	)
 	if err != nil {
 		return err
 	}
@@ -186,7 +229,12 @@ func (s *Service) DeleteRoom(ctx context.Context, roomID int) error {
 }
 
 // requireUnitPermission 校验当前账号对单元的权限。
-func (s *Service) requireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) (*domainunit.Unit, error) {
+func (s *Service) requireUnitPermission(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	permissionCode string,
+) (*domainunit.Unit, error) {
 	unit, err := s.unitRepo.GetByID(ctx, unitID)
 	if err != nil {
 		return nil, err
@@ -196,7 +244,12 @@ func (s *Service) requireUnitPermission(ctx context.Context, accountID string, u
 		return unit, nil
 	}
 
-	if err := s.rbacService.RequireUnitPermission(ctx, accountID, unitID, permissionCode); err != nil {
+	if err := s.rbacService.RequireUnitPermission(
+		ctx,
+		accountID,
+		unitID,
+		permissionCode,
+	); err != nil {
 		return nil, err
 	}
 

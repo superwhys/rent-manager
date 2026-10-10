@@ -2,7 +2,7 @@ package accountsetting
 
 // UpdateSettingsCommand 是更新当前账号配置的请求体。
 type UpdateSettingsCommand struct {
-	Key   string `json:"key" validate:"required,max=64"`
+	Key   string `json:"key"   validate:"required,max=64"`
 	Value string `json:"value" validate:"required,max=255"`
 }
 

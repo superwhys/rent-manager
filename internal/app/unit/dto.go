@@ -4,10 +4,10 @@ import domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 
 // CreateUnitCommand 是创建单元的请求体。
 type CreateUnitCommand struct {
-	Name                string             `json:"name" validate:"required,max=255"`
-	Address             string             `json:"address" validate:"required,max=255"`
-	City                string             `json:"city" validate:"required,max=255"`
-	Province            string             `json:"province" validate:"required,max=255"`
+	Name                string             `json:"name"                   validate:"required,max=255"`
+	Address             string             `json:"address"                validate:"required,max=255"`
+	City                string             `json:"city"                   validate:"required,max=255"`
+	Province            string             `json:"province"               validate:"required,max=255"`
 	DefaultMeterItemIDs []int              `json:"default_meter_item_ids" validate:"omitempty,dive,min=1"`
 	JsonExtend          *UnitConfigCommand `json:"json_extend"`
 }
@@ -15,12 +15,12 @@ type CreateUnitCommand struct {
 // UpdateUnitCommand 是更新单元的请求体。
 type UpdateUnitCommand struct {
 	UnitID              int                `uri:"unit_id" validate:"required,min=1"`
-	Name                string             `json:"name" validate:"required,max=255"`
-	Address             string             `json:"address" validate:"required,max=255"`
-	City                string             `json:"city" validate:"required,max=255"`
-	Province            string             `json:"province" validate:"required,max=255"`
-	DefaultMeterItemIDs []int              `json:"default_meter_item_ids" validate:"omitempty,dive,min=1"`
-	JsonExtend          *UnitConfigCommand `json:"json_extend"`
+	Name                string             `              validate:"required,max=255"     json:"name"`
+	Address             string             `              validate:"required,max=255"     json:"address"`
+	City                string             `              validate:"required,max=255"     json:"city"`
+	Province            string             `              validate:"required,max=255"     json:"province"`
+	DefaultMeterItemIDs []int              `              validate:"omitempty,dive,min=1" json:"default_meter_item_ids"`
+	JsonExtend          *UnitConfigCommand `                                              json:"json_extend"`
 }
 
 // ListUnitsQuery 是单元列表查询参数。

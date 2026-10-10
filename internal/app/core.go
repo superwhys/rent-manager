@@ -14,7 +14,7 @@ type EmptyRequest struct{}
 
 // Pagination 表示通用分页查询参数。
 type Pagination struct {
-	Limit  int `form:"limit" json:"limit"`
+	Limit  int `form:"limit"  json:"limit"`
 	Offset int `form:"offset" json:"offset"`
 }
 

@@ -5,7 +5,12 @@ import "context"
 var _ IRbacService = (*RbacService)(nil)
 
 type IRbacService interface {
-	RequireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) error
+	RequireUnitPermission(
+		ctx context.Context,
+		accountID string,
+		unitID int,
+		permissionCode string,
+	) error
 }
 
 type RbacService struct {
@@ -16,7 +21,12 @@ func NewRbacService(repo Repository) *RbacService {
 	return &RbacService{repo: repo}
 }
 
-func (s *RbacService) RequireUnitPermission(ctx context.Context, accountID string, unitID int, permissionCode string) error {
+func (s *RbacService) RequireUnitPermission(
+	ctx context.Context,
+	accountID string,
+	unitID int,
+	permissionCode string,
+) error {
 	if permissionCode == "" {
 		return ErrPermissionCodeEmpty
 	}

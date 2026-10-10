@@ -3,10 +3,9 @@ package mysql
 import (
 	"errors"
 
+	mysqldriver "github.com/go-sql-driver/mysql"
 	"github.com/miebyte/goutils/mysqlutils"
 	"gorm.io/gorm"
-
-	mysqldriver "github.com/go-sql-driver/mysql"
 )
 
 // OpenMysqlClient initializes a GORM client from MySQL config.
@@ -22,5 +21,6 @@ func isConstraintError(err error) bool {
 		return true
 	}
 	var mysqlErr *mysqldriver.MySQLError
-	return errors.As(err, &mysqlErr) && (mysqlErr.Number == 1062 || mysqlErr.Number == 1451 || mysqlErr.Number == 1452)
+	return errors.As(err, &mysqlErr) &&
+		(mysqlErr.Number == 1062 || mysqlErr.Number == 1451 || mysqlErr.Number == 1452)
 }

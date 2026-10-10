@@ -9,16 +9,15 @@ import (
 	"testing"
 
 	"github.com/glebarez/sqlite"
+	mysqlconfig "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
+	mysqldriver "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/migrator"
 	"gorm.io/gorm/schema"
 
 	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
-
-	mysqlconfig "github.com/go-sql-driver/mysql"
-	mysqldriver "gorm.io/driver/mysql"
 )
 
 // sqliteTestDialector preserves the production models while adapting MySQL-only types.
@@ -53,7 +52,10 @@ func newTestDB(t *testing.T) *gorm.DB {
 	if dsn := os.Getenv("RENT_MANAGER_TEST_MYSQL_DSN"); dsn != "" {
 		dialector = newMysqlTestDialector(t, dsn)
 	}
-	db, err := gorm.Open(dialector, &gorm.Config{TranslateError: true, Logger: logger.Default.LogMode(logger.Silent)})
+	db, err := gorm.Open(
+		dialector,
+		&gorm.Config{TranslateError: true, Logger: logger.Default.LogMode(logger.Silent)},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}

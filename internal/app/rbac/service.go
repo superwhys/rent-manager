@@ -7,7 +7,6 @@ import (
 	"github.com/miebyte/authkit"
 
 	"github.com/superwhys/rent-manager/config"
-
 	appcore "github.com/superwhys/rent-manager/internal/app"
 	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
 	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
@@ -31,7 +30,12 @@ type UnitLookup interface {
 }
 
 // NewService 创建 RBAC 服务。
-func NewService(repo domainrbac.Repository, accounts AccountLookup, units UnitLookup, adminConfig *config.AdminConfig) *Service {
+func NewService(
+	repo domainrbac.Repository,
+	accounts AccountLookup,
+	units UnitLookup,
+	adminConfig *config.AdminConfig,
+) *Service {
 	if adminConfig == nil {
 		adminConfig = &config.AdminConfig{}
 	}
@@ -44,7 +48,10 @@ func NewService(repo domainrbac.Repository, accounts AccountLookup, units UnitLo
 }
 
 // CreateRoles 批量创建当前账号下的角色。
-func (s *Service) CreateRoles(ctx context.Context, cmd *CreateRolesCommand) ([]*domainrbac.Role, error) {
+func (s *Service) CreateRoles(
+	ctx context.Context,
+	cmd *CreateRolesCommand,
+) ([]*domainrbac.Role, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -98,7 +105,10 @@ func (s *Service) GetRole(ctx context.Context, roleID int) (*domainrbac.Role, er
 }
 
 // UpdateRole 更新当前账号下的角色。
-func (s *Service) UpdateRole(ctx context.Context, cmd *UpdateRoleCommand) (*domainrbac.Role, error) {
+func (s *Service) UpdateRole(
+	ctx context.Context,
+	cmd *UpdateRoleCommand,
+) (*domainrbac.Role, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -143,7 +153,10 @@ func (s *Service) DeleteRole(ctx context.Context, roleID int) error {
 }
 
 // AddPermissionGroupsToRole 给当前账号角色绑定权限组。
-func (s *Service) AddPermissionGroupsToRole(ctx context.Context, cmd *RolePermissionGroupsCommand) error {
+func (s *Service) AddPermissionGroupsToRole(
+	ctx context.Context,
+	cmd *RolePermissionGroupsCommand,
+) error {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return err
@@ -158,7 +171,10 @@ func (s *Service) AddPermissionGroupsToRole(ctx context.Context, cmd *RolePermis
 }
 
 // RemovePermissionGroupsFromRole 从当前账号角色移除权限组。
-func (s *Service) RemovePermissionGroupsFromRole(ctx context.Context, cmd *RolePermissionGroupsCommand) error {
+func (s *Service) RemovePermissionGroupsFromRole(
+	ctx context.Context,
+	cmd *RolePermissionGroupsCommand,
+) error {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return err
@@ -173,7 +189,10 @@ func (s *Service) RemovePermissionGroupsFromRole(ctx context.Context, cmd *RoleP
 }
 
 // CreatePermissionGroups 批量创建全局权限组。
-func (s *Service) CreatePermissionGroups(ctx context.Context, cmd *CreatePermissionGroupsCommand) ([]*domainrbac.PermissionGroup, error) {
+func (s *Service) CreatePermissionGroups(
+	ctx context.Context,
+	cmd *CreatePermissionGroupsCommand,
+) ([]*domainrbac.PermissionGroup, error) {
 	if err := s.requireSuperAdmin(ctx); err != nil {
 		return nil, err
 	}
@@ -212,7 +231,10 @@ func (s *Service) ListPermissionGroups(ctx context.Context) ([]*domainrbac.Permi
 }
 
 // CreatePermissions 批量创建全局权限。
-func (s *Service) CreatePermissions(ctx context.Context, cmd *CreatePermissionsCommand) ([]*domainrbac.Permission, error) {
+func (s *Service) CreatePermissions(
+	ctx context.Context,
+	cmd *CreatePermissionsCommand,
+) ([]*domainrbac.Permission, error) {
 	if err := s.requireSuperAdmin(ctx); err != nil {
 		return nil, err
 	}
@@ -249,7 +271,10 @@ func (s *Service) ListPermissions(ctx context.Context) ([]*domainrbac.Permission
 }
 
 // AddPermissionsToPermissionGroup 给权限组绑定权限。
-func (s *Service) AddPermissionsToPermissionGroup(ctx context.Context, cmd *PermissionGroupPermissionsCommand) error {
+func (s *Service) AddPermissionsToPermissionGroup(
+	ctx context.Context,
+	cmd *PermissionGroupPermissionsCommand,
+) error {
 	if err := s.requireSuperAdmin(ctx); err != nil {
 		return err
 	}
@@ -263,7 +288,10 @@ func (s *Service) AddPermissionsToPermissionGroup(ctx context.Context, cmd *Perm
 }
 
 // RemovePermissionsFromPermissionGroup 从权限组移除权限。
-func (s *Service) RemovePermissionsFromPermissionGroup(ctx context.Context, cmd *PermissionGroupPermissionsCommand) error {
+func (s *Service) RemovePermissionsFromPermissionGroup(
+	ctx context.Context,
+	cmd *PermissionGroupPermissionsCommand,
+) error {
 	if err := s.requireSuperAdmin(ctx); err != nil {
 		return err
 	}
@@ -277,7 +305,10 @@ func (s *Service) RemovePermissionsFromPermissionGroup(ctx context.Context, cmd 
 }
 
 // GrantUnitRoles 给目标账号授予单元角色。
-func (s *Service) GrantUnitRoles(ctx context.Context, cmd *UnitAccountRolesCommand) ([]*domainrbac.UnitAccountRole, error) {
+func (s *Service) GrantUnitRoles(
+	ctx context.Context,
+	cmd *UnitAccountRolesCommand,
+) ([]*domainrbac.UnitAccountRole, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -338,7 +369,10 @@ func (s *Service) RevokeUnitRoles(ctx context.Context, cmd *UnitAccountRolesComm
 }
 
 // ListUnitGrants 获取当前账号作为所有者的单元授权列表。
-func (s *Service) ListUnitGrants(ctx context.Context, query *UnitGrantsQuery) ([]*domainrbac.UnitAccountRole, error) {
+func (s *Service) ListUnitGrants(
+	ctx context.Context,
+	query *UnitGrantsQuery,
+) ([]*domainrbac.UnitAccountRole, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err

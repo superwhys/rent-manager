@@ -17,8 +17,16 @@ func RoomTypeRouter(roomTypeService *approomtype.Service) ginutils.Option {
 		ginutils.WithHandler(http.MethodPost, "", CreateRoomTypeHandler(roomTypeService)),
 		ginutils.WithHandler(http.MethodGet, "", ListRoomTypesHandler(roomTypeService)),
 		ginutils.WithHandler(http.MethodGet, "/:room_type_id", GetRoomTypeHandler(roomTypeService)),
-		ginutils.WithHandler(http.MethodPut, "/:room_type_id", UpdateRoomTypeHandler(roomTypeService)),
-		ginutils.WithHandler(http.MethodDelete, "/:room_type_id", DeleteRoomTypeHandler(roomTypeService)),
+		ginutils.WithHandler(
+			http.MethodPut,
+			"/:room_type_id",
+			UpdateRoomTypeHandler(roomTypeService),
+		),
+		ginutils.WithHandler(
+			http.MethodDelete,
+			"/:room_type_id",
+			DeleteRoomTypeHandler(roomTypeService),
+		),
 	)
 }
 
@@ -37,7 +45,10 @@ func CreateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc
 		if apiresponse.HandleRouterError(c, err, "create room type failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)),
+		)
 	})
 }
 
@@ -57,7 +68,10 @@ func ListRoomTypesHandler(roomTypeService *approomtype.Service) gin.HandlerFunc 
 		if apiresponse.HandleRouterError(c, err, "list room types failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approomtype.ToRoomTypeListResponse(roomTypes)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(approomtype.ToRoomTypeListResponse(roomTypes)),
+		)
 	})
 }
 
@@ -75,7 +89,10 @@ func GetRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc {
 		if apiresponse.HandleRouterError(c, err, "get room type failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)),
+		)
 	})
 }
 
@@ -95,7 +112,10 @@ func UpdateRoomTypeHandler(roomTypeService *approomtype.Service) gin.HandlerFunc
 		if apiresponse.HandleRouterError(c, err, "update room type failed", xerr.ErrSysInternal) {
 			return
 		}
-		c.JSON(http.StatusOK, apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)))
+		c.JSON(
+			http.StatusOK,
+			apiresponse.ResponseWithData(approomtype.ToRoomTypeResponse(roomType)),
+		)
 	})
 }
 

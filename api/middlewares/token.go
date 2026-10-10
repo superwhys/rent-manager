@@ -42,22 +42,38 @@ func TokenVerifyMiddleware(authService SessionAuthenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := BearerToken(ctx)
 		if token == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrUnauthorized))
+			ctx.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				response.ErrorResponseWithCode(xerr.ErrUnauthorized),
+			)
 			return
 		}
 		session, err := authService.AuthenticateSession(ctx.Request.Context(), token)
 		if err != nil {
 			if errors.Is(err, authkit.ErrUnauthorized) || errors.Is(err, authkit.ErrBlacklisted) {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrInvalidToken))
+				ctx.AbortWithStatusJSON(
+					http.StatusUnauthorized,
+					response.ErrorResponseWithCode(xerr.ErrInvalidToken),
+				)
 			} else {
-				logging.Errorw(ctx.Request.Context(), "authenticate session failed", logging.Err(err))
-				ctx.AbortWithStatusJSON(http.StatusInternalServerError, response.ErrorResponseWithCode(xerr.ErrSysInternal))
+				logging.Errorw(
+					ctx.Request.Context(),
+					"authenticate session failed",
+					logging.Err(err),
+				)
+				ctx.AbortWithStatusJSON(
+					http.StatusInternalServerError,
+					response.ErrorResponseWithCode(xerr.ErrSysInternal),
+				)
 			}
 			return
 		}
 		// 本项目未提供代登录授权，不能把代登录会话当作目标账号的普通会话。
 		if session == nil || session.Account.ID == "" || session.Actor != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.ErrorResponseWithCode(xerr.ErrInvalidToken))
+			ctx.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				response.ErrorResponseWithCode(xerr.ErrInvalidToken),
+			)
 			return
 		}
 		ctx.Set(sessionContextKey, session)

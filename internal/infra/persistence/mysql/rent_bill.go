@@ -8,10 +8,9 @@ import (
 	"gorm.io/gen"
 	"gorm.io/gorm"
 
+	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
 	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql/query"
-
-	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
 )
 
 // RentBillRepository 提供租金账单的 GORM 持久化实现。
@@ -25,7 +24,11 @@ func NewRentBillRepository(client *gorm.DB) *RentBillRepository {
 }
 
 // Create 创建账号名下房间的租金账单。
-func (r *RentBillRepository) Create(ctx context.Context, accountID string, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) Create(
+	ctx context.Context,
+	accountID string,
+	bill *domainrentbill.RentBill,
+) (*domainrentbill.RentBill, error) {
 	if err := r.ensureRentBillRoomInAccount(ctx, accountID, bill.RoomID); err != nil {
 		return nil, err
 	}
@@ -40,12 +43,18 @@ func (r *RentBillRepository) Create(ctx context.Context, accountID string, bill 
 }
 
 // Get 获取账号名下指定租金账单。
-func (r *RentBillRepository) Get(ctx context.Context, accountID string, id int) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) Get(
+	ctx context.Context,
+	accountID string,
+	id int,
+) (*domainrentbill.RentBill, error) {
 	record, err := r.q.RentBill.WithContext(ctx).
 		Where(
 			r.q.RentBill.ID.Eq(id),
 			r.q.RentBill.DeletedAt.IsNull(),
-			gen.Columns{r.q.RentBill.RoomID}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
+			gen.Columns{
+				r.q.RentBill.RoomID,
+			}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
 		).
 		Take()
 	if err != nil {
@@ -58,7 +67,10 @@ func (r *RentBillRepository) Get(ctx context.Context, accountID string, id int) 
 }
 
 // GetByID 获取指定租金账单，不做账号归属过滤。
-func (r *RentBillRepository) GetByID(ctx context.Context, id int) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) GetByID(
+	ctx context.Context,
+	id int,
+) (*domainrentbill.RentBill, error) {
 	record, err := r.q.RentBill.WithContext(ctx).
 		Where(r.q.RentBill.ID.Eq(id), r.q.RentBill.DeletedAt.IsNull()).
 		Take()
@@ -72,13 +84,20 @@ func (r *RentBillRepository) GetByID(ctx context.Context, id int) (*domainrentbi
 }
 
 // GetByRoomPeriod 获取账号名下房间指定月份的租金账单。
-func (r *RentBillRepository) GetByRoomPeriod(ctx context.Context, accountID string, roomID int, periodMonth string) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) GetByRoomPeriod(
+	ctx context.Context,
+	accountID string,
+	roomID int,
+	periodMonth string,
+) (*domainrentbill.RentBill, error) {
 	record, err := r.q.RentBill.WithContext(ctx).
 		Where(
 			r.q.RentBill.RoomID.Eq(roomID),
 			r.q.RentBill.PeriodMonth.Eq(periodMonth),
 			r.q.RentBill.DeletedAt.IsNull(),
-			gen.Columns{r.q.RentBill.RoomID}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
+			gen.Columns{
+				r.q.RentBill.RoomID,
+			}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
 		).
 		Take()
 	if err != nil {
@@ -91,7 +110,11 @@ func (r *RentBillRepository) GetByRoomPeriod(ctx context.Context, accountID stri
 }
 
 // List 查询账号名下的租金账单列表。
-func (r *RentBillRepository) List(ctx context.Context, accountID string, query domainrentbill.ListQuery) ([]*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) List(
+	ctx context.Context,
+	accountID string,
+	query domainrentbill.ListQuery,
+) ([]*domainrentbill.RentBill, error) {
 	q := r.queryRentBills(ctx, accountID, query)
 	if query.Limit > 0 {
 		q = q.Limit(query.Limit)
@@ -107,7 +130,11 @@ func (r *RentBillRepository) List(ctx context.Context, accountID string, query d
 }
 
 // SaveGeneratedBills 事务性保存生成的账单：新增、刷新待付账单、跳过已支付或已取消账单。
-func (r *RentBillRepository) SaveGeneratedBills(ctx context.Context, accountID string, bills []*domainrentbill.RentBill) (*domainrentbill.SaveGeneratedBillsResult, error) {
+func (r *RentBillRepository) SaveGeneratedBills(
+	ctx context.Context,
+	accountID string,
+	bills []*domainrentbill.RentBill,
+) (*domainrentbill.SaveGeneratedBillsResult, error) {
 	if len(bills) == 0 {
 		return nil, domainrentbill.ErrBillsRequired
 	}
@@ -121,52 +148,60 @@ func (r *RentBillRepository) SaveGeneratedBills(ctx context.Context, accountID s
 		Saved:   make([]*domainrentbill.RentBill, 0, len(bills)),
 		Skipped: make([]*domainrentbill.RentBill, 0),
 	}
-	err := query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(client *query.Query) error {
-		for _, bill := range bills {
-			record, err := client.RentBill.WithContext(ctx).
-				Where(
-					client.RentBill.RoomID.Eq(bill.RoomID),
-					client.RentBill.PeriodMonth.Eq(bill.PeriodMonth),
-					client.RentBill.DeletedAt.IsNull(),
-					gen.Columns{client.RentBill.RoomID}.In(accountRooms(ctx, client, accountID).Select(client.Room.ID)),
-				).
-				Take()
-			if err != nil {
-				if !errors.Is(err, gorm.ErrRecordNotFound) {
-					return err
+	err := query.Use(r.q.UnderlyingDB().WithContext(ctx)).
+		Transaction(func(client *query.Query) error {
+			for _, bill := range bills {
+				record, err := client.RentBill.WithContext(ctx).
+					Where(
+						client.RentBill.RoomID.Eq(bill.RoomID),
+						client.RentBill.PeriodMonth.Eq(bill.PeriodMonth),
+						client.RentBill.DeletedAt.IsNull(),
+						gen.Columns{
+							client.RentBill.RoomID,
+						}.In(accountRooms(ctx, client, accountID).Select(client.Room.ID)),
+					).
+					Take()
+				if err != nil {
+					if !errors.Is(err, gorm.ErrRecordNotFound) {
+						return err
+					}
+					created, err := r.createRentBillRecord(ctx, client, bill)
+					if err != nil {
+						if isConstraintError(err) {
+							return domainrentbill.ErrAlreadyExists
+						}
+						return err
+					}
+					result.Saved = append(result.Saved, toDomainRentBill(created))
+					continue
 				}
-				created, err := r.createRentBillRecord(ctx, client, bill)
+
+				if record.Status != domainrentbill.StatusUnpaid {
+					result.Skipped = append(result.Skipped, toDomainRentBill(record))
+					continue
+				}
+				err = r.updateRentBillRecord(
+					client.RentBill.WithContext(ctx).Where(client.RentBill.ID.Eq(record.ID)),
+					bill,
+				)
 				if err != nil {
 					if isConstraintError(err) {
 						return domainrentbill.ErrAlreadyExists
 					}
 					return err
 				}
-				result.Saved = append(result.Saved, toDomainRentBill(created))
-				continue
-			}
-
-			if record.Status != domainrentbill.StatusUnpaid {
-				result.Skipped = append(result.Skipped, toDomainRentBill(record))
-				continue
-			}
-			err = r.updateRentBillRecord(client.RentBill.WithContext(ctx).Where(client.RentBill.ID.Eq(record.ID)), bill)
-			if err != nil {
-				if isConstraintError(err) {
-					return domainrentbill.ErrAlreadyExists
+				updated, err := client.RentBill.WithContext(ctx).
+					Where(client.RentBill.ID.Eq(record.ID)).
+					Take()
+				if err != nil {
+					return err
 				}
-				return err
-			}
-			updated, err := client.RentBill.WithContext(ctx).Where(client.RentBill.ID.Eq(record.ID)).Take()
-			if err != nil {
-				return err
+
+				result.Saved = append(result.Saved, toDomainRentBill(updated))
 			}
 
-			result.Saved = append(result.Saved, toDomainRentBill(updated))
-		}
-
-		return nil
-	})
+			return nil
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +209,11 @@ func (r *RentBillRepository) SaveGeneratedBills(ctx context.Context, accountID s
 }
 
 // Update 更新账号名下指定租金账单。
-func (r *RentBillRepository) Update(ctx context.Context, accountID string, bill *domainrentbill.RentBill) (*domainrentbill.RentBill, error) {
+func (r *RentBillRepository) Update(
+	ctx context.Context,
+	accountID string,
+	bill *domainrentbill.RentBill,
+) (*domainrentbill.RentBill, error) {
 	if err := r.ensureRentBillRoomInAccount(ctx, accountID, bill.RoomID); err != nil {
 		return nil, err
 	}
@@ -193,7 +232,9 @@ func (r *RentBillRepository) Delete(ctx context.Context, accountID string, id in
 		Where(
 			r.q.RentBill.ID.Eq(id),
 			r.q.RentBill.DeletedAt.IsNull(),
-			gen.Columns{r.q.RentBill.RoomID}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
+			gen.Columns{
+				r.q.RentBill.RoomID,
+			}.In(accountRooms(ctx, r.q, accountID).Select(r.q.Room.ID)),
 		).
 		Update(r.q.RentBill.DeletedAt, time.Now())
 	if err != nil {
@@ -205,7 +246,11 @@ func (r *RentBillRepository) Delete(ctx context.Context, accountID string, id in
 	return nil
 }
 
-func (r *RentBillRepository) createRentBillRecord(ctx context.Context, client *query.Query, bill *domainrentbill.RentBill) (*models.RentBill, error) {
+func (r *RentBillRepository) createRentBillRecord(
+	ctx context.Context,
+	client *query.Query,
+	bill *domainrentbill.RentBill,
+) (*models.RentBill, error) {
 	record := toModelRentBill(bill)
 	if err := client.RentBill.WithContext(ctx).Create(record); err != nil {
 		return nil, err
@@ -213,7 +258,10 @@ func (r *RentBillRepository) createRentBillRecord(ctx context.Context, client *q
 	return record, nil
 }
 
-func (r *RentBillRepository) updateRentBillRecord(q query.IRentBillDo, bill *domainrentbill.RentBill) error {
+func (r *RentBillRepository) updateRentBillRecord(
+	q query.IRentBillDo,
+	bill *domainrentbill.RentBill,
+) error {
 	m := r.q.RentBill
 	result, err := q.Select(
 		m.RoomID,
@@ -257,7 +305,11 @@ func toModelRentBill(bill *domainrentbill.RentBill) *models.RentBill {
 }
 
 // queryRentBills 构建带账号归属约束的租金账单查询。
-func (r *RentBillRepository) queryRentBills(ctx context.Context, accountID string, params domainrentbill.ListQuery) query.IRentBillDo {
+func (r *RentBillRepository) queryRentBills(
+	ctx context.Context,
+	accountID string,
+	params domainrentbill.ListQuery,
+) query.IRentBillDo {
 	rooms := accountRooms(ctx, r.q, accountID)
 	if params.UnitID > 0 {
 		rooms = rooms.Where(r.q.Room.UnitID.Eq(params.UnitID))
@@ -286,7 +338,11 @@ func (r *RentBillRepository) queryRentBills(ctx context.Context, accountID strin
 }
 
 // ensureRentBillRoomInAccount 确认账单房间属于当前账号。
-func (r *RentBillRepository) ensureRentBillRoomInAccount(ctx context.Context, accountID string, roomID int) error {
+func (r *RentBillRepository) ensureRentBillRoomInAccount(
+	ctx context.Context,
+	accountID string,
+	roomID int,
+) error {
 	count, err := accountRooms(ctx, r.q, accountID).Where(r.q.Room.ID.Eq(roomID)).Count()
 	if err != nil {
 		return err

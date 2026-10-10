@@ -12,27 +12,27 @@ import (
 // RoomMeterReadingsQuery 是房间月度抄表查询参数。
 type RoomMeterReadingsQuery struct {
 	RoomID      int    `uri:"room_id" validate:"required,min=1"`
-	PeriodMonth string `form:"period_month" validate:"required"`
+	PeriodMonth string `              validate:"required"       form:"period_month"`
 }
 
 // UnitMeterReadingsQuery 是单元月度抄表汇总查询参数。
 type UnitMeterReadingsQuery struct {
 	UnitID      int    `uri:"unit_id" validate:"required,min=1"`
-	PeriodMonth string `form:"period_month" validate:"required"`
+	PeriodMonth string `              validate:"required"       form:"period_month"`
 }
 
 // SaveRoomMonthCommand 是保存房间月度抄表的请求参数。
 type SaveRoomMonthCommand struct {
 	RoomID      int                 `uri:"room_id" validate:"required,min=1"`
-	PeriodMonth string              `json:"period_month" validate:"required"`
-	Readings    []MeterReadingInput `json:"readings" validate:"required,min=1,dive"`
+	PeriodMonth string              `              validate:"required"            json:"period_month"`
+	Readings    []MeterReadingInput `              validate:"required,min=1,dive" json:"readings"`
 }
 
 // MeterReadingInput 是单个抄表项的录入内容。
 type MeterReadingInput struct {
-	MeterItemID     int        `json:"meter_item_id" validate:"required,min=1"`
+	MeterItemID     int        `json:"meter_item_id"    validate:"required,min=1"`
 	PreviousReading *float64   `json:"previous_reading" validate:"omitempty,min=0"`
-	CurrentReading  float64    `json:"current_reading" validate:"min=0"`
+	CurrentReading  float64    `json:"current_reading"  validate:"min=0"`
 	ReadingTime     *time.Time `json:"reading_time"`
 	Remark          *string    `json:"remark"`
 }

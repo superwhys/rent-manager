@@ -16,9 +16,21 @@ const (
 func TestGetSettingsReturnsAccountSettingsMap(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
 	repo.seed(
-		&domainaccountsetting.AccountSetting{AccountID: testAccountID10, Key: "theme", Value: "dark"},
-		&domainaccountsetting.AccountSetting{AccountID: testAccountID10, Key: "locale", Value: "zh-CN"},
-		&domainaccountsetting.AccountSetting{AccountID: testAccountID20, Key: "theme", Value: "light"},
+		&domainaccountsetting.AccountSetting{
+			AccountID: testAccountID10,
+			Key:       "theme",
+			Value:     "dark",
+		},
+		&domainaccountsetting.AccountSetting{
+			AccountID: testAccountID10,
+			Key:       "locale",
+			Value:     "zh-CN",
+		},
+		&domainaccountsetting.AccountSetting{
+			AccountID: testAccountID20,
+			Key:       "theme",
+			Value:     "light",
+		},
 	)
 	service := NewService(repo)
 	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
@@ -40,7 +52,10 @@ func TestUpdateSettingsStoresKeyValue(t *testing.T) {
 	service := NewService(repo)
 	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
-	settings, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"})
+	settings, err := service.UpdateSettings(
+		ctx,
+		&UpdateSettingsCommand{Key: "theme", Value: "dark"},
+	)
 	if err != nil {
 		t.Fatalf("UpdateSettings() error = %v", err)
 	}
@@ -58,11 +73,20 @@ func TestUpdateSettingsStoresKeyValue(t *testing.T) {
 
 func TestUpdateSettingsOverwritesExistingValue(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
-	repo.seed(&domainaccountsetting.AccountSetting{AccountID: testAccountID10, Key: "theme", Value: "light"})
+	repo.seed(
+		&domainaccountsetting.AccountSetting{
+			AccountID: testAccountID10,
+			Key:       "theme",
+			Value:     "light",
+		},
+	)
 	service := NewService(repo)
 	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
-	settings, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"})
+	settings, err := service.UpdateSettings(
+		ctx,
+		&UpdateSettingsCommand{Key: "theme", Value: "dark"},
+	)
 	if err != nil {
 		t.Fatalf("UpdateSettings() error = %v", err)
 	}
@@ -79,7 +103,13 @@ func TestUpdateSettingsOverwritesExistingValue(t *testing.T) {
 
 func TestSettingsAreScopedByAccount(t *testing.T) {
 	repo := newFakeAccountSettingRepo()
-	repo.seed(&domainaccountsetting.AccountSetting{AccountID: testAccountID20, Key: "theme", Value: "light"})
+	repo.seed(
+		&domainaccountsetting.AccountSetting{
+			AccountID: testAccountID20,
+			Key:       "theme",
+			Value:     "light",
+		},
+	)
 	service := NewService(repo)
 	ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
 
@@ -90,7 +120,10 @@ func TestSettingsAreScopedByAccount(t *testing.T) {
 	if len(*settings) != 0 {
 		t.Fatalf("settings = %#v, want empty", *settings)
 	}
-	if _, err := service.UpdateSettings(ctx, &UpdateSettingsCommand{Key: "theme", Value: "dark"}); err != nil {
+	if _, err := service.UpdateSettings(
+		ctx,
+		&UpdateSettingsCommand{Key: "theme", Value: "dark"},
+	); err != nil {
 		t.Fatalf("UpdateSettings() error = %v", err)
 	}
 	if repo.settings[testAccountID20]["theme"].Value != "light" {
@@ -106,7 +139,9 @@ type fakeAccountSettingRepo struct {
 }
 
 func newFakeAccountSettingRepo() *fakeAccountSettingRepo {
-	return &fakeAccountSettingRepo{settings: make(map[string]map[string]*domainaccountsetting.AccountSetting)}
+	return &fakeAccountSettingRepo{
+		settings: make(map[string]map[string]*domainaccountsetting.AccountSetting),
+	}
 }
 
 func (r *fakeAccountSettingRepo) seed(settings ...*domainaccountsetting.AccountSetting) {
@@ -115,14 +150,21 @@ func (r *fakeAccountSettingRepo) seed(settings ...*domainaccountsetting.AccountS
 	}
 }
 
-func (r *fakeAccountSettingRepo) GetByKey(ctx context.Context, accountID string, key string) (*domainaccountsetting.AccountSetting, error) {
+func (r *fakeAccountSettingRepo) GetByKey(
+	ctx context.Context,
+	accountID string,
+	key string,
+) (*domainaccountsetting.AccountSetting, error) {
 	if r.settings[accountID] == nil || r.settings[accountID][key] == nil {
 		return nil, domainaccountsetting.ErrNotFound
 	}
 	return cloneAccountSetting(r.settings[accountID][key]), nil
 }
 
-func (r *fakeAccountSettingRepo) List(ctx context.Context, query domainaccountsetting.ListQuery) ([]*domainaccountsetting.AccountSetting, error) {
+func (r *fakeAccountSettingRepo) List(
+	ctx context.Context,
+	query domainaccountsetting.ListQuery,
+) ([]*domainaccountsetting.AccountSetting, error) {
 	settingsByKey := r.settings[query.AccountID]
 	settings := make([]*domainaccountsetting.AccountSetting, 0, len(settingsByKey))
 	for _, setting := range settingsByKey {
@@ -131,7 +173,10 @@ func (r *fakeAccountSettingRepo) List(ctx context.Context, query domainaccountse
 	return settings, nil
 }
 
-func (r *fakeAccountSettingRepo) Upsert(ctx context.Context, setting *domainaccountsetting.AccountSetting) (*domainaccountsetting.AccountSetting, error) {
+func (r *fakeAccountSettingRepo) Upsert(
+	ctx context.Context,
+	setting *domainaccountsetting.AccountSetting,
+) (*domainaccountsetting.AccountSetting, error) {
 	if r.settings[setting.AccountID] == nil {
 		r.settings[setting.AccountID] = make(map[string]*domainaccountsetting.AccountSetting)
 	}
@@ -146,7 +191,9 @@ func (r *fakeAccountSettingRepo) Upsert(ctx context.Context, setting *domainacco
 	return cloneAccountSetting(next), nil
 }
 
-func cloneAccountSetting(setting *domainaccountsetting.AccountSetting) *domainaccountsetting.AccountSetting {
+func cloneAccountSetting(
+	setting *domainaccountsetting.AccountSetting,
+) *domainaccountsetting.AccountSetting {
 	if setting == nil {
 		return nil
 	}

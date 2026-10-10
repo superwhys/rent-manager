@@ -18,7 +18,10 @@ func NewService(repo domainroomtype.Repository) *Service {
 }
 
 // CreateRoomType 创建当前账号下的房型。
-func (s *Service) CreateRoomType(ctx context.Context, cmd *CreateRoomTypeCommand) (*domainroomtype.RoomType, error) {
+func (s *Service) CreateRoomType(
+	ctx context.Context,
+	cmd *CreateRoomTypeCommand,
+) (*domainroomtype.RoomType, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -46,7 +49,10 @@ func (s *Service) GetRoomType(ctx context.Context, id int) (*domainroomtype.Room
 }
 
 // ListRoomTypes 获取当前账号下的房型列表。
-func (s *Service) ListRoomTypes(ctx context.Context, query *ListRoomTypesQuery) ([]*domainroomtype.RoomType, error) {
+func (s *Service) ListRoomTypes(
+	ctx context.Context,
+	query *ListRoomTypesQuery,
+) ([]*domainroomtype.RoomType, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -61,7 +67,10 @@ func (s *Service) ListRoomTypes(ctx context.Context, query *ListRoomTypesQuery) 
 }
 
 // UpdateRoomType 更新当前账号下的房型。
-func (s *Service) UpdateRoomType(ctx context.Context, cmd *UpdateRoomTypeCommand) (*domainroomtype.RoomType, error) {
+func (s *Service) UpdateRoomType(
+	ctx context.Context,
+	cmd *UpdateRoomTypeCommand,
+) (*domainroomtype.RoomType, error) {
 	accountID, err := appcore.AccountIDFromContext(ctx)
 	if err != nil {
 		return nil, err
