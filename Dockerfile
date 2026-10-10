@@ -17,7 +17,7 @@ RUN pnpm build
 
 FROM golang:${GO_VERSION}-alpine AS go-builder
 
-ARG BINARY_NAME=one-more-round
+ARG BINARY_NAME=rent-manager
 ARG VERSION=dev
 ARG TARGETOS
 ARG TARGETARCH
@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM alpine:${ALPINE_VERSION}
 
-ARG BINARY_NAME=one-more-round
+ARG BINARY_NAME=rent-manager
 
 RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -S app \
@@ -48,14 +48,11 @@ RUN apk add --no-cache ca-certificates tzdata \
 
 WORKDIR /app
 
-COPY --from=go-builder /out/${BINARY_NAME} /app/one-more-round
+COPY --from=go-builder /out/${BINARY_NAME} /app/rent-manager
 
 USER app
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD wget -q -O /dev/null http://127.0.0.1:8080/health_check || exit 1
-
-ENTRYPOINT ["/app/one-more-round"]
+ENTRYPOINT ["/app/rent-manager"]
 CMD ["--configFile", "/app/config.json"]
