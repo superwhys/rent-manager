@@ -9,7 +9,6 @@
 package main
 
 import (
-	"errors"
 	"time"
 
 	"github.com/miebyte/authkit"
@@ -22,11 +21,6 @@ import (
 
 	"github.com/superwhys/rent-manager/api"
 	"github.com/superwhys/rent-manager/config"
-	"github.com/superwhys/rent-manager/internal/infra/emailcode"
-	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
-	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql"
-	"github.com/superwhys/rent-manager/internal/infra/ratelimit"
-
 	appaccountsetting "github.com/superwhys/rent-manager/internal/app/accountsetting"
 	appadmin "github.com/superwhys/rent-manager/internal/app/admin"
 	appauth "github.com/superwhys/rent-manager/internal/app/auth"
@@ -38,6 +32,10 @@ import (
 	approom "github.com/superwhys/rent-manager/internal/app/room"
 	approomtype "github.com/superwhys/rent-manager/internal/app/roomtype"
 	appunit "github.com/superwhys/rent-manager/internal/app/unit"
+	"github.com/superwhys/rent-manager/internal/infra/emailcode"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/models"
+	"github.com/superwhys/rent-manager/internal/infra/persistence/mysql"
+	"github.com/superwhys/rent-manager/internal/infra/ratelimit"
 )
 
 var (
@@ -72,9 +70,6 @@ func main() {
 	logging.PanicError(err)
 	defer sqlDB.Close()
 
-	if client.Migrator().HasTable("accounts") {
-		logging.PanicError(errors.New("检测到旧 accounts 表，请使用全新数据库，或先按 migrations/20261009_authkit_accounts.sql 处理旧表；旧账号 ID 无法自动转换为 authkit ID"))
-	}
 	logging.PanicError(client.AutoMigrate(authmysql.Models()...))
 	logging.PanicError(client.AutoMigrate(models.AllModels()...))
 
@@ -97,14 +92,31 @@ func main() {
 	rbacService := apprbac.NewService(repos.RBAC, authStore.Accounts(), repos.Unit, adminConfig)
 	adminServices := &appadmin.Services{
 		AccountSetting: appaccountsetting.NewService(repos.AccountSetting),
-		Home:           apphome.NewService(repos.Unit, repos.Room, repos.RentBill, repos.MeterReading, repos.RBAC),
-		RBAC:           rbacService,
-		Unit:           appunit.NewService(repos.Unit, repos.Room, repos.RBAC),
-		Room:           approom.NewService(repos.Room, repos.Unit, repos.RBAC),
-		RoomType:       approomtype.NewService(repos.RoomType),
-		MeterItem:      appmeteritem.NewService(repos.MeterItem),
-		MeterReading:   appmeterreading.NewService(repos.MeterReading, repos.Room, repos.Unit, repos.RBAC),
-		RentBill:       apprentbill.NewService(repos.RentBill, repos.Room, repos.Unit, repos.MeterReading, repos.RBAC),
+		Home: apphome.NewService(
+			repos.Unit,
+			repos.Room,
+			repos.RentBill,
+			repos.MeterReading,
+			repos.RBAC,
+		),
+		RBAC:      rbacService,
+		Unit:      appunit.NewService(repos.Unit, repos.Room, repos.RBAC),
+		Room:      approom.NewService(repos.Room, repos.Unit, repos.RBAC),
+		RoomType:  approomtype.NewService(repos.RoomType),
+		MeterItem: appmeteritem.NewService(repos.MeterItem),
+		MeterReading: appmeterreading.NewService(
+			repos.MeterReading,
+			repos.Room,
+			repos.Unit,
+			repos.RBAC,
+		),
+		RentBill: apprentbill.NewService(
+			repos.RentBill,
+			repos.Room,
+			repos.Unit,
+			repos.MeterReading,
+			repos.RBAC,
+		),
 	}
 	router := api.SetupRouter(httpLimiter, authService, adminServices)
 
