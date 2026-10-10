@@ -8,6 +8,7 @@ import PermissionCatalog from '@/components/access/PermissionCatalog.vue'
 import UnitGrantsPanel from '@/components/access/UnitGrantsPanel.vue'
 import * as accessApi from '@/api/access'
 import { useUnits } from '@/stores/units'
+import { useSession } from '@/stores/session'
 import { errorMessage } from '@/utils/format'
 import { isAccountId } from '@/utils/accessValidation'
 import type {
@@ -15,7 +16,6 @@ import type {
   Permission,
   PermissionGroup,
   PermissionGroupInput,
-  PermissionInput,
   Role,
   RoleInput,
   UnitGrant,
@@ -28,6 +28,7 @@ const {
   error: unitsError,
   loadUnits,
 } = useUnits()
+const { isSuperAdmin } = useSession()
 const activeTab = ref('roles')
 const roles = ref<Role[]>([])
 const groups = ref<PermissionGroup[]>([])
@@ -210,31 +211,16 @@ async function createGroup(value: PermissionGroupInput) {
     busy.value = false
   }
 }
-async function createPermission(value: PermissionInput) {
-  if (busy.value || !value.code.trim() || !value.description.trim()) return
-  busy.value = true
-  actionError.value = ''
-  try {
-    await accessApi.createPermission(value)
-    catalogVersion.value++
-    ElMessage.success('权限已创建')
-    await loadPermissions()
-  } catch (error) {
-    actionError.value = errorMessage(error)
-  } finally {
-    busy.value = false
-  }
-}
 async function bindGroupPermissions(
   id: number,
-  ids: number[],
+  codes: string[],
   action: BindingAction,
 ) {
-  if (busy.value || !ids.length) return
+  if (busy.value || !codes.length) return
   busy.value = true
   actionError.value = ''
   try {
-    await accessApi.changeGroupPermissions(id, ids, action)
+    await accessApi.changeGroupPermissions(id, codes, action)
     catalogVersion.value++
     ElMessage.success(action === 'add' ? '所选权限已添加' : '所选权限已移除')
     await loadGroups()
@@ -351,7 +337,14 @@ onUnmounted(() => {
 
 <template>
   <div class="access-view">
-    <PageHeader title="协作与权限" description="让合适的人，访问合适的空间。" />
+    <PageHeader title="协作与权限" description="让合适的人，访问合适的空间。">
+      <template v-if="isSuperAdmin" #actions>
+        <span class="badge" title="当前账号可管理全局权限目录">
+          <AppIcon name="shield" :size="15" />
+          超级管理员
+        </span>
+      </template>
+    </PageHeader>
     <div class="access-summary">
       <span class="summary-mark" aria-hidden="true"
         ><AppIcon name="shield" :size="24"
@@ -487,7 +480,6 @@ onUnmounted(() => {
         @retry-groups="loadGroups"
         @retry-permissions="loadPermissions"
         @create-group="createGroup"
-        @create-permission="createPermission"
         @bind="bindGroupPermissions"
         @clear-error="actionError = ''"
       />

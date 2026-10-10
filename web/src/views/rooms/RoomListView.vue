@@ -343,7 +343,7 @@ async function removeRoom(room: Room) {
       <span class="muted"
         >第 {{ page + 1 }} 页 · 本页 {{ rooms.length }} 间</span
       >
-      <div>
+      <div class="pagination-actions">
         <el-button :disabled="page === 0 || loading" @click="changePage(-1)"
           >上一页</el-button
         >

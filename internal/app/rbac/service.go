@@ -230,44 +230,9 @@ func (s *Service) ListPermissionGroups(ctx context.Context) ([]*domainrbac.Permi
 	return groups, nil
 }
 
-// CreatePermissions 批量创建全局权限。
-func (s *Service) CreatePermissions(
-	ctx context.Context,
-	cmd *CreatePermissionsCommand,
-) ([]*domainrbac.Permission, error) {
-	if err := s.requireSuperAdmin(ctx); err != nil {
-		return nil, err
-	}
-
-	permissions := make([]*domainrbac.Permission, 0, len(cmd.Permissions))
-	for _, item := range cmd.Permissions {
-		permission, err := domainrbac.NewPermission(domainrbac.CreatePermissionParams{
-			Code:        item.Code,
-			Description: item.Description,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		permissions = append(permissions, permission)
-	}
-
-	created, err := s.repo.CreatePermissions(ctx, permissions)
-	if err != nil {
-		return nil, err
-	}
-
-	return created, nil
-}
-
-// ListPermissions 获取全局权限列表。
-func (s *Service) ListPermissions(ctx context.Context) ([]*domainrbac.Permission, error) {
-	permissions, err := s.repo.ListPermissions(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return permissions, nil
+// ListPermissions 获取业务代码支持的固定权限列表。
+func (s *Service) ListPermissions(_ context.Context) ([]*domainrbac.Permission, error) {
+	return domainrbac.BuiltinPermissions(), nil
 }
 
 // AddPermissionsToPermissionGroup 给权限组绑定权限。
@@ -279,12 +244,12 @@ func (s *Service) AddPermissionsToPermissionGroup(
 		return err
 	}
 
-	permissionIDs := normalizeIDs(cmd.PermissionIDs)
-	if len(permissionIDs) == 0 {
-		return domainrbac.ErrPermissionNotFound
+	permissionCodes, err := normalizePermissionCodes(cmd.PermissionCodes)
+	if err != nil {
+		return err
 	}
 
-	return s.repo.AddPermissionsToPermissionGroup(ctx, cmd.PermissionGroupID, permissionIDs)
+	return s.repo.AddPermissionsToPermissionGroup(ctx, cmd.PermissionGroupID, permissionCodes)
 }
 
 // RemovePermissionsFromPermissionGroup 从权限组移除权限。
@@ -296,12 +261,12 @@ func (s *Service) RemovePermissionsFromPermissionGroup(
 		return err
 	}
 
-	permissionIDs := normalizeIDs(cmd.PermissionIDs)
-	if len(permissionIDs) == 0 {
-		return domainrbac.ErrPermissionNotFound
+	permissionCodes, err := normalizePermissionCodes(cmd.PermissionCodes)
+	if err != nil {
+		return err
 	}
 
-	return s.repo.RemovePermissionsFromPermissionGroup(ctx, cmd.PermissionGroupID, permissionIDs)
+	return s.repo.RemovePermissionsFromPermissionGroup(ctx, cmd.PermissionGroupID, permissionCodes)
 }
 
 // GrantUnitRoles 给目标账号授予单元角色。
@@ -405,6 +370,25 @@ func (s *Service) requireSuperAdmin(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func normalizePermissionCodes(codes []string) ([]string, error) {
+	if len(codes) == 0 {
+		return nil, domainrbac.ErrPermissionNotFound
+	}
+	seen := make(map[string]struct{}, len(codes))
+	normalized := make([]string, 0, len(codes))
+	for _, code := range codes {
+		if !domainrbac.IsBuiltinPermission(code) {
+			return nil, domainrbac.ErrPermissionNotFound
+		}
+		if _, ok := seen[code]; ok {
+			continue
+		}
+		seen[code] = struct{}{}
+		normalized = append(normalized, code)
+	}
+	return normalized, nil
 }
 
 // normalizeIDs 过滤非正数并去重 ID 列表。

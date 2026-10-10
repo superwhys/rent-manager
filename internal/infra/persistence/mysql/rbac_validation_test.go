@@ -10,7 +10,7 @@ import (
 )
 
 func TestRBACRepositoryBulkByteLengthValidation(t *testing.T) {
-	for _, field := range []string{"角色名称", "权限组编码", "权限组名称", "权限组描述", "权限编码", "权限描述"} {
+	for _, field := range []string{"角色名称", "权限组编码", "权限组名称", "权限组描述"} {
 		t.Run(field, func(t *testing.T) {
 			ctx := context.Background()
 			db := newTestDB(t)
@@ -49,27 +49,8 @@ func TestRBACRepositoryBulkByteLengthValidation(t *testing.T) {
 						},
 					)
 					return err
-				default:
-					model = &models.Permission{}
-					permission := &domainrbac.Permission{
-						Code:        "second",
-						Description: "第二个权限",
-						IsActive:    true,
-					}
-					if field == "权限编码" {
-						permission.Code = value
-					} else {
-						permission.Description = value
-					}
-					_, err := repo.CreatePermissions(
-						ctx,
-						[]*domainrbac.Permission{
-							{Code: "first", Description: "有效权限", IsActive: true},
-							permission,
-						},
-					)
-					return err
 				}
+				return nil
 			}
 			if err := create(strings.Repeat("中", 86)); err == nil {
 				t.Fatal("超过 255 字节的中文字符串未被拒绝")

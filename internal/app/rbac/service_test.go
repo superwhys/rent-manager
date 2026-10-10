@@ -3,15 +3,104 @@ package rbac
 import (
 	"context"
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/miebyte/authkit"
 
+	"github.com/superwhys/rent-manager/config"
 	appcore "github.com/superwhys/rent-manager/internal/app"
 	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
 	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
+
+func TestListPermissionsUsesBuiltinCatalogWithoutRepository(t *testing.T) {
+	service := NewService(nil, nil, nil, nil)
+	permissions, err := service.ListPermissions(context.Background())
+	if err != nil || !reflect.DeepEqual(permissions, domainrbac.BuiltinPermissions()) {
+		t.Fatalf("ListPermissions = %+v, error = %v", permissions, err)
+	}
+	permissions[0].Code = "custom.permission"
+	next, err := service.ListPermissions(context.Background())
+	if err != nil || next[0].Code != domainrbac.PermissionUnitView {
+		t.Fatalf("permission catalog was mutated: %+v, error = %v", next, err)
+	}
+}
+
+func TestPermissionGroupBindingsRequireBuiltinCodesAndSuperAdmin(t *testing.T) {
+	adminID := strings.Repeat("a", 64)
+	storageErr := errors.New("权限组仓储不可用")
+	for _, operation := range []struct {
+		name string
+		call func(*Service, context.Context, *PermissionGroupPermissionsCommand) error
+	}{
+		{name: "add", call: (*Service).AddPermissionsToPermissionGroup},
+		{name: "remove", call: (*Service).RemovePermissionsFromPermissionGroup},
+	} {
+		for _, tt := range []struct {
+			name      string
+			accountID string
+			codes     []string
+			repoErr   error
+			wantErr   error
+			wantCall  bool
+		}{
+			{name: "deduplicates", accountID: adminID, codes: []string{domainrbac.PermissionRoomView, domainrbac.PermissionUnitView, domainrbac.PermissionRoomView}, wantCall: true},
+			{name: "nil codes", accountID: adminID, wantErr: domainrbac.ErrPermissionNotFound},
+			{name: "empty codes", accountID: adminID, codes: []string{}, wantErr: domainrbac.ErrPermissionNotFound},
+			{name: "empty code", accountID: adminID, codes: []string{""}, wantErr: domainrbac.ErrPermissionNotFound},
+			{name: "unknown code", accountID: adminID, codes: []string{domainrbac.PermissionRoomView, "custom.permission"}, wantErr: domainrbac.ErrPermissionNotFound},
+			{name: "uppercase code", accountID: adminID, codes: []string{"ROOM.VIEW"}, wantErr: domainrbac.ErrPermissionNotFound},
+			{name: "padded code", accountID: adminID, codes: []string{" room.view "}, wantErr: domainrbac.ErrPermissionNotFound},
+			{name: "ordinary account", accountID: strings.Repeat("b", 64), codes: []string{domainrbac.PermissionRoomView}, wantErr: domainrbac.ErrForbidden},
+			{name: "repository error", accountID: adminID, codes: []string{domainrbac.PermissionRoomView}, repoErr: storageErr, wantErr: storageErr, wantCall: true},
+		} {
+			t.Run(operation.name+"/"+tt.name, func(t *testing.T) {
+				repo := &permissionGroupRepository{err: tt.repoErr}
+				service := NewService(repo, nil, nil, &config.AdminConfig{SuperAdminAccountIDs: []string{adminID}})
+				ctx := appcore.SetAccountIDToContext(context.Background(), tt.accountID)
+				err := operation.call(service, ctx, &PermissionGroupPermissionsCommand{PermissionGroupID: 7, PermissionCodes: tt.codes})
+				if !errors.Is(err, tt.wantErr) {
+					t.Fatalf("binding error = %v, want %v", err, tt.wantErr)
+				}
+				if (repo.calls > 0) != tt.wantCall {
+					t.Fatalf("repository calls = %d, want called=%v", repo.calls, tt.wantCall)
+				}
+				if tt.wantCall {
+					wantCodes := []string{domainrbac.PermissionRoomView}
+					if tt.name == "deduplicates" {
+						wantCodes = append(wantCodes, domainrbac.PermissionUnitView)
+					}
+					if repo.calls != 1 || repo.operation != operation.name || repo.groupID != 7 || !reflect.DeepEqual(repo.codes, wantCodes) {
+						t.Fatalf("unexpected repository binding: %+v", repo)
+					}
+				}
+			})
+		}
+	}
+}
+
+type permissionGroupRepository struct {
+	domainrbac.Repository
+	calls     int
+	operation string
+	groupID   int
+	codes     []string
+	err       error
+}
+
+func (r *permissionGroupRepository) AddPermissionsToPermissionGroup(_ context.Context, groupID int, codes []string) error {
+	r.calls++
+	r.operation, r.groupID, r.codes = "add", groupID, codes
+	return r.err
+}
+
+func (r *permissionGroupRepository) RemovePermissionsFromPermissionGroup(_ context.Context, groupID int, codes []string) error {
+	r.calls++
+	r.operation, r.groupID, r.codes = "remove", groupID, codes
+	return r.err
+}
 
 func TestGrantUnitRolesUsesAuthkitAccountAfterOwnershipCheck(t *testing.T) {
 	ownerID, targetID := strings.Repeat("a", 64), strings.Repeat("b", 64)

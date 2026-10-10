@@ -106,6 +106,12 @@ button:focus:not(:focus-visible) {
   gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
+.pagination-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.75rem;
+}
 .field {
   display: flex;
   flex-direction: column;

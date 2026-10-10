@@ -21,7 +21,6 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		AccountSetting:            newAccountSetting(db, opts...),
 		MeterItem:                 newMeterItem(db, opts...),
 		MeterReading:              newMeterReading(db, opts...),
-		Permission:                newPermission(db, opts...),
 		PermissionGroup:           newPermissionGroup(db, opts...),
 		PermissionGroupPermission: newPermissionGroupPermission(db, opts...),
 		RentBill:                  newRentBill(db, opts...),
@@ -42,7 +41,6 @@ type Query struct {
 	AccountSetting            accountSetting
 	MeterItem                 meterItem
 	MeterReading              meterReading
-	Permission                permission
 	PermissionGroup           permissionGroup
 	PermissionGroupPermission permissionGroupPermission
 	RentBill                  rentBill
@@ -66,7 +64,6 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		AccountSetting:            q.AccountSetting.clone(db),
 		MeterItem:                 q.MeterItem.clone(db),
 		MeterReading:              q.MeterReading.clone(db),
-		Permission:                q.Permission.clone(db),
 		PermissionGroup:           q.PermissionGroup.clone(db),
 		PermissionGroupPermission: q.PermissionGroupPermission.clone(db),
 		RentBill:                  q.RentBill.clone(db),
@@ -95,7 +92,6 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		AccountSetting:            q.AccountSetting.replaceDB(db),
 		MeterItem:                 q.MeterItem.replaceDB(db),
 		MeterReading:              q.MeterReading.replaceDB(db),
-		Permission:                q.Permission.replaceDB(db),
 		PermissionGroup:           q.PermissionGroup.replaceDB(db),
 		PermissionGroupPermission: q.PermissionGroupPermission.replaceDB(db),
 		RentBill:                  q.RentBill.replaceDB(db),
@@ -114,7 +110,6 @@ type queryCtx struct {
 	AccountSetting            IAccountSettingDo
 	MeterItem                 IMeterItemDo
 	MeterReading              IMeterReadingDo
-	Permission                IPermissionDo
 	PermissionGroup           IPermissionGroupDo
 	PermissionGroupPermission IPermissionGroupPermissionDo
 	RentBill                  IRentBillDo
@@ -133,7 +128,6 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		AccountSetting:            q.AccountSetting.WithContext(ctx),
 		MeterItem:                 q.MeterItem.WithContext(ctx),
 		MeterReading:              q.MeterReading.WithContext(ctx),
-		Permission:                q.Permission.WithContext(ctx),
 		PermissionGroup:           q.PermissionGroup.WithContext(ctx),
 		PermissionGroupPermission: q.PermissionGroupPermission.WithContext(ctx),
 		RentBill:                  q.RentBill.WithContext(ctx),

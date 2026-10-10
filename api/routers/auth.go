@@ -11,6 +11,7 @@ import (
 
 	"github.com/superwhys/rent-manager/api/middlewares"
 	apiresponse "github.com/superwhys/rent-manager/api/response"
+	"github.com/superwhys/rent-manager/config"
 	appauth "github.com/superwhys/rent-manager/internal/app/auth"
 )
 
@@ -24,31 +25,33 @@ type AuthService interface {
 }
 
 type LoginResponse struct {
-	Account     authkit.Account `json:"account"`
-	AccessToken string          `json:"access_token"`
-	ExpiresAt   time.Time       `json:"expires_at"`
-	Created     bool            `json:"created"`
+	Account      authkit.Account `json:"account"`
+	AccessToken  string          `json:"access_token"`
+	ExpiresAt    time.Time       `json:"expires_at"`
+	Created      bool            `json:"created"`
+	IsSuperAdmin bool            `json:"is_super_admin"`
 }
 
 type SessionResponse struct {
-	Account   authkit.Account `json:"account"`
-	ExpiresAt time.Time       `json:"expires_at"`
+	Account      authkit.Account `json:"account"`
+	ExpiresAt    time.Time       `json:"expires_at"`
+	IsSuperAdmin bool            `json:"is_super_admin"`
 }
 
 // AuthRouter 将认证接口直接交给 authkit。
-func AuthRouter(authService AuthService) ginutils.Option {
+func AuthRouter(authService AuthService, adminConfig *config.AdminConfig) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithMiddleware(func(c *gin.Context) {
 			c.Header("Cache-Control", "no-store")
 			c.Next()
 		}),
 		ginutils.WithHandler(http.MethodPost, "/email/code", SendEmailCodeHandler(authService)),
-		ginutils.WithHandler(http.MethodPost, "/register", RegisterHandler(authService)),
-		ginutils.WithHandler(http.MethodPost, "/email-login", EmailLoginHandler(authService)),
-		ginutils.WithHandler(http.MethodPost, "/password-login", PasswordLoginHandler(authService)),
+		ginutils.WithHandler(http.MethodPost, "/register", RegisterHandler(authService, adminConfig)),
+		ginutils.WithHandler(http.MethodPost, "/email-login", EmailLoginHandler(authService, adminConfig)),
+		ginutils.WithHandler(http.MethodPost, "/password-login", PasswordLoginHandler(authService, adminConfig)),
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(authService)),
-			ginutils.WithHandler(http.MethodGet, "/session", SessionHandler()),
+			ginutils.WithHandler(http.MethodGet, "/session", SessionHandler(adminConfig)),
 			ginutils.WithHandler(http.MethodDelete, "/session", LogoutHandler(authService)),
 		),
 	)
@@ -88,13 +91,13 @@ func SendEmailCodeHandler(authService AuthService) gin.HandlerFunc {
 // @Param request body appauth.RegisterRequest true "邮箱注册参数"
 // @Success 200 {object} ginutils.Ret[LoginResponse]
 // @Router /auth/register [post]
-func RegisterHandler(authService AuthService) gin.HandlerFunc {
+func RegisterHandler(authService AuthService, adminConfig *config.AdminConfig) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appauth.RegisterRequest) {
 		login, err := authService.Register(c.Request.Context(), *req, c.ClientIP())
 		if apiresponse.HandleAuthError(c, err) {
 			return
 		}
-		writeLoginResponse(c, login)
+		writeLoginResponse(c, login, adminConfig)
 	})
 }
 
@@ -106,7 +109,7 @@ func RegisterHandler(authService AuthService) gin.HandlerFunc {
 // @Param request body appauth.EmailLoginRequest true "验证码登录参数"
 // @Success 200 {object} ginutils.Ret[LoginResponse]
 // @Router /auth/email-login [post]
-func EmailLoginHandler(authService AuthService) gin.HandlerFunc {
+func EmailLoginHandler(authService AuthService, adminConfig *config.AdminConfig) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appauth.EmailLoginRequest) {
 		login, err := authService.LoginEmail(
 			c.Request.Context(),
@@ -115,7 +118,7 @@ func EmailLoginHandler(authService AuthService) gin.HandlerFunc {
 		if apiresponse.HandleAuthError(c, err) {
 			return
 		}
-		writeLoginResponse(c, login)
+		writeLoginResponse(c, login, adminConfig)
 	})
 }
 
@@ -127,7 +130,7 @@ func EmailLoginHandler(authService AuthService) gin.HandlerFunc {
 // @Param request body appauth.PasswordLoginRequest true "密码登录参数"
 // @Success 200 {object} ginutils.Ret[LoginResponse]
 // @Router /auth/password-login [post]
-func PasswordLoginHandler(authService AuthService) gin.HandlerFunc {
+func PasswordLoginHandler(authService AuthService, adminConfig *config.AdminConfig) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *appauth.PasswordLoginRequest) {
 		email, err := authkit.NormalizeEmail(req.Email)
 		if apiresponse.HandleAuthError(c, err) {
@@ -139,17 +142,18 @@ func PasswordLoginHandler(authService AuthService) gin.HandlerFunc {
 		if apiresponse.HandleAuthError(c, err) {
 			return
 		}
-		writeLoginResponse(c, login)
+		writeLoginResponse(c, login, adminConfig)
 	})
 }
 
-func writeLoginResponse(c *gin.Context, login *authkit.LoginResult) {
+func writeLoginResponse(c *gin.Context, login *authkit.LoginResult, adminConfig *config.AdminConfig) {
 	c.Header("Cache-Control", "no-store")
 	c.JSON(http.StatusOK, apiresponse.ResponseWithData(LoginResponse{
-		Account:     login.Account,
-		AccessToken: login.Token,
-		ExpiresAt:   login.Expires,
-		Created:     login.Created,
+		Account:      login.Account,
+		AccessToken:  login.Token,
+		ExpiresAt:    login.Expires,
+		Created:      login.Created,
+		IsSuperAdmin: adminConfig != nil && adminConfig.IsSuperAdmin(login.Account.ID),
 	}))
 }
 
@@ -160,12 +164,14 @@ func writeLoginResponse(c *gin.Context, login *authkit.LoginResult) {
 // @Success 200 {object} ginutils.Ret[SessionResponse]
 // @Security BearerAuth
 // @Router /auth/session [get]
-func SessionHandler() gin.HandlerFunc {
+func SessionHandler(adminConfig *config.AdminConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := middlewares.AuthenticatedSessionFromContext(c)
 		c.Header("Cache-Control", "no-store")
 		c.JSON(http.StatusOK, apiresponse.ResponseWithData(SessionResponse{
-			Account: session.Account, ExpiresAt: session.Expires,
+			Account:      session.Account,
+			ExpiresAt:    session.Expires,
+			IsSuperAdmin: adminConfig != nil && adminConfig.IsSuperAdmin(session.Account.ID),
 		}))
 	}
 }

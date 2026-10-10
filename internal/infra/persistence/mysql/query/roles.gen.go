@@ -39,10 +39,18 @@ func newRole(db *gorm.DB, opts ...gen.DOOption) role {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("PermissionGroups", "models.PermissionGroup"),
-		Permissions: struct {
+		PermissionBindings: struct {
 			field.RelationField
+			PermissionGroup struct {
+				field.RelationField
+			}
 		}{
-			RelationField: field.NewRelation("PermissionGroups.Permissions", "models.Permission"),
+			RelationField: field.NewRelation("PermissionGroups.PermissionBindings", "models.PermissionGroupPermission"),
+			PermissionGroup: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("PermissionGroups.PermissionBindings.PermissionGroup", "models.PermissionGroup"),
+			},
 		},
 	}
 
@@ -142,8 +150,11 @@ type roleManyToManyPermissionGroups struct {
 
 	field.RelationField
 
-	Permissions struct {
+	PermissionBindings struct {
 		field.RelationField
+		PermissionGroup struct {
+			field.RelationField
+		}
 	}
 }
 

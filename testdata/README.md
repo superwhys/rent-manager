@@ -6,7 +6,15 @@
 mysql --default-character-set=utf8mb4 -u <用户名> -p <数据库名> < testdata/seed_demo.sql
 ```
 
-脚本需要目标库的 INSERT、SELECT、CREATE ROUTINE/ALTER ROUTINE 权限；使用 SQL 客户端时运行整个文件，并启用其 `DELIMITER` 支持。所有演示数据写入在同一事务内，失败全部回滚。脚本不清表，不修改现有账号，不关闭外键；已有有效的全局权限按代码复用。已有演示账号、邮箱或 `rent_demo.*` 权限组时停止导入，避免重复数据；不要加 `mysql --force`。
+脚本需要目标库的 INSERT、SELECT、CREATE ROUTINE/ALTER ROUTINE 权限；使用 SQL 客户端时运行整个文件，并启用其 `DELIMITER` 支持。所有演示数据写入在同一事务内，失败全部回滚。脚本不清表，不修改现有账号，不关闭外键；权限组直接绑定后端固定权限编码，不写入权限目录表。已有演示账号、邮箱或 `rent_demo.*` 权限组时停止导入，避免重复数据；不要加 `mysql --force`。
+
+完整查看房间页面的演示角色同时配置 `room.view`、`room_type.view`、`meter_item.view`；目录查看权限不授予修改权限。旧数据库先停止写入并备份，执行 [固定权限迁移](../migrations/20261010_builtin_permissions.sql)，再启动新版服务。旧版演示数据中的抄表、财务权限组漏配了目录查看权限，可在已迁移的测试库执行增量修复，无需重新导入演示数据：
+
+```bash
+mysql --default-character-set=utf8mb4 -u <用户名> -p <数据库名> < testdata/fix_demo_room_view_permissions.sql
+```
+
+修复脚本只向 `rent_demo.readings`、`rent_demo.finance` 添加缺失的目录查看绑定，可重复执行；缺失、停用或已删除的权限组会跳过。
 
 ## 登录账号
 
@@ -16,11 +24,11 @@ mysql --default-character-set=utf8mb4 -u <用户名> -p <数据库名> < testdat
 | --- | --- |
 | `owner@rent-demo.test` | 主账号，拥有梧桐、海棠、银杏三栋楼，管理共享房型、收费项目、角色和楼栋授权 |
 | `manager@rent-demo.test` | 梧桐运营管理、海棠只读；银杏授权已撤销，因此不显示银杏 |
-| `reader@rent-demo.test` | 梧桐抄表协作，可看房间、收费项目并保存读数，不能看账单；海棠仅有最小入口；银杏角色已停用 |
-| `finance@rent-demo.test` | 梧桐、海棠财务协作，可查看和管理账单，不能改房间或抄表 |
+| `reader@rent-demo.test` | 梧桐抄表协作，可看房间、房型、收费项目并保存读数，不能看账单；海棠仅有最小入口；银杏角色已停用 |
+| `finance@rent-demo.test` | 梧桐、海棠财务协作，可看房间、房型、收费项目，可查看和管理账单，不能改房间或抄表 |
 | `other-owner@rent-demo.test` | 独立业主，拥有第四栋楼及自己的字典，与其他账号隔离 |
 
-这些账号是业务所有者或协作者，全局权限目录写操作仍由服务配置中的 `admin.SuperAdminAccountIDs` 控制。如要用演示主账号测试该操作，将下面 ID 加入配置并重启服务：
+这些账号是业务所有者或协作者。权限目录固定只读，全局权限组及其权限绑定的写操作由服务配置中的 `admin.SuperAdminAccountIDs` 控制。如要用演示主账号测试权限组配置，将下面 ID 加入配置并重启服务：
 
 ```text
 aad61764e09ed5e68b715859caa2554d1dbd05229ef529ba23e4afd44c886a83
@@ -33,7 +41,7 @@ aad61764e09ed5e68b715859caa2554d1dbd05229ef529ba23e4afd44c886a83
 - 5 个账号、10 条认证绑定、10 条账号设置。
 - 4 栋楼、24 间房：每栋 4 间已租、2 间空房。
 - 5 个房型、7 个收费项目；主账号的燃气费未绑定任何楼栋，供测试下级读取、选用完整共享目录。
-- 10 个实际业务权限、4 个权限组、6 个角色、8 条楼栋授权，包含空权限角色、停用角色、已撤销授权。
+- 4 个权限组绑定后端的 10 个固定业务权限，6 个角色、8 条楼栋授权，包含空权限角色、停用角色、已撤销授权。
 - 143 条抄表记录、46 张账单，覆盖已付、未付、取消状态。
 
 所有业务 ID 由数据库分配，关联通过查询创建后的 ID 建立。房间租金与账单金额使用“分”，收费单价使用“分/计量单位”；账单费用由读数按各项目四舍五入后累加。`rooms.is_active=0` 表示已租，`1` 表示空房。

@@ -25,3 +25,36 @@ const (
 	SystemPermissionAllowAllCode        = "SYSTEM_ALLOW_ALL"
 	SystemPermissionAllowAllDescription = "Allow all APIs"
 )
+
+var builtinPermissions = [...]Permission{
+	{Code: PermissionUnitView, Description: "查看楼栋详情"},
+	{Code: PermissionUnitUpdate, Description: "修改楼栋资料"},
+	{Code: PermissionRoomView, Description: "查看房间"},
+	{Code: PermissionRoomManage, Description: "管理房间"},
+	{Code: PermissionRoomTypeView, Description: "查看楼栋所有者的共享房型"},
+	{Code: PermissionRentBillView, Description: "查看账单与财务汇总"},
+	{Code: PermissionRentBillManage, Description: "生成、收款及取消账单"},
+	{Code: PermissionMeterReadingView, Description: "查看月度抄表"},
+	{Code: PermissionMeterReadingManage, Description: "保存月度读数"},
+	{Code: PermissionMeterItemView, Description: "查看楼栋所有者的共享收费项目"},
+}
+
+// BuiltinPermissions 返回业务代码支持的固定权限目录副本。
+func BuiltinPermissions() []*Permission {
+	permissions := make([]*Permission, len(builtinPermissions))
+	for i := range builtinPermissions {
+		permission := builtinPermissions[i]
+		permissions[i] = &permission
+	}
+	return permissions
+}
+
+// IsBuiltinPermission 按完整编码检查权限是否属于固定目录。
+func IsBuiltinPermission(code string) bool {
+	for _, permission := range builtinPermissions {
+		if permission.Code == code {
+			return true
+		}
+	}
+	return false
+}

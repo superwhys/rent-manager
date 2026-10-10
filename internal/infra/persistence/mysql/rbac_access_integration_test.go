@@ -46,19 +46,8 @@ func TestUnitRoleRevocationAppliesAcrossReadServices(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	permissions := make([]*domainrbac.Permission, 0)
-	for _, code := range []string{domainrbac.PermissionUnitView, domainrbac.PermissionRoomView, domainrbac.PermissionRentBillView, domainrbac.PermissionRoomTypeView, domainrbac.PermissionMeterItemView} {
-		permissions = append(permissions, &domainrbac.Permission{Code: code, Description: code, IsActive: true})
-	}
-	permissions, err = repos.RBAC.CreatePermissions(ctx, permissions)
-	if err != nil {
-		t.Fatal(err)
-	}
-	permissionIDs := make([]int, 0, len(permissions))
-	for _, permission := range permissions {
-		permissionIDs = append(permissionIDs, permission.ID)
-	}
-	if err := repos.RBAC.AddPermissionsToPermissionGroup(ctx, groups[0].ID, permissionIDs); err != nil {
+	permissionCodes := []string{domainrbac.PermissionUnitView, domainrbac.PermissionRoomView, domainrbac.PermissionRentBillView, domainrbac.PermissionRoomTypeView, domainrbac.PermissionMeterItemView}
+	if err := repos.RBAC.AddPermissionsToPermissionGroup(ctx, groups[0].ID, permissionCodes); err != nil {
 		t.Fatal(err)
 	}
 	if err := repos.RBAC.AddPermissionGroupsToRole(ctx, owner, roles[0].ID, []int{groups[0].ID}); err != nil {

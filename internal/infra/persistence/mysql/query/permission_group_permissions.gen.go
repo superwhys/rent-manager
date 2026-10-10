@@ -28,22 +28,24 @@ func newPermissionGroupPermission(db *gorm.DB, opts ...gen.DOOption) permissionG
 	tableName := _permissionGroupPermission.permissionGroupPermissionDo.TableName()
 	_permissionGroupPermission.ALL = field.NewAsterisk(tableName)
 	_permissionGroupPermission.PermissionGroupID = field.NewInt(tableName, "permission_group_id")
-	_permissionGroupPermission.PermissionID = field.NewInt(tableName, "permission_id")
+	_permissionGroupPermission.PermissionCode = field.NewString(tableName, "permission_code")
 	_permissionGroupPermission.PermissionGroup = permissionGroupPermissionBelongsToPermissionGroup{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("PermissionGroup", "models.PermissionGroup"),
-		Permissions: struct {
+		PermissionBindings: struct {
 			field.RelationField
+			PermissionGroup struct {
+				field.RelationField
+			}
 		}{
-			RelationField: field.NewRelation("PermissionGroup.Permissions", "models.Permission"),
+			RelationField: field.NewRelation("PermissionGroup.PermissionBindings", "models.PermissionGroupPermission"),
+			PermissionGroup: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("PermissionGroup.PermissionBindings.PermissionGroup", "models.PermissionGroup"),
+			},
 		},
-	}
-
-	_permissionGroupPermission.Permission = permissionGroupPermissionBelongsToPermission{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Permission", "models.Permission"),
 	}
 
 	_permissionGroupPermission.fillFieldMap()
@@ -56,10 +58,8 @@ type permissionGroupPermission struct {
 
 	ALL               field.Asterisk
 	PermissionGroupID field.Int
-	PermissionID      field.Int
+	PermissionCode    field.String
 	PermissionGroup   permissionGroupPermissionBelongsToPermissionGroup
-
-	Permission permissionGroupPermissionBelongsToPermission
 
 	fieldMap map[string]field.Expr
 }
@@ -77,7 +77,7 @@ func (p permissionGroupPermission) As(alias string) *permissionGroupPermission {
 func (p *permissionGroupPermission) updateTableName(table string) *permissionGroupPermission {
 	p.ALL = field.NewAsterisk(table)
 	p.PermissionGroupID = field.NewInt(table, "permission_group_id")
-	p.PermissionID = field.NewInt(table, "permission_id")
+	p.PermissionCode = field.NewString(table, "permission_code")
 
 	p.fillFieldMap()
 
@@ -108,9 +108,9 @@ func (p *permissionGroupPermission) GetFieldByName(fieldName string) (field.Orde
 }
 
 func (p *permissionGroupPermission) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 4)
+	p.fieldMap = make(map[string]field.Expr, 3)
 	p.fieldMap["permission_group_id"] = p.PermissionGroupID
-	p.fieldMap["permission_id"] = p.PermissionID
+	p.fieldMap["permission_code"] = p.PermissionCode
 
 }
 
@@ -118,15 +118,12 @@ func (p permissionGroupPermission) clone(db *gorm.DB) permissionGroupPermission 
 	p.permissionGroupPermissionDo.ReplaceConnPool(db.Statement.ConnPool)
 	p.PermissionGroup.db = db.Session(&gorm.Session{Initialized: true})
 	p.PermissionGroup.db.Statement.ConnPool = db.Statement.ConnPool
-	p.Permission.db = db.Session(&gorm.Session{Initialized: true})
-	p.Permission.db.Statement.ConnPool = db.Statement.ConnPool
 	return p
 }
 
 func (p permissionGroupPermission) replaceDB(db *gorm.DB) permissionGroupPermission {
 	p.permissionGroupPermissionDo.ReplaceDB(db)
 	p.PermissionGroup.db = db.Session(&gorm.Session{})
-	p.Permission.db = db.Session(&gorm.Session{})
 	return p
 }
 
@@ -135,8 +132,11 @@ type permissionGroupPermissionBelongsToPermissionGroup struct {
 
 	field.RelationField
 
-	Permissions struct {
+	PermissionBindings struct {
 		field.RelationField
+		PermissionGroup struct {
+			field.RelationField
+		}
 	}
 }
 
@@ -211,87 +211,6 @@ func (a permissionGroupPermissionBelongsToPermissionGroupTx) Count() int64 {
 }
 
 func (a permissionGroupPermissionBelongsToPermissionGroupTx) Unscoped() *permissionGroupPermissionBelongsToPermissionGroupTx {
-	a.tx = a.tx.Unscoped()
-	return &a
-}
-
-type permissionGroupPermissionBelongsToPermission struct {
-	db *gorm.DB
-
-	field.RelationField
-}
-
-func (a permissionGroupPermissionBelongsToPermission) Where(conds ...field.Expr) *permissionGroupPermissionBelongsToPermission {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a permissionGroupPermissionBelongsToPermission) WithContext(ctx context.Context) *permissionGroupPermissionBelongsToPermission {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a permissionGroupPermissionBelongsToPermission) Session(session *gorm.Session) *permissionGroupPermissionBelongsToPermission {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a permissionGroupPermissionBelongsToPermission) Model(m *models.PermissionGroupPermission) *permissionGroupPermissionBelongsToPermissionTx {
-	return &permissionGroupPermissionBelongsToPermissionTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a permissionGroupPermissionBelongsToPermission) Unscoped() *permissionGroupPermissionBelongsToPermission {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type permissionGroupPermissionBelongsToPermissionTx struct{ tx *gorm.Association }
-
-func (a permissionGroupPermissionBelongsToPermissionTx) Find() (result *models.Permission, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a permissionGroupPermissionBelongsToPermissionTx) Append(values ...*models.Permission) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a permissionGroupPermissionBelongsToPermissionTx) Replace(values ...*models.Permission) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a permissionGroupPermissionBelongsToPermissionTx) Delete(values ...*models.Permission) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a permissionGroupPermissionBelongsToPermissionTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a permissionGroupPermissionBelongsToPermissionTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a permissionGroupPermissionBelongsToPermissionTx) Unscoped() *permissionGroupPermissionBelongsToPermissionTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }

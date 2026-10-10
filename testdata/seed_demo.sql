@@ -3,10 +3,10 @@
 -- mysql --default-character-set=utf8mb4 -u <用户名> -p <数据库名> < testdata/seed_demo.sql
 -- 需要目标库 INSERT/SELECT 和 CREATE ROUTINE/ALTER ROUTINE 权限。
 -- 一次性导入；演示账号/邮箱/权限组已存在时会报错并停止，不覆盖已有数据。
--- 所有数据写入在同一事务内；本脚本不关闭外键、不清表、不修改已有账号/权限。
+-- 所有数据写入在同一事务内；本脚本不关闭外键、不清表、不修改已有账号。
 -- 5 个演示账号的共同密码：RentDemo2026!（仅用于测试环境）。
 -- 邮箱：owner / manager / reader / finance / other-owner @rent-demo.test。
--- owner 是业务楼栋所有者；如需全局权限目录写操作，另将其 ID 加入
+-- owner 是业务楼栋所有者；如需全局权限组写操作，另将其 ID 加入
 -- config 中 admin.SuperAdminAccountIDs（SQL 不会改变服务配置）。
 -- 金额单位为分；unit_price 为分/计量单位；is_active=0 已租，1 空房。
 
@@ -87,39 +87,28 @@ BEGIN
     INSERT INTO auth_bindings (method, identifier, account_id, password_hash, created_at, updated_at)
     SELECT 'password', email, account_id, password_hash, auth_now, auth_now FROM tmp_rent_demo_accounts;
 
-    -- 全局权限复用已有有效记录，只补充不存在的权限；不修改现有权限状态。
+    -- 权限目录由后端固定定义；这里只列出演示权限组需要绑定的编码。
     DROP TEMPORARY TABLE IF EXISTS tmp_rent_demo_permissions;
-    CREATE TEMPORARY TABLE tmp_rent_demo_permissions (code VARCHAR(255) PRIMARY KEY, description VARCHAR(255));
+    CREATE TEMPORARY TABLE tmp_rent_demo_permissions (
+        code VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY
+    );
     INSERT INTO tmp_rent_demo_permissions VALUES
-        ('unit.view', '查看楼栋详情'), ('unit.update', '修改楼栋资料'),
-        ('room.view', '查看房间'), ('room.manage', '管理房间'),
-        ('room_type.view', '查看楼栋所有者的共享房型'),
-        ('meter_item.view', '查看楼栋所有者的共享收费项目'),
-        ('meter_reading.view', '查看月度抄表'), ('meter_reading.manage', '保存月度读数'),
-        ('rent_bill.view', '查看账单与财务汇总'), ('rent_bill.manage', '生成、收款及取消账单');
-    SELECT COUNT(*) INTO conflict_count
-    FROM permissions p JOIN tmp_rent_demo_permissions d ON p.code = d.code
-    WHERE p.deleted_at IS NOT NULL OR p.is_active = 0;
-    IF conflict_count > 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '演示所需权限已有停用或删除记录，已回滚；请先自行确认权限配置。';
-    END IF;
-    INSERT INTO permissions (code, description, is_active, created_at, updated_at)
-    SELECT d.code, d.description, 1, seed_now, seed_now
-    FROM tmp_rent_demo_permissions d WHERE NOT EXISTS (SELECT 1 FROM permissions p WHERE p.code = d.code);
+        ('unit.view'), ('unit.update'), ('room.view'), ('room.manage'),
+        ('room_type.view'), ('meter_item.view'),
+        ('meter_reading.view'), ('meter_reading.manage'), ('rent_bill.view'), ('rent_bill.manage');
 
     INSERT INTO permission_groups (code, name, description, sort_order, is_active, created_at, updated_at) VALUES
         ('rent_demo.operations', '演示·楼栋运营', '所有当前楼栋业务权限，共享定义仍由业主管理', 100, 1, seed_now, seed_now),
         ('rent_demo.readings', '演示·抄表协作', '查看楼栋和房间，录入抄表，不可查看账单', 110, 1, seed_now, seed_now),
         ('rent_demo.finance', '演示·财务协作', '查看楼栋和房间，管理账单，不可修改房间或抄表', 120, 1, seed_now, seed_now),
         ('rent_demo.readonly', '演示·只读查看', '查看业务资料，不可修改', 130, 1, seed_now, seed_now);
-    INSERT INTO permission_group_permissions (permission_group_id, permission_id)
-    SELECT g.id, p.id FROM permission_groups g CROSS JOIN permissions p
-    JOIN tmp_rent_demo_permissions d ON p.code = d.code
+    INSERT INTO permission_group_permissions (permission_group_id, permission_code)
+    SELECT g.id, p.code FROM permission_groups g CROSS JOIN tmp_rent_demo_permissions p
     WHERE g.code = 'rent_demo.operations'
        OR (g.code = 'rent_demo.readings' AND p.code IN
-           ('unit.view', 'room.view', 'meter_item.view', 'meter_reading.view', 'meter_reading.manage'))
+           ('unit.view', 'room.view', 'room_type.view', 'meter_item.view', 'meter_reading.view', 'meter_reading.manage'))
        OR (g.code = 'rent_demo.finance' AND p.code IN
-           ('unit.view', 'room.view', 'rent_bill.view', 'rent_bill.manage'))
+           ('unit.view', 'room.view', 'room_type.view', 'meter_item.view', 'rent_bill.view', 'rent_bill.manage'))
        OR (g.code = 'rent_demo.readonly' AND p.code IN
            ('unit.view', 'room.view', 'room_type.view', 'meter_item.view', 'meter_reading.view', 'rent_bill.view'));
 

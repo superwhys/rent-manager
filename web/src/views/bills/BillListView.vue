@@ -350,7 +350,7 @@ onBeforeUnmount(() => {
       </AsyncState>
       <div v-if="selectedUnitId && !error && (bills.length || offset)" class="bill-pagination">
         <span class="muted">第 {{ offset / pageSize + 1 }} 页 · 每页最多 {{ pageSize }} 笔</span>
-        <div>
+        <div class="pagination-actions">
           <el-button :disabled="loading || offset === 0" @click="changePage(offset - pageSize)">
             上一页
           </el-button>

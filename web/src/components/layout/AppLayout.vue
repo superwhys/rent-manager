@@ -90,10 +90,13 @@ async function logout() {
           <span class="avatar">{{
             auth.accountName.value.slice(0, 1).toUpperCase()
           }}</span>
-          <span class="account-copy"
-            ><strong>{{ auth.accountName.value }}</strong
-            ><small>账号与偏好</small></span
-          >
+          <span class="account-copy">
+            <strong>{{ auth.accountName.value }}</strong>
+            <span v-if="auth.isSuperAdmin.value" class="badge account-badge">
+              超级管理员
+            </span>
+            <small v-else>账号与偏好</small>
+          </span>
           <AppIcon name="chevron-right" :size="15" />
         </RouterLink>
       </div>
@@ -326,6 +329,11 @@ async function logout() {
 .account-copy small {
   color: #8b9890;
   font-size: 0.68rem;
+}
+.account-badge {
+  margin-top: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.65rem;
 }
 .workspace-main {
   margin-left: 234px;

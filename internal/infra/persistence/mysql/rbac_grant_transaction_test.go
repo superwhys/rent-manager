@@ -35,16 +35,10 @@ func TestRBACRepositoryGrantUnitRolesRollsBack(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			permissions, err := repo.CreatePermissions(ctx, []*domainrbac.Permission{
-				{Code: domainrbac.PermissionUnitUpdate, Description: "修改单元", IsActive: true},
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
 			if err := repo.AddPermissionGroupsToRole(ctx, owner, roles[0].ID, []int{groups[0].ID}); err != nil {
 				t.Fatal(err)
 			}
-			if err := repo.AddPermissionsToPermissionGroup(ctx, groups[0].ID, []int{permissions[0].ID}); err != nil {
+			if err := repo.AddPermissionsToPermissionGroup(ctx, groups[0].ID, []string{domainrbac.PermissionUnitUpdate}); err != nil {
 				t.Fatal(err)
 			}
 			params := domainrbac.UnitAccountRolesParams{

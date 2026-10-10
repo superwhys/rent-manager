@@ -25,11 +25,6 @@ func AdminRouter(rbacService *apprbac.Service) ginutils.Option {
 			"/permission-groups",
 			ListPermissionGroupsHandler(rbacService),
 		),
-		ginutils.WithHandler(
-			http.MethodPost,
-			"/permissions/batch",
-			CreatePermissionsHandler(rbacService),
-		),
 		ginutils.WithHandler(http.MethodGet, "/permissions", ListPermissionsHandler(rbacService)),
 		ginutils.WithHandler(
 			http.MethodPost,
@@ -98,30 +93,8 @@ func ListPermissionGroupsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 	})
 }
 
-// CreatePermissionsHandler godoc
-// @Summary 批量创建权限
-// @Tags admin
-// @Accept json
-// @Produce json
-// @Param request body rbac.CreatePermissionsCommand true "权限列表"
-// @Success 200 {object} ginutils.Ret[[]rbac.PermissionResponse]
-// @Security BearerAuth
-// @Router /admin/permissions/batch [post]
-func CreatePermissionsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *apprbac.CreatePermissionsCommand) {
-		permissions, err := rbacService.CreatePermissions(c.Request.Context(), req)
-		if apiresponse.HandleRouterError(c, err, "create permissions failed", xerr.ErrSysInternal) {
-			return
-		}
-		c.JSON(
-			http.StatusOK,
-			apiresponse.ResponseWithData(apprbac.ToPermissionListResponse(permissions)),
-		)
-	})
-}
-
 // ListPermissionsHandler godoc
-// @Summary 获取权限列表
+// @Summary 获取代码定义的固定权限列表
 // @Tags admin
 // @Produce json
 // @Success 200 {object} ginutils.Ret[[]rbac.PermissionResponse]
@@ -146,7 +119,7 @@ func ListPermissionsHandler(rbacService *apprbac.Service) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param permission_group_id path int true "权限组ID"
-// @Param request body rbac.PermissionGroupPermissionsCommand true "权限ID列表"
+// @Param request body rbac.PermissionGroupPermissionsCommand true "权限编码列表"
 // @Success 200 {object} ginutils.Ret[any]
 // @Security BearerAuth
 // @Router /admin/permission-groups/{permission_group_id}/permissions [post]
@@ -173,7 +146,7 @@ func AddPermissionsToPermissionGroupHandler(rbacService *apprbac.Service) gin.Ha
 // @Accept json
 // @Produce json
 // @Param permission_group_id path int true "权限组ID"
-// @Param request body rbac.PermissionGroupPermissionsCommand true "权限ID列表"
+// @Param request body rbac.PermissionGroupPermissionsCommand true "权限编码列表"
 // @Success 200 {object} ginutils.Ret[any]
 // @Security BearerAuth
 // @Router /admin/permission-groups/{permission_group_id}/permissions [delete]

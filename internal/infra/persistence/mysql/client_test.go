@@ -3,6 +3,7 @@ package mysql
 import (
 	"crypto/sha256"
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -106,5 +107,44 @@ func TestBusinessSchemaDoesNotCreateAccounts(t *testing.T) {
 	db := newTestDB(t)
 	if db.Migrator().HasTable("accounts") {
 		t.Fatal("业务模型不应创建本地 accounts 表")
+	}
+}
+
+func TestEnsureBuiltinPermissionSchema(t *testing.T) {
+	for _, scenario := range []struct {
+		name         string
+		legacySQL    string
+		dropBindings bool
+		wantCode     bool
+	}{
+		{name: "新权限结构", wantCode: true},
+		{name: "旧权限表", legacySQL: "CREATE TABLE permissions (id BIGINT NOT NULL PRIMARY KEY)", wantCode: true},
+		{name: "旧权限绑定", legacySQL: "CREATE TABLE permission_group_permissions (permission_group_id BIGINT, permission_id BIGINT)", dropBindings: true},
+		{name: "中断迁移双列", legacySQL: "ALTER TABLE permission_group_permissions ADD permission_id BIGINT", wantCode: true},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			db := newTestDB(t)
+			if scenario.dropBindings {
+				if err := db.Migrator().DropTable("permission_group_permissions"); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if scenario.legacySQL != "" {
+				if err := db.Exec(scenario.legacySQL).Error; err != nil {
+					t.Fatal(err)
+				}
+			}
+			err := EnsureBuiltinPermissionSchema(db)
+			if scenario.legacySQL == "" {
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else if !errors.Is(err, ErrLegacyPermissionSchema) {
+				t.Fatalf("旧权限结构未拒绝启动: %v", err)
+			}
+			if db.Migrator().HasColumn("permission_group_permissions", "permission_code") != scenario.wantCode {
+				t.Fatal("启动预检不应修改已有权限绑定")
+			}
+		})
 	}
 }

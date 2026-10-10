@@ -6,7 +6,6 @@ func AllModels() []any {
 		&AccountSetting{},
 		&MeterItem{},
 		&MeterReading{},
-		&Permission{},
 		&PermissionGroup{},
 		&RentBill{},
 		&Role{},

@@ -30,28 +30,19 @@ func TestRBACRepositoryReadsBindings(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	permissions, err := repo.CreatePermissions(ctx, []*domainrbac.Permission{
-		{Code: "unit.view", Description: "查看单元", IsActive: true},
-		{Code: "unit.update", Description: "修改单元", IsActive: false},
-		{Code: "deleted", Description: "已删除权限", IsActive: true},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
 	if err := repo.AddPermissionGroupsToRole(ctx, owner, roles[0].ID,
 		[]int{groups[2].ID, groups[1].ID, groups[0].ID}); err != nil {
 		t.Fatal(err)
 	}
 	if err := repo.AddPermissionsToPermissionGroup(ctx, groups[0].ID,
-		[]int{permissions[2].ID, permissions[1].ID, permissions[0].ID}); err != nil {
+		[]string{domainrbac.PermissionRoomView, domainrbac.PermissionUnitView, domainrbac.PermissionUnitUpdate}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.Model(&models.PermissionGroup{}).Where("id = ?", groups[2].ID).
 		Update("deleted_at", time.Now()).Error; err != nil {
 		t.Fatal(err)
 	}
-	if err := db.Model(&models.Permission{}).Where("id = ?", permissions[2].ID).
-		Update("deleted_at", time.Now()).Error; err != nil {
+	if err := repo.RemovePermissionsFromPermissionGroup(ctx, groups[0].ID, []string{domainrbac.PermissionRoomView}); err != nil {
 		t.Fatal(err)
 	}
 	assertRole := func(t *testing.T, role *domainrbac.Role, want []int) {
@@ -97,15 +88,15 @@ func TestRBACRepositoryReadsBindings(t *testing.T) {
 	if err != nil || len(listedGroups) != 2 {
 		t.Fatalf("ListPermissionGroups = %+v, %v", listedGroups, err)
 	}
-	if !reflect.DeepEqual(listedGroups[0].PermissionIDs, []int{}) ||
-		!reflect.DeepEqual(listedGroups[1].PermissionIDs, []int{permissions[0].ID, permissions[1].ID}) {
+	if !reflect.DeepEqual(listedGroups[0].PermissionCodes, []string{}) ||
+		!reflect.DeepEqual(listedGroups[1].PermissionCodes, []string{domainrbac.PermissionUnitUpdate, domainrbac.PermissionUnitView}) {
 		t.Fatalf("permission bindings = %+v, %+v", listedGroups[0], listedGroups[1])
 	}
 	if err := repo.RemovePermissionGroupsFromRole(ctx, owner, role.ID, wantGroups); err != nil {
 		t.Fatal(err)
 	}
 	if err := repo.RemovePermissionsFromPermissionGroup(ctx, groups[0].ID,
-		[]int{permissions[0].ID, permissions[1].ID}); err != nil {
+		[]string{domainrbac.PermissionUnitUpdate, domainrbac.PermissionUnitView}); err != nil {
 		t.Fatal(err)
 	}
 	role, err = repo.GetRole(ctx, owner, role.ID)
@@ -118,7 +109,7 @@ func TestRBACRepositoryReadsBindings(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, group := range listedGroups {
-		if !reflect.DeepEqual(group.PermissionIDs, []int{}) {
+		if !reflect.DeepEqual(group.PermissionCodes, []string{}) {
 			t.Fatalf("removed permission bindings = %+v", group)
 		}
 	}

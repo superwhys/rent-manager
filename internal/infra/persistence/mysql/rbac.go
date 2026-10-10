@@ -223,37 +223,13 @@ func (r *RBACRepository) CreatePermissionGroups(
 	return toDomainPermissionGroups(records), nil
 }
 
-func (r *RBACRepository) CreatePermissions(
-	ctx context.Context,
-	permissions []*domainrbac.Permission,
-) ([]*domainrbac.Permission, error) {
-	records := make([]*models.Permission, 0, len(permissions))
-	for _, permission := range permissions {
-		if err := validateByteLength(255, permission.Code, permission.Description); err != nil {
-			return nil, err
-		}
-		records = append(records, &models.Permission{
-			Code:        permission.Code,
-			Description: permission.Description,
-			IsActive:    &permission.IsActive,
-		})
-	}
-	if err := r.q.Permission.WithContext(ctx).Create(records...); err != nil {
-		if isConstraintError(err) {
-			return nil, domainrbac.ErrPermissionAlreadyExists
-		}
-		return nil, err
-	}
-	return toDomainPermissions(records), nil
-}
-
 func (r *RBACRepository) ListPermissionGroups(
 	ctx context.Context,
 ) ([]*domainrbac.PermissionGroup, error) {
 	group := r.q.PermissionGroup
 	records, err := group.WithContext(ctx).
 		Where(group.DeletedAt.IsNull()).
-		Preload(group.Permissions.On(r.q.Permission.DeletedAt.IsNull()).Order(r.q.Permission.ID)).
+		Preload(group.PermissionBindings.Order(r.q.PermissionGroupPermission.PermissionCode)).
 		Order(group.SortOrder.Asc(), group.ID.Desc()).
 		Find()
 	if err != nil {
@@ -262,37 +238,25 @@ func (r *RBACRepository) ListPermissionGroups(
 	return toDomainPermissionGroups(records), nil
 }
 
-func (r *RBACRepository) ListPermissions(ctx context.Context) ([]*domainrbac.Permission, error) {
-	permission := r.q.Permission
-	records, err := permission.WithContext(ctx).
-		Where(permission.DeletedAt.IsNull()).
-		Order(permission.ID.Desc()).
-		Find()
-	if err != nil {
-		return nil, err
-	}
-	return toDomainPermissions(records), nil
-}
-
 func (r *RBACRepository) AddPermissionsToPermissionGroup(
 	ctx context.Context,
 	groupID int,
-	permissionIDs []int,
+	permissionCodes []string,
 ) error {
 	if err := r.ensurePermissionGroupExists(ctx, groupID); err != nil {
 		return err
 	}
-	if err := r.ensurePermissionsExist(ctx, permissionIDs); err != nil {
+	if err := validatePermissionCodes(permissionCodes); err != nil {
 		return err
 	}
 	return query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
-		records := make([]*models.PermissionGroupPermission, 0, len(permissionIDs))
-		for _, permissionID := range permissionIDs {
+		records := make([]*models.PermissionGroupPermission, 0, len(permissionCodes))
+		for _, permissionCode := range permissionCodes {
 			records = append(
 				records,
 				&models.PermissionGroupPermission{
 					PermissionGroupID: groupID,
-					PermissionID:      permissionID,
+					PermissionCode:    permissionCode,
 				},
 			)
 		}
@@ -311,18 +275,18 @@ func (r *RBACRepository) AddPermissionsToPermissionGroup(
 func (r *RBACRepository) RemovePermissionsFromPermissionGroup(
 	ctx context.Context,
 	groupID int,
-	permissionIDs []int,
+	permissionCodes []string,
 ) error {
 	if err := r.ensurePermissionGroupExists(ctx, groupID); err != nil {
 		return err
 	}
-	if err := r.ensurePermissionsExist(ctx, permissionIDs); err != nil {
+	if err := validatePermissionCodes(permissionCodes); err != nil {
 		return err
 	}
 	return query.Use(r.q.UnderlyingDB().WithContext(ctx)).Transaction(func(tx *query.Query) error {
 		link := tx.PermissionGroupPermission
 		if _, err := link.WithContext(ctx).
-			Where(link.PermissionGroupID.Eq(groupID), link.PermissionID.In(permissionIDs...)).
+			Where(link.PermissionGroupID.Eq(groupID), link.PermissionCode.In(permissionCodes...)).
 			Delete(); err != nil {
 			return err
 		}
@@ -472,6 +436,9 @@ func (r *RBACRepository) HasUnitPermission(
 	unitID int,
 	permissionCode string,
 ) (bool, error) {
+	if !domainrbac.IsBuiltinPermission(permissionCode) {
+		return false, nil
+	}
 	unit := r.q.Unit
 	unitRecord, err := unit.WithContext(ctx).
 		Where(unit.ID.Eq(unitID), unit.DeletedAt.IsNull()).
@@ -491,13 +458,11 @@ func (r *RBACRepository) HasUnitPermission(
 	roleGroup := r.q.RolePermissionGroup
 	group := r.q.PermissionGroup
 	groupPermission := r.q.PermissionGroupPermission
-	permission := r.q.Permission
 	count, err := grant.WithContext(ctx).
 		Join(role, role.ID.EqCol(grant.RoleID)).
 		Join(roleGroup, roleGroup.RoleID.EqCol(role.ID)).
 		Join(group, group.ID.EqCol(roleGroup.PermissionGroupID)).
 		Join(groupPermission, groupPermission.PermissionGroupID.EqCol(group.ID)).
-		Join(permission, permission.ID.EqCol(groupPermission.PermissionID)).
 		Where(
 			grant.UnitID.Eq(unitID),
 			grant.AccountID.Eq(accountID),
@@ -505,8 +470,7 @@ func (r *RBACRepository) HasUnitPermission(
 			grant.DeletedAt.IsNull(),
 			role.IsActive.Is(true), role.DeletedAt.IsNull(),
 			group.IsActive.Is(true), group.DeletedAt.IsNull(),
-			permission.Code.Eq(permissionCode),
-			permission.IsActive.Is(true), permission.DeletedAt.IsNull(),
+			groupPermission.PermissionCode.Eq(permissionCode),
 		).
 		Count()
 	return count > 0, err
@@ -594,16 +558,14 @@ func (r *RBACRepository) ensurePermissionGroupsExist(ctx context.Context, groupI
 	return nil
 }
 
-func (r *RBACRepository) ensurePermissionsExist(ctx context.Context, permissionIDs []int) error {
-	permission := r.q.Permission
-	count, err := permission.WithContext(ctx).
-		Where(permission.ID.In(permissionIDs...), permission.DeletedAt.IsNull()).
-		Count()
-	if err != nil {
-		return err
-	}
-	if count != int64(len(permissionIDs)) {
+func validatePermissionCodes(permissionCodes []string) error {
+	if len(permissionCodes) == 0 {
 		return domainrbac.ErrPermissionNotFound
+	}
+	for _, code := range permissionCodes {
+		if !domainrbac.IsBuiltinPermission(code) {
+			return domainrbac.ErrPermissionNotFound
+		}
 	}
 	return nil
 }
@@ -641,21 +603,21 @@ func toDomainPermissionGroup(record *models.PermissionGroup) *domainrbac.Permiss
 	if record == nil {
 		return nil
 	}
-	permissionIDs := make([]int, 0, len(record.Permissions))
-	for _, permission := range record.Permissions {
-		permissionIDs = append(permissionIDs, permission.ID)
+	permissionCodes := make([]string, 0, len(record.PermissionBindings))
+	for _, binding := range record.PermissionBindings {
+		permissionCodes = append(permissionCodes, binding.PermissionCode)
 	}
 	return &domainrbac.PermissionGroup{
-		ID:            record.ID,
-		Code:          record.Code,
-		Name:          record.Name,
-		Description:   record.Description,
-		SortOrder:     record.SortOrder,
-		IsActive:      *record.IsActive,
-		PermissionIDs: permissionIDs,
-		CreatedAt:     record.CreatedAt,
-		UpdatedAt:     record.UpdatedAt,
-		DeletedAt:     record.DeletedAt,
+		ID:              record.ID,
+		Code:            record.Code,
+		Name:            record.Name,
+		Description:     record.Description,
+		SortOrder:       record.SortOrder,
+		IsActive:        *record.IsActive,
+		PermissionCodes: permissionCodes,
+		CreatedAt:       record.CreatedAt,
+		UpdatedAt:       record.UpdatedAt,
+		DeletedAt:       record.DeletedAt,
 	}
 }
 
@@ -665,29 +627,6 @@ func toDomainPermissionGroups(records []*models.PermissionGroup) []*domainrbac.P
 		groups = append(groups, toDomainPermissionGroup(record))
 	}
 	return groups
-}
-
-func toDomainPermission(record *models.Permission) *domainrbac.Permission {
-	if record == nil {
-		return nil
-	}
-	return &domainrbac.Permission{
-		ID:          record.ID,
-		Code:        record.Code,
-		Description: record.Description,
-		IsActive:    *record.IsActive,
-		CreatedAt:   record.CreatedAt,
-		UpdatedAt:   record.UpdatedAt,
-		DeletedAt:   record.DeletedAt,
-	}
-}
-
-func toDomainPermissions(records []*models.Permission) []*domainrbac.Permission {
-	permissions := make([]*domainrbac.Permission, 0, len(records))
-	for _, record := range records {
-		permissions = append(permissions, toDomainPermission(record))
-	}
-	return permissions
 }
 
 func toDomainUnitAccountRole(record *models.UnitAccountRole) *domainrbac.UnitAccountRole {

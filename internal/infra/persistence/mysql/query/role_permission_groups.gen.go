@@ -35,15 +35,26 @@ func newRolePermissionGroup(db *gorm.DB, opts ...gen.DOOption) rolePermissionGro
 		RelationField: field.NewRelation("Role", "models.Role"),
 		PermissionGroups: struct {
 			field.RelationField
-			Permissions struct {
+			PermissionBindings struct {
 				field.RelationField
+				PermissionGroup struct {
+					field.RelationField
+				}
 			}
 		}{
 			RelationField: field.NewRelation("Role.PermissionGroups", "models.PermissionGroup"),
-			Permissions: struct {
+			PermissionBindings: struct {
 				field.RelationField
+				PermissionGroup struct {
+					field.RelationField
+				}
 			}{
-				RelationField: field.NewRelation("Role.PermissionGroups.Permissions", "models.Permission"),
+				RelationField: field.NewRelation("Role.PermissionGroups.PermissionBindings", "models.PermissionGroupPermission"),
+				PermissionGroup: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("Role.PermissionGroups.PermissionBindings.PermissionGroup", "models.PermissionGroup"),
+				},
 			},
 		},
 	}
@@ -52,10 +63,18 @@ func newRolePermissionGroup(db *gorm.DB, opts ...gen.DOOption) rolePermissionGro
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("PermissionGroup", "models.PermissionGroup"),
-		Permissions: struct {
+		PermissionBindings: struct {
 			field.RelationField
+			PermissionGroup struct {
+				field.RelationField
+			}
 		}{
-			RelationField: field.NewRelation("PermissionGroup.Permissions", "models.Permission"),
+			RelationField: field.NewRelation("PermissionGroup.PermissionBindings", "models.PermissionGroupPermission"),
+			PermissionGroup: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("PermissionGroup.PermissionBindings.PermissionGroup", "models.PermissionGroup"),
+			},
 		},
 	}
 
@@ -148,8 +167,11 @@ type rolePermissionGroupBelongsToRole struct {
 
 	PermissionGroups struct {
 		field.RelationField
-		Permissions struct {
+		PermissionBindings struct {
 			field.RelationField
+			PermissionGroup struct {
+				field.RelationField
+			}
 		}
 	}
 }
@@ -234,8 +256,11 @@ type rolePermissionGroupBelongsToPermissionGroup struct {
 
 	field.RelationField
 
-	Permissions struct {
+	PermissionBindings struct {
 		field.RelationField
+		PermissionGroup struct {
+			field.RelationField
+		}
 	}
 }
 

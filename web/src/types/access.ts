@@ -20,14 +20,12 @@ export interface PermissionGroup {
   description?: string | null
   sort_order: number
   is_active: boolean
-  permission_ids: number[]
+  permission_codes: string[]
 }
 
 export interface Permission {
-  id: number
   code: string
   description: string
-  is_active: boolean
 }
 
 export interface PermissionGroupInput {
@@ -35,11 +33,6 @@ export interface PermissionGroupInput {
   name: string
   description: string
   sort_order: number
-}
-
-export interface PermissionInput {
-  code: string
-  description: string
 }
 
 export interface UnitGrant {

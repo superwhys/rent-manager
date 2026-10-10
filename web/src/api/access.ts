@@ -5,7 +5,6 @@ import type {
   Permission,
   PermissionGroup,
   PermissionGroupInput,
-  PermissionInput,
   Role,
   RoleInput,
   UnitGrant,
@@ -27,12 +26,6 @@ export const createPermissionGroup = (body: PermissionGroupInput) =>
     method: 'POST',
     body: { permission_groups: [body] },
   })
-export const createPermission = (body: PermissionInput) =>
-  request<Permission[]>('/admin/permissions/batch', {
-    method: 'POST',
-    body: { permissions: [body] },
-  })
-
 export const changeRoleGroups = (
   id: number,
   ids: number[],
@@ -44,12 +37,12 @@ export const changeRoleGroups = (
   })
 export const changeGroupPermissions = (
   id: number,
-  ids: number[],
+  codes: string[],
   action: BindingAction,
 ) =>
   request<void>(`/admin/permission-groups/${id}/permissions`, {
     method: action === 'add' ? 'POST' : 'DELETE',
-    body: { permission_ids: ids },
+    body: { permission_codes: codes },
   })
 
 export const listUnitGrants = (id: number, query: GrantsQuery = {}) =>

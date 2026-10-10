@@ -33,7 +33,7 @@ func newDryRunDB(t *testing.T) *gorm.DB {
 
 func TestCreatePreservesExplicitInactiveAndDefaultsActive(t *testing.T) {
 	db := newDryRunDB(t)
-	for _, model := range []any{&Room{}, &Role{}, &Permission{}, &PermissionGroup{}} {
+	for _, model := range []any{&Room{}, &Role{}, &PermissionGroup{}} {
 		t.Run(reflect.TypeOf(model).Elem().Name(), func(t *testing.T) {
 			active := reflect.ValueOf(model).Elem().FieldByName("IsActive")
 			inactive := false

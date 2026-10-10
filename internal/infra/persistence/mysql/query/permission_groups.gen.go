@@ -36,10 +36,23 @@ func newPermissionGroup(db *gorm.DB, opts ...gen.DOOption) permissionGroup {
 	_permissionGroup.Description = field.NewString(tableName, "description")
 	_permissionGroup.SortOrder = field.NewInt(tableName, "sort_order")
 	_permissionGroup.IsActive = field.NewBool(tableName, "is_active")
-	_permissionGroup.Permissions = permissionGroupManyToManyPermissions{
+	_permissionGroup.PermissionBindings = permissionGroupHasManyPermissionBindings{
 		db: db.Session(&gorm.Session{}),
 
-		RelationField: field.NewRelation("Permissions", "models.Permission"),
+		RelationField: field.NewRelation("PermissionBindings", "models.PermissionGroupPermission"),
+		PermissionGroup: struct {
+			field.RelationField
+			PermissionBindings struct {
+				field.RelationField
+			}
+		}{
+			RelationField: field.NewRelation("PermissionBindings.PermissionGroup", "models.PermissionGroup"),
+			PermissionBindings: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("PermissionBindings.PermissionGroup.PermissionBindings", "models.PermissionGroupPermission"),
+			},
+		},
 	}
 
 	_permissionGroup.fillFieldMap()
@@ -50,17 +63,17 @@ func newPermissionGroup(db *gorm.DB, opts ...gen.DOOption) permissionGroup {
 type permissionGroup struct {
 	permissionGroupDo permissionGroupDo
 
-	ALL         field.Asterisk
-	ID          field.Int
-	CreatedAt   field.Time
-	UpdatedAt   field.Time
-	DeletedAt   field.Time
-	Code        field.String
-	Name        field.String
-	Description field.String
-	SortOrder   field.Int
-	IsActive    field.Bool
-	Permissions permissionGroupManyToManyPermissions
+	ALL                field.Asterisk
+	ID                 field.Int
+	CreatedAt          field.Time
+	UpdatedAt          field.Time
+	DeletedAt          field.Time
+	Code               field.String
+	Name               field.String
+	Description        field.String
+	SortOrder          field.Int
+	IsActive           field.Bool
+	PermissionBindings permissionGroupHasManyPermissionBindings
 
 	fieldMap map[string]field.Expr
 }
@@ -129,24 +142,31 @@ func (p *permissionGroup) fillFieldMap() {
 
 func (p permissionGroup) clone(db *gorm.DB) permissionGroup {
 	p.permissionGroupDo.ReplaceConnPool(db.Statement.ConnPool)
-	p.Permissions.db = db.Session(&gorm.Session{Initialized: true})
-	p.Permissions.db.Statement.ConnPool = db.Statement.ConnPool
+	p.PermissionBindings.db = db.Session(&gorm.Session{Initialized: true})
+	p.PermissionBindings.db.Statement.ConnPool = db.Statement.ConnPool
 	return p
 }
 
 func (p permissionGroup) replaceDB(db *gorm.DB) permissionGroup {
 	p.permissionGroupDo.ReplaceDB(db)
-	p.Permissions.db = db.Session(&gorm.Session{})
+	p.PermissionBindings.db = db.Session(&gorm.Session{})
 	return p
 }
 
-type permissionGroupManyToManyPermissions struct {
+type permissionGroupHasManyPermissionBindings struct {
 	db *gorm.DB
 
 	field.RelationField
+
+	PermissionGroup struct {
+		field.RelationField
+		PermissionBindings struct {
+			field.RelationField
+		}
+	}
 }
 
-func (a permissionGroupManyToManyPermissions) Where(conds ...field.Expr) *permissionGroupManyToManyPermissions {
+func (a permissionGroupHasManyPermissionBindings) Where(conds ...field.Expr) *permissionGroupHasManyPermissionBindings {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -159,32 +179,32 @@ func (a permissionGroupManyToManyPermissions) Where(conds ...field.Expr) *permis
 	return &a
 }
 
-func (a permissionGroupManyToManyPermissions) WithContext(ctx context.Context) *permissionGroupManyToManyPermissions {
+func (a permissionGroupHasManyPermissionBindings) WithContext(ctx context.Context) *permissionGroupHasManyPermissionBindings {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a permissionGroupManyToManyPermissions) Session(session *gorm.Session) *permissionGroupManyToManyPermissions {
+func (a permissionGroupHasManyPermissionBindings) Session(session *gorm.Session) *permissionGroupHasManyPermissionBindings {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a permissionGroupManyToManyPermissions) Model(m *models.PermissionGroup) *permissionGroupManyToManyPermissionsTx {
-	return &permissionGroupManyToManyPermissionsTx{a.db.Model(m).Association(a.Name())}
+func (a permissionGroupHasManyPermissionBindings) Model(m *models.PermissionGroup) *permissionGroupHasManyPermissionBindingsTx {
+	return &permissionGroupHasManyPermissionBindingsTx{a.db.Model(m).Association(a.Name())}
 }
 
-func (a permissionGroupManyToManyPermissions) Unscoped() *permissionGroupManyToManyPermissions {
+func (a permissionGroupHasManyPermissionBindings) Unscoped() *permissionGroupHasManyPermissionBindings {
 	a.db = a.db.Unscoped()
 	return &a
 }
 
-type permissionGroupManyToManyPermissionsTx struct{ tx *gorm.Association }
+type permissionGroupHasManyPermissionBindingsTx struct{ tx *gorm.Association }
 
-func (a permissionGroupManyToManyPermissionsTx) Find() (result []*models.Permission, err error) {
+func (a permissionGroupHasManyPermissionBindingsTx) Find() (result []*models.PermissionGroupPermission, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a permissionGroupManyToManyPermissionsTx) Append(values ...*models.Permission) (err error) {
+func (a permissionGroupHasManyPermissionBindingsTx) Append(values ...*models.PermissionGroupPermission) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -192,7 +212,7 @@ func (a permissionGroupManyToManyPermissionsTx) Append(values ...*models.Permiss
 	return a.tx.Append(targetValues...)
 }
 
-func (a permissionGroupManyToManyPermissionsTx) Replace(values ...*models.Permission) (err error) {
+func (a permissionGroupHasManyPermissionBindingsTx) Replace(values ...*models.PermissionGroupPermission) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -200,7 +220,7 @@ func (a permissionGroupManyToManyPermissionsTx) Replace(values ...*models.Permis
 	return a.tx.Replace(targetValues...)
 }
 
-func (a permissionGroupManyToManyPermissionsTx) Delete(values ...*models.Permission) (err error) {
+func (a permissionGroupHasManyPermissionBindingsTx) Delete(values ...*models.PermissionGroupPermission) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -208,15 +228,15 @@ func (a permissionGroupManyToManyPermissionsTx) Delete(values ...*models.Permiss
 	return a.tx.Delete(targetValues...)
 }
 
-func (a permissionGroupManyToManyPermissionsTx) Clear() error {
+func (a permissionGroupHasManyPermissionBindingsTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a permissionGroupManyToManyPermissionsTx) Count() int64 {
+func (a permissionGroupHasManyPermissionBindingsTx) Count() int64 {
 	return a.tx.Count()
 }
 
-func (a permissionGroupManyToManyPermissionsTx) Unscoped() *permissionGroupManyToManyPermissionsTx {
+func (a permissionGroupHasManyPermissionBindingsTx) Unscoped() *permissionGroupHasManyPermissionBindingsTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }

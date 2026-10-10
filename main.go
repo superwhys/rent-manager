@@ -71,6 +71,7 @@ func main() {
 	logging.PanicError(err)
 	defer sqlDB.Close()
 
+	logging.PanicError(mysql.EnsureBuiltinPermissionSchema(client))
 	logging.PanicError(client.AutoMigrate(authmysql.Models()...))
 	logging.PanicError(client.AutoMigrate(models.AllModels()...))
 
@@ -119,7 +120,7 @@ func main() {
 			repos.RBAC,
 		),
 	}
-	router := api.SetupRouter(httpLimiter, authService, adminServices)
+	router := api.SetupRouter(httpLimiter, authService, adminServices, adminConfig)
 	webHandler, err := web.NewHandler()
 	logging.PanicError(err)
 

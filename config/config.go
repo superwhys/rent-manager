@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net"
 	"net/mail"
+	"slices"
 	"strings"
 	"time"
 )
@@ -63,17 +64,17 @@ func (c SMTPConfig) Validate() error {
 }
 
 type AdminConfig struct {
-	SuperAdminAccountIDs []string
+	SuperAdminAccountIDs []string `json:"super_admin_account_ids"`
 }
 
 func (c *AdminConfig) IsSuperAdmin(accountID string) bool {
 	if strings.TrimSpace(accountID) == "" {
 		return false
 	}
-	for _, id := range c.SuperAdminAccountIDs {
-		if id == accountID {
-			return true
-		}
+
+	if slices.Contains(c.SuperAdminAccountIDs, accountID) {
+		return true
 	}
+
 	return false
 }

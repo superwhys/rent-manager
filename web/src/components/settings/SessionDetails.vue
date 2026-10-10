@@ -4,7 +4,7 @@ import { useSession } from '@/stores/session'
 import { formatDate } from '@/utils/format'
 import AppIcon from '@/components/common/AppIcon.vue'
 
-const { session } = useSession()
+const { session, isSuperAdmin } = useSession()
 const feedback = ref('')
 async function copyId() {
   if (!session.value) return
@@ -34,6 +34,13 @@ async function copyId() {
       <div>
         <dt>邮箱</dt>
         <dd>{{ session.account.Email || '未设置' }}</dd>
+      </div>
+      <div>
+        <dt>账号身份</dt>
+        <dd>
+          <span v-if="isSuperAdmin" class="badge">超级管理员</span>
+          <span v-else>普通账号</span>
+        </dd>
       </div>
       <div class="session-id">
         <dt>账号 ID</dt>

@@ -17,7 +17,7 @@
 | 月度抄表 | 录入房间月度读数，计算费用，查询房间状态与单元汇总 |
 | 租金账单 | 按房间或单元生成月账单，查询账单，标记收款或取消 |
 | 首页 | 汇总收入、空房和抄表/收款待办 |
-| RBAC | 管理账号私有角色、全局权限与权限组，为指定房源向其他账号授予角色 |
+| RBAC | 展示固定权限目录，管理账号私有角色与全局权限组，为指定房源向其他账号授予角色 |
 
 当前实现的边界见文末“当前限制”，前端展示的功能不一定都有后端接口。
 
@@ -48,9 +48,11 @@ CREATE DATABASE rent_manager
   COLLATE utf8mb4_unicode_ci;
 ```
 
-服务启动时先迁移 authkit 的认证表，再通过 GORM AutoMigrate 创建或更新业务表；数据库账号需要相应权限。启动过程不负责创建数据库，也不自动初始化权限、权限组或角色。
+服务启动时先检查权限表结构，再迁移 authkit 的认证表，通过 GORM AutoMigrate 创建或更新业务表；数据库账号需要相应权限。启动过程不负责创建数据库，也不自动初始化权限组或角色。权限目录由后端代码固定提供，无需数据库初始化。
 
 新部署可使用空数据库。对于旧数据库，启动检查一旦发现原 `accounts` 表就会停止，避免把整型账号引用自动转换成无效的 authkit 身份。[账号迁移 SQL](migrations/20261009_authkit_accounts.sql) 仅适用于旧账号及相关业务表均为空的情况，会拒绝非空数据；请先检查脚本再按需手动执行。需要保留历史数据时，必须另行制定数据迁移方案，本项目不建立账号映射。
+
+已有 `permissions` 表或 `permission_group_permissions.permission_id` 列的数据库会在 AutoMigrate 前被拒绝。停止服务和其他写入、备份后，手动执行 [固定权限迁移 SQL](migrations/20261010_builtin_permissions.sql)，然后启动新版服务；空的新数据库无需执行。脚本按旧权限真实 ID 转换为 `permission_code`，保留权限组、角色及楼栋授权，只迁移启用且未删除的权限绑定。未知编码、孤立绑定或异常外键会在修改业务表前拒绝，需要人工确认；MySQL DDL 隐式提交，迁移中断不能靠事务回滚，需从备份恢复后处理，不要加 `--force`。
 
 ### 2. 配置服务
 
@@ -98,7 +100,7 @@ CREATE DATABASE rent_manager
 | `auth.smtp` | 完全不配置时禁用发码；启用时配置 `host`、`port`、`from`，SMTP 认证的 `username` / `password` 成对配置 |
 | `auth.smtp.timeout` | SMTP 操作超时；465 使用 TLS，其他端口要求 STARTTLS，验证服务端证书 |
 | `auth.session_ttl` | 会话有效时长，支持 `720h` 等字符串；零值默认 30 天，不允许负值 |
-| `admin.SuperAdminAccountIDs` | 允许写入全局权限和权限组的 authkit 账号 ID 字符串列表，ID 为 64 位小写十六进制；空列表表示无人拥有该管理权限 |
+| `admin.SuperAdminAccountIDs` | 允许写入全局权限组及其权限绑定的 authkit 账号 ID 字符串列表，ID 为 64 位小写十六进制；空列表表示无人拥有该管理权限，固定权限目录只读 |
 | `mysql.instance` | MySQL 的 `host:port`；`pool_size` 控制连接池大小 |
 | `redis.server` | Redis 的 `host:port`；`poolsize` 为连接池大小 |
 
@@ -249,8 +251,8 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 | POST | `/roles/batch` | 批量创建角色 |
 | GET / PUT / DELETE | `/roles/:role_id` | 角色详情、更新、删除 |
 | POST / DELETE | `/roles/:role_id/permission-groups` | 绑定、移除角色权限组 |
-| GET | `/admin/permissions`、`/admin/permission-groups` | 全局权限、权限组列表 |
-| POST | `/admin/permissions/batch`、`/admin/permission-groups/batch` | 批量创建全局权限、权限组 |
+| GET | `/admin/permissions`、`/admin/permission-groups` | 固定权限目录、全局权限组列表 |
+| POST | `/admin/permission-groups/batch` | 批量创建全局权限组 |
 | POST / DELETE | `/admin/permission-groups/:permission_group_id/permissions` | 绑定、移除权限组中的权限 |
 | GET | `/units/:unit_id/grants` | 单元授权列表 |
 | POST / DELETE | `/units/:unit_id/accounts/:account_id/roles` | 授予、撤销目标账号的单元角色 |
@@ -280,20 +282,20 @@ curl -X DELETE http://localhost:8080/api/auth/session \
 
 - 账号可以管理自己拥有的资源；删除单元及管理单元授权仅限所有者。
 - 访问他人单元的业务数据时，服务检查该单元下的授权角色和权限代码。
-- 角色属于创建它的账号，可以绑定全局权限组；权限组关联全局权限。
-- 普通登录账号可以查询全局权限与权限组，写入操作要求账号 ID 位于 `admin.SuperAdminAccountIDs` 中。
+- 角色属于创建它的账号，可以绑定全局权限组；权限组通过 `permission_code` 关联后端固定权限目录，不再保存权限目录表。
+- 普通登录账号可以查询固定权限与全局权限组；权限组及其权限绑定的写入要求账号 ID 位于 `admin.SuperAdminAccountIDs` 中。页面和 API 均不支持新增权限。
 - 楼栋列表无 `unit.view` 时仅返回 `id/name/access_type/is_owner` 作为入口；房间统计和租金字段还分别要求 `room.view`、`rent_bill.view`。首页同样按各楼栋的房间、账单查看权限汇总数据。
-- 角色查询返回 `permission_group_ids`，权限组查询返回 `permission_ids`，未绑定时返回空数组。批量授予角色在同一事务内完成，失败时全部回滚。
+- 角色查询返回 `permission_group_ids`，权限组查询返回 `permission_codes`；权限组绑定、移除接口也传入 `permission_codes`，只接受固定目录中的编码。未绑定时返回空数组。批量授予角色在同一事务内完成，失败时全部回滚。
 - 房型和收费项目的 GET 列表、详情支持 `?unit_id=楼栋ID`，分别校验该楼栋的 `room_type.view`、`meter_item.view` 后读取所有者的共享目录，供授权楼栋选用；不传时仍读取当前账号自己的目录。
 - 共享房型和收费项目定义仍仅由所有者维护，下级用 `room.manage`、`unit.update` 在授权楼栋选用已有定义。`room_type.manage`、`meter_item.manage` 保留兼容，但不授予跨楼栋共享定义的写权限。
 
 授权关系为：
 
 ```text
-被授权账号 → UnitAccountRole → 房源所有者的 Role → PermissionGroup → Permission
+被授权账号 → UnitAccountRole → 房源所有者的 Role → PermissionGroup → 固定权限编码
 ```
 
-授予单元角色前，应用服务通过 authkit 的账号仓储校验目标账号是否存在。共享房源时，先创建权限与权限组，所有者创建角色并绑定权限组，再将该角色授予目标账号在指定单元使用。权限代码在 [internal/domain/rbac/permissions.go](internal/domain/rbac/permissions.go) 定义，例如 `unit.view`、`room.manage`、`meter_reading.manage`、`rent_bill.manage`。资源权限校验位于业务服务中，按代码匹配。
+授予单元角色前，应用服务通过 authkit 的账号仓储校验目标账号是否存在。共享房源时，超级管理员创建权限组并选择固定权限，所有者创建角色并绑定权限组，再将该角色授予目标账号在指定单元使用。固定的 10 个权限及其中文说明统一在 [internal/domain/rbac/permissions.go](internal/domain/rbac/permissions.go) 维护，例如 `unit.view`、`room.manage`、`meter_reading.manage`、`rent_bill.manage`。业务服务按这些代码校验权限；新增功能权限时必须同时更新后端目录和业务校验。
 
 ## 项目结构
 

@@ -34,7 +34,11 @@ configureSession(token.value, () => {
 })
 
 function acceptSession(value: Session, accessToken: string) {
-  session.value = { account: value.account, expires_at: value.expires_at }
+  session.value = {
+    account: value.account,
+    expires_at: value.expires_at,
+    is_super_admin: value.is_super_admin,
+  }
   token.value = accessToken
   sessionStorage.setItem(storageKey, accessToken)
   configureSession(accessToken)
@@ -77,6 +81,7 @@ export function useSession() {
     session,
     expired,
     isAuthenticated: computed(() => Boolean(session.value)),
+    isSuperAdmin: computed(() => session.value?.is_super_admin === true),
     accountName: computed(() => session.value?.account.Username || '我的账号'),
     initialize,
     async loginWithPassword(body: PasswordLoginRequest, signal?: AbortSignal) {

@@ -133,16 +133,6 @@ func TestRBACRepositoryPermissionsAndBindings(t *testing.T) {
 		*groups[0].Description != description {
 		t.Fatalf("权限组 nullable/false 值未保留: %+v", groups)
 	}
-	permissions, err := repo.CreatePermissions(ctx, []*domainrbac.Permission{
-		{Code: "unit.read", Description: "读取单元", IsActive: true},
-		{Code: "unit.write", Description: "修改单元", IsActive: false},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if permissions[1].IsActive {
-		t.Fatal("权限创建时显式 false 被默认值覆盖")
-	}
 	if _, err := repo.CreatePermissionGroups(
 		ctx,
 		[]*domainrbac.PermissionGroup{{Code: "first", Name: "重复组"}},
@@ -152,23 +142,10 @@ func TestRBACRepositoryPermissionsAndBindings(t *testing.T) {
 	) {
 		t.Fatalf("重复权限组错误 = %v", err)
 	}
-	if _, err := repo.CreatePermissions(
-		ctx,
-		[]*domainrbac.Permission{{Code: "unit.read", Description: "重复权限"}},
-	); !errors.Is(
-		err,
-		domainrbac.ErrPermissionAlreadyExists,
-	) {
-		t.Fatalf("重复权限错误 = %v", err)
-	}
 	listedGroups, err := repo.ListPermissionGroups(ctx)
 	if err != nil || len(listedGroups) != 3 || listedGroups[0].ID != groups[2].ID ||
 		listedGroups[1].ID != groups[1].ID {
 		t.Fatalf("权限组排序 = %+v, %v", listedGroups, err)
-	}
-	listedPermissions, err := repo.ListPermissions(ctx)
-	if err != nil || len(listedPermissions) != 2 || listedPermissions[0].ID != permissions[1].ID {
-		t.Fatalf("权限排序 = %+v, %v", listedPermissions, err)
 	}
 	if err := repo.AddPermissionGroupsToRole(
 		ctx,
@@ -195,7 +172,7 @@ func TestRBACRepositoryPermissionsAndBindings(t *testing.T) {
 	if err := repo.AddPermissionsToPermissionGroup(
 		ctx,
 		groups[0].ID,
-		[]int{99999},
+		[]string{"unknown"},
 	); !errors.Is(
 		err,
 		domainrbac.ErrPermissionNotFound,
@@ -214,7 +191,7 @@ func TestRBACRepositoryPermissionsAndBindings(t *testing.T) {
 		if err := repo.AddPermissionsToPermissionGroup(
 			ctx,
 			groups[0].ID,
-			[]int{permissions[0].ID},
+			[]string{domainrbac.PermissionUnitView},
 		); err != nil {
 			t.Fatal(err)
 		}
@@ -243,7 +220,7 @@ func TestRBACRepositoryPermissionsAndBindings(t *testing.T) {
 	if err := repo.RemovePermissionsFromPermissionGroup(
 		ctx,
 		groups[0].ID,
-		[]int{permissions[0].ID},
+		[]string{domainrbac.PermissionUnitView},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -358,13 +335,6 @@ func TestRBACRepositoryHasUnitPermission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	permissions, err := repo.CreatePermissions(
-		ctx,
-		[]*domainrbac.Permission{{Code: "unit.read", Description: "读取单元", IsActive: true}},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
 	if err := repo.AddPermissionGroupsToRole(
 		ctx,
 		owner,
@@ -376,7 +346,7 @@ func TestRBACRepositoryHasUnitPermission(t *testing.T) {
 	if err := repo.AddPermissionsToPermissionGroup(
 		ctx,
 		groups[0].ID,
-		[]int{permissions[0].ID},
+		[]string{domainrbac.PermissionUnitView},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -397,14 +367,18 @@ func TestRBACRepositoryHasUnitPermission(t *testing.T) {
 			t.Fatalf("HasUnitPermission(%q, %q) = %v, %v; want %v", accountID, code, got, err, want)
 		}
 	}
-	assertPermission(t, owner, "任意权限", true)
-	assertPermission(t, target, "unit.read", true)
-	assertPermission(t, target, "unit.write", false)
+	for _, permission := range domainrbac.BuiltinPermissions() {
+		assertPermission(t, owner, permission.Code, true)
+	}
+	assertPermission(t, owner, "unknown", false)
+	assertPermission(t, owner, "", false)
+	assertPermission(t, target, domainrbac.PermissionUnitView, true)
+	assertPermission(t, target, domainrbac.PermissionUnitUpdate, false)
 	if _, err := repo.HasUnitPermission(
 		ctx,
 		target,
 		99999,
-		"unit.read",
+		domainrbac.PermissionUnitView,
 	); !errors.Is(
 		err,
 		domainrbac.ErrUnitNotInAccount,
@@ -423,8 +397,6 @@ func TestRBACRepositoryHasUnitPermission(t *testing.T) {
 		{"角色删除", &models.Role{}, roles[0].ID, "deleted_at", time.Now(), nil},
 		{"权限组停用", &models.PermissionGroup{}, groups[0].ID, "is_active", false, true},
 		{"权限组删除", &models.PermissionGroup{}, groups[0].ID, "deleted_at", time.Now(), nil},
-		{"权限停用", &models.Permission{}, permissions[0].ID, "is_active", false, true},
-		{"权限删除", &models.Permission{}, permissions[0].ID, "deleted_at", time.Now(), nil},
 		{"授权停用", &models.UnitAccountRole{}, grants[0].ID, "status", domainrbac.UnitGrantStatusDisabled, domainrbac.UnitGrantStatusActive},
 		{"授权删除", &models.UnitAccountRole{}, grants[0].ID, "deleted_at", time.Now(), nil},
 	} {
@@ -435,16 +407,26 @@ func TestRBACRepositoryHasUnitPermission(t *testing.T) {
 				Error; err != nil {
 				t.Fatal(err)
 			}
-			assertPermission(t, target, "unit.read", false)
+			assertPermission(t, target, domainrbac.PermissionUnitView, false)
 			if err := db.Model(test.model).
 				Where("id = ?", test.id).
 				Update(test.column, test.reset).
 				Error; err != nil {
 				t.Fatal(err)
 			}
-			assertPermission(t, target, "unit.read", true)
+			assertPermission(t, target, domainrbac.PermissionUnitView, true)
 		})
 	}
+	t.Run("移除权限绑定", func(t *testing.T) {
+		if err := repo.RemovePermissionsFromPermissionGroup(ctx, groups[0].ID, []string{domainrbac.PermissionUnitView}); err != nil {
+			t.Fatal(err)
+		}
+		assertPermission(t, target, domainrbac.PermissionUnitView, false)
+		if err := repo.AddPermissionsToPermissionGroup(ctx, groups[0].ID, []string{domainrbac.PermissionUnitView}); err != nil {
+			t.Fatal(err)
+		}
+		assertPermission(t, target, domainrbac.PermissionUnitView, true)
+	})
 }
 
 func seedRBACUnit(t *testing.T, db *gorm.DB) (string, string, *models.Unit) {

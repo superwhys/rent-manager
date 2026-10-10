@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
         </AsyncState>
         <div v-if="pageCount > 1" class="reading-pagination">
           <span class="muted">第 {{ page }} / {{ pageCount }} 页</span>
-          <div>
+          <div class="pagination-actions">
             <el-button :disabled="page === 1" @click="page--">上一页</el-button>
             <el-button :disabled="page === pageCount" @click="page++">下一页</el-button>
           </div>
@@ -396,6 +396,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-top: 1.25rem;
   font-size: 0.8125rem;

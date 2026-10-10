@@ -103,7 +103,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "权限ID列表",
+                        "description": "权限编码列表",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -146,7 +146,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "权限ID列表",
+                        "description": "权限编码列表",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -178,45 +178,7 @@ const docTemplate = `{
                 "tags": [
                     "admin"
                 ],
-                "summary": "获取权限列表",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-array_rbac_PermissionResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/permissions/batch": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "批量创建权限",
-                "parameters": [
-                    {
-                        "description": "权限列表",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/rbac.CreatePermissionsCommand"
-                        }
-                    }
-                ],
+                "summary": "获取代码定义的固定权限列表",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2923,36 +2885,6 @@ const docTemplate = `{
                 }
             }
         },
-        "rbac.CreatePermissionItem": {
-            "type": "object",
-            "required": [
-                "code",
-                "description"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                }
-            }
-        },
-        "rbac.CreatePermissionsCommand": {
-            "type": "object",
-            "required": [
-                "permissions"
-            ],
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/rbac.CreatePermissionItem"
-                    }
-                }
-            }
-        },
         "rbac.CreateRoleItem": {
             "type": "object",
             "required": [
@@ -2986,18 +2918,18 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "PermissionGroupID",
-                "permission_ids"
+                "permission_codes"
             ],
             "properties": {
                 "PermissionGroupID": {
                     "type": "integer",
                     "minimum": 1
                 },
-                "permission_ids": {
+                "permission_codes": {
                     "type": "array",
                     "minItems": 1,
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 }
             }
@@ -3020,10 +2952,10 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "permission_ids": {
+                "permission_codes": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "sort_order": {
@@ -3039,12 +2971,6 @@ const docTemplate = `{
                 },
                 "description": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
                 }
             }
         },
@@ -3464,6 +3390,9 @@ const docTemplate = `{
                 },
                 "expires_at": {
                     "type": "string"
+                },
+                "is_super_admin": {
+                    "type": "boolean"
                 }
             }
         },
@@ -3475,6 +3404,9 @@ const docTemplate = `{
                 },
                 "expires_at": {
                     "type": "string"
+                },
+                "is_super_admin": {
+                    "type": "boolean"
                 }
             }
         },

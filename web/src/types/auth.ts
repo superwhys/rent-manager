@@ -7,6 +7,7 @@ export interface Account {
 export interface Session {
   account: Account
   expires_at: string
+  is_super_admin: boolean
 }
 
 export interface LoginResult extends Session {

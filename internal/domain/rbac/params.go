@@ -28,14 +28,9 @@ type CreatePermissionGroupParams struct {
 	SortOrder   int
 }
 
-type CreatePermissionParams struct {
-	Code        string
-	Description string
-}
-
 type PermissionGroupPermissionsParams struct {
 	PermissionGroupID int
-	PermissionIDs     []int
+	PermissionCodes   []string
 }
 
 type RolePermissionGroupsParams struct {

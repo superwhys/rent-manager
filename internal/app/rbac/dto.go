@@ -26,21 +26,10 @@ type CreatePermissionGroupsCommand struct {
 	PermissionGroups []CreatePermissionGroupItem `json:"permission_groups" validate:"required,min=1,dive"`
 }
 
-// CreatePermissionItem 表示批量创建权限中的单个权限参数。
-type CreatePermissionItem struct {
-	Code        string `json:"code"        validate:"required"`
-	Description string `json:"description" validate:"required"`
-}
-
-// CreatePermissionsCommand 表示批量创建权限命令。
-type CreatePermissionsCommand struct {
-	Permissions []CreatePermissionItem `json:"permissions" validate:"required,min=1,dive"`
-}
-
 // PermissionGroupPermissionsCommand 表示权限组绑定或解绑权限命令。
 type PermissionGroupPermissionsCommand struct {
-	PermissionGroupID int   `uri:"permission_group_id" validate:"required,min=1"`
-	PermissionIDs     []int `                          validate:"required,min=1,dive,min=1" json:"permission_ids"`
+	PermissionGroupID int      `uri:"permission_group_id" validate:"required,min=1"`
+	PermissionCodes   []string `                          validate:"required,min=1,dive,required" json:"permission_codes"`
 }
 
 // RolePermissionGroupsCommand 表示角色绑定或解绑权限组命令。
@@ -90,21 +79,19 @@ type RoleResponse struct {
 
 // PermissionGroupResponse 是权限组响应。
 type PermissionGroupResponse struct {
-	ID            int     `json:"id"`
-	Code          string  `json:"code"`
-	Name          string  `json:"name"`
-	Description   *string `json:"description,omitempty"`
-	SortOrder     int     `json:"sort_order"`
-	IsActive      bool    `json:"is_active"`
-	PermissionIDs []int   `json:"permission_ids"`
+	ID              int      `json:"id"`
+	Code            string   `json:"code"`
+	Name            string   `json:"name"`
+	Description     *string  `json:"description,omitempty"`
+	SortOrder       int      `json:"sort_order"`
+	IsActive        bool     `json:"is_active"`
+	PermissionCodes []string `json:"permission_codes"`
 }
 
 // PermissionResponse 是权限响应。
 type PermissionResponse struct {
-	ID          int    `json:"id"`
 	Code        string `json:"code"`
 	Description string `json:"description"`
-	IsActive    bool   `json:"is_active"`
 }
 
 // UnitGrantResponse 是单元授权响应。
@@ -148,13 +135,13 @@ func ToPermissionGroupResponse(group *domainrbac.PermissionGroup) *PermissionGro
 		return nil
 	}
 	return &PermissionGroupResponse{
-		ID:            group.ID,
-		Code:          group.Code,
-		Name:          group.Name,
-		Description:   group.Description,
-		SortOrder:     group.SortOrder,
-		IsActive:      group.IsActive,
-		PermissionIDs: append([]int{}, group.PermissionIDs...),
+		ID:              group.ID,
+		Code:            group.Code,
+		Name:            group.Name,
+		Description:     group.Description,
+		SortOrder:       group.SortOrder,
+		IsActive:        group.IsActive,
+		PermissionCodes: append([]string{}, group.PermissionCodes...),
 	}
 }
 
@@ -175,10 +162,8 @@ func ToPermissionResponse(permission *domainrbac.Permission) *PermissionResponse
 		return nil
 	}
 	return &PermissionResponse{
-		ID:          permission.ID,
 		Code:        permission.Code,
 		Description: permission.Description,
-		IsActive:    permission.IsActive,
 	}
 }
 

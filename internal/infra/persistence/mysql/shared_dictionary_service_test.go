@@ -23,19 +23,15 @@ func TestSharedDictionaryServicesUseUnitOwnerAndRevokeAccess(t *testing.T) {
 	privateMeterItem := &models.MeterItem{AccountID: collaborator, Code: "个人水费", Unit: "吨", CalcType: domainmeteritem.CalcTypeDifference}
 	role := &models.Role{AccountID: owner, Name: "读取目录"}
 	group := &models.PermissionGroup{Code: "dictionary", Name: "目录查看"}
-	permissions := []*models.Permission{
-		{Code: domainrbac.PermissionRoomTypeView, Description: "房型查看"},
-		{Code: domainrbac.PermissionMeterItemView, Description: "收费项查看"},
-	}
-	for _, record := range []any{roomType, privateRoomType, meterItem, privateMeterItem, role, group, permissions} {
+	for _, record := range []any{roomType, privateRoomType, meterItem, privateMeterItem, role, group} {
 		if err := db.Create(record).Error; err != nil {
 			t.Fatal(err)
 		}
 	}
 	for _, record := range []any{
 		&models.RolePermissionGroup{RoleID: role.ID, PermissionGroupID: group.ID},
-		&models.PermissionGroupPermission{PermissionGroupID: group.ID, PermissionID: permissions[0].ID},
-		&models.PermissionGroupPermission{PermissionGroupID: group.ID, PermissionID: permissions[1].ID},
+		&models.PermissionGroupPermission{PermissionGroupID: group.ID, PermissionCode: domainrbac.PermissionRoomTypeView},
+		&models.PermissionGroupPermission{PermissionGroupID: group.ID, PermissionCode: domainrbac.PermissionMeterItemView},
 	} {
 		if err := db.Create(record).Error; err != nil {
 			t.Fatal(err)

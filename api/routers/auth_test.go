@@ -14,6 +14,7 @@ import (
 	"github.com/miebyte/goutils/ginutils"
 
 	"github.com/superwhys/rent-manager/api/routers"
+	"github.com/superwhys/rent-manager/config"
 	appcore "github.com/superwhys/rent-manager/internal/app"
 	appauth "github.com/superwhys/rent-manager/internal/app/auth"
 )
@@ -65,9 +66,13 @@ func (s authServiceStub) Logout(ctx context.Context, token string) error {
 }
 
 func newAuthHandler(service authServiceStub) http.Handler {
+	return newAuthHandlerWithAdminConfig(service, nil)
+}
+
+func newAuthHandlerWithAdminConfig(service authServiceStub, adminConfig *config.AdminConfig) http.Handler {
 	return ginutils.NewServerHandler(ginutils.WithGroupHandlers(
 		ginutils.WithPrefix("/auth"),
-		routers.AuthRouter(service),
+		routers.AuthRouter(service, adminConfig),
 	))
 }
 
@@ -269,6 +274,112 @@ func TestAuthRouterPasswordLoginReturnsAuthkitSession(t *testing.T) {
 		!body.Data.ExpiresAt.Equal(result.Expires) ||
 		body.Data.Created {
 		t.Fatalf("unexpected email login response: %s", recorder.Body.String())
+	}
+}
+
+func TestAuthRouterSuperAdminIdentityMatchesLoginAndSession(t *testing.T) {
+	adminID := strings.Repeat("a", 64)
+	for _, tt := range []struct {
+		name        string
+		accountID   string
+		adminConfig *config.AdminConfig
+		want        bool
+	}{
+		{
+			name: "super admin", accountID: adminID,
+			adminConfig: &config.AdminConfig{SuperAdminAccountIDs: []string{adminID}},
+			want:        true,
+		},
+		{
+			name: "ordinary account", accountID: strings.Repeat("c", 64),
+			adminConfig: &config.AdminConfig{SuperAdminAccountIDs: []string{adminID}},
+		},
+		{name: "empty configuration", accountID: adminID, adminConfig: &config.AdminConfig{}},
+		{name: "nil configuration", accountID: adminID},
+		{
+			name: "case differs", accountID: adminID,
+			adminConfig: &config.AdminConfig{SuperAdminAccountIDs: []string{strings.ToUpper(adminID)}},
+		},
+		{
+			name: "whitespace differs", accountID: adminID,
+			adminConfig: &config.AdminConfig{SuperAdminAccountIDs: []string{" " + adminID + " "}},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			result := &authkit.LoginResult{
+				Account: authkit.Account{ID: tt.accountID, Email: "tenant@example.com"},
+				Token:   strings.Repeat("b", 64), Expires: time.Now().Add(time.Hour),
+			}
+			for _, route := range []struct {
+				path string
+				body string
+			}{
+				{path: "/auth/register", body: `{"email":"tenant@example.com","code":"123456","password":"valid-password","is_super_admin":true}`},
+				{path: "/auth/email-login", body: `{"email":"tenant@example.com","code":"123456","is_super_admin":true}`},
+				{path: "/auth/password-login", body: `{"email":"tenant@example.com","password":"valid-password","is_super_admin":true}`},
+			} {
+				t.Run(route.path, func(t *testing.T) {
+					handler := newAuthHandlerWithAdminConfig(authServiceStub{
+						register: func(context.Context, appauth.RegisterRequest, string) (*authkit.LoginResult, error) {
+							return result, nil
+						},
+						loginEmail: func(context.Context, authkit.EmailLoginInput) (*authkit.LoginResult, error) {
+							return result, nil
+						},
+						loginPassword: func(context.Context, authkit.PasswordLoginInput) (*authkit.LoginResult, error) {
+							return result, nil
+						},
+						authenticate: func(_ context.Context, token string) (*authkit.AuthenticatedSession, error) {
+							if token != result.Token {
+								t.Errorf("session token = %q, want login token %q", token, result.Token)
+							}
+							return &authkit.AuthenticatedSession{Account: result.Account, Expires: result.Expires}, nil
+						},
+					}, tt.adminConfig)
+					token := ""
+					for _, request := range []struct {
+						method string
+						path   string
+						body   string
+					}{
+						{method: http.MethodPost, path: route.path, body: route.body},
+						{method: http.MethodGet, path: "/auth/session"},
+					} {
+						req := httptest.NewRequest(request.method, request.path, strings.NewReader(request.body))
+						req.Header.Set("Content-Type", "application/json")
+						if request.method == http.MethodGet {
+							req.Header.Set("Authorization", "Bearer "+token)
+						}
+						recorder := httptest.NewRecorder()
+						handler.ServeHTTP(recorder, req)
+						var body struct {
+							Code int `json:"code"`
+							Data struct {
+								Account      authkit.Account `json:"account"`
+								IsSuperAdmin *bool           `json:"is_super_admin"`
+								AccessToken  string          `json:"access_token"`
+							} `json:"data"`
+						}
+						if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
+							t.Fatal(err)
+						}
+						if recorder.Code != http.StatusOK || body.Code != 0 || body.Data.Account != result.Account ||
+							body.Data.IsSuperAdmin == nil || *body.Data.IsSuperAdmin != tt.want {
+							t.Fatalf("unexpected %s response: status=%d body=%s", request.path, recorder.Code, recorder.Body.String())
+						}
+						if request.method == http.MethodPost {
+							token = body.Data.AccessToken
+							if token != result.Token {
+								t.Fatalf("login token = %q, want %q", token, result.Token)
+							}
+						}
+						if recorder.Header().Get("Cache-Control") != "no-store" {
+							t.Errorf("%s response must not be cached", request.path)
+						}
+					}
+				})
+			}
+		})
 	}
 }
 

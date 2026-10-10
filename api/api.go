@@ -19,6 +19,7 @@ import (
 	_ "github.com/superwhys/rent-manager/api/docs"
 	"github.com/superwhys/rent-manager/api/middlewares"
 	"github.com/superwhys/rent-manager/api/routers"
+	"github.com/superwhys/rent-manager/config"
 	appadmin "github.com/superwhys/rent-manager/internal/app/admin"
 )
 
@@ -34,12 +35,13 @@ func SetupRouter(
 	httpLimiter *limiter.Limiter,
 	authService routers.AuthService,
 	adminServices *appadmin.Services,
+	adminConfig *config.AdminConfig,
 ) *gin.Engine {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(middlewares.RateLimitMiddleware(httpLimiter, nil)),
 		ginutils.WithGroupHandlers(
 			ginutils.WithPrefix("/auth"),
-			routers.AuthRouter(authService),
+			routers.AuthRouter(authService, adminConfig),
 		),
 
 		ginutils.WithGroupHandlers(

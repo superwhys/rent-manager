@@ -548,26 +548,6 @@ definitions:
     required:
     - permission_groups
     type: object
-  rbac.CreatePermissionItem:
-    properties:
-      code:
-        type: string
-      description:
-        type: string
-    required:
-    - code
-    - description
-    type: object
-  rbac.CreatePermissionsCommand:
-    properties:
-      permissions:
-        items:
-          $ref: '#/definitions/rbac.CreatePermissionItem'
-        minItems: 1
-        type: array
-    required:
-    - permissions
-    type: object
   rbac.CreateRoleItem:
     properties:
       is_default_owner:
@@ -592,14 +572,14 @@ definitions:
       PermissionGroupID:
         minimum: 1
         type: integer
-      permission_ids:
+      permission_codes:
         items:
-          type: integer
+          type: string
         minItems: 1
         type: array
     required:
     - PermissionGroupID
-    - permission_ids
+    - permission_codes
     type: object
   rbac.PermissionGroupResponse:
     properties:
@@ -613,9 +593,9 @@ definitions:
         type: boolean
       name:
         type: string
-      permission_ids:
+      permission_codes:
         items:
-          type: integer
+          type: string
         type: array
       sort_order:
         type: integer
@@ -626,10 +606,6 @@ definitions:
         type: string
       description:
         type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
     type: object
   rbac.RolePermissionGroupsCommand:
     properties:
@@ -914,6 +890,8 @@ definitions:
         type: boolean
       expires_at:
         type: string
+      is_super_admin:
+        type: boolean
     type: object
   routers.SessionResponse:
     properties:
@@ -921,6 +899,8 @@ definitions:
         $ref: '#/definitions/authkit.Account'
       expires_at:
         type: string
+      is_super_admin:
+        type: boolean
     type: object
   unit.CreateUnitCommand:
     properties:
@@ -1103,7 +1083,7 @@ paths:
         name: permission_group_id
         required: true
         type: integer
-      - description: 权限ID列表
+      - description: 权限编码列表
         in: body
         name: request
         required: true
@@ -1130,7 +1110,7 @@ paths:
         name: permission_group_id
         required: true
         type: integer
-      - description: 权限ID列表
+      - description: 权限编码列表
         in: body
         name: request
         required: true
@@ -1182,30 +1162,7 @@ paths:
             $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionResponse'
       security:
       - BearerAuth: []
-      summary: 获取权限列表
-      tags:
-      - admin
-  /admin/permissions/batch:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: 权限列表
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/rbac.CreatePermissionsCommand'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ginutils.Ret-array_rbac_PermissionResponse'
-      security:
-      - BearerAuth: []
-      summary: 批量创建权限
+      summary: 获取代码定义的固定权限列表
       tags:
       - admin
   /auth/email-login:

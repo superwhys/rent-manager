@@ -42,15 +42,26 @@ func newUnitAccountRole(db *gorm.DB, opts ...gen.DOOption) unitAccountRole {
 		RelationField: field.NewRelation("Role", "models.Role"),
 		PermissionGroups: struct {
 			field.RelationField
-			Permissions struct {
+			PermissionBindings struct {
 				field.RelationField
+				PermissionGroup struct {
+					field.RelationField
+				}
 			}
 		}{
 			RelationField: field.NewRelation("Role.PermissionGroups", "models.PermissionGroup"),
-			Permissions: struct {
+			PermissionBindings: struct {
 				field.RelationField
+				PermissionGroup struct {
+					field.RelationField
+				}
 			}{
-				RelationField: field.NewRelation("Role.PermissionGroups.Permissions", "models.Permission"),
+				RelationField: field.NewRelation("Role.PermissionGroups.PermissionBindings", "models.PermissionGroupPermission"),
+				PermissionGroup: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("Role.PermissionGroups.PermissionBindings.PermissionGroup", "models.PermissionGroup"),
+				},
 			},
 		},
 	}
@@ -176,8 +187,11 @@ type unitAccountRoleBelongsToRole struct {
 
 	PermissionGroups struct {
 		field.RelationField
-		Permissions struct {
+		PermissionBindings struct {
 			field.RelationField
+			PermissionGroup struct {
+				field.RelationField
+			}
 		}
 	}
 }
