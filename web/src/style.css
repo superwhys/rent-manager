@@ -2,7 +2,7 @@ html:root {
   font-family:
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue',
     'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-size: 87.5%;
+  font-size: 93.75%;
   line-height: 1.5;
   font-weight: 400;
   color: #232b31;
@@ -32,6 +32,12 @@ html:root {
   --el-border-radius-base: 9px;
   --el-border-color: #e2e8e8;
   --el-font-family: inherit;
+  --el-font-size-extra-large: 21px;
+  --el-font-size-large: 19px;
+  --el-font-size-medium: 17px;
+  --el-font-size-base: 15px;
+  --el-font-size-small: 14px;
+  --el-font-size-extra-small: 13px;
 }
 
 * {
@@ -211,6 +217,16 @@ input[type='radio'] {
 .el-date-editor {
   --el-component-size: 40px;
 }
+.el-input.el-input--large,
+.el-select .el-select__wrapper,
+.el-select.el-select--large .el-select__wrapper {
+  font-size: var(--el-font-size-base);
+}
+.el-button.el-button--small,
+.el-input.el-input--small,
+.el-select.el-select--small .el-select__wrapper {
+  font-size: var(--el-font-size-extra-small);
+}
 .field .el-date-editor.el-input {
   width: 100%;
   min-width: 0;
@@ -253,7 +269,8 @@ body .el-message-box {
   border-radius: 16px;
   padding: 1.5rem;
 }
-.el-tag {
+body .el-tag {
+  --el-tag-font-size: var(--el-font-size-extra-small);
   font-weight: 500;
   border: none;
 }
