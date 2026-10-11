@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/glebarez/sqlite"
 	mysqlconfig "github.com/go-sql-driver/mysql"
@@ -107,6 +108,63 @@ func TestBusinessSchemaDoesNotCreateAccounts(t *testing.T) {
 	db := newTestDB(t)
 	if db.Migrator().HasTable("accounts") {
 		t.Fatal("业务模型不应创建本地 accounts 表")
+	}
+}
+
+func TestBusinessSchemaWithLegacyTimestampDefaults(t *testing.T) {
+	dsn := os.Getenv("RENT_MANAGER_TEST_MYSQL_DSN")
+	if dsn == "" {
+		t.Skip("需要真实 MySQL 验证 TIMESTAMP 默认值")
+	}
+	for _, explicitDefaults := range []bool{false, true} {
+		t.Run(fmt.Sprintf("explicit_defaults=%t", explicitDefaults), func(t *testing.T) {
+			db, err := gorm.Open(newMysqlTestDialector(t, dsn), &gorm.Config{
+				PrepareStmt: true,
+				Logger:      logger.Default.LogMode(logger.Silent),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			sqlDB, err := db.DB()
+			if err != nil {
+				t.Fatal(err)
+			}
+			sqlDB.SetMaxOpenConns(1)
+			t.Cleanup(func() { _ = sqlDB.Close() })
+			if err := db.Exec("SET SESSION sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE'").Error; err != nil {
+				t.Fatal(err)
+			}
+			if err := db.Exec("SET SESSION explicit_defaults_for_timestamp = ?", explicitDefaults).Error; err != nil {
+				t.Fatal(err)
+			}
+			if err := db.AutoMigrate(models.AllModels()...); err != nil {
+				t.Fatal(err)
+			}
+			createdAt := time.Date(2026, time.October, 1, 12, 0, 0, 0, time.UTC)
+			db.NowFunc = func() time.Time { return createdAt }
+			setting := &models.AccountSetting{Key: "test", Value: "value", AccountID: testAccountID("owner")}
+			if err := db.Create(setting).Error; err != nil {
+				t.Fatal(err)
+			}
+			var saved models.AccountSetting
+			if err := db.First(&saved, setting.ID).Error; err != nil {
+				t.Fatal(err)
+			}
+			if !saved.CreatedAt.Equal(createdAt) || !saved.UpdatedAt.Equal(createdAt) || saved.DeletedAt != nil {
+				t.Fatal("创建时应填充时间并保留 deleted_at 为 NULL")
+			}
+			updatedAt := createdAt.Add(time.Hour)
+			db.NowFunc = func() time.Time { return updatedAt }
+			if err := db.Model(setting).Update("value", "updated").Error; err != nil {
+				t.Fatal(err)
+			}
+			if err := db.First(&saved, setting.ID).Error; err != nil {
+				t.Fatal(err)
+			}
+			if !saved.CreatedAt.Equal(createdAt) || !saved.UpdatedAt.Equal(updatedAt) {
+				t.Fatal("更新时应保留创建时间并刷新更新时间")
+			}
+		})
 	}
 }
 

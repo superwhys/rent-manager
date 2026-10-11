@@ -4,9 +4,9 @@ import "time"
 
 type MeterItem struct {
 	ID        int        `gorm:"column:id;type:bigint;primaryKey;autoIncrement"`
-	CreatedAt time.Time  `gorm:"column:created_at;type:timestamp;not null;autoCreateTime;<-:create"`
-	UpdatedAt time.Time  `gorm:"column:updated_at;type:timestamp;not null;autoUpdateTime"`
-	DeletedAt *time.Time `gorm:"column:deleted_at;type:timestamp"`
+	CreatedAt time.Time  `gorm:"column:created_at;not null;autoCreateTime;<-:create"`
+	UpdatedAt time.Time  `gorm:"column:updated_at;not null;autoUpdateTime"`
+	DeletedAt *time.Time `gorm:"column:deleted_at"`
 	Code      string     `gorm:"column:code;type:varchar(255);not null;uniqueIndex:meteritem_account_id_code,priority:2"`
 	Unit      string     `gorm:"column:unit;type:varchar(255);not null"`
 	UnitPrice float64    `gorm:"column:unit_price;type:double;not null;default:0"`

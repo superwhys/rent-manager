@@ -4,9 +4,9 @@ import "time"
 
 type Room struct {
 	ID         int          `gorm:"column:id;type:bigint;primaryKey;autoIncrement"`
-	CreatedAt  time.Time    `gorm:"column:created_at;type:timestamp;not null;autoCreateTime;<-:create"`
-	UpdatedAt  time.Time    `gorm:"column:updated_at;type:timestamp;not null;autoUpdateTime"`
-	DeletedAt  *time.Time   `gorm:"column:deleted_at;type:timestamp"`
+	CreatedAt  time.Time    `gorm:"column:created_at;not null;autoCreateTime;<-:create"`
+	UpdatedAt  time.Time    `gorm:"column:updated_at;not null;autoUpdateTime"`
+	DeletedAt  *time.Time   `gorm:"column:deleted_at"`
 	RoomNo     string       `gorm:"column:room_no;type:varchar(255);not null"`
 	Floor      int          `gorm:"column:floor;type:bigint;not null"`
 	Price      int          `gorm:"column:price;type:bigint;not null"`

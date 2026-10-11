@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 func newDryRunDB(t *testing.T) *gorm.DB {
@@ -77,6 +78,27 @@ func TestTimestampsPreserveCreationAndRefreshUpdate(t *testing.T) {
 	if strings.Contains(result.Statement.SQL.String(), "`created_at`") ||
 		!role.UpdatedAt.Equal(updatedAt) {
 		t.Fatalf("更新时间语义变化: %s", result.Statement.SQL.String())
+	}
+}
+
+func TestTimeColumnsUseDatetime(t *testing.T) {
+	db := newDryRunDB(t)
+	for _, model := range AllModels() {
+		t.Run(reflect.TypeOf(model).Elem().Name(), func(t *testing.T) {
+			statement := &gorm.Statement{DB: db}
+			if err := statement.Parse(model); err != nil {
+				t.Fatal(err)
+			}
+			for _, field := range statement.Schema.Fields {
+				if field.GORMDataType != schema.Time {
+					continue
+				}
+				dataType := db.Migrator().FullDataTypeOf(field).SQL
+				if !strings.HasPrefix(dataType, "datetime") {
+					t.Errorf("%s 应由 GORM 推导为 datetime，实际为 %s", field.DBName, dataType)
+				}
+			}
+		})
 	}
 }
 

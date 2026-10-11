@@ -4,9 +4,9 @@ import "time"
 
 type Unit struct {
 	ID         int          `gorm:"column:id;type:bigint;primaryKey;autoIncrement"`
-	CreatedAt  time.Time    `gorm:"column:created_at;type:timestamp;not null;autoCreateTime;<-:create"`
-	UpdatedAt  time.Time    `gorm:"column:updated_at;type:timestamp;not null;autoUpdateTime"`
-	DeletedAt  *time.Time   `gorm:"column:deleted_at;type:timestamp"`
+	CreatedAt  time.Time    `gorm:"column:created_at;not null;autoCreateTime;<-:create"`
+	UpdatedAt  time.Time    `gorm:"column:updated_at;not null;autoUpdateTime"`
+	DeletedAt  *time.Time   `gorm:"column:deleted_at"`
 	Name       string       `gorm:"column:name;type:varchar(255);not null;uniqueIndex:unit_account_id_name,priority:2"`
 	Address    string       `gorm:"column:address;type:varchar(255);not null"`
 	City       string       `gorm:"column:city;type:varchar(255);not null"`
