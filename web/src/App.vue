@@ -8,7 +8,7 @@ import { safeAuthRedirect } from '@/utils/authValidation'
 
 const route = useRoute()
 const router = useRouter()
-const { expired, session } = useSession()
+const { expired, session, syncSession } = useSession()
 const animatePages = ref(true)
 
 function trackNavigationInput(event: Event) {
@@ -20,10 +20,13 @@ function finishPageLeave(_element: Element, done: () => void) {
 }
 
 onMounted(() => {
+  window.addEventListener('storage', syncSession)
+  syncSession()
   document.addEventListener('pointerdown', trackNavigationInput, true)
   document.addEventListener('keydown', trackNavigationInput, true)
 })
 onBeforeUnmount(() => {
+  window.removeEventListener('storage', syncSession)
   document.removeEventListener('pointerdown', trackNavigationInput, true)
   document.removeEventListener('keydown', trackNavigationInput, true)
 })
