@@ -1,9 +1,13 @@
 import { request } from '@/api/request'
 import type { RoomMonthReadings, SaveReadingsInput, UnitMonthReadings } from '@/types/readings'
 
-export function getUnitReadings(unitId: number, periodMonth: string) {
+export function getUnitReadings(
+  unitId: number,
+  periodMonth: string,
+  includeVacantRecords = false,
+) {
   return request<UnitMonthReadings>(`/units/${unitId}/meter-readings`, {
-    query: { period_month: periodMonth },
+    query: { period_month: periodMonth, include_vacant_records: includeVacantRecords },
   })
 }
 

@@ -17,8 +17,9 @@ type RoomMeterReadingsQuery struct {
 
 // UnitMeterReadingsQuery 是单元月度抄表汇总查询参数。
 type UnitMeterReadingsQuery struct {
-	UnitID      int    `uri:"unit_id" validate:"required,min=1"`
-	PeriodMonth string `              validate:"required"       form:"period_month"`
+	UnitID               int    `uri:"unit_id" validate:"required,min=1"`
+	PeriodMonth          string `              validate:"required"       form:"period_month"`
+	IncludeVacantRecords bool   `                                        form:"include_vacant_records"`
 }
 
 // SaveRoomMonthCommand 是保存房间月度抄表的请求参数。
@@ -101,6 +102,7 @@ type RoomMonthReadingsResponse struct {
 	RoomNo       string                     `json:"room_no"`
 	UnitID       int                        `json:"unit_id"`
 	PeriodMonth  string                     `json:"period_month"`
+	IsActive     bool                       `json:"is_active"`
 	Readings     []MeterReadingLineResponse `json:"readings"`
 	TotalFee     int                        `json:"total_fee"`
 	MissingCount int                        `json:"missing_count"`
@@ -131,19 +133,15 @@ type UnitMonthReadingsResponse struct {
 
 // ToRoomMonthReadingsResponse 将房间月度抄表视图转换为响应。
 func ToRoomMonthReadingsResponse(roomMonth *RoomMonthReadings) RoomMonthReadingsResponse {
-	if roomMonth == nil {
-		return RoomMonthReadingsResponse{}
-	}
 	response := RoomMonthReadingsResponse{
+		RoomID:       roomMonth.Room.ID,
+		RoomNo:       roomMonth.Room.RoomNo,
+		UnitID:       roomMonth.Room.UnitID,
 		PeriodMonth:  roomMonth.PeriodMonth,
+		IsActive:     roomMonth.Room.IsActive,
 		TotalFee:     roomMonth.TotalFee,
 		MissingCount: roomMonth.MissingCount,
 		Readings:     make([]MeterReadingLineResponse, 0, len(roomMonth.Readings)),
-	}
-	if roomMonth.Room != nil {
-		response.RoomID = roomMonth.Room.ID
-		response.RoomNo = roomMonth.Room.RoomNo
-		response.UnitID = roomMonth.Room.UnitID
 	}
 	for _, line := range roomMonth.Readings {
 		response.Readings = append(response.Readings, ToMeterReadingLineResponse(line))
@@ -153,9 +151,6 @@ func ToRoomMonthReadingsResponse(roomMonth *RoomMonthReadings) RoomMonthReadings
 
 // ToMeterReadingLineResponse 将抄表项录入状态转换为响应。
 func ToMeterReadingLineResponse(line *MeterReadingLine) MeterReadingLineResponse {
-	if line == nil {
-		return MeterReadingLineResponse{}
-	}
 	response := MeterReadingLineResponse{
 		RoomID:              line.RoomID,
 		PeriodMonth:         line.PeriodMonth,
@@ -180,9 +175,6 @@ func ToMeterReadingLineResponse(line *MeterReadingLine) MeterReadingLineResponse
 
 // ToUnitMonthReadingsResponse 将单元月度抄表汇总转换为响应。
 func ToUnitMonthReadingsResponse(unitMonth *UnitMonthReadings) UnitMonthReadingsResponse {
-	if unitMonth == nil {
-		return UnitMonthReadingsResponse{}
-	}
 	response := UnitMonthReadingsResponse{
 		UnitID:       unitMonth.UnitID,
 		PeriodMonth:  unitMonth.PeriodMonth,
@@ -202,9 +194,6 @@ func ToUnitMonthReadingsResponse(unitMonth *UnitMonthReadings) UnitMonthReadings
 
 // ToMeterItemSummaryResponse 将抄表项汇总转换为响应。
 func ToMeterItemSummaryResponse(summary *MeterItemSummary) MeterItemSummaryResponse {
-	if summary == nil || summary.MeterItem == nil {
-		return MeterItemSummaryResponse{}
-	}
 	return MeterItemSummaryResponse{
 		MeterItemID: summary.MeterItem.ID,
 		Code:        summary.MeterItem.Code,

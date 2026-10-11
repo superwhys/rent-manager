@@ -22,6 +22,7 @@ export interface RoomMonthReadings {
   room_no: string
   unit_id: number
   period_month: string
+  is_active: boolean
   readings: MeterReadingLine[]
   total_fee: number
   missing_count: number

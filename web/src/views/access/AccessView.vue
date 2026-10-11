@@ -30,6 +30,7 @@ const {
 } = useUnits()
 const { isSuperAdmin } = useSession()
 const activeTab = ref('roles')
+const animateTabs = ref(false)
 const roles = ref<Role[]>([])
 const groups = ref<PermissionGroup[]>([])
 const permissions = ref<Permission[]>([])
@@ -292,6 +293,10 @@ function closeConfirmation() {
   deletingRole.value = null
   revokingGrant.value = null
 }
+function selectTab(tab: string, event: MouseEvent) {
+  animateTabs.value = event.detail > 0
+  activeTab.value = tab
+}
 function navigateTabs(event: KeyboardEvent) {
   if (
     busy.value ||
@@ -308,6 +313,7 @@ function navigateTabs(event: KeyboardEvent) {
         : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) %
           tabs.length
   event.preventDefault()
+  animateTabs.value = false
   activeTab.value = tabs[next] ?? 'roles'
   const container = event.currentTarget
   if (container instanceof HTMLElement) {
@@ -370,7 +376,7 @@ onUnmounted(() => {
         aria-controls="roles-panel"
         :class="{ active: activeTab === 'roles' }"
         :disabled="busy"
-        @click="activeTab = 'roles'"
+        @click="selectTab('roles', $event)"
       >
         我的角色
       </button>
@@ -382,7 +388,7 @@ onUnmounted(() => {
         aria-controls="grants-panel"
         :class="{ active: activeTab === 'grants' }"
         :disabled="busy"
-        @click="activeTab = 'grants'"
+        @click="selectTab('grants', $event)"
       >
         单元协作
       </button>
@@ -394,7 +400,7 @@ onUnmounted(() => {
         aria-controls="catalog-panel"
         :class="{ active: activeTab === 'catalog' }"
         :disabled="busy"
-        @click="activeTab = 'catalog'"
+        @click="selectTab('catalog', $event)"
       >
         权限目录
       </button>
@@ -402,6 +408,10 @@ onUnmounted(() => {
     <div
       v-show="activeTab === 'roles'"
       id="roles-panel"
+      class="access-panel"
+      :class="{ 'access-panel-animated': animateTabs }"
+      :inert="activeTab !== 'roles'"
+      :aria-hidden="activeTab !== 'roles'"
       role="tabpanel"
       aria-labelledby="roles-tab"
     >
@@ -432,6 +442,10 @@ onUnmounted(() => {
     <div
       v-show="activeTab === 'grants'"
       id="grants-panel"
+      class="access-panel"
+      :class="{ 'access-panel-animated': animateTabs }"
+      :inert="activeTab !== 'grants'"
+      :aria-hidden="activeTab !== 'grants'"
       role="tabpanel"
       aria-labelledby="grants-tab"
     >
@@ -464,6 +478,10 @@ onUnmounted(() => {
     <div
       v-show="activeTab === 'catalog'"
       id="catalog-panel"
+      class="access-panel"
+      :class="{ 'access-panel-animated': animateTabs }"
+      :inert="activeTab !== 'catalog'"
+      :aria-hidden="activeTab !== 'catalog'"
       role="tabpanel"
       aria-labelledby="catalog-tab"
     >
@@ -536,6 +554,17 @@ onUnmounted(() => {
 .access-view {
   display: grid;
   gap: 1.5rem;
+}
+.access-panel {
+  min-width: 0;
+}
+.access-panel-animated {
+  transition: opacity var(--motion-fast) var(--ease-out);
+}
+@starting-style {
+  .access-panel-animated {
+    opacity: 0;
+  }
 }
 .access-summary {
   display: flex;
@@ -618,6 +647,11 @@ onUnmounted(() => {
   .segmented-control button {
     flex: 1;
     padding: 0.65rem 0.6rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .access-panel-animated {
+    transition-duration: 100ms !important;
   }
 }
 </style>

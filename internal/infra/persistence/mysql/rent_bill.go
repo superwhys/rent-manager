@@ -389,9 +389,6 @@ func (r *RentBillRepository) ensureRentBillRoomInAccount(
 
 // toDomainRentBill 将 GORM 租金账单转换为领域对象。
 func toDomainRentBill(record *models.RentBill) (*domainrentbill.RentBill, error) {
-	if record == nil {
-		return nil, nil
-	}
 	var readings []domainrentbill.MeterReadingSnapshot
 	if record.MeterReadingsJSON != nil {
 		if err := json.Unmarshal([]byte(*record.MeterReadingsJSON), &readings); err != nil {

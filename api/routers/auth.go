@@ -43,6 +43,9 @@ type SessionResponse struct {
 
 // AuthRouter 将认证接口直接交给 authkit。
 func AuthRouter(authService AuthService, adminConfig *config.AdminConfig) ginutils.Option {
+	if adminConfig == nil {
+		adminConfig = &config.AdminConfig{}
+	}
 	return ginutils.WithGroupHandlers(
 		ginutils.WithMiddleware(func(c *gin.Context) {
 			c.Header("Cache-Control", "no-store")
@@ -182,7 +185,7 @@ func writeLoginResponse(c *gin.Context, login *authkit.LoginResult, adminConfig 
 		AccessToken:  login.Token,
 		ExpiresAt:    login.Expires,
 		Created:      login.Created,
-		IsSuperAdmin: adminConfig != nil && adminConfig.IsSuperAdmin(login.Account.ID),
+		IsSuperAdmin: adminConfig.IsSuperAdmin(login.Account.ID),
 	}))
 }
 
@@ -200,7 +203,7 @@ func SessionHandler(adminConfig *config.AdminConfig) gin.HandlerFunc {
 		c.JSON(http.StatusOK, apiresponse.ResponseWithData(SessionResponse{
 			Account:      session.Account,
 			ExpiresAt:    session.Expires,
-			IsSuperAdmin: adminConfig != nil && adminConfig.IsSuperAdmin(session.Account.ID),
+			IsSuperAdmin: adminConfig.IsSuperAdmin(session.Account.ID),
 		}))
 	}
 }

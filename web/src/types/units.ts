@@ -16,6 +16,7 @@ export interface Unit {
   room_count?: number
   rented_count?: number
   monthly_rent_amount?: string
+  current_month_received_amount?: number
   occupancy_status?: 'vacancy' | 'full' | ''
 }
 

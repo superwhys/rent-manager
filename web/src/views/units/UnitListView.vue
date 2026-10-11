@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { createUnit, deleteUnit, updateUnit } from '@/api/units'
 import { listMeterItems } from '@/api/meterItems'
 import { useUnits } from '@/stores/units'
-import { errorMessage } from '@/utils/format'
+import { errorMessage, formatMoney } from '@/utils/format'
 import type { Unit, UnitInput, UnitMeterItem, UnitScope } from '@/types/units'
 import PageHeader from '@/components/common/PageHeader.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
@@ -45,6 +45,9 @@ const meterError = ref('')
 const meterLoading = ref(false)
 const deleting = ref<number>()
 let meterVersion = 0
+onMounted(() => {
+  if (!loading.value) void loadUnits()
+})
 onUnmounted(() => {
   meterVersion += 1
 })
@@ -190,6 +193,8 @@ function openRooms(unit: Unit) {
     <AsyncState
       :loading="loading"
       :error="error"
+      :has-content="visibleUnits.length > 0"
+      loading-layout="cards"
       :empty="visibleUnits.length === 0"
       :empty-title="units.length ? '没有找到匹配的楼栋' : '从第一栋房子开始'"
       :empty-description="
@@ -246,6 +251,13 @@ function openRooms(unit: Unit) {
           <div v-if="unit.json_extend && unit.default_meter_items" class="unit-meta">
             <span>每月 {{ unit.json_extend.meter_reading_day }} 日抄表</span
             ><span>{{ unit.default_meter_items.length }} 个收费项目</span>
+          </div>
+          <div class="unit-collection">
+            <span>本月已收款</span>
+            <strong v-if="unit.current_month_received_amount !== undefined">
+              {{ formatMoney(unit.current_month_received_amount) }}
+            </strong>
+            <span v-else>未授权</span>
           </div>
           <div class="unit-actions">
             <el-button type="primary" plain @click="openRooms(unit)"
@@ -455,6 +467,26 @@ function openRooms(unit: Unit) {
   justify-content: space-between;
   gap: 0.5rem;
   margin-top: 0.75rem;
+}
+.unit-collection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem 0.75rem;
+  margin-top: 1.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.7rem;
+  background: #edf5f0;
+  color: var(--text-secondary, #727780);
+  font-size: 0.78rem;
+}
+.unit-collection strong {
+  color: #3f7d64;
+  font-size: 1.2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 .unit-actions {
   display: flex;

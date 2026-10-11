@@ -131,9 +131,6 @@ func ToRoleListResponse(roles []*domainrbac.Role) []*RoleResponse {
 
 // ToPermissionGroupResponse 将权限组领域对象转换为响应对象。
 func ToPermissionGroupResponse(group *domainrbac.PermissionGroup) *PermissionGroupResponse {
-	if group == nil {
-		return nil
-	}
 	return &PermissionGroupResponse{
 		ID:              group.ID,
 		Code:            group.Code,
@@ -158,9 +155,6 @@ func ToPermissionGroupListResponse(
 
 // ToPermissionResponse 将权限领域对象转换为响应对象。
 func ToPermissionResponse(permission *domainrbac.Permission) *PermissionResponse {
-	if permission == nil {
-		return nil
-	}
 	return &PermissionResponse{
 		Code:        permission.Code,
 		Description: permission.Description,
@@ -178,9 +172,6 @@ func ToPermissionListResponse(permissions []*domainrbac.Permission) []*Permissio
 
 // ToUnitGrantResponse 将单元授权领域对象转换为响应对象。
 func ToUnitGrantResponse(grant *domainrbac.UnitAccountRole) *UnitGrantResponse {
-	if grant == nil {
-		return nil
-	}
 	return &UnitGrantResponse{
 		ID:                 grant.ID,
 		UnitID:             grant.UnitID,

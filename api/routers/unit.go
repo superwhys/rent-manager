@@ -93,6 +93,7 @@ func CreateUnitHandler(unitService *appunit.Service) gin.HandlerFunc {
 
 // ListUnitsHandler godoc
 // @Summary 获取单元列表
+// @Description 本月已收款按北京时间当前账单月份的已收款账单总金额统计，单位为分；仅有单元及账单查看权限时返回。
 // @Tags unit
 // @Produce json
 // @Param scope query string false "列表范围: all/owned/granted，默认 all"

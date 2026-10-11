@@ -29,9 +29,6 @@ func (s *Service) GetSettings(ctx context.Context) (*Settings, error) {
 		return nil, err
 	}
 	for _, record := range records {
-		if record == nil {
-			continue
-		}
 		settings[record.Key] = record.Value
 	}
 	return &settings, nil

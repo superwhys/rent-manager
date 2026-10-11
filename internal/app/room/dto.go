@@ -79,9 +79,6 @@ type RoomResponse struct {
 
 // ToRoomResponse 将房间领域对象转换为响应对象。
 func ToRoomResponse(room *domainroom.Room) RoomResponse {
-	if room == nil {
-		return RoomResponse{}
-	}
 	return RoomResponse{
 		ID:         room.ID,
 		RoomNo:     room.RoomNo,

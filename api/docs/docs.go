@@ -1548,6 +1548,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "本月已收款按北京时间当前账单月份的已收款账单总金额统计，单位为分；仅有单元及账单查看权限时返回。",
                 "produces": [
                     "application/json"
                 ],
@@ -1891,6 +1892,12 @@ const docTemplate = `{
                         "name": "period_month",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否包含空房（含所选月份未录入的空房），默认 false",
+                        "name": "include_vacant_records",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2846,6 +2853,9 @@ const docTemplate = `{
         "meterreading.RoomMonthReadingsResponse": {
             "type": "object",
             "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
                 "missing_count": {
                     "type": "integer"
                 },
@@ -3598,6 +3608,10 @@ const docTemplate = `{
                 },
                 "city": {
                     "type": "string"
+                },
+                "current_month_received_amount": {
+                    "description": "单位分，按账单月份统计。",
+                    "type": "integer"
                 },
                 "default_meter_items": {
                     "type": "array",

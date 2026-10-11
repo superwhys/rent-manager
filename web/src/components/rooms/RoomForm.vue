@@ -178,7 +178,7 @@ async function submit() {
           v-model="draft.rentYuan"
           :min="initial ? 0 : 0.01"
           :precision="2"
-          :step="100"
+          :step="0.01"
           controls-position="right"
         />
       </el-form-item>

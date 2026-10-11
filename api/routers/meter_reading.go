@@ -76,6 +76,7 @@ func SaveRoomMeterReadingsHandler(meterReadingService *appmeterreading.Service) 
 // @Produce json
 // @Param unit_id path int true "单元ID"
 // @Param period_month query string true "抄表月份 YYYY-MM"
+// @Param include_vacant_records query bool false "是否包含空房（含所选月份未录入的空房），默认 false"
 // @Success 200 {object} ginutils.Ret[meterreading.UnitMonthReadingsResponse]
 // @Security BearerAuth
 // @Router /units/{unit_id}/meter-readings [get]

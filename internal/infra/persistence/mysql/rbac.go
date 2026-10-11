@@ -571,9 +571,6 @@ func validatePermissionCodes(permissionCodes []string) error {
 }
 
 func toDomainRole(record *models.Role) *domainrbac.Role {
-	if record == nil {
-		return nil
-	}
 	groupIDs := make([]int, 0, len(record.PermissionGroups))
 	for _, group := range record.PermissionGroups {
 		groupIDs = append(groupIDs, group.ID)
@@ -600,9 +597,6 @@ func toDomainRoles(records []*models.Role) []*domainrbac.Role {
 }
 
 func toDomainPermissionGroup(record *models.PermissionGroup) *domainrbac.PermissionGroup {
-	if record == nil {
-		return nil
-	}
 	permissionCodes := make([]string, 0, len(record.PermissionBindings))
 	for _, binding := range record.PermissionBindings {
 		permissionCodes = append(permissionCodes, binding.PermissionCode)
@@ -630,9 +624,6 @@ func toDomainPermissionGroups(records []*models.PermissionGroup) []*domainrbac.P
 }
 
 func toDomainUnitAccountRole(record *models.UnitAccountRole) *domainrbac.UnitAccountRole {
-	if record == nil {
-		return nil
-	}
 	grant := &domainrbac.UnitAccountRole{
 		ID:                 record.ID,
 		UnitID:             record.UnitID,

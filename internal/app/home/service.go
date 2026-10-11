@@ -43,16 +43,12 @@ func NewService(
 	meterReadingRepo domainmeterreading.Repository,
 	rbacRepo domainrbac.Repository,
 ) *Service {
-	var rbacService domainrbac.IRbacService
-	if rbacRepo != nil {
-		rbacService = domainrbac.NewRbacService(rbacRepo)
-	}
 	return &Service{
 		unitRepo:         unitRepo,
 		roomRepo:         roomRepo,
 		rentBillRepo:     rentBillRepo,
 		meterReadingRepo: meterReadingRepo,
-		rbacService:      rbacService,
+		rbacService:      domainrbac.NewRbacService(rbacRepo),
 		now:              time.Now,
 	}
 }
@@ -78,9 +74,6 @@ func (s *Service) GetHomeSummary(ctx context.Context) (*Summary, error) {
 	todoBuckets := &homeTodoBuckets{}
 
 	for _, unit := range units {
-		if unit == nil {
-			continue
-		}
 		summary.BuildingCount++
 		canViewRooms, err := s.canViewUnit(ctx, accountID, unit.ID, domainrbac.PermissionRoomView)
 		if err != nil {
@@ -156,9 +149,6 @@ func (s *Service) collectRentBillSummary(
 	currentMonth string,
 	previousMonth string,
 ) error {
-	if s.rentBillRepo == nil {
-		return nil
-	}
 	currentIncome, _, err := s.sumRentBills(ctx, unit, currentMonth, domainrentbill.StatusPaid)
 	if err != nil {
 		return err
@@ -195,9 +185,6 @@ func (s *Service) sumRentBills(
 	totalAmount := 0
 	count := 0
 	for _, bill := range bills {
-		if bill == nil {
-			continue
-		}
 		totalAmount += bill.TotalAmount
 		count++
 	}
@@ -236,22 +223,17 @@ func (s *Service) collectUnitTodos(
 
 	billRoomIDsByPeriod := make(map[string]map[int]bool)
 	unpaidCountByPeriod := make(map[string]int)
-	if s.rentBillRepo != nil {
-		bills, err := s.rentBillRepo.List(ctx, unit.AccountID, domainrentbill.ListQuery{UnitID: unit.ID})
-		if err != nil {
-			return nil, err
+	bills, err := s.rentBillRepo.List(ctx, unit.AccountID, domainrentbill.ListQuery{UnitID: unit.ID})
+	if err != nil {
+		return nil, err
+	}
+	for _, bill := range bills {
+		if billRoomIDsByPeriod[bill.PeriodMonth] == nil {
+			billRoomIDsByPeriod[bill.PeriodMonth] = make(map[int]bool)
 		}
-		for _, bill := range bills {
-			if bill == nil {
-				continue
-			}
-			if billRoomIDsByPeriod[bill.PeriodMonth] == nil {
-				billRoomIDsByPeriod[bill.PeriodMonth] = make(map[int]bool)
-			}
-			billRoomIDsByPeriod[bill.PeriodMonth][bill.RoomID] = true
-			if canViewRentBill && bill.Status == domainrentbill.StatusUnpaid {
-				unpaidCountByPeriod[bill.PeriodMonth]++
-			}
+		billRoomIDsByPeriod[bill.PeriodMonth][bill.RoomID] = true
+		if canViewRentBill && bill.Status == domainrentbill.StatusUnpaid {
+			unpaidCountByPeriod[bill.PeriodMonth]++
 		}
 	}
 
@@ -263,9 +245,6 @@ func (s *Service) collectUnitTodos(
 	for _, month := range periods {
 		missingReadingCount, generationCount := 0, 0
 		for _, room := range rentedRooms {
-			if room == nil {
-				continue
-			}
 			roomReadings := readingsByPeriod[month][room.ID]
 			hasBill := billRoomIDsByPeriod[month][room.ID]
 			complete, hasMeterItems := isRoomMeterReadingComplete(room, roomReadings)
@@ -274,7 +253,7 @@ func (s *Service) collectUnitTodos(
 			if canViewMeterReading && needsReading && hasMeterItems && !complete && (month == currentMonth || !hasBill) {
 				missingReadingCount++
 			}
-			if canViewRentBill && s.rentBillRepo != nil && needsReading && complete && !hasBill {
+			if canViewRentBill && needsReading && complete && !hasBill {
 				generationCount++
 			}
 		}
@@ -312,9 +291,6 @@ func (s *Service) listUnitReadingsByPeriod(
 	currentMonth string,
 ) (map[string]map[int]map[int]*domainmeterreading.MeterReading, error) {
 	readingsByPeriod := make(map[string]map[int]map[int]*domainmeterreading.MeterReading)
-	if s.meterReadingRepo == nil {
-		return readingsByPeriod, nil
-	}
 	readings, err := s.meterReadingRepo.List(ctx, unit.AccountID, domainmeterreading.ListQuery{
 		UnitID: unit.ID, PeriodMonthTo: currentMonth,
 	})
@@ -322,9 +298,6 @@ func (s *Service) listUnitReadingsByPeriod(
 		return nil, err
 	}
 	for _, reading := range readings {
-		if reading == nil {
-			continue
-		}
 		if readingsByPeriod[reading.PeriodMonth] == nil {
 			readingsByPeriod[reading.PeriodMonth] = make(map[int]map[int]*domainmeterreading.MeterReading)
 		}
@@ -342,9 +315,6 @@ func (s *Service) canViewUnit(
 	unitID int,
 	permissionCode string,
 ) (bool, error) {
-	if s.rbacService == nil {
-		return true, nil
-	}
 	if err := s.rbacService.RequireUnitPermission(
 		ctx,
 		accountID,
@@ -378,14 +348,8 @@ func isRoomMeterReadingComplete(
 }
 
 func roomMeterItemIDs(room *domainroom.Room) []int {
-	if room == nil {
-		return nil
-	}
 	ids := make([]int, 0, len(room.MeterItems))
 	for _, item := range room.MeterItems {
-		if item == nil {
-			continue
-		}
 		ids = append(ids, item.ID)
 	}
 	if len(ids) > 0 {
@@ -417,9 +381,6 @@ type homeTodoBuckets struct {
 }
 
 func (b *homeTodoBuckets) append(result *unitTodoResult) {
-	if result == nil {
-		return
-	}
 	b.currentMeterReadings = append(b.currentMeterReadings, result.currentMeterReadings...)
 	b.meterReadings = append(b.meterReadings, result.meterReadings...)
 	b.billGenerations = append(b.billGenerations, result.billGenerations...)
@@ -449,10 +410,7 @@ func currentAndPreviousMonth(now time.Time) (string, string) {
 }
 
 func (s *Service) currentTime() time.Time {
-	if s.now != nil {
-		return s.now()
-	}
-	return time.Now()
+	return s.now()
 }
 
 func meterReadingTodoDescription(unit *domainunit.Unit, month string, missingCount int, now time.Time) string {

@@ -412,9 +412,6 @@ func (r *MeterReadingRepository) ensureMeterReadingRelationsInAccount(
 
 // toDomainMeterReading 将 GORM 抄表记录转换为领域对象。
 func toDomainMeterReading(record *models.MeterReading) *domainmeterreading.MeterReading {
-	if record == nil {
-		return nil
-	}
 	return &domainmeterreading.MeterReading{
 		ID:              record.ID,
 		RoomID:          record.RoomID,

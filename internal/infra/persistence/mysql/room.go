@@ -275,9 +275,6 @@ func replaceRoomMeterItems(ctx context.Context, q *query.Query, roomID int, ids 
 }
 
 func toDomainRoom(record *models.Room) *domainroom.Room {
-	if record == nil {
-		return nil
-	}
 	room := &domainroom.Room{
 		ID:         record.ID,
 		RoomNo:     record.RoomNo,

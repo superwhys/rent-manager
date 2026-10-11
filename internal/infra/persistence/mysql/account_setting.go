@@ -91,9 +91,6 @@ func (r *AccountSettingRepository) Upsert(
 }
 
 func toDomainAccountSetting(record *models.AccountSetting) *domainaccountsetting.AccountSetting {
-	if record == nil {
-		return nil
-	}
 	return &domainaccountsetting.AccountSetting{
 		ID:        record.ID,
 		AccountID: record.AccountID,

@@ -496,6 +496,8 @@ definitions:
     type: object
   meterreading.RoomMonthReadingsResponse:
     properties:
+      is_active:
+        type: boolean
       missing_count:
         type: integer
       period_month:
@@ -1004,6 +1006,9 @@ definitions:
         type: string
       city:
         type: string
+      current_month_received_amount:
+        description: 单位分，按账单月份统计。
+        type: integer
       default_meter_items:
         items:
           $ref: '#/definitions/unit.UnitMeterItemResponse'
@@ -2057,6 +2062,7 @@ paths:
       - settings
   /units:
     get:
+      description: 本月已收款按北京时间当前账单月份的已收款账单总金额统计，单位为分；仅有单元及账单查看权限时返回。
       parameters:
       - description: '列表范围: all/owned/granted，默认 all'
         in: query
@@ -2268,6 +2274,10 @@ paths:
         name: period_month
         required: true
         type: string
+      - description: 是否包含空房（含所选月份未录入的空房），默认 false
+        in: query
+        name: include_vacant_records
+        type: boolean
       produces:
       - application/json
       responses:

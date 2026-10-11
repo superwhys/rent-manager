@@ -17,6 +17,7 @@ This file provides guidance to Codex and other coding agents when working in thi
 
 ## Code Style
 
+- For frontend changes, follow [the web frontend conventions](web/AGENT.md), including explicit spacing between adjacent buttons.
 - Follow the existing Go style and local package patterns.
 - Keep changes scoped to the requested behavior.
 - Run `gofmt` on changed Go files.

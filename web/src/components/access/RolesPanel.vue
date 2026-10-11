@@ -97,6 +97,7 @@ watch(bindingAction, () => {
     <AsyncState
       :loading="loading"
       :error="error"
+      :has-content="roles.length > 0"
       :empty="!roles.length"
       @retry="emit('retry')"
     >

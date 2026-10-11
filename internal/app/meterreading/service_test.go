@@ -97,7 +97,9 @@ func TestGetRoomMonthReadingsPreviousReading(t *testing.T) {
 			}
 			repo := &fakeMeterReadingRepo{
 				latestByMeterItemID: map[int]*domainmeterreading.MeterReading{1: tt.latest},
-				listByRoomID:        map[int][]*domainmeterreading.MeterReading{11: {tt.recorded}},
+			}
+			if tt.recorded != nil {
+				repo.listByRoomID = map[int][]*domainmeterreading.MeterReading{11: {tt.recorded}}
 			}
 			service := &Service{
 				repo: repo, roomRepo: &fakeRoomRepo{byID: map[int]*domainroom.Room{11: room}},

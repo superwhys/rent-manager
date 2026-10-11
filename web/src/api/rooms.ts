@@ -13,7 +13,7 @@ export function createRoom(unitId: number, body: RoomInput) {
   return request<Room>(`/units/${unitId}/rooms`, { method: 'POST', body })
 }
 
-export function updateRoom(id: number, body: RoomUpdateInput) {
+export function updateRoom(id: number, body: Partial<RoomUpdateInput>) {
   return request<Room>(`/rooms/${id}`, { method: 'PUT', body })
 }
 

@@ -44,9 +44,6 @@ type RoomTypeResponse struct {
 
 // ToRoomTypeResponse 将房型领域对象转换为响应对象。
 func ToRoomTypeResponse(roomType *domainroomtype.RoomType) RoomTypeResponse {
-	if roomType == nil {
-		return RoomTypeResponse{}
-	}
 	return RoomTypeResponse{
 		ID:        roomType.ID,
 		AccountID: roomType.AccountID,

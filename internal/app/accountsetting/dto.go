@@ -14,9 +14,6 @@ type SettingsResponse map[string]string
 
 // ToSettingsResponse 将账号配置视图转换为响应。
 func ToSettingsResponse(settings *Settings) SettingsResponse {
-	if settings == nil {
-		return SettingsResponse{}
-	}
 	response := make(SettingsResponse, len(*settings))
 	for key, value := range *settings {
 		response[key] = value

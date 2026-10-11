@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"time"
 
 	appcore "github.com/superwhys/rent-manager/internal/app"
 	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
+	domainrentbill "github.com/superwhys/rent-manager/internal/domain/rentbill"
 	domainroom "github.com/superwhys/rent-manager/internal/domain/room"
 	domainunit "github.com/superwhys/rent-manager/internal/domain/unit"
 )
@@ -16,23 +18,30 @@ const (
 	unitOccupancyStatusFull    = "full"
 )
 
+var unitLocation = time.FixedZone("Asia/Shanghai", 8*60*60)
+
 // Service 提供单元管理用例。
 type Service struct {
-	repo        domainunit.Repository
-	roomRepo    domainroom.Repository
-	rbacService domainrbac.IRbacService
+	repo         domainunit.Repository
+	roomRepo     domainroom.Repository
+	rentBillRepo domainrentbill.Repository
+	rbacService  domainrbac.IRbacService
+	now          func() time.Time
 }
 
 // NewService 创建单元管理服务。
 func NewService(
 	repo domainunit.Repository,
 	roomRepo domainroom.Repository,
+	rentBillRepo domainrentbill.Repository,
 	rbacRepo domainrbac.Repository,
 ) *Service {
 	return &Service{
-		repo:        repo,
-		roomRepo:    roomRepo,
-		rbacService: domainrbac.NewRbacService(rbacRepo),
+		repo:         repo,
+		roomRepo:     roomRepo,
+		rentBillRepo: rentBillRepo,
+		rbacService:  domainrbac.NewRbacService(rbacRepo),
+		now:          time.Now,
 	}
 }
 
@@ -209,12 +218,9 @@ func (s *Service) buildUnitSummaries(
 ) ([]*Summary, error) {
 	summaries := make([]*Summary, 0, len(units))
 	rented := false
+	currentMonth := ""
 
 	for _, unit := range units {
-		if unit == nil {
-			continue
-		}
-
 		setUnitAccessType(unit, accountID)
 		canViewDetails, err := s.canViewUnit(ctx, accountID, unit, domainrbac.PermissionUnitView)
 		if err != nil {
@@ -252,6 +258,20 @@ func (s *Service) buildUnitSummaries(
 		}
 		if summary.CanViewBills {
 			summary.MonthlyRentAmount = mockUnitMonthlyRentAmount(unit)
+			if currentMonth == "" {
+				currentMonth = s.now().In(unitLocation).Format("2006-01")
+			}
+			bills, err := s.rentBillRepo.List(ctx, unit.AccountID, domainrentbill.ListQuery{
+				UnitID:      unit.ID,
+				PeriodMonth: currentMonth,
+				Status:      domainrentbill.StatusPaid,
+			})
+			if err != nil {
+				return nil, err
+			}
+			for _, bill := range bills {
+				summary.CurrentMonthReceivedAmount += bill.TotalAmount
+			}
 		}
 	}
 
@@ -278,10 +298,6 @@ func (s *Service) canViewUnit(
 
 // setUnitAccessType 根据账号与单元归属设置访问类型。
 func setUnitAccessType(unit *domainunit.Unit, accountID string) {
-	if unit == nil {
-		return
-	}
-
 	if unit.AccountID == accountID {
 		unit.AccessType = domainunit.AccessTypeOwned
 	} else {
@@ -300,10 +316,6 @@ func unitOccupancyStatus(roomCount int, rentedCount int) string {
 
 // mockUnitMonthlyRentAmount 返回当前阶段用于首页展示的月租金金额。
 func mockUnitMonthlyRentAmount(unit *domainunit.Unit) string {
-	if unit == nil {
-		return "0"
-	}
-
 	amount := 6000 + unit.ID*800
 
 	return formatAmountWithComma(amount)

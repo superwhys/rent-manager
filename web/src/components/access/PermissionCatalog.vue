@@ -167,6 +167,7 @@ watch(bindingAction, () => {
         <AsyncState
           :loading="groupsLoading"
           :error="groupsError"
+          :has-content="visibleGroups.length > 0"
           :empty="!visibleGroups.length"
           @retry="emit('retryGroups')"
         >
@@ -206,6 +207,7 @@ watch(bindingAction, () => {
         <AsyncState
           :loading="permissionsLoading"
           :error="permissionsError"
+          :has-content="visiblePermissions.length > 0"
           :empty="!visiblePermissions.length"
           @retry="emit('retryPermissions')"
         >

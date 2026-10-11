@@ -13,13 +13,18 @@ defineEmits<{ edit: [room: RoomMonthReadings] }>()
         <h2>{{ room.room_no }}</h2>
         <span class="muted">{{ room.readings.length }} 个抄表项</span>
       </div>
-      <span class="reading-status" :class="{ pending: room.missing_count > 0 }">
+      <span
+        class="reading-status"
+        :class="{ pending: !room.is_active && room.missing_count > 0, vacant: room.is_active }"
+      >
         {{
-          room.missing_count > 0
-            ? `待录入 ${room.missing_count} 项`
-            : room.readings.length
-              ? '已完成'
-              : '未配置'
+          room.is_active
+            ? '空房'
+            : room.missing_count > 0
+              ? `待录入 ${room.missing_count} 项`
+              : room.readings.length
+                ? '已完成'
+                : '未配置'
         }}
       </span>
     </div>
@@ -89,6 +94,10 @@ defineEmits<{ edit: [room: RoomMonthReadings] }>()
 .reading-status.pending {
   background: #fff3df;
   color: #936225;
+}
+.reading-status.vacant {
+  background: var(--surface-subtle, #f8fafb);
+  color: var(--text-secondary, #67717c);
 }
 .reading-lines {
   flex: 1;

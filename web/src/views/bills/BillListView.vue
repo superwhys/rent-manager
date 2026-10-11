@@ -44,11 +44,17 @@ const detail = ref<RentBillDetail>()
 const detailOpen = ref(false)
 const detailLoading = ref(false)
 const detailError = ref('')
+const detailLoaded = ref(false)
+const detailContent = ref<HTMLElement>()
+const exporting = ref(false)
 let requestId = 0
 let roomRequestId = 0
 let detailRequestId = 0
 
 const roomNames = computed(() => new Map(rooms.value.map((room) => [room.id, room.room_no])))
+const detailRoomName = computed(() =>
+  detail.value ? roomNames.value.get(detail.value.room_id) ?? `房间 #${detail.value.room_id}` : '',
+)
 const unpaidAmount = computed(() =>
   bills.value.reduce((sum, bill) => sum + (bill.status === 'UNPAID' ? bill.total_amount : 0), 0),
 )
@@ -57,6 +63,9 @@ const paidAmount = computed(() =>
 )
 const validMonth = computed(() => !month.value || /^\d{4}-(0[1-9]|1[0-2])$/.test(month.value))
 const statusLabels = { UNPAID: '待收款', PAID: '已收款', CANCELLED: '已取消' }
+const canExportDetail = computed(
+  () => detailLoaded.value && !detailLoading.value && !detailError.value && !!detailContent.value,
+)
 
 async function loadBills(afterSave = false) {
   const unitId = selectedUnitId.value
@@ -186,17 +195,61 @@ async function saveMutation() {
 
 async function showDetail(bill: RentBill) {
   const currentRequest = ++detailRequestId
-  detail.value = { ...bill, meter_readings: null }
+  if (detail.value?.id !== bill.id || !detailLoaded.value) {
+    detail.value = { ...bill, meter_readings: null }
+    detailLoaded.value = false
+  }
   detailOpen.value = true
   detailLoading.value = true
   detailError.value = ''
   try {
     const result = await getBill(bill.id)
-    if (currentRequest === detailRequestId) detail.value = result
+    if (currentRequest === detailRequestId) {
+      detail.value = result
+      detailLoaded.value = true
+    }
   } catch (cause) {
     if (currentRequest === detailRequestId) detailError.value = errorMessage(cause)
   } finally {
     if (currentRequest === detailRequestId) detailLoading.value = false
+  }
+}
+
+async function exportDetailImage() {
+  const bill = detail.value
+  const content = detailContent.value
+  if (!detailOpen.value || !bill || !content || !canExportDetail.value || exporting.value) return
+  const currentRequest = detailRequestId
+  const isCurrentDetail = () =>
+    detailOpen.value &&
+    currentRequest === detailRequestId &&
+    detail.value?.id === bill.id &&
+    detailContent.value === content
+
+  exporting.value = true
+  try {
+    const { toPng } = await import('html-to-image')
+    await document.fonts.ready
+    if (!isCurrentDetail()) return
+    const roomName = detailRoomName.value.replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g, '_').trim()
+    const dataUrl = await toPng(content, {
+      backgroundColor: '#fff',
+      pixelRatio: 2,
+      width: content.scrollWidth,
+      height: content.scrollHeight,
+    })
+    if (!isCurrentDetail()) return
+    if (!dataUrl.startsWith('data:image/png')) throw new Error('图片生成失败')
+    const link = document.createElement('a')
+    link.download = `账单-${bill.period_month}-${roomName}-${bill.id}.png`
+    link.href = dataUrl
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch {
+    if (isCurrentDetail()) ElMessage.error('图片导出失败，请重试')
+  } finally {
+    exporting.value = false
   }
 }
 
@@ -217,6 +270,7 @@ watch(
     generateOpen.value = false
     mutation.value = undefined
     detailOpen.value = false
+    detailLoaded.value = false
     detailRequestId++
     savedNotice.value = ''
     bills.value = []
@@ -254,16 +308,16 @@ onBeforeUnmount(() => {
     <div v-if="selectedUnitId" class="bill-metrics">
       <div class="panel metric">
         <span>本页待收</span>
-        <strong>{{ loading || error ? '—' : formatMoney(unpaidAmount) }}</strong>
+        <strong>{{ (loading && !bills.length) || error ? '—' : formatMoney(unpaidAmount) }}</strong>
       </div>
       <div class="panel metric">
         <span>本页已收</span>
-        <strong>{{ loading || error ? '—' : formatMoney(paidAmount) }}</strong>
+        <strong>{{ (loading && !bills.length) || error ? '—' : formatMoney(paidAmount) }}</strong>
       </div>
       <div class="panel metric">
         <span>本页账单</span>
         <strong>
-          {{ loading || error ? '—' : bills.length }}
+          {{ (loading && !bills.length) || error ? '—' : bills.length }}
           <small>笔</small>
         </strong>
       </div>
@@ -341,6 +395,8 @@ onBeforeUnmount(() => {
       <AsyncState
         :loading="loading"
         :error="error"
+        :has-content="bills.length > 0"
+        loading-layout="list"
         :empty="!selectedUnitId || !bills.length"
         :empty-title="selectedUnitId ? '暂无符合条件的账单' : '先选择一个物业'"
         :empty-description="
@@ -469,75 +525,109 @@ onBeforeUnmount(() => {
       </form>
     </el-dialog>
 
-    <el-dialog v-model="detailOpen" title="账单详情" width="min(680px, calc(100vw - 32px))">
-      <AsyncState
-        :loading="detailLoading"
-        :error="detailError"
-        @retry="detail && showDetail(detail)"
+    <el-dialog
+      v-model="detailOpen"
+      class="bill-detail-dialog"
+      title="账单详情"
+      width="min(680px, calc(100vw - 32px))"
+    >
+      <el-scrollbar
+        class="bill-detail-scrollbar"
+        max-height="calc(88dvh - 11rem)"
+        always
+        :tabindex="0"
+        role="region"
+        aria-label="账单详情内容"
       >
-        <dl v-if="detail" class="bill-details">
-          <div>
-            <dt>账单编号</dt>
-            <dd>#{{ detail.id }}</dd>
+        <AsyncState
+          :loading="detailLoading"
+          :error="detailError"
+          :has-content="detailLoaded"
+          loading-layout="form"
+          @retry="detail && showDetail(detail)"
+        >
+          <div v-if="detail" ref="detailContent" class="bill-detail-content">
+            <h2 class="bill-image-heading">
+              {{ detail.period_month }} · {{ detailRoomName }} 租金账单
+            </h2>
+            <dl class="bill-details">
+              <div>
+                <dt>账单编号</dt>
+                <dd>#{{ detail.id }}</dd>
+              </div>
+              <div>
+                <dt>房间</dt>
+                <dd>{{ detailRoomName }}</dd>
+              </div>
+              <div>
+                <dt>账单月份</dt>
+                <dd>{{ detail.period_month }}</dd>
+              </div>
+              <div>
+                <dt>租金</dt>
+                <dd>{{ formatMoney(detail.base_rent) }}</dd>
+              </div>
+              <div>
+                <dt>抄表费用</dt>
+                <dd>{{ formatMoney(detail.meter_fee) }}</dd>
+              </div>
+              <div>
+                <dt>总金额</dt>
+                <dd>
+                  <strong>{{ formatMoney(detail.total_amount) }}</strong>
+                </dd>
+              </div>
+              <div>
+                <dt>状态</dt>
+                <dd>{{ statusLabels[detail.status] }}</dd>
+              </div>
+              <div>
+                <dt>收款时间</dt>
+                <dd>{{ formatTime(detail.paid_at) }}</dd>
+              </div>
+              <div>
+                <dt>创建时间</dt>
+                <dd>{{ formatTime(detail.created_at) }}</dd>
+              </div>
+              <div>
+                <dt>更新时间</dt>
+                <dd>{{ formatTime(detail.updated_at) }}</dd>
+              </div>
+              <div>
+                <dt>备注</dt>
+                <dd>{{ detail.remark || '—' }}</dd>
+              </div>
+            </dl>
+            <section class="bill-readings-section" aria-label="账单抄表明细">
+              <BillMeterReadings
+                v-if="detail.meter_readings"
+                :readings="detail.meter_readings"
+                :period-month="detail.period_month"
+              />
+              <div v-else class="bill-readings-missing">
+                <h3>抄表明细</h3>
+                <p>此历史账单未保存生成时的抄表明细。</p>
+                <p v-if="detail.status === 'UNPAID'">
+                  重新生成该月份账单后，可保存本次生成时的抄表明细。
+                </p>
+              </div>
+            </section>
           </div>
-          <div>
-            <dt>房间</dt>
-            <dd>{{ roomNames.get(detail.room_id) ?? `房间 #${detail.room_id}` }}</dd>
-          </div>
-          <div>
-            <dt>账单月份</dt>
-            <dd>{{ detail.period_month }}</dd>
-          </div>
-          <div>
-            <dt>租金</dt>
-            <dd>{{ formatMoney(detail.base_rent) }}</dd>
-          </div>
-          <div>
-            <dt>抄表费用</dt>
-            <dd>{{ formatMoney(detail.meter_fee) }}</dd>
-          </div>
-          <div>
-            <dt>总金额</dt>
-            <dd>
-              <strong>{{ formatMoney(detail.total_amount) }}</strong>
-            </dd>
-          </div>
-          <div>
-            <dt>状态</dt>
-            <dd>{{ statusLabels[detail.status] }}</dd>
-          </div>
-          <div>
-            <dt>收款时间</dt>
-            <dd>{{ formatTime(detail.paid_at) }}</dd>
-          </div>
-          <div>
-            <dt>创建时间</dt>
-            <dd>{{ formatTime(detail.created_at) }}</dd>
-          </div>
-          <div>
-            <dt>更新时间</dt>
-            <dd>{{ formatTime(detail.updated_at) }}</dd>
-          </div>
-          <div>
-            <dt>备注</dt>
-            <dd>{{ detail.remark || '—' }}</dd>
-          </div>
-        </dl>
-        <section v-if="detail" class="bill-readings-section" aria-label="账单抄表明细">
-          <BillMeterReadings
-            v-if="detail.meter_readings"
-            :readings="detail.meter_readings"
-            :period-month="detail.period_month"
-          />
-          <div v-else class="bill-readings-missing">
-            <h3>抄表明细</h3>
-            <p>此历史账单未保存生成时的抄表明细。</p>
-            <p v-if="detail.status === 'UNPAID'">
-              重新生成该月份账单后，可保存本次生成时的抄表明细。
-            </p>
-          </div>
-        </section>
-      </AsyncState>
+        </AsyncState>
+      </el-scrollbar>
+      <template #footer>
+        <div class="bill-detail-actions">
+          <el-button @click="detailOpen = false">关闭</el-button>
+          <el-button
+            type="primary"
+            :disabled="!canExportDetail"
+            :loading="exporting"
+            @click="exportDetailImage"
+          >
+            {{ exporting ? '正在导出…' : '导出图片' }}
+          </el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -643,6 +733,32 @@ onBeforeUnmount(() => {
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
+:global(body .el-dialog.bill-detail-dialog) {
+  overflow: hidden;
+}
+.bill-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+.bill-detail-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+.bill-detail-scrollbar :deep(.el-scrollbar__view) {
+  padding-right: 0.75rem;
+}
+.bill-detail-content {
+  padding: 1rem;
+  background: var(--surface, #fff);
+}
+.bill-image-heading {
+  margin: 0 0 1.5rem;
+  color: var(--text-primary, #232b31);
+  font-size: 1.25rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
 .bill-details {
   display: grid;
   gap: 0.875rem;
@@ -660,6 +776,7 @@ onBeforeUnmount(() => {
   margin: 0;
   text-align: right;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 .bill-readings-section {
   margin-top: 1.5rem;

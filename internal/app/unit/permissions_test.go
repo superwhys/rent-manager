@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+	"time"
 
 	appcore "github.com/superwhys/rent-manager/internal/app"
 	domainrbac "github.com/superwhys/rent-manager/internal/domain/rbac"
@@ -48,8 +49,10 @@ func TestListUnitsFiltersFieldsByPermission(t *testing.T) {
 				allowed[permission] = true
 			}
 			roomRepo := &unitListRoomRepo{}
+			billRepo := &unitListRentBillRepo{}
 			service := &Service{
 				repo: &unitListRepo{units: []*domainunit.Unit{unit}}, roomRepo: roomRepo,
+				rentBillRepo: billRepo, now: time.Now,
 				rbacService: &unitListRbacService{allowed: allowed},
 			}
 			ctx := appcore.SetAccountIDToContext(context.Background(), testAccountID10)
@@ -82,11 +85,23 @@ func TestListUnitsFiltersFieldsByPermission(t *testing.T) {
 					t.Errorf("field %s present=%t, want %t: %s", key, present, tt.rooms, data)
 				}
 			}
-			if _, present := response["monthly_rent_amount"]; present != tt.bills {
-				t.Errorf("monthly_rent_amount present=%t, want %t: %s", present, tt.bills, data)
+			for _, key := range []string{"monthly_rent_amount", "current_month_received_amount"} {
+				if _, present := response[key]; present != tt.bills {
+					t.Errorf("field %s present=%t, want %t: %s", key, present, tt.bills, data)
+				}
+			}
+			if tt.bills && response["current_month_received_amount"] != float64(0) {
+				t.Errorf("current_month_received_amount = %v, want 0", response["current_month_received_amount"])
 			}
 			if !tt.rooms && roomRepo.countCalls != 0 {
 				t.Errorf("room count queried %d times without list statistics permission", roomRepo.countCalls)
+			}
+			wantBillCalls := 0
+			if tt.bills {
+				wantBillCalls = 1
+			}
+			if len(billRepo.calls) != wantBillCalls {
+				t.Errorf("rent bills queried %d times, want %d", len(billRepo.calls), wantBillCalls)
 			}
 		})
 	}

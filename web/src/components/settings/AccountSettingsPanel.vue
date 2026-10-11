@@ -58,6 +58,7 @@ watch(
     <AsyncState
       :loading="loading"
       :error="error"
+      :has-content="entries.length > 0"
       :empty="!entries.length"
       empty-title="暂无账号配置"
       empty-description="需要自定义配置时，可添加配置键与对应的值。"

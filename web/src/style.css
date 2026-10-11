@@ -19,6 +19,9 @@ html:root {
   --surface-secondary: #f3f6f6;
   --border: #e8edee;
   --danger: #c44e48;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-fast: 150ms;
+  --motion-enter: 200ms;
   --el-color-primary: #187b62;
   --el-color-primary-light-3: #5da38e;
   --el-color-primary-light-5: #8bbdae;
@@ -260,6 +263,15 @@ body .el-message-box {
 .el-tabs__item {
   font-weight: 500;
 }
+.route-page {
+  min-width: 0;
+}
+.page-enter-active {
+  transition: opacity var(--motion-fast) var(--ease-out);
+}
+.page-enter-from {
+  opacity: 0;
+}
 @media (max-width: 360px) {
   .rent-date-picker .el-date-picker {
     width: calc(100vw - 24px);
@@ -300,6 +312,9 @@ body .el-message-box {
   }
   button:active {
     transform: none !important;
+  }
+  .page-enter-active {
+    transition-duration: 100ms !important;
   }
 }
 @media (prefers-reduced-transparency: reduce) {

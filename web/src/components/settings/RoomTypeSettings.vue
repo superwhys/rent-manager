@@ -152,6 +152,7 @@ onUnmounted(() => {
     <AsyncState
       :loading="loading"
       :error="error"
+      :has-content="roomTypes.length > 0"
       :empty="roomTypes.length === 0"
       empty-title="暂无房型"
       empty-description="添加单间、一居室等房型，创建房间时即可选择。"

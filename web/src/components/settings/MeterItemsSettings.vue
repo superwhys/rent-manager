@@ -93,6 +93,7 @@ watch(
     <AsyncState
       :loading="loading"
       :error="error"
+      :has-content="items.length > 0"
       :empty="!items.length"
       empty-title="暂无计费项"
       empty-description="添加水费、电费等计费项，为抄表和账单做好准备。"

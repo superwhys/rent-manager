@@ -182,9 +182,6 @@ func (s *Service) GenerateUnitRentBills(
 	bills := make([]*domainrentbill.RentBill, 0, len(rooms))
 	skippedBills := make([]*domainrentbill.RentBill, 0)
 	for _, room := range rooms {
-		if room == nil {
-			continue
-		}
 		if existing, skipped, err := s.skippableExistingBill(
 			ctx,
 			unit.AccountID,
@@ -325,16 +322,10 @@ func (s *Service) buildMeterReadingSnapshots(
 	}
 	readingByMeterItemID := make(map[int]*domainmeterreading.MeterReading, len(readings))
 	for _, reading := range readings {
-		if reading == nil {
-			continue
-		}
 		readingByMeterItemID[reading.MeterItemID] = reading
 	}
 	total := 0
 	for _, item := range room.MeterItems {
-		if item == nil {
-			continue
-		}
 		reading := readingByMeterItemID[item.ID]
 		if reading == nil || reading.UsageAmount == nil {
 			return 0, nil, domainrentbill.ErrMeterReadingMissing

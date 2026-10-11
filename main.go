@@ -102,7 +102,7 @@ func main() {
 			repos.RBAC,
 		),
 		RBAC:      rbacService,
-		Unit:      appunit.NewService(repos.Unit, repos.Room, repos.RBAC),
+		Unit:      appunit.NewService(repos.Unit, repos.Room, repos.RentBill, repos.RBAC),
 		Room:      approom.NewService(repos.Room, repos.Unit, repos.RBAC),
 		RoomType:  approomtype.NewService(repos.RoomType, repos.Unit, repos.RBAC),
 		MeterItem: appmeteritem.NewService(repos.MeterItem, repos.Unit, repos.RBAC),

@@ -88,7 +88,7 @@ type RentBillDetailResponse struct {
 // ToRentBillDetailResponse 将账单及其冻结抄表明细转换为响应。
 func ToRentBillDetailResponse(bill *domainrentbill.RentBill) RentBillDetailResponse {
 	response := RentBillDetailResponse{RentBillResponse: ToRentBillResponse(bill)}
-	if bill == nil || bill.MeterReadings == nil {
+	if bill.MeterReadings == nil {
 		return response
 	}
 	response.MeterReadings = make([]appmeterreading.MeterReadingLineResponse, 0, len(bill.MeterReadings))
@@ -122,9 +122,6 @@ type GeneratedRentBillsResponse struct {
 
 // ToRentBillResponse 将账单领域对象转换为响应。
 func ToRentBillResponse(bill *domainrentbill.RentBill) RentBillResponse {
-	if bill == nil {
-		return RentBillResponse{}
-	}
 	return RentBillResponse{
 		ID:          bill.ID,
 		RoomID:      bill.RoomID,
@@ -151,9 +148,6 @@ func ToRentBillListResponse(bills []*domainrentbill.RentBill) []RentBillResponse
 
 // ToGeneratedRentBillsResponse 将生成结果转换为响应。
 func ToGeneratedRentBillsResponse(result *GeneratedRentBills) GeneratedRentBillsResponse {
-	if result == nil {
-		return GeneratedRentBillsResponse{}
-	}
 	return GeneratedRentBillsResponse{
 		SavedBills:   ToRentBillListResponse(result.Saved),
 		SkippedBills: ToRentBillListResponse(result.Skipped),

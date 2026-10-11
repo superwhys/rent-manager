@@ -101,7 +101,13 @@ onMounted(load)
       >
     </template>
   </PageHeader>
-  <AsyncState :loading="loading" :error="error" @retry="load">
+  <AsyncState
+    :loading="loading"
+    :has-content="!!data"
+    :error="error"
+    loading-layout="dashboard"
+    @retry="load"
+  >
     <template v-if="data">
       <div class="stat-grid">
         <article
@@ -198,6 +204,7 @@ onMounted(load)
           >
             <AsyncState
               :loading="unitsLoading"
+              :has-content="units.length > 0"
               :error="unitsError"
               :empty="units.length === 0"
               empty-title="从你的第一处房源开始"

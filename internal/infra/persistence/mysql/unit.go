@@ -274,9 +274,6 @@ func replaceUnitMeterItems(ctx context.Context, q *query.Query, unitID int, ids 
 }
 
 func toDomainUnit(record *models.Unit) (*domainunit.Unit, error) {
-	if record == nil {
-		return nil, nil
-	}
 	config, err := domainunit.ParseUnitConfigJSON(record.JSONExtend)
 	if err != nil {
 		return nil, err
@@ -315,9 +312,6 @@ func toDomainUnitForAccount(record *models.Unit, accountID string) (*domainunit.
 	unit, err := toDomainUnit(record)
 	if err != nil {
 		return nil, err
-	}
-	if unit == nil {
-		return nil, nil
 	}
 	if unit.AccountID == accountID {
 		unit.AccessType = domainunit.AccessTypeOwned

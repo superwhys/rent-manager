@@ -36,6 +36,7 @@ const hasNext = ref(false)
 let requestVersion = 0
 let dictionaryVersion = 0
 let disposed = false
+let roomsUnitId: number | undefined
 const typeNames = computed(
   () => new Map(roomTypes.value.map((type) => [type.id, type.name])),
 )
@@ -46,10 +47,16 @@ const formKey = ref(0)
 const saving = ref(false)
 const formError = ref('')
 const deleting = ref<number>()
+const changingStatus = ref<number>()
 
 async function loadRooms() {
   const version = ++requestVersion
   const unitId = selectedUnitId.value
+  if (roomsUnitId !== unitId) {
+    rooms.value = []
+    hasNext.value = false
+    roomsUnitId = unitId
+  }
   if (!unitId) {
     rooms.value = []
     loading.value = false
@@ -123,13 +130,18 @@ onUnmounted(() => {
 })
 
 function changePage(direction: number) {
-  if (loading.value || page.value + direction < 0) return
+  if (
+    loading.value ||
+    changingStatus.value !== undefined ||
+    page.value + direction < 0
+  )
+    return
   page.value += direction
   void loadRooms()
 }
 
 function openForm(room?: Room) {
-  if (!selectedUnit.value) return
+  if (!selectedUnit.value || changingStatus.value !== undefined) return
   editing.value = room
   formUnit.value = selectedUnit.value
   formError.value = ''
@@ -163,7 +175,7 @@ async function saveRoom(input: RoomUpdateInput) {
 }
 
 async function removeRoom(room: Room) {
-  if (deleting.value !== undefined) return
+  if (deleting.value !== undefined || changingStatus.value !== undefined) return
   deleting.value = room.id
   try {
     await ElMessageBox.confirm(
@@ -192,6 +204,59 @@ async function removeRoom(room: Room) {
   await Promise.all([loadRooms(), loadUnits()])
   if (error.value || unitsError.value)
     ElMessage.warning('房间已删除，部分数据刷新失败，请重试')
+}
+
+async function toggleRoomStatus(room: Room) {
+  if (
+    changingStatus.value !== undefined ||
+    saving.value ||
+    deleting.value !== undefined ||
+    formVisible.value ||
+    loading.value ||
+    unitsLoading.value ||
+    disposed ||
+    room.unit_id !== selectedUnitId.value
+  )
+    return
+  const unitId = room.unit_id
+  changingStatus.value = room.id
+  try {
+    let updated: Room
+    try {
+      updated = await updateRoom(room.id, { is_active: !room.is_active })
+    } catch (err) {
+      if (!disposed && selectedUnitId.value === unitId)
+        ElMessage.error(errorMessage(err))
+      return
+    }
+    if (disposed) return
+    if (selectedUnitId.value !== unitId) {
+      await loadUnits()
+      return
+    }
+    const currentRoom = rooms.value.find((item) => item.id === room.id)
+    if (currentRoom) currentRoom.is_active = updated.is_active
+    ElMessage.success(
+      `${room.room_no} 房间已设为${updated.is_active ? '空置' : '已出租'}`,
+    )
+    if (
+      statusFilter.value !== 'all' &&
+      (statusFilter.value === 'vacant') !== updated.is_active &&
+      rooms.value.length === 1 &&
+      rooms.value[0]?.id === room.id &&
+      page.value > 0
+    )
+      page.value -= 1
+    await Promise.all([loadRooms(), loadUnits()])
+    if (
+      !disposed &&
+      selectedUnitId.value === unitId &&
+      (error.value || unitsError.value)
+    )
+      ElMessage.warning('出租状态已更新，部分数据刷新失败，请重试')
+  } finally {
+    changingStatus.value = undefined
+  }
 }
 </script>
 
@@ -277,6 +342,8 @@ async function removeRoom(room: Room) {
     <AsyncState
       :loading="loading || unitsLoading"
       :error="unitsError || error"
+      :has-content="rooms.length > 0 && !!selectedUnit"
+      loading-layout="cards"
       :empty="rooms.length === 0 || !selectedUnit"
       :empty-title="
         !selectedUnit ? '请先添加或选择楼栋' : '这里还没有匹配的房间'
@@ -292,7 +359,7 @@ async function removeRoom(room: Room) {
         <article v-for="room in rooms" :key="room.id" class="room-card panel">
           <div class="room-card-header">
             <div class="room-number">
-              <AppIcon name="grid" />
+              <span class="room-icon"><AppIcon name="grid" :size="18" /></span>
               <h2>{{ room.room_no }}</h2>
             </div>
             <span
@@ -301,15 +368,24 @@ async function removeRoom(room: Room) {
               >{{ room.is_active ? '空置' : '已出租' }}</span
             >
           </div>
-          <p class="room-spec">
-            {{ room.floor }} 层<span>·</span>{{ room.size }} ㎡<span>·</span
-            >{{
-              typeNames.get(room.room_type_id) || `房型 #${room.room_type_id}`
-            }}
-          </p>
-          <p class="room-rent">
-            {{ formatMoney(room.price) }}<span>/ 月</span>
-          </p>
+          <div class="room-details">
+            <div class="room-info">
+              <p class="room-spec">
+                <span>{{ room.floor }} 层</span>
+                <span aria-hidden="true">·</span>
+                <span>{{ room.size }} ㎡</span>
+              </p>
+              <p class="room-type">
+                {{ typeNames.get(room.room_type_id) || `房型 #${room.room_type_id}` }}
+              </p>
+            </div>
+            <div class="room-pricing">
+              <span class="room-rent-label">月租金</span>
+              <p class="room-rent">
+                {{ formatMoney(room.price) }}<span>/ 月</span>
+              </p>
+            </div>
+          </div>
           <div class="meter-tags">
             <span v-for="item in room.meter_items" :key="item.id">{{
               item.code
@@ -319,19 +395,43 @@ async function removeRoom(room: Room) {
             >
           </div>
           <div class="room-card-actions">
-            <el-button text type="primary" @click="openForm(room)">
-              <template #icon><AppIcon name="edit" /></template>
-              编辑房间
-            </el-button>
+            <div class="room-primary-actions">
+              <el-button
+                :disabled="changingStatus !== undefined"
+                @click="openForm(room)"
+              >
+                <template #icon><AppIcon name="edit" :size="16" /></template>
+                编辑房间
+              </el-button>
+              <el-button
+                plain
+                type="primary"
+                :aria-label="`将 ${room.room_no} 房间设为${room.is_active ? '已出租' : '空置'}`"
+                :loading="changingStatus === room.id"
+                :disabled="
+                  changingStatus !== undefined ||
+                  saving ||
+                  deleting !== undefined ||
+                  loading ||
+                  unitsLoading
+                "
+                @click="toggleRoomStatus(room)"
+              >
+                <template #icon><AppIcon name="refresh" :size="16" /></template>
+                {{ room.is_active ? '设为已出租' : '设为空置' }}
+              </el-button>
+            </div>
             <el-button
+              class="room-delete-button"
               text
               type="danger"
               :aria-label="`删除 ${room.room_no} 房间`"
               :loading="deleting === room.id"
-              :disabled="deleting !== undefined"
+              :disabled="deleting !== undefined || changingStatus !== undefined"
               @click="removeRoom(room)"
-              ><AppIcon name="trash"
-            /></el-button>
+            >
+              <AppIcon name="trash" :size="18" />
+            </el-button>
           </div>
         </article>
       </div>
@@ -345,12 +445,18 @@ async function removeRoom(room: Room) {
         >第 {{ page + 1 }} 页 · 本页 {{ rooms.length }} 间</span
       >
       <div class="pagination-actions">
-        <el-button :disabled="page === 0 || loading" @click="changePage(-1)"
-          >上一页</el-button
+        <el-button
+          :disabled="page === 0 || loading || changingStatus !== undefined"
+          @click="changePage(-1)"
         >
-        <el-button :disabled="!hasNext || loading" @click="changePage(1)"
-          >下一页</el-button
+          上一页
+        </el-button>
+        <el-button
+          :disabled="!hasNext || loading || changingStatus !== undefined"
+          @click="changePage(1)"
         >
+          下一页
+        </el-button>
       </div>
     </div>
 
@@ -442,6 +548,9 @@ async function removeRoom(room: Room) {
   gap: 1.1rem;
 }
 .room-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   padding: 1.3rem;
 }
 .room-card-header {
@@ -456,8 +565,14 @@ async function removeRoom(room: Room) {
   gap: 0.65rem;
   min-width: 0;
 }
-.room-number :deep(svg) {
-  color: #7e918a;
+.room-icon {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0.6rem;
   flex-shrink: 0;
 }
 .room-number h2 {
@@ -468,7 +583,8 @@ async function removeRoom(room: Room) {
   overflow-wrap: anywhere;
 }
 .room-status {
-  font-size: 0.68rem;
+  flex-shrink: 0;
+  font-size: 0.85rem;
   padding: 0.3rem 0.6rem;
   border-radius: 0.45rem;
   white-space: nowrap;
@@ -481,19 +597,45 @@ async function removeRoom(room: Room) {
   color: #94692d;
   background: #fbf3e5;
 }
+.room-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+.room-info,
+.room-pricing {
+  min-width: 0;
+}
 .room-spec {
   color: var(--text-secondary, #727780);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  margin: 0.7rem 0 1.4rem;
+  margin: 0;
+}
+.room-type {
+  margin-top: 0.3rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.room-pricing {
+  text-align: right;
+}
+.room-rent-label {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
 }
 .room-rent {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 600;
   margin: 0;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 .room-rent span {
   font-size: 0.73rem;
@@ -505,16 +647,18 @@ async function removeRoom(room: Room) {
 .meter-tags {
   display: flex;
   gap: 0.4rem;
-  margin-top: 0.9rem;
+  margin: 0.9rem 0 1rem;
   flex-wrap: wrap;
   min-height: 1.5rem;
 }
 .meter-tags span {
-  padding: 0.15rem 0.45rem;
-  font-size: 0.68rem;
+  max-width: 100%;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
   color: #75827c;
   background: #f4f6f4;
   border-radius: 0.35rem;
+  overflow-wrap: anywhere;
 }
 .meter-tags .no-meter {
   background: none;
@@ -524,14 +668,32 @@ async function removeRoom(room: Room) {
 .room-card-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 1.3rem;
-  padding-top: 0.7rem;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.9rem;
   border-top: 1px solid var(--border, #eff1ee);
 }
 .room-card-actions :deep(.el-button) {
   margin-left: 0;
   padding-inline: 0.45rem;
+  font-size: 0.85rem;
+}
+.room-primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.room-card-actions :deep(.room-delete-button) {
+  --el-button-text-color: var(--text-tertiary);
+  --el-button-hover-text-color: var(--danger);
+  flex-shrink: 0;
+  width: 40px;
+  margin-left: auto;
+}
+.room-card-actions :deep(.el-icon) {
+  width: 16px;
+  height: 16px;
 }
 .room-pagination {
   display: flex;
@@ -574,6 +736,25 @@ async function removeRoom(room: Room) {
   .room-pagination {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .room-card-actions :deep(.el-button) {
+    min-height: 44px;
+  }
+  .room-card-actions :deep(.room-delete-button) {
+    width: 44px;
+  }
+}
+@media (max-width: 360px) {
+  .room-details {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+  .room-pricing {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    text-align: left;
   }
 }
 </style>

@@ -75,34 +75,33 @@ type UnitResponse struct {
 // Summary 包含当前账号可查看的单元列表详情及统计。
 type Summary struct {
 	*domainunit.Summary
-	CanViewDetails bool
-	CanViewRooms   bool
-	CanViewBills   bool
+	CanViewDetails             bool
+	CanViewRooms               bool
+	CanViewBills               bool
+	CurrentMonthReceivedAmount int
 }
 
 // UnitListResponse 始终保留楼栋入口，其余字段仅在有对应查看权限时返回。
 type UnitListResponse struct {
-	ID                int                      `json:"id"`
-	Name              string                   `json:"name"`
-	AccessType        string                   `json:"access_type"`
-	IsOwner           bool                     `json:"is_owner"`
-	AccountID         string                   `json:"account_id,omitempty"`
-	Address           string                   `json:"address,omitempty"`
-	City              string                   `json:"city,omitempty"`
-	Province          string                   `json:"province,omitempty"`
-	DefaultMeterItems *[]UnitMeterItemResponse `json:"default_meter_items,omitempty"`
-	JsonExtend        *UnitConfigResponse      `json:"json_extend,omitempty"`
-	RoomCount         *int                     `json:"room_count,omitempty"`
-	RentedCount       *int                     `json:"rented_count,omitempty"`
-	MonthlyRentAmount *string                  `json:"monthly_rent_amount,omitempty"`
-	OccupancyStatus   *string                  `json:"occupancy_status,omitempty"`
+	ID                         int                      `json:"id"`
+	Name                       string                   `json:"name"`
+	AccessType                 string                   `json:"access_type"`
+	IsOwner                    bool                     `json:"is_owner"`
+	AccountID                  string                   `json:"account_id,omitempty"`
+	Address                    string                   `json:"address,omitempty"`
+	City                       string                   `json:"city,omitempty"`
+	Province                   string                   `json:"province,omitempty"`
+	DefaultMeterItems          *[]UnitMeterItemResponse `json:"default_meter_items,omitempty"`
+	JsonExtend                 *UnitConfigResponse      `json:"json_extend,omitempty"`
+	RoomCount                  *int                     `json:"room_count,omitempty"`
+	RentedCount                *int                     `json:"rented_count,omitempty"`
+	MonthlyRentAmount          *string                  `json:"monthly_rent_amount,omitempty"`
+	CurrentMonthReceivedAmount *int                     `json:"current_month_received_amount,omitempty"` // 单位分，按账单月份统计。
+	OccupancyStatus            *string                  `json:"occupancy_status,omitempty"`
 }
 
 // ToUnitResponse 将单元领域对象转换为响应对象。
 func ToUnitResponse(unit *domainunit.Unit) UnitResponse {
-	if unit == nil {
-		return UnitResponse{}
-	}
 	return UnitResponse{
 		ID:                unit.ID,
 		AccountID:         unit.AccountID,
@@ -119,9 +118,6 @@ func ToUnitResponse(unit *domainunit.Unit) UnitResponse {
 
 // ToUnitSummaryResponse 将单元统计对象转换为响应对象。
 func ToUnitSummaryResponse(summary *Summary) UnitListResponse {
-	if summary == nil || summary.Unit == nil {
-		return UnitListResponse{}
-	}
 	unit := summary.Unit
 	response := UnitListResponse{
 		ID:         unit.ID,
@@ -145,6 +141,7 @@ func ToUnitSummaryResponse(summary *Summary) UnitListResponse {
 	}
 	if summary.CanViewBills {
 		response.MonthlyRentAmount = &summary.MonthlyRentAmount
+		response.CurrentMonthReceivedAmount = &summary.CurrentMonthReceivedAmount
 	}
 	return response
 }
@@ -181,9 +178,6 @@ func ToUnitListResponse(summaries []*Summary) []UnitListResponse {
 func toUnitMeterItemResponses(items []*domainunit.MeterItem) []UnitMeterItemResponse {
 	ret := make([]UnitMeterItemResponse, 0, len(items))
 	for _, item := range items {
-		if item == nil {
-			continue
-		}
 		ret = append(ret, UnitMeterItemResponse{
 			ID:        item.ID,
 			Code:      item.Code,

@@ -118,9 +118,6 @@ func (r *MeterItemRepository) Update(
 }
 
 func toDomainMeterItem(record *models.MeterItem) *domainmeteritem.MeterItem {
-	if record == nil {
-		return nil
-	}
 	return &domainmeteritem.MeterItem{
 		ID:        record.ID,
 		AccountID: record.AccountID,

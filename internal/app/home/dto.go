@@ -61,9 +61,6 @@ type Response struct {
 
 // ToSummaryResponse 将首页服务汇总转换为接口响应。
 func ToSummaryResponse(summary *Summary) *Response {
-	if summary == nil {
-		return &Response{}
-	}
 	incomeAmount, incomeDecimal := formatCentsParts(summary.CurrentMonthIncomeCents)
 	return &Response{
 		BuildingRoomSummary: BuildingRoomSummaryResponse{

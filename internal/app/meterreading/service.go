@@ -169,7 +169,11 @@ func (s *Service) GetUnitMonthReadings(
 	if err != nil {
 		return nil, err
 	}
-	rooms, err := s.roomRepo.List(ctx, unit.AccountID, domainroom.ListQuery{UnitID: unit.ID})
+	roomQuery := domainroom.ListQuery{UnitID: unit.ID}
+	if !query.IncludeVacantRecords {
+		roomQuery.IsActive = new(false)
+	}
+	rooms, err := s.roomRepo.List(ctx, unit.AccountID, roomQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -211,9 +215,6 @@ func (s *Service) buildRoomMonthReadings(
 	}
 	readingByMeterItemID := make(map[int]*domainmeterreading.MeterReading, len(readings))
 	for _, reading := range readings {
-		if reading == nil {
-			continue
-		}
 		readingByMeterItemID[reading.MeterItemID] = reading
 	}
 
@@ -223,9 +224,6 @@ func (s *Service) buildRoomMonthReadings(
 		Readings:    make([]*MeterReadingLine, 0, len(room.MeterItems)),
 	}
 	for _, item := range room.MeterItems {
-		if item == nil {
-			continue
-		}
 		line, err := s.buildMeterReadingLine(
 			ctx,
 			accountID,
@@ -239,7 +237,7 @@ func (s *Service) buildRoomMonthReadings(
 		}
 		roomMonth.Readings = append(roomMonth.Readings, line)
 		roomMonth.TotalFee += line.Fee
-		if !line.IsRecorded {
+		if !line.IsRecorded && !room.IsActive {
 			roomMonth.MissingCount++
 		}
 	}
@@ -365,13 +363,7 @@ func validatePeriodMonth(periodMonth string) (string, error) {
 
 func roomMeterItemMap(room *domainroom.Room) map[int]*domainmeteritem.MeterItem {
 	items := make(map[int]*domainmeteritem.MeterItem)
-	if room == nil {
-		return items
-	}
 	for _, item := range room.MeterItems {
-		if item == nil {
-			continue
-		}
 		items[item.ID] = item
 	}
 	return items
@@ -382,16 +374,15 @@ func collectRoomMonthSummary(
 	roomMonth *RoomMonthReadings,
 ) {
 	for _, line := range roomMonth.Readings {
-		if line == nil || line.MeterItem == nil {
-			continue
-		}
 		summary := summaryByMeterItemID[line.MeterItem.ID]
 		if summary == nil {
 			summary = &MeterItemSummary{MeterItem: line.MeterItem}
 			summaryByMeterItemID[line.MeterItem.ID] = summary
 		}
 		if !line.IsRecorded {
-			summary.Missing++
+			if !roomMonth.Room.IsActive {
+				summary.Missing++
+			}
 			continue
 		}
 		summary.Recorded++

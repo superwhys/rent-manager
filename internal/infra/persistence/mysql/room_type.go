@@ -122,9 +122,6 @@ func (r *RoomTypeRepository) Delete(ctx context.Context, accountID string, id in
 }
 
 func toDomainRoomType(record *models.RoomType) *domainroomtype.RoomType {
-	if record == nil {
-		return nil
-	}
 	return &domainroomtype.RoomType{
 		ID:        record.ID,
 		AccountID: record.AccountID,

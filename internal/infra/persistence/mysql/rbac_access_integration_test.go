@@ -32,7 +32,7 @@ func TestUnitRoleRevocationAppliesAcrossReadServices(t *testing.T) {
 	if err := db.Create(room).Error; err != nil {
 		t.Fatal(err)
 	}
-	bill := &models.RentBill{RoomID: room.ID, PeriodMonth: time.Now().Format("2006-01"), TotalAmount: 123456, Status: domainrentbill.StatusPaid}
+	bill := &models.RentBill{RoomID: room.ID, PeriodMonth: time.Now().In(time.FixedZone("Asia/Shanghai", 8*60*60)).Format("2006-01"), TotalAmount: 123456, Status: domainrentbill.StatusPaid}
 	if err := db.Create(bill).Error; err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestUnitRoleRevocationAppliesAcrossReadServices(t *testing.T) {
 	}
 
 	home := apphome.NewService(repos.Unit, repos.Room, repos.RentBill, repos.MeterReading, repos.RBAC)
-	units := appunit.NewService(repos.Unit, repos.Room, repos.RBAC)
+	units := appunit.NewService(repos.Unit, repos.Room, repos.RentBill, repos.RBAC)
 	types := approomtype.NewService(repos.RoomType, repos.Unit, repos.RBAC)
 	items := appmeteritem.NewService(repos.MeterItem, repos.Unit, repos.RBAC)
 	summary, err := home.GetHomeSummary(ctx)
@@ -72,6 +72,9 @@ func TestUnitRoleRevocationAppliesAcrossReadServices(t *testing.T) {
 	}
 	if response := appunit.ToUnitSummaryResponse(listed[0]); response.Address != unit.Address || response.RoomCount == nil || *response.RoomCount != 1 {
 		t.Fatalf("authorized details = %+v", response)
+	}
+	if response := appunit.ToUnitSummaryResponse(listed[0]); response.CurrentMonthReceivedAmount == nil || *response.CurrentMonthReceivedAmount != bill.TotalAmount {
+		t.Fatalf("authorized received amount = %+v, want %d", response, bill.TotalAmount)
 	}
 	if options, err := types.ListRoomTypes(ctx, &approomtype.ListRoomTypesQuery{UnitID: unit.ID}); err != nil || len(options) != 1 || options[0].ID != typeRecord.ID {
 		t.Fatalf("authorized room types = %+v, %v", options, err)

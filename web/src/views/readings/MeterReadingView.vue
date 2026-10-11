@@ -17,6 +17,7 @@ const loading = ref(false)
 const error = ref('')
 const search = ref('')
 const onlyMissing = ref(false)
+const includeVacantRecords = ref(false)
 const page = ref(1)
 const pageSize = 12
 const editorOpen = ref(false)
@@ -63,7 +64,7 @@ async function loadReadings(afterSave = false) {
   loading.value = true
   error.value = ''
   try {
-    const next = await getUnitReadings(unitId, month.value)
+    const next = await getUnitReadings(unitId, month.value, includeVacantRecords.value)
     if (currentRequest !== requestId) return
     result.value = next
     page.value = Math.min(page.value, pageCount.value)
@@ -78,7 +79,7 @@ async function loadReadings(afterSave = false) {
 }
 
 async function openEditor(room: RoomMonthReadings) {
-  if (submitting.value || !room.readings.length) return
+  if (loading.value || submitting.value || !room.readings.length) return
   const currentRequest = ++editorRequestId
   editorOpen.value = true
   editingRoom.value = room
@@ -118,9 +119,9 @@ async function save(input: SaveReadingsInput) {
 }
 
 watch(
-  [selectedUnitId, month],
-  () => {
-    result.value = undefined
+  [selectedUnitId, month, includeVacantRecords],
+  ([unitId, periodMonth], [previousUnitId, previousMonth]) => {
+    if (unitId !== previousUnitId || periodMonth !== previousMonth) result.value = undefined
     page.value = 1
     search.value = ''
     onlyMissing.value = false
@@ -145,10 +146,18 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="readings-page">
-    <PageHeader title="月度抄表" description="记录用量，让每月费用一目了然。">
+    <PageHeader
+      title="月度抄表"
+      description="默认只显示已出租房间。选择“包含空房”可显示所有空房，包括尚未录入的房间；空房不计入待录入数量。"
+    >
       <template #actions>
-        <el-button :loading="loading" :disabled="!selectedUnitId" @click="loadReadings()">
-          刷新记录
+        <el-button
+          :loading="loading"
+          :disabled="!selectedUnitId"
+          aria-live="polite"
+          @click="loadReadings()"
+        >
+          {{ loading && result ? '正在更新…' : '刷新记录' }}
         </el-button>
       </template>
     </PageHeader>
@@ -172,6 +181,18 @@ onBeforeUnmount(() => {
         <span>查找房间</span>
         <el-input v-model="search" clearable placeholder="输入房间号" :disabled="!selectedUnitId" />
       </label>
+      <div class="field room-scope-filter">
+        <span>房间范围</span>
+        <el-radio-group
+          v-model="includeVacantRecords"
+          size="large"
+          :disabled="!selectedUnitId || submitting"
+          aria-label="是否展示空房"
+        >
+          <el-radio-button :value="false">仅已出租</el-radio-button>
+          <el-radio-button :value="true">包含空房</el-radio-button>
+        </el-radio-group>
+      </div>
       <el-checkbox v-model="onlyMissing" class="missing-filter" :disabled="!selectedUnitId">
         只看待抄表
       </el-checkbox>
@@ -185,88 +206,94 @@ onBeforeUnmount(() => {
       @close="savedNotice = ''"
     />
 
-    <AsyncState
-      :loading="loading"
-      :error="error"
-      :empty="!selectedUnitId || !result?.rooms.length"
-      :empty-title="selectedUnitId ? '还没有房间可供抄表' : '先选择一个物业'"
-      :empty-description="
-        selectedUnitId
-          ? '创建房间并绑定抄表项目，即可记录每月用量。'
-          : '选择物业后，查看当月用量和抄表进度。'
-      "
-      @retry="loadReadings()"
-    >
-      <template v-if="result">
-        <div class="reading-metrics">
-          <div class="panel metric">
-            <span>本月抄表费用</span>
-            <strong>{{ formatMoney(result.total_fee) }}</strong>
-          </div>
-          <div class="panel metric">
-            <span>已完成抄表</span>
-            <strong>
-              {{ recorded }}
-              <small>项</small>
-            </strong>
-          </div>
-          <div class="panel metric">
-            <span>待录入</span>
-            <strong>
-              {{ result.missing_count }}
-              <small>项</small>
-            </strong>
-          </div>
-        </div>
-        <section
-          v-if="result.summaries.length"
-          class="panel usage-summary"
-          aria-label="抄表项目汇总"
-        >
-          <div v-for="summary in result.summaries" :key="summary.meter_item_id" class="usage-item">
-            <div>
-              <strong>{{ summary.code }}</strong>
-              <span class="muted">
-                {{ summary.recorded }} 项已录入 · {{ summary.missing }} 项待录入
-              </span>
+    <section class="readings-results">
+      <AsyncState
+        :loading="loading"
+        :has-content="!!result?.rooms.length"
+        loading-layout="cards"
+        :error="error"
+        :empty="!selectedUnitId || !result?.rooms.length"
+        :empty-title="selectedUnitId ? '所选月份暂无房间可供抄表' : '先选择一个物业'"
+        :empty-description="
+          selectedUnitId
+            ? includeVacantRecords
+              ? '当前显示全部房间。创建房间并绑定抄表项目后，即可记录用量。'
+              : '仅显示已出租房间，可切换“包含空房”查看尚未出租的房间。'
+            : '选择物业后，查看当月用量和抄表进度。'
+        "
+        @retry="loadReadings()"
+      >
+        <template v-if="result">
+          <div class="reading-metrics">
+            <div class="panel metric">
+              <span>本月抄表费用</span>
+              <strong>{{ formatMoney(result.total_fee) }}</strong>
             </div>
-            <div class="usage-totals">
-              <span>
-                {{ Number(summary.usage_amount.toFixed(4)) }}
-                <small>{{ summary.unit }}</small>
-              </span>
-              <strong>{{ formatMoney(summary.fee) }}</strong>
+            <div class="panel metric">
+              <span>已完成抄表</span>
+              <strong>
+                {{ recorded }}
+                <small>项</small>
+              </strong>
+            </div>
+            <div class="panel metric">
+              <span>待录入</span>
+              <strong>
+                {{ result.missing_count }}
+                <small>项</small>
+              </strong>
             </div>
           </div>
-        </section>
-        <div class="room-section-heading">
-          <h2>房间记录</h2>
-          <span class="muted">共 {{ filteredRooms.length }} 间</span>
-        </div>
-        <AsyncState
-          :empty="!filteredRooms.length"
-          empty-title="没有匹配的房间"
-          empty-description="试试其他房间号，或取消“只看待抄表”。"
-        >
-          <div class="reading-grid">
-            <RoomReadingCard
-              v-for="room in visibleRooms"
-              :key="room.room_id"
-              :room="room"
-              :disabled="submitting"
-              @edit="openEditor"
-            />
+          <section
+            v-if="result.summaries.length"
+            class="panel usage-summary"
+            aria-label="抄表项目汇总"
+          >
+            <div v-for="summary in result.summaries" :key="summary.meter_item_id" class="usage-item">
+              <div>
+                <strong>{{ summary.code }}</strong>
+                <span class="muted">
+                  {{ summary.recorded }} 项已录入 · {{ summary.missing }} 项待录入
+                </span>
+              </div>
+              <div class="usage-totals">
+                <span>
+                  {{ Number(summary.usage_amount.toFixed(4)) }}
+                  <small>{{ summary.unit }}</small>
+                </span>
+                <strong>{{ formatMoney(summary.fee) }}</strong>
+              </div>
+            </div>
+          </section>
+          <div class="room-section-heading">
+            <h2>房间记录</h2>
+            <span class="muted">共 {{ filteredRooms.length }} 间</span>
           </div>
-        </AsyncState>
-        <div v-if="pageCount > 1" class="reading-pagination">
-          <span class="muted">第 {{ page }} / {{ pageCount }} 页</span>
-          <div class="pagination-actions">
-            <el-button :disabled="page === 1" @click="page--">上一页</el-button>
-            <el-button :disabled="page === pageCount" @click="page++">下一页</el-button>
+          <AsyncState
+            :empty="!filteredRooms.length"
+            empty-title="没有匹配的房间"
+            empty-description="试试其他房间号、取消“只看待抄表”，或切换“包含空房”。"
+          >
+            <div class="reading-grid">
+              <RoomReadingCard
+                v-for="room in visibleRooms"
+                :key="room.room_id"
+                :room="room"
+                :disabled="submitting || loading"
+                @edit="openEditor"
+              />
+            </div>
+          </AsyncState>
+          <div v-if="pageCount > 1" class="reading-pagination">
+            <span class="muted">第 {{ page }} / {{ pageCount }} 页</span>
+            <div class="pagination-actions">
+              <el-button :disabled="page === 1" @click="page--">上一页</el-button>
+              <el-button :disabled="page === pageCount" @click="page++">下一页</el-button>
+            </div>
           </div>
-        </div>
-      </template>
-    </AsyncState>
+        </template>
+      </AsyncState>
+    </section>
 
     <el-dialog
       v-model="editorOpen"
@@ -279,6 +306,7 @@ onBeforeUnmount(() => {
     >
       <AsyncState
         :loading="editorLoading"
+        loading-layout="form"
         :error="editorError"
         @retry="editingRoom && openEditor(editingRoom)"
       >
@@ -314,6 +342,9 @@ onBeforeUnmount(() => {
 }
 .missing-filter {
   margin: 0 0 0.35rem auto;
+}
+.readings-results {
+  position: relative;
 }
 .reading-metrics {
   display: grid;
@@ -432,6 +463,9 @@ onBeforeUnmount(() => {
   .missing-filter {
     grid-column: 1 / -1;
     margin: 0;
+  }
+  .room-scope-filter {
+    grid-column: 1 / -1;
   }
   .reading-grid {
     grid-template-columns: 1fr;

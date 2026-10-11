@@ -1,22 +1,9 @@
 <script setup lang="ts">
 import type { MeterReadingLine } from '@/types/readings'
-import { formatDate, formatMoney } from '@/utils/format'
+import { formatMoney } from '@/utils/format'
 import { formatReadingPrice } from '@/utils/readings'
 
 defineProps<{ readings: MeterReadingLine[]; periodMonth: string }>()
-
-function sourceLabel(source?: string): string {
-  switch (source) {
-    case 'MANUAL':
-      return '手动录入'
-    case 'IMPORT':
-      return '导入'
-    case 'AUTO':
-      return '自动抄表'
-    default:
-      return '—'
-  }
-}
 </script>
 
 <template>
@@ -67,14 +54,6 @@ function sourceLabel(source?: string): string {
         <div>
           <dt>费用</dt>
           <dd>{{ line.is_recorded ? formatMoney(line.fee) : '—' }}</dd>
-        </div>
-        <div>
-          <dt>抄表时间</dt>
-          <dd>{{ line.reading_time ? formatDate(line.reading_time) : '—' }}</dd>
-        </div>
-        <div>
-          <dt>来源</dt>
-          <dd>{{ sourceLabel(line.source) }}</dd>
         </div>
         <div v-if="line.remark" class="reading-remark">
           <dt>备注</dt>
