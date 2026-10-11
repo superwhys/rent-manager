@@ -6,7 +6,7 @@ FROM node:${NODE_VERSION}-alpine AS web-builder
 
 WORKDIR /src/web
 
-RUN npm install --global pnpm@11.22.0
+RUN npm install --global pnpm@9.15.4
 
 COPY web/package.json web/pnpm-lock.yaml ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
